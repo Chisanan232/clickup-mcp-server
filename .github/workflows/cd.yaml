@@ -1,0 +1,42 @@
+name: CD
+
+on:
+  # Run the deployment about publishing the Python source code to PyPI.
+  push:
+    branches:
+      - "sample_master_never_run"
+    paths:
+#     This deployment workflow would only be triggered by file change of module *__pkg_info__* because it has the package version info.
+#      - ".github/workflows/cd.yaml"    # For test or emergency scenario only
+      - "**/__pkg_info__.py"
+
+jobs:
+  check_version-state:
+#    name: Check the version update state
+    uses: ./.github/workflows/rw_checking_deployment_state.yaml
+
+
+  build_git-tag_and_create_github-release:
+#    name: Build git tag and GitHub release if it needs
+    needs: check_version-state
+    if: ${{ needs.check_version-state.outputs.version_update_state == 'VERSION UPDATE' }}
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_build_git-tag_and_create_github-release.yaml@v7.3
+    secrets:
+      github_auth_token: ${{ secrets.GITHUB_TOKEN }}
+    with:
+      project_type: python-package
+      project_name: <your lib name>
+      software_version_format: general-3
+
+
+  push_python_pkg_to_pypi:
+#    name: Check about it could work finely by installing the Python package with setup.py file
+    needs: build_git-tag_and_create_github-release
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_push_pypi.yaml@v7.3
+    with:
+      build-type: poetry
+      release-type: ${{ needs.build_git-tag_and_create_github-release.outputs.python_release_version }}
+      push-to-PyPI: official
+    secrets:
+      PyPI_user: ${{ secrets.PYPI_USERNAME }}
+      PyPI_token: ${{ secrets.PYPI_PASSWORD }}

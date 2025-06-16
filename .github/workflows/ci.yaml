@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  # No matter for push or pull request events, it would trigger CI for safely saving the source code.
+  # For the push event, it only runs building and testing.
+  push:
+    branches:
+      - "sample_master_never_run"
+    paths:
+#     For GitHub Action
+      - ".github/workflows/**ci.yaml"
+      - ".github/workflows/rw_build_and_test.yaml"
+      - ".github/workflows/rw_poetry_run_test_with_multi_py_versions.yaml"
+#     For source code and test
+      - "fake_api_server/**/*.py"
+      - "!**/__pkg_info__.py"
+      - "test/**/*.py"
+#     For shell script for CI
+      - "scripts/run_all_tests.sh"
+#     For configurations for test or CI
+      - ".coveragerc"
+      - "codecov.yml"
+      - "pytest.ini"
+      - "sonar-project.properties"
+#     For Python project configuration
+      - "pyproject.toml"
+      - "poetry.lock"
+
+  # For the push event, in addition to build and test would be run, it would trigger other service to keep the reports
+  # or other checking, i.e., record the test report by CodeCov and check the code quality by SonarQube.
+  pull_request:
+    branches:
+      - "sample_master_never_run"
+    paths:
+#     For GitHub Action
+      - ".github/workflows/**ci.yaml"
+      - ".github/workflows/rw_build_and_test.yaml"
+      - ".github/workflows/rw_poetry_run_test_with_multi_py_versions.yaml"
+#     For source code and test
+      - "fake_api_server/**/*.py"
+      - "!**/__pkg_info__.py"
+      - "test/**/*.py"
+#     For shell script for CI
+      - "scripts/run_all_tests.sh"
+#     For configurations for test or CI
+      - ".coveragerc"
+      - "codecov.yml"
+      - "pytest.ini"
+      - "sonar-project.properties"
+#     For Python project configuration
+      - "pyproject.toml"
+      - "poetry.lock"
+
+jobs:
+  build-and-test:
+#    name: Run all tests and organize all test reports
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'dependencies') }}
+    uses: ./.github/workflows/rw_build_and_test.yaml
+
+
+  unit-test_codecov_finish:
+#    name: Organize and generate the testing report and upload it to Codecov
+    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == 'master') }}
+    needs: build-and-test
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_upload_test_cov_report.yaml@v7.3
+    secrets:
+      codecov_token: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      test_type: unit-test
+      upload-to-codecov: true
+      codecov_flags: unit-test  # Required if 'upload-to-codecov' is true
+      codecov_name: <your lib name>  # Required if 'upload-to-codecov' is true
+
+
+  integration-test_codecov_finish:
+#    name: Organize and generate the testing report and upload it to Codecov
+    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == 'master') }}
+    needs: build-and-test
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_upload_test_cov_report.yaml@v7.3
+    secrets:
+      codecov_token: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      test_type: integration-test
+      upload-to-codecov: true
+      codecov_flags: integration-test  # Required if 'upload-to-codecov' is true
+      codecov_name: <your lib name>  # Required if 'upload-to-codecov' is true
+
+
+  all-test_codecov_finish:
+#    name: Organize and generate the testing report and upload it to Codecov
+    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == 'master') }}
+    needs: build-and-test
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_upload_test_cov_report.yaml@v7.3
+    secrets:
+      codecov_token: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      test_type: all-test
+      upload-to-codecov: true
+      codecov_flags: all-test  # Required if 'upload-to-codecov' is true
+      codecov_name: <your lib name>  # Required if 'upload-to-codecov' is true
+
+
+  sonarcloud_finish:
+#    name: SonarCloud Scan
+    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == 'master') }}
+    needs: build-and-test
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_sonarqube_scan.yaml@v7.3
+    secrets:
+      sonar_token: ${{ secrets.SONAR_TOKEN }}
+    with:
+      download_path: ${{ inputs.download_path }}
+
+
+  pre-building_test:
+#    name: Check about it could work finely by installing the Python package with setup.py file
+    needs: [unit-test_codecov_finish, integration-test_codecov_finish, all-test_codecov_finish, sonarcloud_finish]
+    if: ${{ github.ref_name == 'release' || github.ref_name == 'master' }}
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_pre-building_test.yaml@v7.3
+    with:
+      build-type: poetry
+      python_package_name: <your lib name>
+      test_shell_in_python: <the Python script you want to test>
+      test_shell: <the shell you want to test>

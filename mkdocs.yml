@@ -1,0 +1,179 @@
+# Project information
+site_name: <Your lib name>
+site_url: <Your documentation URL of lib>
+site_author: <author name>
+site_description: >-
+  <Clear brief of your lib>
+
+# Repository
+repo_name: <Your repo>/<Your project name>
+repo_url: <repo link URL>
+
+# Copyright
+copyright: Copyright &copy; <year period> <author name>
+
+theme:
+  name: material
+  custom_dir: ./docs/_overrides
+  features:
+    - announce.dismiss
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.code.copy
+    # - content.tabs.link
+    - content.tooltips
+    # - header.autohide
+    # - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    # - navigation.instant
+    # - navigation.prune
+    - navigation.sections
+    - navigation.tabs
+    # - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    # - toc.integrate
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+#  favicon: assets/favicon.png
+  icon:
+    logo: logo
+
+# Plugins
+plugins:
+  # Doc as Code
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: sphinx
+            docstring_section_style: spacy
+            docstring_options:
+              ignore_init_summary: true
+            merge_init_into_class: true
+            relative_crossrefs: true
+  # Versioning documentation
+  - mike:
+      alias_type: symlink
+      redirect_template: null
+      deploy_prefix: ''
+      canonical_version: null
+      version_selector: true
+      css_dir: css
+      javascript_dir: js
+  # Documentation modification info - create & update time
+  - git-revision-date-localized:
+      type: timeago
+#      custom_format: "%d. %B %Y"
+      timezone: Asia/Taipei
+#      locale: en
+      fallback_to_build_date: false
+      enable_creation_date: true
+#      exclude:
+#          - index.md
+      enable_git_follow: true
+      enabled: true
+      strict: true
+  # Documentation modification info - contributor
+  - git-committers:
+      repository: <Your repo>/<Your project name>
+      branch: <default git branch of project>
+
+# Additional configuration
+extra:
+  # Versioning documentation
+  version:
+    provider: mike
+    default: stable
+    alias: true
+  # Documentation analytics
+  analytics:
+    provider: google
+    property: <your Google analytics service key>
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/emoticon-happy-outline
+          name: This page was helpful
+          data: 1
+          note: >-
+            Thanks for your feedback!
+        - icon: material/emoticon-sad-outline
+          name: This page could be improved
+          data: 0
+          note: >-
+            Thanks for your feedback!
+  # Social info
+  social:
+    - icon: fontawesome/brands/github
+      link: <Your GitHub URL>
+    - icon: fontawesome/brands/docker
+      link: <The Docker Hub about this project URL>
+    - icon: fontawesome/brands/python
+      link: <The Python package home page in PyPI>
+
+# Extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: squidfunk
+      repo: mkdocs-material
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Page tree
+nav:
+  - Home: index.md

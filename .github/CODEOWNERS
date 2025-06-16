@@ -1,0 +1,51 @@
+# CODEOWNERS file for the fake-api-server project
+# Format: file-pattern @owner
+# Order is important; the last matching pattern takes precedence.
+
+#######################################
+# Repository Default Owner
+#######################################
+*                                     @<your username>
+
+# Software license annotation
+/LICENSE                              @<your username>
+
+#######################################
+# Source Code
+#######################################
+/src/                                 @<your username>
+*.py                                  @<your username>
+
+#######################################
+# Tests
+#######################################
+/test/                                @<your username>
+
+#######################################
+# Documentation
+#######################################
+/docs/                                @<your username>
+*.md                                  @<your username>
+
+#######################################
+# CI/CD Configuration
+#######################################
+/.github/                             @<your username>
+/.github/workflows/                   @<your username>
+
+#######################################
+# Build Configuration
+#######################################
+/pyproject.toml                       @<your username>
+/scripts/                             @<your username>
+
+#######################################
+# Code Quality and Testing
+#######################################
+/.pre-commit-config.yaml              @<your username>
+/pytest.ini                           @<your username>
+/.coveragerc                          @<your username>
+/mypy.ini                             @<your username>
+/.pylintrc                            @<your username>
+/sonar-project.properties             @<your username>
+/codecov.yml                          @<your username>

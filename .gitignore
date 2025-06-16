@@ -1,0 +1,30 @@
+#### Cache
+## MacOS
+.DS_Store
+## Python cache
+__pycache__
+## PyEnv
+.python-version
+## PyTest
+.pytest_cache/
+## PyLint
+.pypirc
+## MyPy
+.mypy_cache/
+
+#### Running result of tools
+## Docummentation
+site/
+## Test coverage
+.coverage
+.coverage.*
+coverage.xml
+## Package Python code
+build/
+dist/
+*.egg-info/
+
+## Script
+scripts/ci/get-all-tests.sh
+
+## Some usage of this project

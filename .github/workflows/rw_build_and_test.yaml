@@ -1,0 +1,63 @@
+name: Run test and organize test coverage reports
+
+on:
+  workflow_call:
+
+jobs:
+  prep_unit-test:
+#    name: Prepare all unit test items
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_get_tests.yaml@v7.3
+    with:
+      shell_arg: test/unit_test/
+
+
+  prep_integration-test:
+#    name: Prepare all integration test items
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_get_tests.yaml@v7.3
+    with:
+      shell_arg: test/integration_test/
+
+
+  run_unit-test:
+#    name: Run all unit test items
+    needs: prep_unit-test
+    uses: ./.github/workflows/rw_poetry_run_test_with_multi_py_versions.yaml
+    with:
+      test_type: unit-test
+      all_test_items_paths: ${{needs.prep_unit-test.outputs.all_test_items}}
+
+
+  run_integration-test:
+#    name: Run all integration test items
+    needs: prep_integration-test
+    uses: ./.github/workflows/rw_poetry_run_test_with_multi_py_versions.yaml
+    with:
+      test_type: integration-test
+      all_test_items_paths: ${{needs.prep_integration-test.outputs.all_test_items}}
+
+
+  unit-test_codecov:
+#    name: For unit test, organize and generate the testing report and upload it to Codecov
+    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == 'master') }}
+    needs: run_unit-test
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_organize_test_cov_reports.yaml@v7.3
+    with:
+      test_type: unit-test
+
+
+  integration-test_codecov:
+#    name: For unit test, organize and generate the testing report and upload it to Codecov
+    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == 'master') }}
+    needs: run_integration-test
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_organize_test_cov_reports.yaml@v7.3
+    with:
+      test_type: integration-test
+
+
+  all_test_codecov:
+#    name: Organize and generate the testing report and upload it to Codecov
+    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == 'master') }}
+    needs: [run_unit-test, run_integration-test]
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_organize_test_cov_reports.yaml@v7.3
+    with:
+      test_type: all-test
