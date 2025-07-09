@@ -52,10 +52,16 @@ repos:
   rev: v1.15.0
   hooks:
     - id: mypy
-      package: <your lib src dir>,test
+      package: clickup_mcp,test
 #      exclude: ^test/unit_test.{1,64}.py
       args:
 #        - --strict
         - --ignore-missing-imports
         - --show-traceback
       additional_dependencies: [types-PyYAML>=6.0.12.9]
+
+- repo: https://github.com/astral-sh/uv-pre-commit
+  # uv version.
+  rev: 0.7.19
+  hooks:
+    - id: uv-lock
