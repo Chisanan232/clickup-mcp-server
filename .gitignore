@@ -3,6 +3,8 @@
 .DS_Store
 ## Python cache
 __pycache__
+## UV
+.venv/
 ## PyEnv
 .python-version
 ## PyTest
@@ -28,3 +30,7 @@ dist/
 scripts/ci/get-all-tests.sh
 
 ## Some usage of this project
+
+## Configuration
+.env*
+!.env*example
