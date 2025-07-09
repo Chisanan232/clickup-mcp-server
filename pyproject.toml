@@ -29,7 +29,10 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
+    "fastapi>=0.116.0",
     "mcp[cli]>=1.10.1",
+    "pydantic>=2.11.7",
+    "uvicorn>=0.35.0",
 ]
 
 [project.urls]
