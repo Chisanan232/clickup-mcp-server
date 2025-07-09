@@ -28,7 +28,12 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
-dependencies = []
+dependencies = [
+    "fastapi>=0.116.0",
+    "mcp[cli]>=1.10.1",
+    "pydantic>=2.11.7",
+    "uvicorn>=0.35.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/Chisanan232/clickup-mcp-server"
