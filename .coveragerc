@@ -1,12 +1,15 @@
 [run]
 parallel = True
 relative_files = True
-include=./fake_api_server
-
+#source=./clickup_mcp/
+include=./clickup_mcp/
 omit =
 #    */__init__.py
-    ./fake_api_server/__main__.py
+    ./clickup_mcp/*/__main__.py
 
+[paths]
+source =
+    ./clickup_mcp/
 
 [report]
 # Regexes for lines to exclude from consideration
@@ -27,6 +30,9 @@ exclude_lines =
 
     # Don't complain about abstract methods, they aren't run:
     @(abc\.)?abstractmethod
+
+    # Don't complain about Protocol ellipsis lines that aren't meant to be executed:
+    \.\.\.
 
     # Don't complain about the exceptions catching of ImportError and ModuleNotFoundError, they aren't run:
     except ImportError:
