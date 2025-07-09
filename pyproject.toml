@@ -32,7 +32,7 @@ dependencies = []
 
 [tool.poetry]
 packages = [
-    { include = "<Your library source code folder>" },
+    { include = "clickup_mcp/" },
 ]
 
 [project.urls]
