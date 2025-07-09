@@ -3,15 +3,19 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [project]
-name = "<your lib name>"
+name = "clickup-mcp-server"
 version = "0.0.0"
-description = "👨‍💻 A clear brief for your library."
-authors = [
-    { name = "<Your name>", email = "<Your e-mail address>" }
-]
+description = "🦾 A strong MCP server for ClickUp."
+authors = [{ name = "Chisanan232", email = "chi10211201@cycu.org.tw" }]
 license = { file = "LICENSE" }
 readme = "README.md"
-keywords = ["the keywords for your lib"]
+keywords = [
+    "clickup",
+    "mcp",
+    "mcp-server",
+    "clickup-mcp",
+    "clickup-mcp-server",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -20,6 +24,8 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 requires-python = ">=3.12"
 dependencies = []
@@ -30,10 +36,8 @@ packages = [
 ]
 
 [project.urls]
-Homepage = "<home page of your repo or documentation, up to you>"
-Documentation = "<the documentation host URL of your lib>"
-Repository = "https://github.com/<your username>/<your repository>"
-Changelog = "<the release note page in documentation or GitHub release info>"
+Homepage = "https://github.com/Chisanan232/clickup-mcp-server"
+Repository = "https://github.com/Chisanan232/clickup-mcp-server"
 
 # TODO: Let the dependencies for development to be optional
 #[tool.poetry.group.dev]
