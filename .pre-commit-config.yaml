@@ -1,67 +1,72 @@
 exclude: '.github/|docs/'
 
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
-  hooks:
-    - id: check-yaml
-      args: ['--unsafe']
-    - id: debug-statements
-    - id: end-of-file-fixer
-    - id: trailing-whitespace
-    - id: detect-private-key
-- repo: https://github.com/PyCQA/isort
-  rev: 6.0.1
-  hooks:
-    - id: isort
-      args: # arguments to configure black
-        - --profile=black
-- repo: https://github.com/PyCQA/autoflake
-  rev: v2.3.1
-  hooks:
-    - id: autoflake
-      args:
-        - --remove-all-unused-imports
-        - --ignore-init-module-imports
-        - --in-place
-- repo: https://github.com/psf/black
-  rev: 25.1.0
-  hooks:
-    - id: black
-      args: # arguments to configure black
-        - --line-length=120
-        # these folders won't be formatted by black
-        - --exclude="""\.git |
-          \.__pycache__|
-          \**.egg-info|
-          \.mypy_cache|
-          \.pytest_cache|
-          \.tox|
-          \.venv|
-          _build|
-          build|
-          dist"""
-- repo: https://github.com/python-poetry/poetry
-  rev: 2.1.2
-  hooks:
-    - id: poetry-check
-      # Please activate this hook in local development environment. In Pre-Commit CI, it would occur error like below:
-      # HTTPSConnectionPool(host='pypi.org', port=443): Max retries exceeded with url ...
-#    - id: poetry-lock
-- repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.15.0
-  hooks:
-    - id: mypy
-      package: clickup_mcp,test
-#      exclude: ^test/unit_test.{1,64}.py
-      args:
-#        - --strict
-        - --ignore-missing-imports
-        - --show-traceback
-      additional_dependencies: [types-PyYAML>=6.0.12.9]
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+        args: ['--unsafe']
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: detect-private-key
 
-- repo: https://github.com/astral-sh/uv-pre-commit
-  # uv version.
-  rev: 0.7.19
-  hooks:
-    - id: uv-lock
+  - repo: https://github.com/PyCQA/isort
+    rev: 6.0.1
+    hooks:
+      - id: isort
+        args: # arguments to configure black
+          - --profile=black
+
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.3.1
+    hooks:
+      - id: autoflake
+        args:
+          - --remove-all-unused-imports
+          - --ignore-init-module-imports
+          - --in-place
+
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        args: # arguments to configure black
+          - --line-length=120
+          # these folders won't be formatted by black
+          - --exclude="""\.git |
+            \.__pycache__|
+            \**.egg-info|
+            \.mypy_cache|
+            \.pytest_cache|
+            \.tox|
+            \.venv|
+            _build|
+            build|
+            dist"""
+
+  - repo: https://github.com/python-poetry/poetry
+    rev: 2.1.2
+    hooks:
+      - id: poetry-check
+        # Please activate this hook in local development environment. In Pre-Commit CI, it would occur error like below:
+        # HTTPSConnectionPool(host='pypi.org', port=443): Max retries exceeded with url ...
+  #    - id: poetry-lock
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+      - id: mypy
+        package: clickup_mcp,test
+  #      exclude: ^test/unit_test.{1,64}.py
+        args:
+  #        - --strict
+          - --ignore-missing-imports
+          - --show-traceback
+        additional_dependencies: [types-PyYAML>=6.0.12.9]
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    # uv version.
+    rev: 0.7.19
+    hooks:
+      - id: uv-lock
