@@ -14,27 +14,14 @@ from urllib.parse import urljoin
 import httpx
 from pydantic import BaseModel, Field
 
+from .exceptions import (
+    ClickUpAPIError,
+    AuthenticationError,
+    RateLimitError,
+    ResourceNotFoundError
+)
 
 logger = logging.getLogger(__name__)
-
-
-class ClickUpAPIError(Exception):
-    """Base exception for ClickUp API errors."""
-    
-    def __init__(self, message: str, status_code: Optional[int] = None, response_data: Optional[Dict] = None):
-        super().__init__(message)
-        self.status_code = status_code
-        self.response_data = response_data
-
-
-class RateLimitError(ClickUpAPIError):
-    """Exception raised when API rate limit is exceeded."""
-    pass
-
-
-class AuthenticationError(ClickUpAPIError):
-    """Exception raised when authentication fails."""
-    pass
 
 
 class APIResponse(BaseModel):

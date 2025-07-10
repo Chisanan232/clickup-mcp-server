@@ -23,9 +23,9 @@ def api_client():
     return ClickUpAPIClient(
         api_token="test_token",
         timeout=5.0,
-        max_retries=1,
+        max_retries=3,
         retry_delay=0.1,
-        rate_limit_requests_per_minute=60
+        rate_limit_requests_per_minute=5
     )
 
 
