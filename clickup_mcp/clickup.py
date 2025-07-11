@@ -1,4 +1,6 @@
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
+
+from typing import Any, Optional
 
 from .client import APIResponse, ClickUpAPIClient, create_clickup_client
 
@@ -87,20 +89,20 @@ class ClickUpResourceClient:
         order_by: str = "created",
         reverse: bool = False,
         subtasks: bool = False,
-        statuses: Optional[List[str]] = None,
+        statuses: Optional[list[str]] = None,
         include_closed: bool = False,
-        assignees: Optional[List[str]] = None,
-        tags: Optional[List[str]] = None,
+        assignees: Optional[list[str]] = None,
+        tags: Optional[list[str]] = None,
         due_date_gt: Optional[int] = None,
         due_date_lt: Optional[int] = None,
         date_created_gt: Optional[int] = None,
         date_created_lt: Optional[int] = None,
         date_updated_gt: Optional[int] = None,
         date_updated_lt: Optional[int] = None,
-        custom_fields: Optional[List[Dict]] = None,
+        custom_fields: Optional[list[dict]] = None,
     ) -> APIResponse:
         """Get tasks from a list with optional filtering."""
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             "page": page,
             "order_by": order_by,
             "reverse": reverse,
@@ -134,7 +136,7 @@ class ClickUpResourceClient:
 
     async def get_task(self, task_id: str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> APIResponse:
         """Get a specific task by ID."""
-        params: Dict[str, Any] = {"custom_task_ids": custom_task_ids}
+        params: dict[str, Any] = {"custom_task_ids": custom_task_ids}
         if team_id:
             params["team_id"] = team_id
 
@@ -145,8 +147,8 @@ class ClickUpResourceClient:
         list_id: str,
         name: str,
         description: Optional[str] = None,
-        assignees: Optional[List[str]] = None,
-        tags: Optional[List[str]] = None,
+        assignees: Optional[list[str]] = None,
+        tags: Optional[list[str]] = None,
         status: Optional[str] = None,
         priority: Optional[int] = None,
         due_date: Optional[int] = None,
@@ -158,10 +160,10 @@ class ClickUpResourceClient:
         parent: Optional[str] = None,
         links_to: Optional[str] = None,
         check_required_custom_fields: Optional[bool] = True,
-        custom_fields: Optional[List[Dict]] = None,
+        custom_fields: Optional[list[dict]] = None,
     ) -> APIResponse:
         """Create a new task in a list."""
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "name": name,
             "notify_all": notify_all,
             "check_required_custom_fields": check_required_custom_fields,
@@ -203,7 +205,7 @@ class ClickUpResourceClient:
         self, task_id: str, custom_task_ids: bool = False, team_id: Optional[str] = None
     ) -> APIResponse:
         """Delete a task by ID."""
-        params: Dict[str, Any] = {"custom_task_ids": custom_task_ids}
+        params: dict[str, Any] = {"custom_task_ids": custom_task_ids}
         if team_id:
             params["team_id"] = team_id
 

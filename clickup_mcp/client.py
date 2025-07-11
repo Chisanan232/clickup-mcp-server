@@ -5,10 +5,12 @@ This module provides a comprehensive HTTP client for interacting with the ClickU
 It includes authentication, error handling, rate limiting, and common API operations.
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import httpx
 from pydantic import BaseModel, Field
@@ -26,8 +28,8 @@ class APIResponse(BaseModel):
     """Standard API response model."""
 
     status_code: int
-    data: Optional[Dict[str, Any]] = None
-    headers: Dict[str, str] = Field(default_factory=dict)
+    data: Optional[dict[str, Any]] = None
+    headers: dict[str, str] = Field(default_factory=dict)
     success: bool = Field(default=True)
     error: Optional[str] = None
 
@@ -67,7 +69,7 @@ class ClickUpAPIClient:
         self.rate_limit = rate_limit_requests_per_minute
 
         # Rate limiting
-        self._request_times: List[float] = []
+        self._request_times: list[float] = []
         self._rate_limit_lock = asyncio.Lock()
 
         # HTTP client configuration
@@ -114,9 +116,9 @@ class ClickUpAPIClient:
         self,
         method: str,
         endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
-        data: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
+        params: Optional[dict[str, Any]] = None,
+        data: Optional[dict[str, Any]] = None,
+        headers: Optional[dict[str, str]] = None,
     ) -> APIResponse:
         """
         Make an HTTP request with retry logic and error handling.
@@ -214,7 +216,7 @@ class ClickUpAPIClient:
         raise ClickUpAPIError(f"Request failed after {self.max_retries + 1} attempts: {last_exception}")
 
     async def get(
-        self, endpoint: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None
+        self, endpoint: str, params: Optional[dict[str, Any]] = None, headers: Optional[dict[str, str]] = None
     ) -> APIResponse:
         """Make a GET request."""
         return await self._make_request("GET", endpoint, params=params, headers=headers)
@@ -222,9 +224,9 @@ class ClickUpAPIClient:
     async def post(
         self,
         endpoint: str,
-        data: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
+        data: Optional[dict[str, Any]] = None,
+        params: Optional[dict[str, Any]] = None,
+        headers: Optional[dict[str, str]] = None,
     ) -> APIResponse:
         """Make a POST request."""
         return await self._make_request("POST", endpoint, params=params, data=data, headers=headers)
@@ -232,15 +234,15 @@ class ClickUpAPIClient:
     async def put(
         self,
         endpoint: str,
-        data: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
+        data: Optional[dict[str, Any]] = None,
+        params: Optional[dict[str, Any]] = None,
+        headers: Optional[dict[str, str]] = None,
     ) -> APIResponse:
         """Make a PUT request."""
         return await self._make_request("PUT", endpoint, params=params, data=data, headers=headers)
 
     async def delete(
-        self, endpoint: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None
+        self, endpoint: str, params: Optional[dict[str, Any]] = None, headers: Optional[dict[str, str]] = None
     ) -> APIResponse:
         """Make a DELETE request."""
         return await self._make_request("DELETE", endpoint, params=params, headers=headers)
@@ -248,9 +250,9 @@ class ClickUpAPIClient:
     async def patch(
         self,
         endpoint: str,
-        data: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
+        data: Optional[dict[str, Any]] = None,
+        params: Optional[dict[str, Any]] = None,
+        headers: Optional[dict[str, str]] = None,
     ) -> APIResponse:
         """Make a PATCH request."""
         return await self._make_request("PATCH", endpoint, params=params, data=data, headers=headers)
