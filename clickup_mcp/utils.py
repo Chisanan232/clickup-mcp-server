@@ -196,11 +196,11 @@ def extract_clickup_ids_from_url(url: str) -> Dict[str, Optional[str]]:
 
     # Common ClickUp URL patterns - updated patterns to handle various URL formats
     patterns = {
-        "team_id": r"(?:app\.clickup\.com|clickup\.com)/(?:team/)?(\w+)(?:/|$)",
-        "space_id": r"/space/(\w+)",
-        "folder_id": r"/folder/(\w+)",
-        "list_id": r"/list/(\w+)",
-        "task_id": r"/t/(\w+)",
+        "team_id": r"(?:app\.clickup\.com|clickup\.com)(?::\d+)?/(?:team/)?([a-zA-Z0-9\-_]+)(?:/|$)",
+        "space_id": r"/space/([a-zA-Z0-9\-_]+)",
+        "folder_id": r"/folder/([a-zA-Z0-9\-_]+)",
+        "list_id": r"(?:/list/|/v/li/)([a-zA-Z0-9\-_]+)",
+        "task_id": r"/[tT]/([a-zA-Z0-9\-_]+)",
     }
 
     for id_type, pattern in patterns.items():
