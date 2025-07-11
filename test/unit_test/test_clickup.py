@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from clickup_mcp import ClickUpAPIClient, ClickUpResourceClient, APIResponse
+from clickup_mcp import APIResponse, ClickUpAPIClient, ClickUpResourceClient
 
 from ._base import BaseAPIClientTestSuite
 

@@ -15,7 +15,6 @@ class BaseAPIClientTestSuite(ABC):
             api_token="test_token", timeout=5.0, max_retries=3, retry_delay=0.1, rate_limit_requests_per_minute=5
         )
 
-
     @pytest.fixture
     def mock_httpx_client(self) -> AsyncMock:
         """Create a mock httpx client."""

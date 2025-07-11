@@ -1,6 +1,6 @@
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
-from .client import ClickUpAPIClient, APIResponse, create_clickup_client
+from .client import APIResponse, ClickUpAPIClient, create_clickup_client
 
 
 class ClickUpResourceClient:
