@@ -1,0 +1,83 @@
+###################################################################################################################################
+#
+# Workflow Description:
+#     Organize all the testing coverage reports. (it would save reports by 'actions/upload-artifact').
+#
+# Workflow input parameters:
+#     * test_type: The testing type. In generally, it only has 2 options: 'unit-test' and 'integration-test'.
+#     * test_working_directory: The working directory for test running.
+#
+# Workflow running output:
+#     No, but it would save the testing coverage reports (coverage.xml) to provide after-process to organize and record.
+#
+#     * Upload-Artifact:
+#         * test_coverage_report: The handled test coverage report (.coverage file). It's file name format would be .coverage.<inputs.test type>.
+#         * test_coverage_xml_report: The handled test coverage report (.xml file). It's file name format would be coverage_<inputs.test type>.xml.
+#
+###################################################################################################################################
+
+name: Organize all testing coverage reports which be tested in many different runtime OS and Python version as a testing coverage report
+
+on:
+  workflow_call:
+    inputs:
+      test_type:
+        description: "The testing type. In generally, it only has 2 options: 'unit-test' and 'integration-test'."
+        type: string
+        required: true
+      test_working_directory:
+        description: "The working directory for test running."
+        required: false
+        type: string
+        default: './'
+
+
+jobs:
+  organize_and_generate_test_reports:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download code coverage result file
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage*
+          path: ${{ inputs.test_working_directory }}
+          merge-multiple: true
+
+      - name: Setup Python 3.12 in Ubuntu OS
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python tool 'coverage'
+        working-directory: ${{ inputs.test_working_directory }}
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install -U pip
+          pip3 install coverage
+          echo "======== Check all the test coverage reports currently. ========"
+          ls -la
+
+      - name: Combine all testing coverage data files with test type and runtime OS, and convert to XML format file finally
+        working-directory: ${{ inputs.test_working_directory }}
+        run: |
+          curl https://raw.githubusercontent.com/Chisanan232/GitHub-Action_Reusable_Workflows-Python/develop/scripts/ci/combine_coverage_reports.sh --output ./scripts/ci/combine_coverage_reports.sh
+          bash ./scripts/ci/combine_coverage_reports.sh ${{ inputs.test_type }} .coverage.
+
+      - name: Upload testing coverage report (.coverage)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.test_type }}_coverage_data_file
+          path: ${{ inputs.test_working_directory }}.coverage
+          if-no-files-found: error
+          include-hidden-files: true
+
+      - name: Upload testing coverage report (.xml)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.test_type }}_coverage_xml_report
+          path: ${{ inputs.test_working_directory }}coverage**xml
+          if-no-files-found: error
+          include-hidden-files: true
