@@ -34,7 +34,7 @@ def validate_clickup_id(clickup_id: str, id_type: str = "ID") -> str:
     return clickup_id
 
 
-def format_clickup_date(timestamp: Union[int, float, str, datetime, None]) -> Optional[int]:
+def format_clickup_date(timestamp: int | float | str | datetime | None) -> Optional[int]:
     """
     Convert various date formats to ClickUp timestamp (milliseconds since epoch).
 
@@ -77,7 +77,7 @@ def format_clickup_date(timestamp: Union[int, float, str, datetime, None]) -> Op
     raise ValueError(f"Unsupported timestamp type: {type(timestamp)}")
 
 
-def parse_clickup_date(timestamp: Union[int, str, None]) -> Optional[datetime]:
+def parse_clickup_date(timestamp: int | str | None) -> Optional[datetime]:
     """
     Parse a ClickUp timestamp to a datetime object.
 
@@ -113,7 +113,7 @@ def parse_clickup_date(timestamp: Union[int, str, None]) -> Optional[datetime]:
         raise ValueError(f"Invalid timestamp value: {timestamp}") from e
 
 
-def build_query_params(params: Dict[str, Any]) -> Dict[str, Union[str, List[str]]]:
+def build_query_params(params: Dict[str, Any]) -> Dict[str, str | List[str]]:
     """
     Build query parameters for API requests, handling lists and special values.
 
@@ -123,7 +123,7 @@ def build_query_params(params: Dict[str, Any]) -> Dict[str, Union[str, List[str]
     Returns:
         Dictionary with string keys and values suitable for HTTP requests
     """
-    query_params: Dict[str, Union[str, List[str]]] = {}
+    query_params: Dict[str, str | List[str]] = {}
 
     for key, value in params.items():
         if value is None:
@@ -211,7 +211,7 @@ def extract_clickup_ids_from_url(url: str) -> Dict[str, Optional[str]]:
     return ids
 
 
-def format_priority(priority: Union[int, str, None]) -> Optional[int]:
+def format_priority(priority: int | str | None) -> Optional[int]:
     """
     Format priority value for ClickUp API.
 
