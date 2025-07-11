@@ -52,25 +52,79 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
         # Set a very low rate limit for testing
         api_client.rate_limit = 2
 
-        start_time = asyncio.get_event_loop().time()
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            # Mock the event loop time to have consistent timing
+            with patch("asyncio.get_event_loop") as mock_get_event_loop:
+                mock_loop = Mock()
+                mock_get_event_loop.return_value = mock_loop
 
-        # Add some request times to simulate recent requests
-        current_time = start_time
-        api_client._request_times = [current_time - 10, current_time - 5]
+                # Test case 1: No rate limiting needed (old requests that should be cleaned up)
+                mock_loop.time.return_value = 100.0
+                api_client._request_times = [30.0, 35.0]  # More than 60 seconds old (100-30=70, 100-35=65)
 
-        # This should not be rate limited
-        await api_client._enforce_rate_limit()
+                await api_client._enforce_rate_limit()
 
-        # Add more requests to trigger rate limiting
-        api_client._request_times = [current_time, current_time + 0.1]
+                # Should not sleep and should clean up old requests
+                mock_sleep.assert_not_called()
+                assert len(api_client._request_times) == 1  # Only current request time added
+                assert api_client._request_times[0] == 100.0
 
-        # This should be rate limited and take some time
-        rate_limit_start = asyncio.get_event_loop().time()
-        await api_client._enforce_rate_limit()
-        rate_limit_end = asyncio.get_event_loop().time()
+                # Reset for next test
+                mock_sleep.reset_mock()
+                api_client._request_times = []
 
-        # The rate limiting should have taken some time
-        # (In practice this would be up to 60 seconds, but our test data is artificial)
+                # Test case 2: Rate limiting triggered (requests within limit but at capacity)
+                mock_loop.time.return_value = 200.0
+                # Add requests within the last minute that meet the rate limit exactly
+                api_client._request_times = [150.0, 160.0]  # 2 requests within 60 seconds (exactly at limit)
+
+                await api_client._enforce_rate_limit()
+
+                # Should sleep for the calculated time
+                expected_sleep_time = 60 - (200.0 - 150.0)  # 60 - 50 = 10 seconds
+                mock_sleep.assert_called_once_with(expected_sleep_time)
+                assert len(api_client._request_times) == 3  # 2 existing + 1 new
+
+                # Reset for next test
+                mock_sleep.reset_mock()
+                api_client._request_times = []
+
+                # Test case 3: No rate limiting needed (under limit)
+                mock_loop.time.return_value = 300.0
+                api_client._request_times = [290.0]  # Only 1 request within limit (rate limit is 2)
+
+                await api_client._enforce_rate_limit()
+
+                # Should not sleep because we're under the limit
+                mock_sleep.assert_not_called()
+                assert len(api_client._request_times) == 2  # 1 existing + 1 new
+
+                # Test case 4: Edge case - sleep time is negative (already expired)
+                mock_sleep.reset_mock()
+                api_client._request_times = []
+                mock_loop.time.return_value = 400.0
+                # Add requests where the first one is more than 60 seconds ago
+                api_client._request_times = [330.0, 380.0]  # 330 is 70 seconds ago, 380 is 20 seconds ago
+
+                await api_client._enforce_rate_limit()
+
+                # Should not sleep because the first request (330.0) gets cleaned up
+                # leaving only [380.0] + new time, so total = 2 (exactly at limit but not over)
+                mock_sleep.assert_not_called()
+                assert len(api_client._request_times) == 2  # 1 remaining + 1 new
+
+                # Test case 5: Sleep time calculation with edge case
+                mock_sleep.reset_mock()
+                api_client._request_times = []
+                mock_loop.time.return_value = 500.0
+                # Add requests that trigger rate limiting
+                api_client._request_times = [460.0, 480.0]  # Both within 60 seconds
+
+                await api_client._enforce_rate_limit()
+
+                # Should sleep for remaining time based on oldest request
+                expected_sleep_time = 60 - (500.0 - 460.0)  # 60 - 40 = 20 seconds
+                mock_sleep.assert_called_once_with(expected_sleep_time)
 
     @pytest.mark.asyncio
     async def test_successful_request(self, api_client):
