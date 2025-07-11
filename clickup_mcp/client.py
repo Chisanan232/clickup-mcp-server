@@ -156,27 +156,36 @@ class ClickUpAPIClient:
                     method=method, url=url, params=params, content=json_data, headers=request_headers
                 )
 
+                # Helper function to safely parse JSON
+                def safe_json_parse(response_obj):
+                    try:
+                        return response_obj.json() if response_obj.content else None
+                    except json.JSONDecodeError:
+                        return None
+
                 # Handle different response status codes
                 if response.status_code == 200:
                     return APIResponse(
                         status_code=response.status_code,
-                        data=response.json() if response.content else None,
+                        data=safe_json_parse(response),
                         headers=dict(response.headers),
                     )
                 elif response.status_code == 401:
                     raise AuthenticationError(
                         "Invalid API token or insufficient permissions",
                         status_code=response.status_code,
-                        response_data=response.json() if response.content else None,
+                        response_data=safe_json_parse(response),
                     )
                 elif response.status_code == 429:
                     raise RateLimitError(
                         "Rate limit exceeded",
                         status_code=response.status_code,
-                        response_data=response.json() if response.content else None,
+                        response_data=safe_json_parse(response),
                     )
                 elif response.status_code >= 400:
-                    error_data = response.json() if response.content else {}
+                    error_data = safe_json_parse(response)
+                    if error_data is None:
+                        error_data = {}
                     error_message = error_data.get("err", f"HTTP {response.status_code} error")
 
                     return APIResponse(
@@ -189,7 +198,7 @@ class ClickUpAPIClient:
                 else:
                     return APIResponse(
                         status_code=response.status_code,
-                        data=response.json() if response.content else None,
+                        data=safe_json_parse(response),
                         headers=dict(response.headers),
                     )
 
