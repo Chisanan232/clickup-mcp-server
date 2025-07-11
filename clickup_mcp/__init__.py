@@ -8,10 +8,9 @@ with ClickUp's API, enabling AI assistants to manage tasks, projects, and teams.
 from .client import (
     APIResponse,
     ClickUpAPIClient,
-    ClickUpResourceClient,
     create_clickup_client,
-    create_resource_client,
 )
+from .clickup import ClickUpResourceClient, create_resource_client
 from .config import ClickUpConfig, get_default_config, load_config_from_env
 from .exceptions import (
     AuthenticationError,
