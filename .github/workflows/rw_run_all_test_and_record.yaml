@@ -1,0 +1,141 @@
+name: CI
+
+on:
+  workflow_call:
+    inputs:
+      run_e2e:
+        description: "The testing type. In generally, it only has 2 options: 'unit-test' and 'integration-test'."
+        type: boolean
+        required: false
+        default: false
+    secrets:
+      e2e_test_slack_bot_token:
+        description: "Set the Slack bot token for end-to-end test."
+        required: false
+      codecov_token:
+        description: "The API token for uploading testing coverage report to Codecov."
+        required: false
+      sonar_token:
+        description: "The API token for uploading testing coverage report to Coveralls."
+        required: true
+
+jobs:
+  build-and-test:
+#    name: Run all tests and organize all test reports
+    uses: ./.github/workflows/rw_build_and_test.yaml
+    with:
+      run_e2e: ${{ inputs.run_e2e }}
+    secrets:
+      e2e_test_slack_bot_token: ${{ secrets.e2e_test_slack_bot_token }}
+
+  unit-test_codecov_finish:
+#    name: Organize and generate the testing report and upload it to Codecov
+    if: ${{
+        !contains(github.event.pull_request.labels.*.name, 'dependencies') && 
+        (
+            contains(fromJSON('["pull_request","workflow_dispatch","schedule"]'), github.event_name) || 
+            (github.event_name == 'push' && github.ref_name == 'master')
+        ) 
+      }}
+    needs: build-and-test
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_upload_test_cov_report.yaml@v7.3
+    secrets:
+      codecov_token: ${{ secrets.codecov_token }}
+    with:
+      test_type: unit-test
+      upload-to-codecov: true
+      codecov_flags: unit-test  # Required if 'upload-to-codecov' is true
+      codecov_name: clickup_mcp  # Required if 'upload-to-codecov' is true
+
+#  integration-test_codecov_finish:
+##    name: Organize and generate the testing report and upload it to Codecov
+#    if: ${{
+#        !contains(github.event.pull_request.labels.*.name, 'dependencies') &&
+#        (
+#            contains(fromJSON('["pull_request","workflow_dispatch","schedule"]'), github.event_name) ||
+#            (github.event_name == 'push' && github.ref_name == 'master')
+#        )
+#      }}
+#    needs: build-and-test
+#    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_upload_test_cov_report.yaml@v7.3
+#    secrets:
+#      codecov_token: ${{ secrets.codecov_token }}
+#    with:
+#      test_type: integration-test
+#      upload-to-codecov: true
+#      codecov_flags: integration-test  # Required if 'upload-to-codecov' is true
+#      codecov_name: clickup_mcp  # Required if 'upload-to-codecov' is true
+
+#  e2e-test_codecov_finish:
+##    name: Organize and generate the testing report and upload it to Codecov
+#    if: ${{
+#        !contains(github.event.pull_request.labels.*.name, 'dependencies') &&
+#        (
+#            (contains(fromJSON('["pull_request","workflow_dispatch","schedule"]'), github.event_name) ||
+#            (github.event_name == 'push' && github.ref_name == 'master')
+#        )) &&
+#        inputs.run_e2e == true
+#      }}
+#    needs: build-and-test
+#    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_upload_test_cov_report.yaml@v7.3
+#    secrets:
+#      codecov_token: ${{ secrets.codecov_token }}
+#    with:
+#      test_type: e2e-test
+#      upload-to-codecov: true
+#      codecov_flags: e2e-test  # Required if 'upload-to-codecov' is true
+#      codecov_name: clickup_mcp  # Required if 'upload-to-codecov' is true
+
+#  contract-test_codecov_finish:
+##    name: Organize and generate the testing report and upload it to Codecov
+#    if: ${{
+#        !contains(github.event.pull_request.labels.*.name, 'dependencies') &&
+#        (
+#            contains(fromJSON('["pull_request","workflow_dispatch","schedule"]'), github.event_name) ||
+#            (github.event_name == 'push' && github.ref_name == 'master')
+#        )
+#      }}
+#    needs: build-and-test
+#    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_upload_test_cov_report.yaml@v7.3
+#    secrets:
+#      codecov_token: ${{ secrets.codecov_token }}
+#    with:
+#      test_type: contract-test
+#      upload-to-codecov: true
+#      codecov_flags: contract-test  # Required if 'upload-to-codecov' is true
+#      codecov_name: clickup_mcp  # Required if 'upload-to-codecov' is true
+
+  all-test_codecov_finish:
+#    name: Organize and generate the testing report and upload it to Codecov
+    if: ${{
+        !contains(github.event.pull_request.labels.*.name, 'dependencies') &&
+        (
+            contains(fromJSON('["pull_request","workflow_dispatch","schedule"]'), github.event_name) ||
+            (github.event_name == 'push' && github.ref_name == 'master')
+        )
+      }}
+    needs: build-and-test
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_upload_test_cov_report.yaml@v7.3
+    secrets:
+      codecov_token: ${{ secrets.codecov_token }}
+    with:
+      test_type: all-test
+      upload-to-codecov: true
+      codecov_flags: all-test  # Required if 'upload-to-codecov' is true
+      codecov_name: clickup_mcp  # Required if 'upload-to-codecov' is true
+
+  sonarcloud_finish:
+#    name: SonarCloud Scan
+    if: ${{
+        !contains(github.event.pull_request.labels.*.name, 'dependencies') &&
+        (
+            contains(fromJSON('["pull_request","workflow_dispatch","schedule"]'), github.event_name) ||
+            (github.event_name == 'push' && github.ref_name == 'master')
+        )
+      }}
+    needs: build-and-test
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_sonarqube_scan.yaml@v7.3
+    secrets:
+      sonar_token: ${{ secrets.sonar_token }}
+    with:
+      download_path: ${{ inputs.download_path }}
