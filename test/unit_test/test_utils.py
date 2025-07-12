@@ -103,10 +103,38 @@ class TestValidateClickUpIdAdvanced:
 
     def test_invalid_characters_comprehensive(self):
         """Test comprehensive list of invalid characters."""
-        invalid_chars = ["@", "#", "$", "%", "^", "&", "*", "(", ")", "+", "=", 
-                        "[", "]", "{", "}", "|", "\\", ":", ";", '"', "'", "<", ">", 
-                        ",", ".", "?", "/", "~", "`"]
-        
+        invalid_chars = [
+            "@",
+            "#",
+            "$",
+            "%",
+            "^",
+            "&",
+            "*",
+            "(",
+            ")",
+            "+",
+            "=",
+            "[",
+            "]",
+            "{",
+            "}",
+            "|",
+            "\\",
+            ":",
+            ";",
+            '"',
+            "'",
+            "<",
+            ">",
+            ",",
+            ".",
+            "?",
+            "/",
+            "~",
+            "`",
+        ]
+
         for char in invalid_chars:
             with pytest.raises(ValueError, match="Invalid.*ID format"):
                 validate_clickup_id(f"id{char}test")
@@ -269,9 +297,9 @@ class TestParseClickUpDateAdvanced:
             "abc1672574400000",
             "1.672574400000e12",  # Scientific notation
             "1,672,574,400,000",  # Comma-separated
-            ""
+            "",
         ]
-        
+
         for invalid_str in invalid_strs:
             with pytest.raises(ValueError):
                 parse_clickup_date(invalid_str)
@@ -308,7 +336,7 @@ class TestParseClickUpDateAdvanced:
     def test_timezone_consistency(self):
         """Test that all parsed dates are in UTC timezone."""
         timestamps = [0, 1672574400000, 4102444800000]
-        
+
         for ts in timestamps:
             result = parse_clickup_date(ts)
             assert result.tzinfo == timezone.utc
@@ -316,11 +344,11 @@ class TestParseClickUpDateAdvanced:
     def test_unsupported_input_types(self):
         """Test unsupported input types."""
         unsupported_types = [[], {}, set(), bytes(b"123"), complex(1, 2)]
-        
+
         for unsupported_type in unsupported_types:
             with pytest.raises(ValueError, match="Timestamp must be an integer"):
                 parse_clickup_date(unsupported_type)
-                
+
         # Test boolean types separately as they are converted to int
         assert parse_clickup_date(True) is not None  # True -> 1
         assert parse_clickup_date(False) is not None  # False -> 0
@@ -381,39 +409,29 @@ class TestBuildQueryParamsAdvanced:
         params = {
             "tags": ["urgent", "backend", "api"],
             "assignees": ["user1", "user2"],
-            "statuses": ["open", "in_progress"]
+            "statuses": ["open", "in_progress"],
         }
-        
+
         result = build_query_params(params)
         expected = {
             "tags[]": ["urgent", "backend", "api"],
             "assignees[]": ["user1", "user2"],
-            "statuses[]": ["open", "in_progress"]
+            "statuses[]": ["open", "in_progress"],
         }
         assert result == expected
 
     def test_list_with_array_notation(self):
         """Test list parameters that already have array notation."""
-        params = {
-            "tags[]": ["urgent", "backend"],
-            "assignees[]": ["user1", "user2"]
-        }
-        
+        params = {"tags[]": ["urgent", "backend"], "assignees[]": ["user1", "user2"]}
+
         result = build_query_params(params)
-        expected = {
-            "tags[]": ["urgent", "backend"],
-            "assignees[]": ["user1", "user2"]
-        }
+        expected = {"tags[]": ["urgent", "backend"], "assignees[]": ["user1", "user2"]}
         assert result == expected
 
     def test_empty_lists(self):
         """Test empty list parameters."""
-        params = {
-            "tags": [],
-            "assignees": [],
-            "name": "test"
-        }
-        
+        params = {"tags": [], "assignees": [], "name": "test"}
+
         result = build_query_params(params)
         expected = {"name": "test"}  # Empty lists should be excluded
         assert result == expected
@@ -428,9 +446,9 @@ class TestBuildQueryParamsAdvanced:
             "private": False,
             "tags": ["urgent", "backend"],
             "assignees": None,
-            "time_estimate": 3600.5
+            "time_estimate": 3600.5,
         }
-        
+
         result = build_query_params(params)
         expected = {
             "name": "Test Task",
@@ -439,26 +457,16 @@ class TestBuildQueryParamsAdvanced:
             "archived": "true",
             "private": "false",
             "tags[]": ["urgent", "backend"],
-            "time_estimate": "3600.5"
+            "time_estimate": "3600.5",
         }
         assert result == expected
 
     def test_boolean_conversion_edge_cases(self):
         """Test boolean conversion edge cases."""
-        params = {
-            "archived": True,
-            "private": False,
-            "include_closed": True,
-            "show_subtasks": False
-        }
-        
+        params = {"archived": True, "private": False, "include_closed": True, "show_subtasks": False}
+
         result = build_query_params(params)
-        expected = {
-            "archived": "true",
-            "private": "false",
-            "include_closed": "true",
-            "show_subtasks": "false"
-        }
+        expected = {"archived": "true", "private": "false", "include_closed": "true", "show_subtasks": "false"}
         assert result == expected
 
     def test_numeric_edge_cases(self):
@@ -469,9 +477,9 @@ class TestBuildQueryParamsAdvanced:
             "negative_int": -1,
             "negative_float": -1.5,
             "large_int": 9999999999,
-            "scientific": 1e6
+            "scientific": 1e6,
         }
-        
+
         result = build_query_params(params)
         expected = {
             "zero_int": "0",
@@ -479,7 +487,7 @@ class TestBuildQueryParamsAdvanced:
             "negative_int": "-1",
             "negative_float": "-1.5",
             "large_int": "9999999999",
-            "scientific": "1000000.0"
+            "scientific": "1000000.0",
         }
         assert result == expected
 
@@ -490,16 +498,16 @@ class TestBuildQueryParamsAdvanced:
             "whitespace": "   ",
             "special_chars": "!@#$%^&*()",
             "unicode": "café测试🚀",
-            "newlines": "line1\nline2\tline3"
+            "newlines": "line1\nline2\tline3",
         }
-        
+
         result = build_query_params(params)
         expected = {
             "empty_string": "",
             "whitespace": "   ",
             "special_chars": "!@#$%^&*()",
             "unicode": "café测试🚀",
-            "newlines": "line1\nline2\tline3"
+            "newlines": "line1\nline2\tline3",
         }
         assert result == expected
 
@@ -509,15 +517,15 @@ class TestBuildQueryParamsAdvanced:
             "mixed_list": ["string", 123, True, None, 0, ""],
             "numeric_list": [1, 2, 3, 0, -1],
             "boolean_list": [True, False, True],
-            "empty_strings": ["", "   ", "valid"]
+            "empty_strings": ["", "   ", "valid"],
         }
-        
+
         result = build_query_params(params)
         expected = {
             "mixed_list[]": ["string", 123, True, None, 0, ""],
             "numeric_list[]": [1, 2, 3, 0, -1],
             "boolean_list[]": [True, False, True],
-            "empty_strings[]": ["", "   ", "valid"]
+            "empty_strings[]": ["", "   ", "valid"],
         }
         assert result == expected
 
@@ -528,15 +536,11 @@ class TestBuildQueryParamsAdvanced:
             "none_param": None,
             "another_valid": 123,
             "another_none": None,
-            "list_param": ["a", "b"]
+            "list_param": ["a", "b"],
         }
-        
+
         result = build_query_params(params)
-        expected = {
-            "valid_param": "value",
-            "another_valid": "123",
-            "list_param[]": ["a", "b"]
-        }
+        expected = {"valid_param": "value", "another_valid": "123", "list_param[]": ["a", "b"]}
         assert result == expected
 
     def test_complex_nested_structure(self):
@@ -547,14 +551,14 @@ class TestBuildQueryParamsAdvanced:
                 {"nested": "not_supported"},  # This would become string representation
                 "simple_string",
                 123,
-                True
+                True,
             ],
             "multiple_arrays": ["a", "b", "c"],
-            "flags": {"flag1": True, "flag2": False}  # This would become string representation
+            "flags": {"flag1": True, "flag2": False},  # This would become string representation
         }
-        
+
         result = build_query_params(params)
-        
+
         # Complex objects should be converted to string representation
         assert "simple" in result
         assert "complex_list[]" in result
@@ -568,12 +572,8 @@ class TestBuildQueryParamsAdvanced:
 
     def test_all_none_params(self):
         """Test parameter dictionary with all None values."""
-        params = {
-            "param1": None,
-            "param2": None,
-            "param3": None
-        }
-        
+        params = {"param1": None, "param2": None, "param3": None}
+
         result = build_query_params(params)
         assert result == {}
 
@@ -583,15 +583,11 @@ class TestBuildQueryParamsAdvanced:
             "tags[]": ["tag1", "tag2"],
             "users[]": ["user1"],
             "statuses[]": [],  # Empty array should be excluded
-            "regular_param": "value"
+            "regular_param": "value",
         }
-        
+
         result = build_query_params(params)
-        expected = {
-            "tags[]": ["tag1", "tag2"],
-            "users[]": ["user1"],
-            "regular_param": "value"
-        }
+        expected = {"tags[]": ["tag1", "tag2"], "users[]": ["user1"], "regular_param": "value"}
         assert result == expected
 
 
@@ -645,9 +641,9 @@ class TestSanitizeTaskNameAdvanced:
             "Задача на русском",
             "タスク日本語",
             "🚀 Rocket Task 🚀",
-            "Task with émojis 😊"
+            "Task with émojis 😊",
         ]
-        
+
         for name in unicode_names:
             result = sanitize_task_name(name)
             assert result == name  # Should preserve unicode
@@ -659,10 +655,10 @@ class TestSanitizeTaskNameAdvanced:
             ("Task\n\nwith\nnewlines", "Task with newlines"),
             ("Task\r\nwith\r\ncarriage", "Task with carriage"),
             ("Task   with   spaces", "Task with spaces"),
-            ("Task\u00A0with\u00A0nbsp", "Task with nbsp"),  # Non-breaking space
-            ("Task\u2003with\u2003em", "Task with em")  # Em space
+            ("Task\u00a0with\u00a0nbsp", "Task with nbsp"),  # Non-breaking space
+            ("Task\u2003with\u2003em", "Task with em"),  # Em space
         ]
-        
+
         for input_name, expected in whitespace_tests:
             result = sanitize_task_name(input_name)
             assert result == expected
@@ -675,9 +671,9 @@ class TestSanitizeTaskNameAdvanced:
             ("\n\nTask Name\n\n", "Task Name"),
             ("   \t\n Task Name \n\t   ", "Task Name"),
             ("Task Name\t\t", "Task Name"),
-            ("  \t  Task Name", "Task Name")
+            ("  \t  Task Name", "Task Name"),
         ]
-        
+
         for input_name, expected in whitespace_variations:
             result = sanitize_task_name(input_name)
             assert result == expected
@@ -709,9 +705,9 @@ class TestSanitizeTaskNameAdvanced:
             ("Short", 10, "Short"),
             ("Exact length", 12, "Exact length"),
             ("Over length task", 5, "Over"),
-            ("   Padded   ", 6, "Padded")
+            ("   Padded   ", 6, "Padded"),
         ]
-        
+
         for input_name, max_len, expected in test_cases:
             result = sanitize_task_name(input_name, max_length=max_len)
             assert result == expected
@@ -735,15 +731,15 @@ class TestSanitizeTaskNameAdvanced:
             "Task : colon",
             "Task ; semicolon",
             "Task ' apostrophe",
-            "Task \" quote",
+            'Task " quote',
             "Task ? question",
             "Task ! exclamation",
             "Task + plus",
             "Task = equals",
             "Task ~ tilde",
-            "Task ` backtick"
+            "Task ` backtick",
         ]
-        
+
         for name in special_names:
             result = sanitize_task_name(name)
             assert result == name
@@ -756,29 +752,18 @@ class TestSanitizeTaskNameAdvanced:
             "\n\n\n",
             "\r\n\r\n",
             " \t \n \r ",
-            "\u00A0\u00A0",  # Non-breaking spaces
-            "\u2003\u2003"   # Em spaces
+            "\u00a0\u00a0",  # Non-breaking spaces
+            "\u2003\u2003",  # Em spaces
         ]
-        
+
         for ws in whitespace_only:
             with pytest.raises(ValueError, match="Task name cannot be empty after sanitization"):
                 sanitize_task_name(ws)
 
     def test_invalid_input_types(self):
         """Test invalid input types."""
-        invalid_inputs = [
-            None,
-            123,
-            [],
-            {},
-            True,
-            False,
-            0.5,
-            bytes(b"test"),
-            set(),
-            complex(1, 2)
-        ]
-        
+        invalid_inputs = [None, 123, [], {}, True, False, 0.5, bytes(b"test"), set(), complex(1, 2)]
+
         for invalid_input in invalid_inputs:
             with pytest.raises(ValueError, match="Task name must be a non-empty string"):
                 sanitize_task_name(invalid_input)
@@ -799,7 +784,7 @@ class TestSanitizeTaskNameAdvanced:
 
     def test_mixed_whitespace_normalization(self):
         """Test complex whitespace normalization scenarios."""
-        complex_whitespace = "  Task  \t\n  with  \r\n  mixed  \u00A0  whitespace  "
+        complex_whitespace = "  Task  \t\n  with  \r\n  mixed  \u00a0  whitespace  "
         result = sanitize_task_name(complex_whitespace)
         assert result == "Task with mixed whitespace"
 
@@ -909,12 +894,24 @@ class TestFormatPriorityAdvanced:
     def test_case_insensitive_strings(self):
         """Test case-insensitive string priority handling."""
         case_variations = [
-            ("urgent", 1), ("URGENT", 1), ("Urgent", 1), ("uRgEnT", 1),
-            ("high", 2), ("HIGH", 2), ("High", 2), ("hIgH", 2),
-            ("normal", 3), ("NORMAL", 3), ("Normal", 3), ("nOrMaL", 3),
-            ("low", 4), ("LOW", 4), ("Low", 4), ("lOw", 4),
+            ("urgent", 1),
+            ("URGENT", 1),
+            ("Urgent", 1),
+            ("uRgEnT", 1),
+            ("high", 2),
+            ("HIGH", 2),
+            ("High", 2),
+            ("hIgH", 2),
+            ("normal", 3),
+            ("NORMAL", 3),
+            ("Normal", 3),
+            ("nOrMaL", 3),
+            ("low", 4),
+            ("LOW", 4),
+            ("Low", 4),
+            ("lOw", 4),
         ]
-        
+
         for input_str, expected in case_variations:
             result = format_priority(input_str)
             assert result == expected
@@ -922,12 +919,20 @@ class TestFormatPriorityAdvanced:
     def test_string_with_whitespace(self):
         """Test string priorities with whitespace."""
         whitespace_variations = [
-            (" urgent ", 1), ("\turgent\t", 1), ("\nurgent\n", 1),
-            (" high ", 2), ("\thigh\t", 2), ("\nhigh\n", 2),
-            (" normal ", 3), ("\tnormal\t", 3), ("\nnormal\n", 3),
-            (" low ", 4), ("\tlow\t", 4), ("\nlow\n", 4),
+            (" urgent ", 1),
+            ("\turgent\t", 1),
+            ("\nurgent\n", 1),
+            (" high ", 2),
+            ("\thigh\t", 2),
+            ("\nhigh\n", 2),
+            (" normal ", 3),
+            ("\tnormal\t", 3),
+            ("\nnormal\n", 3),
+            (" low ", 4),
+            ("\tlow\t", 4),
+            ("\nlow\n", 4),
         ]
-        
+
         for input_str, expected in whitespace_variations:
             result = format_priority(input_str)
             assert result == expected
@@ -935,20 +940,24 @@ class TestFormatPriorityAdvanced:
     def test_numeric_strings(self):
         """Test numeric string inputs."""
         numeric_strings = [
-            ("1", 1), ("2", 2), ("3", 3), ("4", 4),
-            (" 1 ", 1), ("\t2\t", 2), ("\n3\n", 3), (" 4 ", 4),
+            ("1", 1),
+            ("2", 2),
+            ("3", 3),
+            ("4", 4),
+            (" 1 ", 1),
+            ("\t2\t", 2),
+            ("\n3\n", 3),
+            (" 4 ", 4),
         ]
-        
+
         for input_str, expected in numeric_strings:
             result = format_priority(input_str)
             assert result == expected
 
     def test_invalid_numeric_strings(self):
         """Test invalid numeric string inputs."""
-        invalid_numerics = [
-            "0", "5", "10", "-1", "1.5", "2.0", "3.14", "999"
-        ]
-        
+        invalid_numerics = ["0", "5", "10", "-1", "1.5", "2.0", "3.14", "999"]
+
         for invalid_str in invalid_numerics:
             with pytest.raises(ValueError, match="Invalid priority value"):
                 format_priority(invalid_str)
@@ -956,12 +965,30 @@ class TestFormatPriorityAdvanced:
     def test_invalid_string_values(self):
         """Test invalid string priority values."""
         invalid_strings = [
-            "medium", "critical", "emergency", "none", "null", "undefined",
-            "urgent!", "high-priority", "low_priority", "normal_task",
-            "1urgent", "2high", "urgent1", "high2", "priority1", "p1",
-            "", "   ", "\t\n", "priority", "level", "importance"
+            "medium",
+            "critical",
+            "emergency",
+            "none",
+            "null",
+            "undefined",
+            "urgent!",
+            "high-priority",
+            "low_priority",
+            "normal_task",
+            "1urgent",
+            "2high",
+            "urgent1",
+            "high2",
+            "priority1",
+            "p1",
+            "",
+            "   ",
+            "\t\n",
+            "priority",
+            "level",
+            "importance",
         ]
-        
+
         for invalid_str in invalid_strings:
             with pytest.raises(ValueError, match="Invalid priority value"):
                 format_priority(invalid_str)
@@ -983,7 +1010,7 @@ class TestFormatPriorityAdvanced:
     def test_float_inputs(self):
         """Test float inputs (should be invalid)."""
         float_inputs = [1.0, 2.0, 3.0, 4.0, 1.5, 2.5, 3.14, 0.5]
-        
+
         for float_val in float_inputs:
             with pytest.raises(ValueError, match="Invalid priority value"):
                 format_priority(float_val)
@@ -997,11 +1024,8 @@ class TestFormatPriorityAdvanced:
 
     def test_complex_types(self):
         """Test complex data types."""
-        complex_types = [
-            [], {}, set(), tuple(), complex(1, 2), bytes(b"test"),
-            lambda x: x, format_priority, object()
-        ]
-        
+        complex_types = [[], {}, set(), tuple(), complex(1, 2), bytes(b"test"), lambda x: x, format_priority, object()]
+
         for complex_val in complex_types:
             with pytest.raises(ValueError, match="Invalid priority value"):
                 format_priority(complex_val)
@@ -1012,17 +1036,15 @@ class TestFormatPriorityAdvanced:
             # Large integers
             (1000000, ValueError),
             (-1000000, ValueError),
-            
             # Very large integers
             (2**31, ValueError),
             (2**63, ValueError),
-            
             # Zero and negative
             (0, ValueError),
             (-1, ValueError),
             (-2, ValueError),
         ]
-        
+
         for value, expected_exception in edge_cases:
             with pytest.raises(expected_exception, match="Priority must be 1"):
                 format_priority(value)
@@ -1030,7 +1052,7 @@ class TestFormatPriorityAdvanced:
     def test_string_representations_of_floats(self):
         """Test string representations of floats."""
         float_strings = ["1.0", "2.0", "3.0", "4.0", "1.5", "2.5", "3.14"]
-        
+
         for float_str in float_strings:
             with pytest.raises(ValueError, match="Invalid priority value"):
                 format_priority(float_str)
@@ -1038,12 +1060,24 @@ class TestFormatPriorityAdvanced:
     def test_multilingual_priority_strings(self):
         """Test priority strings in different languages (should be invalid)."""
         multilingual_strings = [
-            "紧急", "高", "正常", "低",  # Chinese
-            "urgent", "élevé", "normal", "faible",  # French
-            "urgente", "alto", "normal", "bajo",  # Spanish
-            "срочный", "высокий", "нормальный", "низкий",  # Russian
+            "紧急",
+            "高",
+            "正常",
+            "低",  # Chinese
+            "urgent",
+            "élevé",
+            "normal",
+            "faible",  # French
+            "urgente",
+            "alto",
+            "normal",
+            "bajo",  # Spanish
+            "срочный",
+            "высокий",
+            "нормальный",
+            "низкий",  # Russian
         ]
-        
+
         for ml_str in multilingual_strings:
             if ml_str not in ["urgent", "normal"]:  # These are valid English
                 with pytest.raises(ValueError, match="Invalid priority value"):
@@ -1052,11 +1086,24 @@ class TestFormatPriorityAdvanced:
     def test_priority_with_extra_text(self):
         """Test priority strings with extra text."""
         extra_text_strings = [
-            "urgent priority", "high priority", "normal priority", "low priority",
-            "priority: urgent", "priority: high", "priority: normal", "priority: low",
-            "urgentx", "xurgent", "highx", "xhigh", "normalx", "xnormal", "lowx", "xlow",
+            "urgent priority",
+            "high priority",
+            "normal priority",
+            "low priority",
+            "priority: urgent",
+            "priority: high",
+            "priority: normal",
+            "priority: low",
+            "urgentx",
+            "xurgent",
+            "highx",
+            "xhigh",
+            "normalx",
+            "xnormal",
+            "lowx",
+            "xlow",
         ]
-        
+
         for extra_str in extra_text_strings:
             with pytest.raises(ValueError, match="Invalid priority value"):
                 format_priority(extra_str)
@@ -1198,18 +1245,8 @@ class TestSafeGetAdvanced:
 
     def test_deeply_nested_dictionaries(self):
         """Test deeply nested dictionary access."""
-        deep_dict = {
-            "level1": {
-                "level2": {
-                    "level3": {
-                        "level4": {
-                            "level5": "deep_value"
-                        }
-                    }
-                }
-            }
-        }
-        
+        deep_dict = {"level1": {"level2": {"level3": {"level4": {"level5": "deep_value"}}}}}
+
         assert safe_get(deep_dict, "level1", "level2", "level3", "level4", "level5") == "deep_value"
         assert safe_get(deep_dict, "level1", "level2", "level3", "level4", "level5", "nonexistent") is None
 
@@ -1226,10 +1263,10 @@ class TestSafeGetAdvanced:
                 "inner_string": "inner_value",
                 "inner_int": 100,
                 "inner_list": ["a", "b", "c"],
-                "inner_dict": {"deep": "value"}
-            }
+                "inner_dict": {"deep": "value"},
+            },
         }
-        
+
         assert safe_get(mixed_dict, "string_key") == "string_value"
         assert safe_get(mixed_dict, "int_key") == 42
         assert safe_get(mixed_dict, "float_key") == 3.14
@@ -1247,25 +1284,23 @@ class TestSafeGetAdvanced:
             "list_val": [1, 2, 3],
             "none_val": None,
             "bool_val": True,
-            "nested": {
-                "valid": "value"
-            }
+            "nested": {"valid": "value"},
         }
-        
+
         # These should return default because intermediate values aren't dicts
         assert safe_get(non_dict_structure, "string_val", "nonexistent") is None
         assert safe_get(non_dict_structure, "int_val", "nonexistent") is None
         assert safe_get(non_dict_structure, "list_val", "nonexistent") is None
         assert safe_get(non_dict_structure, "none_val", "nonexistent") is None
         assert safe_get(non_dict_structure, "bool_val", "nonexistent") is None
-        
+
         # This should work
         assert safe_get(non_dict_structure, "nested", "valid") == "value"
 
     def test_custom_default_values(self):
         """Test custom default values."""
         data = {"exists": "value"}
-        
+
         # Test various default types
         assert safe_get(data, "missing", default="custom_default") == "custom_default"
         assert safe_get(data, "missing", default=42) == 42
@@ -1278,7 +1313,7 @@ class TestSafeGetAdvanced:
     def test_empty_key_sequence(self):
         """Test behavior with empty key sequence."""
         data = {"key": "value"}
-        
+
         # No keys should return the original data
         assert safe_get(data) == data
 
@@ -1292,9 +1327,9 @@ class TestSafeGetAdvanced:
             0: "zero_int_key",
             None: "none_key_value",
             1: "one_int_key",
-            2: "two_int_key"
+            2: "two_int_key",
         }
-        
+
         assert safe_get(data, "simple") == "value"
         assert safe_get(data, "") == "empty_key_value"
         assert safe_get(data, " ") == "space_key_value"
@@ -1303,23 +1338,15 @@ class TestSafeGetAdvanced:
         assert safe_get(data, None) == "none_key_value"
         assert safe_get(data, 1) == "one_int_key"
         assert safe_get(data, 2) == "two_int_key"
-        
+
         # Test boolean keys (they map to int keys in Python)
         assert safe_get(data, True) == "one_int_key"  # True == 1
         assert safe_get(data, False) == "zero_int_key"  # False == 0
 
     def test_key_types_consistency(self):
         """Test different key types in nested access."""
-        data = {
-            "string_key": {
-                0: {
-                    True: {
-                        None: "nested_value"
-                    }
-                }
-            }
-        }
-        
+        data = {"string_key": {0: {True: {None: "nested_value"}}}}
+
         assert safe_get(data, "string_key", 0, True, None) == "nested_value"
         assert safe_get(data, "string_key", 0, True, "None") is None  # String "None" vs None
 
@@ -1339,9 +1366,9 @@ class TestSafeGetAdvanced:
             "key/with/slashes": "slashed_key",
             "key\\with\\backslashes": "backslash_key",
             "key:with:colons": "colon_key",
-            "key@with@symbols": "symbol_key"
+            "key@with@symbols": "symbol_key",
         }
-        
+
         for key, expected_value in data.items():
             assert safe_get(data, key) == expected_value
 
@@ -1355,9 +1382,9 @@ class TestSafeGetAdvanced:
             "résumé": "resume",
             "北京": "beijing",
             "東京": "tokyo",
-            "🌟⭐": "stars"
+            "🌟⭐": "stars",
         }
-        
+
         for key, expected_value in data.items():
             assert safe_get(data, key) == expected_value
 
@@ -1367,20 +1394,20 @@ class TestSafeGetAdvanced:
         large_dict = {}
         current = large_dict
         keys = []
-        
+
         for i in range(100):
             key = f"level_{i}"
             keys.append(key)
             current[key] = {}
             current = current[key]
-        
+
         # Set final value
         current["final"] = "deep_value"
         keys.append("final")
-        
+
         # Test access
         assert safe_get(large_dict, *keys) == "deep_value"
-        
+
         # Test partial access
         partial_keys = keys[:50]
         result = safe_get(large_dict, *partial_keys)
@@ -1390,45 +1417,29 @@ class TestSafeGetAdvanced:
         """Test safety with circular references."""
         data = {"a": {}}
         data["a"]["b"] = data  # Create circular reference
-        
+
         # Should not cause infinite recursion
         assert safe_get(data, "a", "b", "a", "b") == data
         assert safe_get(data, "a", "b", "a", "nonexistent") is None
 
     def test_none_values_in_path(self):
         """Test when values in the path are None."""
-        data = {
-            "level1": {
-                "level2": None,
-                "level3": {
-                    "level4": "value"
-                }
-            }
-        }
-        
+        data = {"level1": {"level2": None, "level3": {"level4": "value"}}}
+
         assert safe_get(data, "level1", "level2") is None
         assert safe_get(data, "level1", "level2", "anything") is None
         assert safe_get(data, "level1", "level3", "level4") == "value"
 
     def test_default_value_with_none_in_path(self):
         """Test default values when None is encountered in path."""
-        data = {
-            "level1": {
-                "level2": None
-            }
-        }
-        
+        data = {"level1": {"level2": None}}
+
         assert safe_get(data, "level1", "level2", "anything", default="default") == "default"
 
     def test_empty_nested_dicts(self):
         """Test with empty nested dictionaries."""
-        data = {
-            "empty": {},
-            "nested_empty": {
-                "empty": {}
-            }
-        }
-        
+        data = {"empty": {}, "nested_empty": {"empty": {}}}
+
         assert safe_get(data, "empty") == {}
         assert safe_get(data, "empty", "anything") is None
         assert safe_get(data, "nested_empty", "empty") == {}
@@ -1442,14 +1453,9 @@ class TestSafeGetAdvanced:
             "empty_string": "",
             "empty_list": [],
             "empty_dict": {},
-            "nested": {
-                "zero": 0,
-                "false": False,
-                "empty_string": "",
-                "none": None
-            }
+            "nested": {"zero": 0, "false": False, "empty_string": "", "none": None},
         }
-        
+
         assert safe_get(data, "zero") == 0
         assert safe_get(data, "false") is False
         assert safe_get(data, "empty_string") == ""
@@ -1462,12 +1468,8 @@ class TestSafeGetAdvanced:
 
     def test_key_error_scenarios(self):
         """Test various key error scenarios."""
-        data = {
-            "exists": {
-                "nested": "value"
-            }
-        }
-        
+        data = {"exists": {"nested": "value"}}
+
         # Missing keys at different levels
         assert safe_get(data, "missing") is None
         assert safe_get(data, "exists", "missing") is None
@@ -1522,15 +1524,15 @@ class TestClickUpURLBuilderAdvanced:
         # With team
         url = ClickUpURLBuilder.build_space_url("space123", "team456")
         assert url == "https://app.clickup.com/team456/v/s/space123"
-        
+
         # Without team
         url = ClickUpURLBuilder.build_space_url("space123")
         assert url == "https://app.clickup.com/v/s/space123"
-        
+
         # With None team (should be same as without)
         url = ClickUpURLBuilder.build_space_url("space123", None)
         assert url == "https://app.clickup.com/v/s/space123"
-        
+
         # With empty string team (should be same as without)
         url = ClickUpURLBuilder.build_space_url("space123", "")
         assert url == "https://app.clickup.com/v/s/space123"
@@ -1540,15 +1542,15 @@ class TestClickUpURLBuilderAdvanced:
         # With team
         url = ClickUpURLBuilder.build_folder_url("folder123", "team456")
         assert url == "https://app.clickup.com/team456/v/f/folder123"
-        
+
         # Without team
         url = ClickUpURLBuilder.build_folder_url("folder123")
         assert url == "https://app.clickup.com/v/f/folder123"
-        
+
         # With None team (should be same as without)
         url = ClickUpURLBuilder.build_folder_url("folder123", None)
         assert url == "https://app.clickup.com/v/f/folder123"
-        
+
         # With empty string team (should be same as without)
         url = ClickUpURLBuilder.build_folder_url("folder123", "")
         assert url == "https://app.clickup.com/v/f/folder123"
@@ -1558,15 +1560,15 @@ class TestClickUpURLBuilderAdvanced:
         # Task with special characters
         url = ClickUpURLBuilder.build_task_url("task-123_456", "team-789")
         assert url == "https://app.clickup.com/team-789/t/task-123_456"
-        
+
         # List with special characters
         url = ClickUpURLBuilder.build_list_url("list_123-456", "team_789")
         assert url == "https://app.clickup.com/team_789/v/li/list_123-456"
-        
+
         # Space with special characters
         url = ClickUpURLBuilder.build_space_url("space-123_456", "team-789_012")
         assert url == "https://app.clickup.com/team-789_012/v/s/space-123_456"
-        
+
         # Folder with special characters
         url = ClickUpURLBuilder.build_folder_url("folder_123-456", "team-789")
         assert url == "https://app.clickup.com/team-789/v/f/folder_123-456"
@@ -1576,13 +1578,13 @@ class TestClickUpURLBuilderAdvanced:
         # All numeric IDs
         url = ClickUpURLBuilder.build_task_url("123456789", "987654321")
         assert url == "https://app.clickup.com/987654321/t/123456789"
-        
+
         url = ClickUpURLBuilder.build_list_url("123456", "789012")
         assert url == "https://app.clickup.com/789012/v/li/123456"
-        
+
         url = ClickUpURLBuilder.build_space_url("345678", "901234")
         assert url == "https://app.clickup.com/901234/v/s/345678"
-        
+
         url = ClickUpURLBuilder.build_folder_url("567890", "123456")
         assert url == "https://app.clickup.com/123456/v/f/567890"
 
@@ -1591,26 +1593,26 @@ class TestClickUpURLBuilderAdvanced:
         # Mixed case IDs
         url = ClickUpURLBuilder.build_task_url("TaSk123", "TeAm456")
         assert url == "https://app.clickup.com/TeAm456/t/TaSk123"
-        
+
         url = ClickUpURLBuilder.build_list_url("LiSt123", "TeAm456")
         assert url == "https://app.clickup.com/TeAm456/v/li/LiSt123"
-        
+
         url = ClickUpURLBuilder.build_space_url("SpAcE123", "TeAm456")
         assert url == "https://app.clickup.com/TeAm456/v/s/SpAcE123"
-        
+
         url = ClickUpURLBuilder.build_folder_url("FoLdEr123", "TeAm456")
         assert url == "https://app.clickup.com/TeAm456/v/f/FoLdEr123"
 
     def test_base_url_consistency(self):
         """Test that all methods use the same base URL."""
         base_url = "https://app.clickup.com"
-        
+
         # Test all methods use the same base URL
         task_url = ClickUpURLBuilder.build_task_url("task123")
         list_url = ClickUpURLBuilder.build_list_url("list123")
         space_url = ClickUpURLBuilder.build_space_url("space123")
         folder_url = ClickUpURLBuilder.build_folder_url("folder123")
-        
+
         assert task_url.startswith(base_url)
         assert list_url.startswith(base_url)
         assert space_url.startswith(base_url)
@@ -1621,15 +1623,15 @@ class TestClickUpURLBuilderAdvanced:
         # Task URL pattern
         url = ClickUpURLBuilder.build_task_url("task123", "team456")
         assert "/t/" in url
-        
+
         # List URL pattern
         url = ClickUpURLBuilder.build_list_url("list123", "team456")
         assert "/v/li/" in url
-        
+
         # Space URL pattern
         url = ClickUpURLBuilder.build_space_url("space123", "team456")
         assert "/v/s/" in url
-        
+
         # Folder URL pattern
         url = ClickUpURLBuilder.build_folder_url("folder123", "team456")
         assert "/v/f/" in url
@@ -1644,9 +1646,9 @@ class TestUtilsIntegration:
             "https://app.clickup.com/team123/t/task456",
             "https://app.clickup.com/team123/v/li/list456",
             "https://app.clickup.com/team123/space/space456",
-            "https://app.clickup.com/team123/folder/folder456"
+            "https://app.clickup.com/team123/folder/folder456",
         ]
-        
+
         for url in test_urls:
             extracted_ids = extract_clickup_ids_from_url(url)
             for id_type, id_value in extracted_ids.items():
@@ -1659,13 +1661,10 @@ class TestUtilsIntegration:
         """Test that extracted IDs can be used to build URLs."""
         original_url = "https://app.clickup.com/team123/t/task456"
         extracted_ids = extract_clickup_ids_from_url(original_url)
-        
+
         # Rebuild URL using extracted IDs
-        rebuilt_url = ClickUpURLBuilder.build_task_url(
-            extracted_ids["task_id"], 
-            extracted_ids["team_id"]
-        )
-        
+        rebuilt_url = ClickUpURLBuilder.build_task_url(extracted_ids["task_id"], extracted_ids["team_id"])
+
         # URLs should be equivalent (though not necessarily identical due to format differences)
         assert extracted_ids["task_id"] in rebuilt_url
         assert extracted_ids["team_id"] in rebuilt_url
@@ -1673,18 +1672,18 @@ class TestUtilsIntegration:
     def test_date_formatting_round_trip(self):
         """Test that date formatting and parsing work together."""
         from datetime import datetime, timezone
-        
+
         # Test with current datetime
         original_dt = datetime(2023, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
-        
+
         # Format to ClickUp timestamp
         formatted_ts = format_clickup_date(original_dt)
         assert formatted_ts is not None
-        
+
         # Parse back to datetime
         parsed_dt = parse_clickup_date(formatted_ts)
         assert parsed_dt is not None
-        
+
         # Should be the same (allowing for millisecond precision)
         assert abs((parsed_dt - original_dt).total_seconds()) < 0.001
 
@@ -1693,17 +1692,17 @@ class TestUtilsIntegration:
         # Create a task with sanitized name
         task_name = "  My Task With    Multiple   Spaces  "
         sanitized_name = sanitize_task_name(task_name)
-        
+
         # Use in query parameters
         params = {
             "name": sanitized_name,
             "priority": format_priority("high"),
             "status": format_status("Open"),
-            "tags": ["urgent", "backend"]
+            "tags": ["urgent", "backend"],
         }
-        
+
         query_params = build_query_params(params)
-        
+
         # Verify all components work together
         assert query_params["name"] == "My Task With Multiple Spaces"
         assert query_params["priority"] == "2"
@@ -1752,7 +1751,7 @@ class TestFilterNoneValues:
             "zero": 0,
             "empty_string": "",
             "empty_list": [],
-            "empty_dict": {}
+            "empty_dict": {},
         }
         result = filter_none_values(data)
         expected = {
@@ -1765,7 +1764,7 @@ class TestFilterNoneValues:
             "zero": 0,
             "empty_string": "",
             "empty_list": [],
-            "empty_dict": {}
+            "empty_dict": {},
         }
         assert result == expected
 
@@ -1780,16 +1779,10 @@ class TestFilterNoneValues:
             2: "two_key",
             3: None,
             "True": "true_string_key",
-            "False": None
+            "False": None,
         }
         result = filter_none_values(data)
-        expected = {
-            "": "empty_key",
-            " ": "space_key",
-            "normal": "value",
-            2: "two_key",
-            "True": "true_string_key"
-        }
+        expected = {"": "empty_key", " ": "space_key", "normal": "value", 2: "two_key", "True": "true_string_key"}
         assert result == expected
 
 
@@ -1801,15 +1794,15 @@ class TestClickUpURLBuilderAdvanced:
         # With team
         url = ClickUpURLBuilder.build_space_url("space123", "team456")
         assert url == "https://app.clickup.com/team456/v/s/space123"
-        
+
         # Without team
         url = ClickUpURLBuilder.build_space_url("space123")
         assert url == "https://app.clickup.com/v/s/space123"
-        
+
         # With None team (should be same as without)
         url = ClickUpURLBuilder.build_space_url("space123", None)
         assert url == "https://app.clickup.com/v/s/space123"
-        
+
         # With empty string team (should be same as without)
         url = ClickUpURLBuilder.build_space_url("space123", "")
         assert url == "https://app.clickup.com/v/s/space123"
@@ -1819,15 +1812,15 @@ class TestClickUpURLBuilderAdvanced:
         # With team
         url = ClickUpURLBuilder.build_folder_url("folder123", "team456")
         assert url == "https://app.clickup.com/team456/v/f/folder123"
-        
+
         # Without team
         url = ClickUpURLBuilder.build_folder_url("folder123")
         assert url == "https://app.clickup.com/v/f/folder123"
-        
+
         # With None team (should be same as without)
         url = ClickUpURLBuilder.build_folder_url("folder123", None)
         assert url == "https://app.clickup.com/v/f/folder123"
-        
+
         # With empty string team (should be same as without)
         url = ClickUpURLBuilder.build_folder_url("folder123", "")
         assert url == "https://app.clickup.com/v/f/folder123"
@@ -1837,15 +1830,15 @@ class TestClickUpURLBuilderAdvanced:
         # Task with special characters
         url = ClickUpURLBuilder.build_task_url("task-123_456", "team-789")
         assert url == "https://app.clickup.com/team-789/t/task-123_456"
-        
+
         # List with special characters
         url = ClickUpURLBuilder.build_list_url("list_123-456", "team_789")
         assert url == "https://app.clickup.com/team_789/v/li/list_123-456"
-        
+
         # Space with special characters
         url = ClickUpURLBuilder.build_space_url("space-123_456", "team-789_012")
         assert url == "https://app.clickup.com/team-789_012/v/s/space-123_456"
-        
+
         # Folder with special characters
         url = ClickUpURLBuilder.build_folder_url("folder_123-456", "team-789")
         assert url == "https://app.clickup.com/team-789/v/f/folder_123-456"
@@ -1855,13 +1848,13 @@ class TestClickUpURLBuilderAdvanced:
         # All numeric IDs
         url = ClickUpURLBuilder.build_task_url("123456789", "987654321")
         assert url == "https://app.clickup.com/987654321/t/123456789"
-        
+
         url = ClickUpURLBuilder.build_list_url("123456", "789012")
         assert url == "https://app.clickup.com/789012/v/li/123456"
-        
+
         url = ClickUpURLBuilder.build_space_url("345678", "901234")
         assert url == "https://app.clickup.com/901234/v/s/345678"
-        
+
         url = ClickUpURLBuilder.build_folder_url("567890", "123456")
         assert url == "https://app.clickup.com/123456/v/f/567890"
 
@@ -1870,26 +1863,26 @@ class TestClickUpURLBuilderAdvanced:
         # Mixed case IDs
         url = ClickUpURLBuilder.build_task_url("TaSk123", "TeAm456")
         assert url == "https://app.clickup.com/TeAm456/t/TaSk123"
-        
+
         url = ClickUpURLBuilder.build_list_url("LiSt123", "TeAm456")
         assert url == "https://app.clickup.com/TeAm456/v/li/LiSt123"
-        
+
         url = ClickUpURLBuilder.build_space_url("SpAcE123", "TeAm456")
         assert url == "https://app.clickup.com/TeAm456/v/s/SpAcE123"
-        
+
         url = ClickUpURLBuilder.build_folder_url("FoLdEr123", "TeAm456")
         assert url == "https://app.clickup.com/TeAm456/v/f/FoLdEr123"
 
     def test_base_url_consistency(self):
         """Test that all methods use the same base URL."""
         base_url = "https://app.clickup.com"
-        
+
         # Test all methods use the same base URL
         task_url = ClickUpURLBuilder.build_task_url("task123")
         list_url = ClickUpURLBuilder.build_list_url("list123")
         space_url = ClickUpURLBuilder.build_space_url("space123")
         folder_url = ClickUpURLBuilder.build_folder_url("folder123")
-        
+
         assert task_url.startswith(base_url)
         assert list_url.startswith(base_url)
         assert space_url.startswith(base_url)
@@ -1900,15 +1893,15 @@ class TestClickUpURLBuilderAdvanced:
         # Task URL pattern
         url = ClickUpURLBuilder.build_task_url("task123", "team456")
         assert "/t/" in url
-        
+
         # List URL pattern
         url = ClickUpURLBuilder.build_list_url("list123", "team456")
         assert "/v/li/" in url
-        
+
         # Space URL pattern
         url = ClickUpURLBuilder.build_space_url("space123", "team456")
         assert "/v/s/" in url
-        
+
         # Folder URL pattern
         url = ClickUpURLBuilder.build_folder_url("folder123", "team456")
         assert "/v/f/" in url
@@ -1923,9 +1916,9 @@ class TestUtilsIntegration:
             "https://app.clickup.com/team123/t/task456",
             "https://app.clickup.com/team123/v/li/list456",
             "https://app.clickup.com/team123/space/space456",
-            "https://app.clickup.com/team123/folder/folder456"
+            "https://app.clickup.com/team123/folder/folder456",
         ]
-        
+
         for url in test_urls:
             extracted_ids = extract_clickup_ids_from_url(url)
             for id_type, id_value in extracted_ids.items():
@@ -1938,13 +1931,10 @@ class TestUtilsIntegration:
         """Test that extracted IDs can be used to build URLs."""
         original_url = "https://app.clickup.com/team123/t/task456"
         extracted_ids = extract_clickup_ids_from_url(original_url)
-        
+
         # Rebuild URL using extracted IDs
-        rebuilt_url = ClickUpURLBuilder.build_task_url(
-            extracted_ids["task_id"], 
-            extracted_ids["team_id"]
-        )
-        
+        rebuilt_url = ClickUpURLBuilder.build_task_url(extracted_ids["task_id"], extracted_ids["team_id"])
+
         # URLs should be equivalent (though not necessarily identical due to format differences)
         assert extracted_ids["task_id"] in rebuilt_url
         assert extracted_ids["team_id"] in rebuilt_url
@@ -1952,18 +1942,18 @@ class TestUtilsIntegration:
     def test_date_formatting_round_trip(self):
         """Test that date formatting and parsing work together."""
         from datetime import datetime, timezone
-        
+
         # Test with current datetime
         original_dt = datetime(2023, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
-        
+
         # Format to ClickUp timestamp
         formatted_ts = format_clickup_date(original_dt)
         assert formatted_ts is not None
-        
+
         # Parse back to datetime
         parsed_dt = parse_clickup_date(formatted_ts)
         assert parsed_dt is not None
-        
+
         # Should be the same (allowing for millisecond precision)
         assert abs((parsed_dt - original_dt).total_seconds()) < 0.001
 
@@ -1972,17 +1962,17 @@ class TestUtilsIntegration:
         # Create a task with sanitized name
         task_name = "  My Task With    Multiple   Spaces  "
         sanitized_name = sanitize_task_name(task_name)
-        
+
         # Use in query parameters
         params = {
             "name": sanitized_name,
             "priority": format_priority("high"),
             "status": format_status("Open"),
-            "tags": ["urgent", "backend"]
+            "tags": ["urgent", "backend"],
         }
-        
+
         query_params = build_query_params(params)
-        
+
         # Verify all components work together
         assert query_params["name"] == "My Task With Multiple Spaces"
         assert query_params["priority"] == "2"
@@ -2002,9 +1992,9 @@ class TestUtilsIntegration:
             "tags": ["urgent", "backend", "api"],
             "description": None,
             "custom_fields": None,
-            "url": "https://app.clickup.com/team123/t/task123"
+            "url": "https://app.clickup.com/team123/t/task123",
         }
-        
+
         # Process the data using various utilities
         processed_data = {
             "id": validate_clickup_id(raw_data["id"], "task"),
@@ -2014,12 +2004,12 @@ class TestUtilsIntegration:
             "due_date": format_clickup_date(raw_data["due_date"]),
             "assignees": raw_data["assignees"],
             "tags": raw_data["tags"],
-            "extracted_ids": extract_clickup_ids_from_url(raw_data["url"])
+            "extracted_ids": extract_clickup_ids_from_url(raw_data["url"]),
         }
-        
+
         # Remove None values
         processed_data = filter_none_values(processed_data)
-        
+
         # Verify processed data
         assert processed_data["id"] == "task123"
         assert processed_data["name"] == "Important Task"

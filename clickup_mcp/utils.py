@@ -7,7 +7,7 @@ including data transformation, validation, and helper functions.
 
 import re
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 
 def validate_clickup_id(clickup_id: str, id_type: str = "ID") -> str:

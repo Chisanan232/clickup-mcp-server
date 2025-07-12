@@ -6,30 +6,24 @@ and utility functions in the exceptions module.
 """
 
 import pytest
-from typing import Dict, Any, Optional
 
-from clickup_mcp.exceptions import (
-    # Base exceptions
-    ClickUpError,
-    ClickUpAPIError,
-    
-    # Specific API exceptions
+from clickup_mcp.exceptions import (  # Base exceptions; Specific API exceptions; Utility functions
     AuthenticationError,
     AuthorizationError,
-    RateLimitError,
-    ResourceNotFoundError,
-    ValidationError,
+    ClickUpAPIError,
+    ClickUpError,
     ConfigurationError,
-    NetworkError,
-    TimeoutError,
-    RetryExhaustedError,
     MCPError,
     MCPToolError,
-    
-    # Utility functions
+    NetworkError,
+    RateLimitError,
+    ResourceNotFoundError,
+    RetryExhaustedError,
+    TimeoutError,
+    ValidationError,
     create_api_error,
-    create_validation_error,
     create_network_error,
+    create_validation_error,
 )
 
 
@@ -46,9 +40,7 @@ class TestConfigurationError:
     def test_with_config_details(self):
         """Test ConfigurationError with config details."""
         error = ConfigurationError(
-            "Invalid API token",
-            config_key="api_token",
-            details={"config_value": "invalid_token"}
+            "Invalid API token", config_key="api_token", details={"config_value": "invalid_token"}
         )
         assert error.message == "Invalid API token"
         assert error.config_key == "api_token"
@@ -134,15 +126,18 @@ class TestCreateApiError:
         error = create_api_error(500)
         assert error.message == "API request failed"
 
-    @pytest.mark.parametrize("status_code,expected_type", [
-        (401, AuthenticationError),
-        (403, AuthorizationError),
-        (404, ResourceNotFoundError),
-        (429, RateLimitError),
-        (400, ClickUpAPIError),
-        (500, ClickUpAPIError),
-        (502, ClickUpAPIError),
-    ])
+    @pytest.mark.parametrize(
+        "status_code,expected_type",
+        [
+            (401, AuthenticationError),
+            (403, AuthorizationError),
+            (404, ResourceNotFoundError),
+            (429, RateLimitError),
+            (400, ClickUpAPIError),
+            (500, ClickUpAPIError),
+            (502, ClickUpAPIError),
+        ],
+    )
     def test_create_api_error_status_code_mapping(self, status_code, expected_type):
         """Test that create_api_error returns correct exception types."""
         error = create_api_error(status_code)
@@ -178,12 +173,15 @@ class TestCreateValidationError:
         assert error.value == value
         assert "invalid structure" in error.message
 
-    @pytest.mark.parametrize("field,value,message", [
-        ("email", "invalid-email", "must be a valid email address"),
-        ("priority", 5, "must be between 1 and 4"),
-        ("status", "", "cannot be empty"),
-        ("assignee", ["invalid", "ids"], "must be valid user IDs"),
-    ])
+    @pytest.mark.parametrize(
+        "field,value,message",
+        [
+            ("email", "invalid-email", "must be a valid email address"),
+            ("priority", 5, "must be between 1 and 4"),
+            ("status", "", "cannot be empty"),
+            ("assignee", ["invalid", "ids"], "must be valid user IDs"),
+        ],
+    )
     def test_create_validation_error_parametrized(self, field, value, message):
         """Test validation error creation with various field types."""
         error = create_validation_error(field, value, message)
@@ -219,12 +217,15 @@ class TestCreateNetworkError:
         assert error.original_error == original_error
         assert error.message == "Network error occurred"
 
-    @pytest.mark.parametrize("original_error,context,expected_message", [
-        (ConnectionError("Failed"), "during API call", "Network error occurred: during API call"),
-        (TimeoutError("Timeout"), "fetching tasks", "Network error occurred: fetching tasks"),
-        (OSError("No connection"), "", "Network error occurred"),
-        (Exception("Generic error"), "unknown operation", "Network error occurred: unknown operation"),
-    ])
+    @pytest.mark.parametrize(
+        "original_error,context,expected_message",
+        [
+            (ConnectionError("Failed"), "during API call", "Network error occurred: during API call"),
+            (TimeoutError("Timeout"), "fetching tasks", "Network error occurred: fetching tasks"),
+            (OSError("No connection"), "", "Network error occurred"),
+            (Exception("Generic error"), "unknown operation", "Network error occurred: unknown operation"),
+        ],
+    )
     def test_create_network_error_parametrized(self, original_error, context, expected_message):
         """Test network error creation with various original errors and contexts."""
         error = create_network_error(original_error, context)
@@ -239,14 +240,10 @@ class TestExceptionIntegration:
         """Test creating a chain of API errors."""
         # Create a network error first
         network_error = NetworkError("Connection failed")
-        
+
         # Create a retry exhausted error
-        retry_error = RetryExhaustedError(
-            "Failed after 3 attempts",
-            attempts=3,
-            last_error=network_error
-        )
-        
+        retry_error = RetryExhaustedError("Failed after 3 attempts", attempts=3, last_error=network_error)
+
         # Verify the chain
         assert retry_error.last_error == network_error
         assert retry_error.attempts == 3
@@ -257,14 +254,11 @@ class TestExceptionIntegration:
         validation_errors = [
             {"field": "name", "error": "Required"},
             {"field": "priority", "error": "Invalid value"},
-            {"field": "assignee", "error": "User not found"}
+            {"field": "assignee", "error": "User not found"},
         ]
-        
-        error = ValidationError(
-            "Multiple validation failures",
-            details={"validation_errors": validation_errors}
-        )
-        
+
+        error = ValidationError("Multiple validation failures", details={"validation_errors": validation_errors})
+
         assert len(error.details.get("validation_errors", [])) == 3
         assert error.details["validation_errors"][0]["field"] == "name"
         assert error.details["validation_errors"][1]["field"] == "priority"
@@ -276,18 +270,16 @@ class TestExceptionIntegration:
             "type": "tool_error",
             "tool": "create_task",
             "parameters": {"name": "test", "priority": "invalid"},
-            "validation_errors": [
-                {"field": "priority", "message": "Invalid priority value"}
-            ]
+            "validation_errors": [{"field": "priority", "message": "Invalid priority value"}],
         }
-        
+
         error = MCPError(
             "Tool execution failed",
             error_code="TOOL_EXECUTION_ERROR",
             tool_name="create_task",
-            details={"error_data": nested_data}
+            details={"error_data": nested_data},
         )
-        
+
         assert error.error_code == "TOOL_EXECUTION_ERROR"
         assert error.tool_name == "create_task"
         assert error.details["error_data"]["type"] == "tool_error"
@@ -297,19 +289,14 @@ class TestExceptionIntegration:
     def test_error_serialization(self):
         """Test that errors can be properly serialized (useful for logging)."""
         response_data = {"error": "Invalid request", "code": 400}
-        error = ClickUpAPIError(
-            "Test error",
-            status_code=400,
-            response_data=response_data,
-            endpoint="/api/v2/task"
-        )
-        
+        error = ClickUpAPIError("Test error", status_code=400, response_data=response_data, endpoint="/api/v2/task")
+
         # Test that we can access all attributes
         assert error.message == "Test error"
         assert error.status_code == 400
         assert error.response_data == response_data
         assert error.endpoint == "/api/v2/task"
-        
+
         # Test string representation
         error_str = str(error)
         assert "Test error" in error_str
@@ -322,7 +309,7 @@ class TestAdditionalUtilityFunctions:
         """Test that TimeoutError works correctly with create_network_error."""
         original_timeout = TimeoutError("Request timed out", timeout_duration=30.0)
         network_error = create_network_error(original_timeout, "while fetching task data")
-        
+
         assert isinstance(network_error, NetworkError)
         assert network_error.original_error == original_timeout
         assert "while fetching task data" in network_error.message
@@ -333,15 +320,15 @@ class TestAdditionalUtilityFunctions:
         """Test MCPToolError integration with other error types."""
         # Test creating MCPToolError with validation error details
         validation_error = ValidationError("Invalid priority", field="priority", value="invalid")
-        
+
         mcp_tool_error = MCPToolError(
             "Tool validation failed",
             tool_name="create_task",
             parameters={"name": "Test Task", "priority": "invalid"},
             error_code="VALIDATION_ERROR",
-            details={"validation_error": validation_error}
+            details={"validation_error": validation_error},
         )
-        
+
         assert isinstance(mcp_tool_error, MCPToolError)
         assert mcp_tool_error.tool_name == "create_task"
         assert mcp_tool_error.error_code == "VALIDATION_ERROR"

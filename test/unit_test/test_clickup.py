@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from unittest.mock import patch
-from typing import Any
 
 import pytest
 
-from clickup_mcp import APIResponse, ClickUpAPIClient, ClickUpResourceClient, create_resource_client
+from clickup_mcp import (
+    APIResponse,
+    ClickUpAPIClient,
+    ClickUpResourceClient,
+    create_resource_client,
+)
 
 from ._base import BaseAPIClientTestSuite
 
@@ -142,7 +146,8 @@ class TestClickUpResourceClient(BaseAPIClientTestSuite):
             )
 
             mock_post.assert_called_once_with(
-                "/folder/folder123/list", data={"name": "Test List", "content": "Description", "due_date": 1609459200000}
+                "/folder/folder123/list",
+                data={"name": "Test List", "content": "Description", "due_date": 1609459200000},
             )
 
     @pytest.mark.asyncio
@@ -153,7 +158,7 @@ class TestClickUpResourceClient(BaseAPIClientTestSuite):
 
         assert "Either folder_id or space_id must be provided" in str(exc_info.value)
 
-    # Task operations tests  
+    # Task operations tests
     @pytest.mark.asyncio
     async def test_get_tasks_minimal(self, resource_client: ClickUpResourceClient) -> None:
         """Test getting tasks with minimal parameters."""
@@ -233,9 +238,7 @@ class TestClickUpResourceClient(BaseAPIClientTestSuite):
         with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
             await resource_client.get_task("task123", custom_task_ids=True, team_id="team456")
 
-            mock_get.assert_called_once_with(
-                "/task/task123", params={"custom_task_ids": True, "team_id": "team456"}
-            )
+            mock_get.assert_called_once_with("/task/task123", params={"custom_task_ids": True, "team_id": "team456"})
 
     @pytest.mark.asyncio
     async def test_create_task_minimal(self, resource_client: ClickUpResourceClient) -> None:
@@ -348,9 +351,7 @@ class TestClickUpResourceClient(BaseAPIClientTestSuite):
         with patch.object(resource_client.client, "delete", return_value=APIResponse(status_code=200)) as mock_delete:
             await resource_client.delete_task("task123", custom_task_ids=True, team_id="team123")
 
-            mock_delete.assert_called_once_with(
-                "/task/task123", params={"custom_task_ids": True, "team_id": "team123"}
-            )
+            mock_delete.assert_called_once_with("/task/task123", params={"custom_task_ids": True, "team_id": "team123"})
 
     # User operations tests
     @pytest.mark.asyncio
@@ -425,18 +426,12 @@ class TestClickUpResourceClientEdgeCases(BaseAPIClientTestSuite):
     async def test_get_tasks_with_empty_lists(self, resource_client: ClickUpResourceClient) -> None:
         """Test getting tasks with empty lists for optional parameters."""
         with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
-            await resource_client.get_tasks(
-                "list123",
-                statuses=[],
-                assignees=[],
-                tags=[],
-                custom_fields=[]
-            )
+            await resource_client.get_tasks("list123", statuses=[], assignees=[], tags=[], custom_fields=[])
 
             mock_get.assert_called_once()
             call_args = mock_get.call_args
             params = call_args[1]["params"]
-            
+
             # Empty lists should not be included in params
             assert "statuses[]" not in params
             assert "assignees[]" not in params
@@ -455,13 +450,13 @@ class TestClickUpResourceClientEdgeCases(BaseAPIClientTestSuite):
                 date_created_gt=0,
                 date_created_lt=0,
                 date_updated_gt=0,
-                date_updated_lt=0
+                date_updated_lt=0,
             )
 
             mock_get.assert_called_once()
             call_args = mock_get.call_args
             params = call_args[1]["params"]
-            
+
             # Zero values should be included (they're valid timestamps)
             assert params["due_date_gt"] == 0
             assert params["due_date_lt"] == 0
@@ -481,7 +476,7 @@ class TestClickUpResourceClientEdgeCases(BaseAPIClientTestSuite):
                 due_date_time=False,
                 start_date_time=False,
                 notify_all=False,
-                check_required_custom_fields=False
+                check_required_custom_fields=False,
             )
 
             expected_data = {
@@ -497,11 +492,7 @@ class TestClickUpResourceClientEdgeCases(BaseAPIClientTestSuite):
     async def test_create_task_with_priority_zero(self, resource_client: ClickUpResourceClient) -> None:
         """Test creating a task with priority 0."""
         with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200)) as mock_post:
-            await resource_client.create_task(
-                "list123",
-                "Test Task",
-                priority=0
-            )
+            await resource_client.create_task("list123", "Test Task", priority=0)
 
             expected_data = {
                 "name": "Test Task",
@@ -517,14 +508,7 @@ class TestClickUpResourceClientEdgeCases(BaseAPIClientTestSuite):
     async def test_create_task_with_empty_strings(self, resource_client: ClickUpResourceClient) -> None:
         """Test creating a task with empty strings for optional parameters (should be filtered out)."""
         with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200)) as mock_post:
-            await resource_client.create_task(
-                "list123",
-                "Test Task",
-                description="",
-                status="",
-                parent="",
-                links_to=""
-            )
+            await resource_client.create_task("list123", "Test Task", description="", status="", parent="", links_to="")
 
             # Empty strings should be filtered out, only required fields and defaults should remain
             expected_data = {
@@ -544,15 +528,12 @@ class TestClickUpResourceClientEdgeCases(BaseAPIClientTestSuite):
                 "name": "Updated Task",
                 "assignees": ["user1", "user2"],
                 "tags": ["tag1", "tag2"],
-                "custom_fields": [
-                    {"field_id": "123", "value": "test"},
-                    {"field_id": "456", "value": 42}
-                ],
+                "custom_fields": [{"field_id": "123", "value": "test"}, {"field_id": "456", "value": 42}],
                 "priority": 1,
                 "due_date": 1609459200000,
-                "time_estimate": 3600000
+                "time_estimate": 3600000,
             }
-            
+
             await resource_client.update_task("task123", **complex_data)
 
             mock_put.assert_called_once_with("/task/task123", data=complex_data)
@@ -593,14 +574,14 @@ class TestClickUpResourceClientEdgeCases(BaseAPIClientTestSuite):
                 "Test Space",
                 multiple_assignees=True,
                 features={"due_dates": {"enabled": True}},
-                private=False
+                private=False,
             )
 
             expected_data = {
                 "name": "Test Space",
                 "multiple_assignees": True,
                 "features": {"due_dates": {"enabled": True}},
-                "private": False
+                "private": False,
             }
 
             mock_post.assert_called_once_with("/team/team123/space", data=expected_data)
@@ -619,17 +600,13 @@ class TestClickUpResourceClientStringParameterTypes(BaseAPIClientTestSuite):
         """Test getting tasks with string parameters for order_by and other fields."""
         with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
             await resource_client.get_tasks(
-                "list123",
-                order_by="updated",
-                reverse=True,
-                subtasks=True,
-                include_closed=True
+                "list123", order_by="updated", reverse=True, subtasks=True, include_closed=True
             )
 
             mock_get.assert_called_once()
             call_args = mock_get.call_args
             params = call_args[1]["params"]
-            
+
             assert params["order_by"] == "updated"
             assert params["reverse"] is True
             assert params["subtasks"] is True
@@ -660,12 +637,13 @@ class TestClickUpResourceClientAsyncContext(BaseAPIClientTestSuite):
     async def test_client_context_manager_usage(self, api_client: ClickUpAPIClient) -> None:
         """Test using resource client in async context manager pattern."""
         resource_client = ClickUpResourceClient(api_client)
-        
+
         # Test that client can be used in async context patterns
         with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
+
             async def use_client() -> APIResponse:
                 return await resource_client.get_teams()
-            
+
             response = await use_client()
             assert response.status_code == 200
             mock_get.assert_called_once_with("/team")
@@ -694,11 +672,7 @@ class TestClickUpResourceClientParameterValidation(BaseAPIClientTestSuite):
     async def test_create_task_with_large_time_estimate(self, resource_client: ClickUpResourceClient) -> None:
         """Test creating a task with large time estimate."""
         with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200)) as mock_post:
-            await resource_client.create_task(
-                "list123",
-                "Test Task",
-                time_estimate=99999999999  # Large number
-            )
+            await resource_client.create_task("list123", "Test Task", time_estimate=99999999999)  # Large number
 
             expected_data = {
                 "name": "Test Task",
@@ -717,7 +691,7 @@ class TestClickUpResourceClientParameterValidation(BaseAPIClientTestSuite):
                 "list123",
                 "Test Task 测试任务 🚀",
                 description="Description with émojis and spéciål characters 你好",
-                tags=["测试", "emoji🎉", "spéciål-tâg"]
+                tags=["测试", "emoji🎉", "spéciål-tâg"],
             )
 
             expected_data = {
@@ -742,11 +716,13 @@ class TestClickUpResourceClientReturnTypes(BaseAPIClientTestSuite):
     @pytest.mark.asyncio
     async def test_all_methods_return_api_response(self, resource_client: ClickUpResourceClient) -> None:
         """Test that all methods return APIResponse objects."""
-        with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get, \
-             patch.object(resource_client.client, "post", return_value=APIResponse(status_code=201)) as mock_post, \
-             patch.object(resource_client.client, "put", return_value=APIResponse(status_code=200)) as mock_put, \
-             patch.object(resource_client.client, "delete", return_value=APIResponse(status_code=204)) as mock_delete:
-            
+        with (
+            patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get,
+            patch.object(resource_client.client, "post", return_value=APIResponse(status_code=201)) as mock_post,
+            patch.object(resource_client.client, "put", return_value=APIResponse(status_code=200)) as mock_put,
+            patch.object(resource_client.client, "delete", return_value=APIResponse(status_code=204)) as mock_delete,
+        ):
+
             # Test GET methods
             response = await resource_client.get_teams()
             assert isinstance(response, APIResponse)
@@ -795,24 +771,26 @@ class TestClickUpResourceClientIntegration(BaseAPIClientTestSuite):
     @pytest.mark.asyncio
     async def test_typical_workflow_simulation(self, resource_client: ClickUpResourceClient) -> None:
         """Test a typical workflow: get teams -> spaces -> lists -> tasks."""
-        with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get, \
-             patch.object(resource_client.client, "post", return_value=APIResponse(status_code=201)) as mock_post:
-            
+        with (
+            patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get,
+            patch.object(resource_client.client, "post", return_value=APIResponse(status_code=201)) as mock_post,
+        ):
+
             # Step 1: Get teams
             await resource_client.get_teams()
-            
+
             # Step 2: Get spaces in a team
             await resource_client.get_spaces("team123")
-            
+
             # Step 3: Get lists in a space
             await resource_client.get_lists(space_id="space456")
-            
+
             # Step 4: Get tasks in a list
             await resource_client.get_tasks("list789")
-            
+
             # Step 5: Create a new task
             await resource_client.create_task("list789", "New Task")
-            
+
             # Verify all calls were made
             assert mock_get.call_count == 4
             assert mock_post.call_count == 1
@@ -823,7 +801,7 @@ class TestClickUpResourceClientIntegration(BaseAPIClientTestSuite):
         # Test that ValueError is raised for invalid get_lists call
         with pytest.raises(ValueError, match="Either folder_id or space_id must be provided"):
             await resource_client.get_lists()
-        
+
         # Test that ValueError is raised for invalid create_list call
         with pytest.raises(ValueError, match="Either folder_id or space_id must be provided"):
             await resource_client.create_list("Test List")
@@ -845,11 +823,7 @@ class TestCreateResourceClientFunction:
     def test_create_resource_client_with_custom_params(self) -> None:
         """Test creating a resource client with custom parameters."""
         client = create_resource_client(
-            "test_token",
-            timeout=60.0,
-            max_retries=5,
-            retry_delay=2.0,
-            rate_limit_requests_per_minute=50
+            "test_token", timeout=60.0, max_retries=5, retry_delay=2.0, rate_limit_requests_per_minute=50
         )
         assert isinstance(client, ClickUpResourceClient)
         assert client.client.timeout == 60.0
