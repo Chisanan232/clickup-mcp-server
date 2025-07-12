@@ -141,7 +141,7 @@ class ClickUpAPIClient:
         await self._enforce_rate_limit()
 
         # Prepare request
-        url = endpoint if endpoint.startswith("http") else endpoint
+        url = endpoint
         request_headers = self._headers.copy()
         if headers:
             request_headers.update(headers)
