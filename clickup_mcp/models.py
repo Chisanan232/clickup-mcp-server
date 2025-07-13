@@ -48,17 +48,6 @@ class Team(ClickUpBaseModel):
         return cls(team_id=team_id)
 
 
-# Legacy aliases for backward compatibility
-class TeamRequest(Team):
-    """Legacy alias for Team - use Team instead."""
-    pass
-
-
-class TeamMembersRequest(Team):
-    """Legacy alias for Team - use Team instead."""
-    pass
-
-
 class Space(ClickUpBaseModel):
     """Domain model for ClickUp Space operations."""
     space_id: Optional[str] = Field(None, description="The space ID")
@@ -107,27 +96,6 @@ class Space(ClickUpBaseModel):
         return data
 
 
-# Legacy aliases for backward compatibility
-class SpaceRequest(ClickUpBaseModel):
-    """Legacy alias - use Space.get_request() instead."""
-    space_id: str = Field(..., description="The space ID")
-
-
-class SpacesRequest(ClickUpBaseModel):
-    """Legacy alias - use Space.list_request() instead."""
-    team_id: str = Field(..., description="The team ID")
-
-
-class CreateSpaceRequest(ClickUpBaseModel):
-    """Legacy alias - use Space.create_request() instead."""
-    team_id: str = Field(..., description="The team ID")
-    name: str = Field(..., description="The space name")
-    description: Optional[str] = Field(None, description="The space description")
-    multiple_assignees: Optional[bool] = Field(None, description="Allow multiple assignees")
-    features: Optional[Dict[str, Any]] = Field(None, description="Space features configuration")
-    private: Optional[bool] = Field(None, description="Private space flag")
-
-
 class Folder(ClickUpBaseModel):
     """Domain model for ClickUp Folder operations."""
     folder_id: Optional[str] = Field(None, description="The folder ID")
@@ -159,27 +127,6 @@ class Folder(ClickUpBaseModel):
     def extract_create_data(self) -> Dict[str, Any]:
         """Extract data for folder creation."""
         return {"name": self.name}
-
-
-# Legacy aliases for backward compatibility
-class FolderRequest(ClickUpBaseModel):
-    """Legacy alias - use Folder.get_request() instead."""
-    folder_id: str = Field(..., description="The folder ID")
-
-
-class FolderListRequest(ClickUpBaseModel):
-    """Clear naming - request for listing folders in a space."""
-    space_id: str = Field(..., description="The space ID")
-
-
-class CreateFolderRequest(ClickUpBaseModel):
-    """Legacy alias - use Folder.create_request() instead."""
-    space_id: str = Field(..., description="The space ID")
-    name: str = Field(..., description="The folder name")
-
-
-# Backward compatibility alias - keeping old unclear name
-FoldersRequest = FolderListRequest
 
 
 class ClickUpListDomain(ClickUpBaseModel):
@@ -243,46 +190,6 @@ class ClickUpListDomain(ClickUpBaseModel):
 
 # Backward compatibility aliases
 List = ClickUpListDomain
-ClickUpListRequest = ClickUpListDomain
-
-
-# Legacy aliases for backward compatibility
-class ListRequest(ClickUpBaseModel):
-    """Legacy alias - use List.get_request() instead."""
-    list_id: str = Field(..., description="The list ID")
-
-
-class ListsRequest(ClickUpBaseModel):
-    """Legacy alias - use List.list_request() instead."""
-    folder_id: Optional[str] = Field(None, description="The folder ID")
-    space_id: Optional[str] = Field(None, description="The space ID")
-    
-    @model_validator(mode='after')
-    def validate_ids(self):
-        """Ensure either folder_id or space_id is provided."""
-        if not self.folder_id and not self.space_id:
-            raise ValueError("Either folder_id or space_id must be provided")
-        return self
-
-
-class CreateListRequest(ClickUpBaseModel):
-    """Legacy alias - use List.create_request() instead."""
-    name: str = Field(..., description="The list name")
-    folder_id: Optional[str] = Field(None, description="The folder ID")
-    space_id: Optional[str] = Field(None, description="The space ID")
-    content: Optional[str] = Field(None, description="List description")
-    due_date: Optional[int] = Field(None, description="Due date as Unix timestamp")
-    due_date_time: Optional[bool] = Field(None, description="Include time in due date")
-    priority: Optional[int] = Field(None, description="Priority level")
-    assignee: Optional[str] = Field(None, description="Assignee ID")
-    status: Optional[str] = Field(None, description="Status")
-    
-    @model_validator(mode='after')
-    def validate_ids(self):
-        """Ensure either folder_id or space_id is provided."""
-        if not self.folder_id and not self.space_id:
-            raise ValueError("Either folder_id or space_id must be provided")
-        return self
 
 
 class CustomField(ClickUpBaseModel):
@@ -470,99 +377,6 @@ class Task(ClickUpBaseModel):
         return params
 
 
-# Legacy aliases for backward compatibility
-class TaskRequest(ClickUpBaseModel):
-    """Legacy alias - use Task.get_request() instead."""
-    task_id: str = Field(..., description="The task ID")
-    custom_task_ids: Optional[bool] = Field(False, description="Use custom task IDs")
-    team_id: Optional[str] = Field(None, description="The team ID")
-
-
-class TasksRequest(ClickUpBaseModel):
-    """Legacy alias - use Task.list_request() instead."""
-    list_id: str = Field(..., description="The list ID")
-    page: Optional[int] = Field(0, description="Page number for pagination")
-    order_by: Optional[str] = Field("created", description="Field to order by")
-    reverse: Optional[bool] = Field(False, description="Reverse order")
-    subtasks: Optional[bool] = Field(False, description="Include subtasks")
-    statuses: Optional[ListType[str]] = Field(None, description="Filter by statuses")
-    include_closed: Optional[bool] = Field(False, description="Include closed tasks")
-    assignees: Optional[ListType[str]] = Field(None, description="Filter by assignee IDs")
-    tags: Optional[ListType[str]] = Field(None, description="Filter by tags")
-    due_date_gt: Optional[int] = Field(None, description="Due date greater than (Unix timestamp)")
-    due_date_lt: Optional[int] = Field(None, description="Due date less than (Unix timestamp)")
-    date_created_gt: Optional[int] = Field(None, description="Created date greater than (Unix timestamp)")
-    date_created_lt: Optional[int] = Field(None, description="Created date less than (Unix timestamp)")
-    date_updated_gt: Optional[int] = Field(None, description="Updated date greater than (Unix timestamp)")
-    date_updated_lt: Optional[int] = Field(None, description="Updated date less than (Unix timestamp)")
-    custom_fields: Optional[ListType[Dict[str, Any]]] = Field(None, description="Custom field filters")
-
-
-class CreateTaskRequest(ClickUpBaseModel):
-    """Legacy alias - use Task.create_request() instead."""
-    list_id: str = Field(..., description="The list ID")
-    name: str = Field(..., description="Task name")
-    description: Optional[str] = Field(None, description="Task description")
-    assignees: Optional[ListType[str]] = Field(None, description="List of assignee IDs")
-    tags: Optional[ListType[str]] = Field(None, description="List of tags")
-    status: Optional[str] = Field(None, description="Task status")
-    priority: Optional[int] = Field(None, description="Priority level (1-4)")
-    due_date: Optional[int] = Field(None, description="Due date as Unix timestamp")
-    due_date_time: Optional[bool] = Field(False, description="Include time in due date")
-    time_estimate: Optional[int] = Field(None, description="Time estimate in milliseconds")
-    start_date: Optional[int] = Field(None, description="Start date as Unix timestamp")
-    start_date_time: Optional[bool] = Field(False, description="Include time in start date")
-    notify_all: Optional[bool] = Field(True, description="Notify all team members")
-    parent: Optional[str] = Field(None, description="Parent task ID for subtasks")
-    links_to: Optional[str] = Field(None, description="Link to another task")
-    check_required_custom_fields: Optional[bool] = Field(True, description="Check required custom fields")
-    custom_fields: Optional[ListType[CustomField]] = Field(None, description="Custom field values")
-    
-    @field_validator('priority')
-    @classmethod
-    def validate_priority(cls, v):
-        """Validate priority is between 0-4."""
-        if v is not None and (v < 0 or v > 4):
-            raise ValueError("Priority must be between 0 (no priority) and 4 (low)")
-        return v
-
-
-class UpdateTaskRequest(ClickUpBaseModel):
-    """Legacy alias - use Task.update_request() instead."""
-    task_id: str = Field(..., description="The task ID")
-    name: Optional[str] = Field(None, description="Task name")
-    description: Optional[str] = Field(None, description="Task description")
-    assignees: Optional[ListType[str]] = Field(None, description="List of assignee IDs")
-    tags: Optional[ListType[str]] = Field(None, description="List of tags")
-    status: Optional[str] = Field(None, description="Task status")
-    priority: Optional[int] = Field(None, description="Priority level (1-4)")
-    due_date: Optional[int] = Field(None, description="Due date as Unix timestamp")
-    due_date_time: Optional[bool] = Field(False, description="Include time in due date")
-    time_estimate: Optional[int] = Field(None, description="Time estimate in milliseconds")
-    start_date: Optional[int] = Field(None, description="Start date as Unix timestamp")
-    start_date_time: Optional[bool] = Field(False, description="Include time in start date")
-    notify_all: Optional[bool] = Field(True, description="Notify all team members")
-    parent: Optional[str] = Field(None, description="Parent task ID for subtasks")
-    links_to: Optional[str] = Field(None, description="Link to another task")
-    check_required_custom_fields: Optional[bool] = Field(True, description="Check required custom fields")
-    custom_fields: Optional[ListType[CustomField]] = Field(None, description="Custom field values")
-    
-    @field_validator('priority')
-    @classmethod
-    def validate_priority(cls, v):
-        """Validate priority is between 0-4."""
-        if v is not None and (v < 0 or v > 4):
-            raise ValueError("Priority must be between 0 (no priority) and 4 (low)")
-        return v
-
-
-class DeleteTaskRequest(ClickUpBaseModel):
-    """Legacy alias - use Task.delete_request() instead."""
-    task_id: str = Field(..., description="The task ID")
-    custom_task_ids: Optional[bool] = Field(False, description="Use custom task IDs")
-    team_id: Optional[str] = Field(None, description="The team ID")
-
-
 class User(ClickUpBaseModel):
     """Domain model for ClickUp User operations."""
     
@@ -570,12 +384,6 @@ class User(ClickUpBaseModel):
     def get_request(cls) -> 'User':
         """Create a request for getting the authenticated user."""
         return cls()
-
-
-# Legacy aliases for backward compatibility
-class UserRequest(ClickUpBaseModel):
-    """Legacy alias - use User.get_request() instead."""
-    pass  # No parameters needed for getting authenticated user
 
 
 # Response Models
@@ -683,145 +491,3 @@ class ClickUpTask(ClickUpBaseModel):
     project: Optional[Dict[str, Any]] = Field(None, description="Parent project")
     folder: Optional[Dict[str, Any]] = Field(None, description="Parent folder")
     space: Optional[Dict[str, Any]] = Field(None, description="Parent space")
-
-
-# Helper functions for backward compatibility
-def extract_create_task_data(request: CreateTaskRequest) -> Dict[str, Any]:
-    """Extract task creation data from legacy request model."""
-    data = {"name": request.name}
-    
-    if request.description:
-        data["description"] = request.description
-    if request.assignees:
-        data["assignees"] = request.assignees
-    if request.tags:
-        data["tags"] = request.tags
-    if request.status:
-        data["status"] = request.status
-    if request.priority is not None:
-        data["priority"] = request.priority
-    if request.due_date:
-        data["due_date"] = request.due_date
-        if request.due_date_time is not None:
-            data["due_date_time"] = request.due_date_time
-    if request.time_estimate:
-        data["time_estimate"] = request.time_estimate
-    if request.start_date:
-        data["start_date"] = request.start_date
-        if request.start_date_time is not None:
-            data["start_date_time"] = request.start_date_time
-    if request.notify_all is not None:
-        data["notify_all"] = request.notify_all
-    if request.parent:
-        data["parent"] = request.parent
-    if request.links_to:
-        data["links_to"] = request.links_to
-    if request.check_required_custom_fields is not None:
-        data["check_required_custom_fields"] = request.check_required_custom_fields
-    if request.custom_fields:
-        data["custom_fields"] = [
-            {"field_id": field.id, "value": field.value} for field in request.custom_fields
-        ]
-    
-    return data
-
-
-def extract_update_task_data(request: UpdateTaskRequest) -> Dict[str, Any]:
-    """Extract task update data from legacy request model."""
-    data = {}
-    
-    if request.name:
-        data["name"] = request.name
-    if request.description:
-        data["description"] = request.description
-    if request.assignees:
-        data["assignees"] = request.assignees
-    if request.tags:
-        data["tags"] = request.tags
-    if request.status:
-        data["status"] = request.status
-    if request.priority is not None:
-        data["priority"] = request.priority
-    if request.due_date:
-        data["due_date"] = request.due_date
-    if request.time_estimate:
-        data["time_estimate"] = request.time_estimate
-    if request.start_date:
-        data["start_date"] = request.start_date
-    if request.custom_fields:
-        data["custom_fields"] = [
-            {"field_id": field.id, "value": field.value} for field in request.custom_fields
-        ]
-    
-    return data
-
-
-def extract_tasks_params(request: TasksRequest) -> Dict[str, Any]:
-    """Extract task filtering parameters from legacy request model."""
-    params = {
-        "page": request.page,
-        "order_by": request.order_by,
-        "reverse": request.reverse,
-        "subtasks": request.subtasks,
-        "include_closed": request.include_closed,
-    }
-    
-    # Add optional parameters if provided
-    if request.statuses:
-        params["statuses[]"] = request.statuses
-    if request.assignees:
-        params["assignees[]"] = request.assignees
-    if request.tags:
-        params["tags[]"] = request.tags
-    if request.due_date_gt is not None:
-        params["due_date_gt"] = request.due_date_gt
-    if request.due_date_lt is not None:
-        params["due_date_lt"] = request.due_date_lt
-    if request.date_created_gt is not None:
-        params["date_created_gt"] = request.date_created_gt
-    if request.date_created_lt is not None:
-        params["date_created_lt"] = request.date_created_lt
-    if request.date_updated_gt is not None:
-        params["date_updated_gt"] = request.date_updated_gt
-    if request.date_updated_lt is not None:
-        params["date_updated_lt"] = request.date_updated_lt
-    if request.custom_fields:
-        params["custom_fields"] = request.custom_fields
-    
-    return params
-
-
-def extract_create_space_data(request: CreateSpaceRequest) -> Dict[str, Any]:
-    """Extract space creation data from legacy request model."""
-    data = {"name": request.name}
-    
-    if request.description:
-        data["description"] = request.description
-    if request.multiple_assignees is not None:
-        data["multiple_assignees"] = request.multiple_assignees
-    if request.features:
-        data["features"] = request.features
-    if request.private is not None:
-        data["private"] = request.private
-    
-    return data
-
-
-def extract_create_list_data(request: CreateListRequest) -> Dict[str, Any]:
-    """Extract list creation data from legacy request model."""
-    data = {"name": request.name}
-    
-    if request.content:
-        data["content"] = request.content
-    if request.due_date:
-        data["due_date"] = request.due_date
-        if request.due_date_time is not None:
-            data["due_date_time"] = request.due_date_time
-    if request.priority is not None:
-        data["priority"] = request.priority
-    if request.assignee:
-        data["assignee"] = request.assignee
-    if request.status:
-        data["status"] = request.status
-    
-    return data

@@ -12,32 +12,6 @@ from .models import (
     Task,
     User,
     CustomField,
-    
-    # Legacy models (for backward compatibility)
-    CreateFolderRequest,
-    CreateListRequest,
-    CreateSpaceRequest,
-    CreateTaskRequest,
-    DeleteTaskRequest,
-    FolderRequest,
-    FoldersRequest,
-    ListRequest,
-    ListsRequest,
-    SpaceRequest,
-    SpacesRequest,
-    TaskRequest,
-    TasksRequest,
-    TeamMembersRequest,
-    TeamRequest,
-    UpdateTaskRequest,
-    UserRequest,
-    
-    # Legacy helper functions (for backward compatibility)
-    extract_create_list_data,
-    extract_create_space_data,
-    extract_create_task_data,
-    extract_tasks_params,
-    extract_update_task_data,
 )
 
 

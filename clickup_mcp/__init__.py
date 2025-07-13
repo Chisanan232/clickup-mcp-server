@@ -44,26 +44,6 @@ from .models import (
     ClickUpTask,
     ClickUpTeam,
     ClickUpUser,
-    
-    # Legacy request models (for backward compatibility)
-    CreateFolderRequest,
-    CreateListRequest,
-    CreateSpaceRequest,
-    CreateTaskRequest,
-    DeleteTaskRequest,
-    FolderRequest,
-    FoldersRequest,
-    FolderListRequest,
-    ListRequest,
-    ListsRequest,
-    SpaceRequest,
-    SpacesRequest,
-    TaskRequest,
-    TasksRequest,
-    TeamMembersRequest,
-    TeamRequest,
-    UpdateTaskRequest,
-    UserRequest,
 )
 from .utils import (
     ClickUpURLBuilder,
@@ -115,27 +95,7 @@ __all__ = [
     "Task",
     "User",
     "CustomField",
-    
-    # Legacy Request Models (for backward compatibility)
-    "TeamRequest",
-    "TeamMembersRequest",
-    "SpaceRequest",
-    "SpacesRequest",
-    "CreateSpaceRequest",
-    "FolderRequest",
-    "FoldersRequest",
-    "FolderListRequest",
-    "CreateFolderRequest",
-    "ListRequest",
-    "ListsRequest",
-    "CreateListRequest",
-    "TaskRequest",
-    "TasksRequest",
-    "CreateTaskRequest",
-    "UpdateTaskRequest",
-    "DeleteTaskRequest",
-    "UserRequest",
-    
+
     # Response Models
     "ClickUpUser",
     "ClickUpTeam",
