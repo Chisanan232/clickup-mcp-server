@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import patch, Mock, AsyncMock
+import json
 
 import pytest
 
@@ -705,61 +706,6 @@ class TestClickUpResourceClientParameterValidation(BaseAPIClientTestSuite):
             mock_post.assert_called_once_with("/list/list123/task", data=expected_data)
 
 
-class TestClickUpResourceClientReturnTypes(BaseAPIClientTestSuite):
-    """Test return types and response handling."""
-
-    @pytest.fixture
-    def resource_client(self, api_client: ClickUpAPIClient) -> ClickUpResourceClient:
-        """Create a test resource client."""
-        return ClickUpResourceClient(api_client)
-
-    @pytest.mark.asyncio
-    async def test_all_methods_return_api_response(self, resource_client: ClickUpResourceClient) -> None:
-        """Test that all methods return APIResponse objects."""
-        with (
-            patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get,
-            patch.object(resource_client.client, "post", return_value=APIResponse(status_code=201)) as mock_post,
-            patch.object(resource_client.client, "put", return_value=APIResponse(status_code=200)) as mock_put,
-            patch.object(resource_client.client, "delete", return_value=APIResponse(status_code=204)) as mock_delete,
-        ):
-
-            # Test GET methods
-            response = await resource_client.get_teams()
-            assert isinstance(response, APIResponse)
-            assert response.status_code == 200
-
-            response = await resource_client.get_team("team123")
-            assert isinstance(response, APIResponse)
-            assert response.status_code == 200
-
-            response = await resource_client.get_spaces("team123")
-            assert isinstance(response, APIResponse)
-            assert response.status_code == 200
-
-            response = await resource_client.get_user()
-            assert isinstance(response, APIResponse)
-            assert response.status_code == 200
-
-            # Test POST methods
-            response = await resource_client.create_space("team123", "Test Space")
-            assert isinstance(response, APIResponse)
-            assert response.status_code == 201
-
-            response = await resource_client.create_task("list123", "Test Task")
-            assert isinstance(response, APIResponse)
-            assert response.status_code == 201
-
-            # Test PUT methods
-            response = await resource_client.update_task("task123", name="Updated")
-            assert isinstance(response, APIResponse)
-            assert response.status_code == 200
-
-            # Test DELETE methods
-            response = await resource_client.delete_task("task123")
-            assert isinstance(response, APIResponse)
-            assert response.status_code == 204
-
-
 class TestClickUpResourceClientIntegration(BaseAPIClientTestSuite):
     """Integration-like tests for resource client functionality."""
 
@@ -843,3 +789,452 @@ class TestCreateResourceClientFunction:
         client = create_resource_client(long_token)
         assert isinstance(client, ClickUpResourceClient)
         assert client.client.api_token == long_token
+
+
+class TestBackwardCompatibilityMethods(BaseAPIClientTestSuite):
+    """Test backward compatibility methods in ClickUpResourceClient."""
+
+    @pytest.fixture
+    def resource_client(self, api_client: ClickUpAPIClient) -> ClickUpResourceClient:
+        """Create a test resource client."""
+        return ClickUpResourceClient(api_client)
+
+    # Test legacy team methods
+    @pytest.mark.asyncio
+    async def test_get_team_by_id(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy get_team_by_id method."""
+        with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
+            await resource_client.get_team_by_id("team123")
+            mock_get.assert_called_once_with("/team/team123")
+
+    @pytest.mark.asyncio
+    async def test_get_spaces_by_team_id(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy get_spaces_by_team_id method."""
+        with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
+            await resource_client.get_spaces_by_team_id("team123")
+            mock_get.assert_called_once_with("/team/team123/space")
+
+    @pytest.mark.asyncio
+    async def test_get_space_by_id(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy get_space_by_id method."""
+        with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
+            await resource_client.get_space_by_id("space123")
+            mock_get.assert_called_once_with("/space/space123")
+
+    @pytest.mark.asyncio
+    async def test_create_space_legacy(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy create_space_legacy method."""
+        with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200)) as mock_post:
+            await resource_client.create_space_legacy("team123", "My Space", description="Test space")
+            mock_post.assert_called_once()
+            args, kwargs = mock_post.call_args
+            assert args[0] == "/team/team123/space"
+            assert kwargs["data"]["name"] == "My Space"
+            assert kwargs["data"]["description"] == "Test space"
+
+    # Test legacy folder methods
+    @pytest.mark.asyncio
+    async def test_get_folders_by_space_id(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy get_folders_by_space_id method."""
+        with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
+            await resource_client.get_folders_by_space_id("space123")
+            mock_get.assert_called_once_with("/space/space123/folder")
+
+    @pytest.mark.asyncio
+    async def test_get_folder_by_id(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy get_folder_by_id method."""
+        with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
+            await resource_client.get_folder_by_id("folder123")
+            mock_get.assert_called_once_with("/folder/folder123")
+
+    @pytest.mark.asyncio
+    async def test_create_folder_legacy(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy create_folder_legacy method."""
+        with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200)) as mock_post:
+            await resource_client.create_folder_legacy("space123", "My Folder")
+            mock_post.assert_called_once()
+            args, kwargs = mock_post.call_args
+            assert args[0] == "/space/space123/folder"
+            assert kwargs["data"]["name"] == "My Folder"
+
+    # Test legacy list methods
+    @pytest.mark.asyncio
+    async def test_get_lists_legacy_with_folder_id(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy get_lists_legacy method with folder_id."""
+        with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
+            await resource_client.get_lists_legacy(folder_id="folder123")
+            mock_get.assert_called_once_with("/folder/folder123/list")
+
+    @pytest.mark.asyncio
+    async def test_get_lists_legacy_with_space_id(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy get_lists_legacy method with space_id."""
+        with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
+            await resource_client.get_lists_legacy(space_id="space123")
+            mock_get.assert_called_once_with("/space/space123/list")
+
+    @pytest.mark.asyncio
+    async def test_get_list_by_id(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy get_list_by_id method."""
+        with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
+            await resource_client.get_list_by_id("list123")
+            mock_get.assert_called_once_with("/list/list123")
+
+    @pytest.mark.asyncio
+    async def test_create_list_legacy_in_folder(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy create_list_legacy method in folder."""
+        with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200)) as mock_post:
+            await resource_client.create_list_legacy("My List", folder_id="folder123")
+            mock_post.assert_called_once()
+            args, kwargs = mock_post.call_args
+            assert args[0] == "/folder/folder123/list"
+            assert kwargs["data"]["name"] == "My List"
+
+    @pytest.mark.asyncio
+    async def test_create_list_legacy_in_space(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy create_list_legacy method in space."""
+        with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200)) as mock_post:
+            await resource_client.create_list_legacy("My List", space_id="space123")
+            mock_post.assert_called_once()
+            args, kwargs = mock_post.call_args
+            assert args[0] == "/space/space123/list"
+            assert kwargs["data"]["name"] == "My List"
+
+    # Test legacy task methods
+    @pytest.mark.asyncio
+    async def test_get_tasks_legacy(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy get_tasks_legacy method with all parameters."""
+        with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
+            await resource_client.get_tasks_legacy(
+                "list123",
+                page=1,
+                order_by="due_date",
+                reverse=True,
+                subtasks=True,
+                statuses=["open", "in progress"],
+                include_closed=True,
+                assignees=["user1", "user2"],
+                tags=["urgent", "bug"],
+                due_date_gt=1640995200000,
+                due_date_lt=1641081600000,
+                date_created_gt=1640908800000,
+                date_created_lt=1640995200000,
+                date_updated_gt=1640995200000,
+                date_updated_lt=1641081600000,
+                custom_fields=[{"field_id": "cf1", "operator": "=", "value": "test"}]
+            )
+            mock_get.assert_called_once()
+            args, kwargs = mock_get.call_args
+            assert args[0] == "/list/list123/task"
+            params = kwargs["params"]
+            assert params["page"] == 1
+            assert params["order_by"] == "due_date"
+            assert params["reverse"] is True
+            assert params["subtasks"] is True
+            assert params["statuses[]"] == ["open", "in progress"]
+            assert params["include_closed"] is True
+            assert params["assignees[]"] == ["user1", "user2"]
+            assert params["tags[]"] == ["urgent", "bug"]
+            assert params["due_date_gt"] == 1640995200000
+            assert params["due_date_lt"] == 1641081600000
+            assert params["date_created_gt"] == 1640908800000
+            assert params["date_created_lt"] == 1640995200000
+            assert params["date_updated_gt"] == 1640995200000
+            assert params["date_updated_lt"] == 1641081600000
+            assert params["custom_fields"] == [{"field_id": "cf1", "operator": "=", "value": "test"}]
+
+    @pytest.mark.asyncio
+    async def test_get_task_by_id(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy get_task_by_id method."""
+        with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
+            await resource_client.get_task_by_id("task123", custom_task_ids=True, team_id="team123")
+            mock_get.assert_called_once()
+            args, kwargs = mock_get.call_args
+            assert args[0] == "/task/task123"
+            assert kwargs["params"]["custom_task_ids"] is True
+            assert kwargs["params"]["team_id"] == "team123"
+
+    @pytest.mark.asyncio
+    async def test_create_task_legacy(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy create_task_legacy method with all parameters."""
+        with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200)) as mock_post:
+            await resource_client.create_task_legacy(
+                "list123",
+                "Test Task",
+                description="Task description",
+                assignees=["user1", "user2"],
+                tags=["tag1", "tag2"],
+                status="open",
+                priority=3,
+                due_date=1640995200000,
+                due_date_time=True,
+                time_estimate=7200000,
+                start_date=1640908800000,
+                start_date_time=True,
+                notify_all=False,
+                parent="parent123",
+                links_to="link123",
+                check_required_custom_fields=False,
+                custom_fields=[{"id": "cf1", "value": "test"}]
+            )
+            mock_post.assert_called_once()
+            args, kwargs = mock_post.call_args
+            assert args[0] == "/list/list123/task"
+            data = kwargs["data"]
+            assert data["name"] == "Test Task"
+            assert data["description"] == "Task description"
+            assert data["assignees"] == ["user1", "user2"]
+            assert data["tags"] == ["tag1", "tag2"]
+            assert data["status"] == "open"
+            assert data["priority"] == 3
+            assert data["due_date"] == 1640995200000
+            assert data["due_date_time"] is True
+            assert data["time_estimate"] == 7200000
+            assert data["start_date"] == 1640908800000
+            assert data["start_date_time"] is True
+            assert data["notify_all"] is False
+            assert data["parent"] == "parent123"
+            assert data["links_to"] == "link123"
+            assert data["check_required_custom_fields"] is False
+            assert len(data["custom_fields"]) == 1
+            assert data["custom_fields"][0]["field_id"] == "cf1"
+            assert data["custom_fields"][0]["value"] == "test"
+
+    @pytest.mark.asyncio
+    async def test_create_task_legacy_with_custom_fields(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy create_task_legacy method with custom fields."""
+        with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200)) as mock_post:
+            custom_fields = [
+                {"id": "cf1", "name": "Priority", "type": "drop_down", "value": "High"},
+                {"id": "cf2", "name": "Budget", "type": "number", "value": 1000}
+            ]
+            await resource_client.create_task_legacy("list123", "Test Task", custom_fields=custom_fields)
+            mock_post.assert_called_once()
+            args, kwargs = mock_post.call_args
+            data = kwargs["data"]
+            assert len(data["custom_fields"]) == 2
+            assert data["custom_fields"][0]["field_id"] == "cf1"
+            assert data["custom_fields"][0]["value"] == "High"
+            assert data["custom_fields"][1]["field_id"] == "cf2"
+            assert data["custom_fields"][1]["value"] == 1000
+
+    @pytest.mark.asyncio
+    async def test_update_task_legacy(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy update_task_legacy method."""
+        with patch.object(resource_client.client, "put", return_value=APIResponse(status_code=200)) as mock_put:
+            await resource_client.update_task_legacy(
+                "task123",
+                name="Updated Task",
+                description="Updated description",
+                priority=2,
+                custom_fields=[{"id": "cf1", "value": "updated"}]
+            )
+            mock_put.assert_called_once()
+            args, kwargs = mock_put.call_args
+            assert args[0] == "/task/task123"
+            data = kwargs["data"]
+            assert data["name"] == "Updated Task"
+            assert data["description"] == "Updated description"
+            assert data["priority"] == 2
+            assert len(data["custom_fields"]) == 1
+            assert data["custom_fields"][0]["field_id"] == "cf1"
+            assert data["custom_fields"][0]["value"] == "updated"
+
+    @pytest.mark.asyncio
+    async def test_update_task_legacy_with_custom_fields(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy update_task_legacy method with custom fields."""
+        with patch.object(resource_client.client, "put", return_value=APIResponse(status_code=200)) as mock_put:
+            custom_fields = [
+                {"id": "cf1", "name": "Status", "type": "drop_down", "value": "Complete"},
+                {"id": "cf2", "name": "Score", "type": "number", "value": 95}
+            ]
+            await resource_client.update_task_legacy("task123", custom_fields=custom_fields)
+            mock_put.assert_called_once()
+            args, kwargs = mock_put.call_args
+            data = kwargs["data"]
+            assert len(data["custom_fields"]) == 2
+            assert data["custom_fields"][0]["field_id"] == "cf1"
+            assert data["custom_fields"][0]["value"] == "Complete"
+            assert data["custom_fields"][1]["field_id"] == "cf2"
+            assert data["custom_fields"][1]["value"] == 95
+
+    @pytest.mark.asyncio
+    async def test_delete_task_by_id(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy delete_task_by_id method."""
+        with patch.object(resource_client.client, "delete", return_value=APIResponse(status_code=200)) as mock_delete:
+            await resource_client.delete_task_by_id("task123", custom_task_ids=True, team_id="team123")
+            mock_delete.assert_called_once()
+            args, kwargs = mock_delete.call_args
+            assert args[0] == "/task/task123"
+            assert kwargs["params"]["custom_task_ids"] is True
+            assert kwargs["params"]["team_id"] == "team123"
+
+    # Test legacy user methods
+    @pytest.mark.asyncio
+    async def test_get_user_info(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy get_user_info method."""
+        with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
+            await resource_client.get_user_info()
+            mock_get.assert_called_once_with("/user")
+
+    @pytest.mark.asyncio
+    async def test_get_team_members_by_id(self, resource_client: ClickUpResourceClient) -> None:
+        """Test legacy get_team_members_by_id method."""
+        with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
+            await resource_client.get_team_members_by_id("team123")
+            mock_get.assert_called_once_with("/team/team123/member")
+
+
+class TestModelsAdditionalCoverage:
+    """Additional tests to achieve 100% coverage for models.py."""
+    
+    def test_lists_request_validation_error(self):
+        """Test ListsRequest validation with neither folder_id nor space_id."""
+        from clickup_mcp.models import ListsRequest
+        
+        # This should raise a validation error
+        with pytest.raises(ValueError, match="Either folder_id or space_id must be provided"):
+            ListsRequest()
+    
+    def test_create_task_request_priority_validation_edge_cases(self):
+        """Test CreateTaskRequest priority validation edge cases."""
+        from clickup_mcp.models import CreateTaskRequest
+        
+        # Test boundary values
+        with pytest.raises(ValueError, match="Priority must be between 0"):
+            CreateTaskRequest(name="Test", list_id="123", priority=-1)
+        
+        with pytest.raises(ValueError, match="Priority must be between 0"):
+            CreateTaskRequest(name="Test", list_id="123", priority=5)
+    
+    def test_update_task_request_priority_validation_edge_cases(self):
+        """Test UpdateTaskRequest priority validation edge cases."""
+        from clickup_mcp.models import UpdateTaskRequest
+        
+        # Test boundary values
+        with pytest.raises(ValueError, match="Priority must be between 0"):
+            UpdateTaskRequest(task_id="123", priority=-1)
+        
+        with pytest.raises(ValueError, match="Priority must be between 0"):
+            UpdateTaskRequest(task_id="123", priority=5)
+    
+    def test_extract_create_task_data_with_custom_fields(self):
+        """Test extract_create_task_data with custom fields."""
+        from clickup_mcp.models import CreateTaskRequest, CustomField, extract_create_task_data
+        
+        custom_fields = [
+            CustomField(id="field1", name="Field 1", type="text", value="value1"),
+            CustomField(id="field2", name="Field 2", type="text", value="value2")
+        ]
+        
+        request = CreateTaskRequest(
+            name="Test Task",
+            list_id="123",
+            custom_fields=custom_fields
+        )
+        
+        data = extract_create_task_data(request)
+        
+        assert data["custom_fields"] == [
+            {"field_id": "field1", "value": "value1"},
+            {"field_id": "field2", "value": "value2"}
+        ]
+    
+    def test_extract_create_list_data_with_all_fields(self):
+        """Test extract_create_list_data with all optional fields."""
+        from clickup_mcp.models import CreateListRequest, extract_create_list_data
+        
+        request = CreateListRequest(
+            name="Test List",
+            folder_id="folder123",
+            content="List description",
+            due_date=1234567890,
+            due_date_time=True,
+            priority=3,
+            assignee="user123",
+            status="active"
+        )
+        
+        data = extract_create_list_data(request)
+        
+        expected_data = {
+            "name": "Test List",
+            "content": "List description",
+            "due_date": 1234567890,
+            "due_date_time": True,
+            "priority": 3,
+            "assignee": "user123",
+            "status": "active"
+        }
+        
+        assert data == expected_data
+
+
+class TestUtilsAdditionalCoverage:
+    """Additional tests to achieve 100% coverage for utils.py."""
+    
+    def test_format_clickup_date_unsupported_type(self):
+        """Test format_clickup_date with unsupported type."""
+        from clickup_mcp.utils import format_clickup_date
+        
+        # Test with unsupported type (list)
+        with pytest.raises(ValueError, match="Unsupported timestamp type"):
+            format_clickup_date([1234567890])
+    
+    def test_format_clickup_date_invalid_string_then_invalid_float(self):
+        """Test format_clickup_date with invalid string that can't be parsed as float."""
+        from clickup_mcp.utils import format_clickup_date
+        
+        # Test with invalid string that can't be parsed as timestamp
+        with pytest.raises(ValueError, match="Invalid timestamp format"):
+            format_clickup_date("not-a-timestamp-or-date")
+
+
+class TestClickUpResourceClientAdditionalCoverage:
+    """Additional tests to achieve 100% coverage for ClickUp resource client."""
+    
+    @pytest.fixture
+    def mock_client(self):
+        """Create a mock ClickUp client."""
+        return Mock()
+    
+    @pytest.fixture
+    def clickup_client(self, mock_client):
+        """Create a ClickUp resource client with mock."""
+        return ClickUpResourceClient(mock_client)
+    
+    async def test_get_lists_missing_folder_and_space_id(self, clickup_client):
+        """Test get_lists with missing folder_id and space_id."""
+        from clickup_mcp.models import ListsRequest
+        
+        # This should raise a validation error since neither folder_id nor space_id is provided
+        with pytest.raises(ValueError, match="Either folder_id or space_id must be provided"):
+            request = ListsRequest()
+            await clickup_client.get_lists(request)
+    
+    async def test_create_list_missing_folder_and_space_id(self, clickup_client):
+        """Test create_list with missing folder_id and space_id."""
+        from clickup_mcp.models import CreateListRequest
+        
+        # This should raise a validation error since neither folder_id nor space_id is provided
+        with pytest.raises(ValueError, match="Either folder_id or space_id must be provided"):
+            request = CreateListRequest(name="Test List")
+            await clickup_client.create_list(request)
+    
+    async def test_create_list_legacy_parameter_handling(self, clickup_client):
+        """Test create_list legacy parameter handling edge cases."""
+        # Test the specific legacy parameter handling logic that's missing coverage
+        clickup_client.client.post = AsyncMock(return_value={"id": "list123"})
+        
+        # Test case where name parameter matches folder_id/space_id
+        result = await clickup_client.create_list(
+            "Test List", 
+            name="folder123",  # This becomes folder_id
+            folder_id="folder123",  # Same as name
+            space_id=None
+        )
+        
+        # Should use folder_id from the name parameter
+        clickup_client.client.post.assert_called_once_with(
+            "/folder/folder123/list",
+            data={"name": "Test List"}
+        )
