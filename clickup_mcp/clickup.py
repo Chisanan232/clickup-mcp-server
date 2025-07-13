@@ -1,14 +1,23 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List as ListType, Optional
 
 from .client import APIResponse, ClickUpAPIClient, create_clickup_client
 from .models import (
+    # Domain models (preferred approach)
+    Team,
+    Space,
+    Folder,
+    List,
+    Task,
+    User,
+    CustomField,
+    
+    # Legacy models (for backward compatibility)
     CreateFolderRequest,
     CreateListRequest,
     CreateSpaceRequest,
     CreateTaskRequest,
-    CustomField,
     DeleteTaskRequest,
     FolderRequest,
     FoldersRequest,
@@ -22,6 +31,8 @@ from .models import (
     TeamRequest,
     UpdateTaskRequest,
     UserRequest,
+    
+    # Legacy helper functions (for backward compatibility)
     extract_create_list_data,
     extract_create_space_data,
     extract_create_task_data,
@@ -47,66 +58,66 @@ class ClickUpResourceClient:
         """Get all teams for the authenticated user."""
         return await self.client.get("/team")
 
-    async def get_team(self, request: TeamRequest | str) -> APIResponse:
+    async def get_team(self, request: Team | str) -> APIResponse:
         """Get a specific team by ID."""
         if isinstance(request, str):
-            request = TeamRequest(team_id=request)
+            request = Team.get_request(request)
         return await self.client.get(f"/team/{request.team_id}")
 
     # Space operations
-    async def get_spaces(self, request: SpacesRequest | str) -> APIResponse:
+    async def get_spaces(self, request: Space | str) -> APIResponse:
         """Get all spaces in a team."""
         if isinstance(request, str):
-            request = SpacesRequest(team_id=request)
+            request = Space.list_request(request)
         return await self.client.get(f"/team/{request.team_id}/space")
 
-    async def get_space(self, request: SpaceRequest | str) -> APIResponse:
+    async def get_space(self, request: Space | str) -> APIResponse:
         """Get a specific space by ID."""
         if isinstance(request, str):
-            request = SpaceRequest(space_id=request)
+            request = Space.get_request(request)
         return await self.client.get(f"/space/{request.space_id}")
 
-    async def create_space(self, request: CreateSpaceRequest | str, name: str = None, **kwargs) -> APIResponse:
+    async def create_space(self, request: Space | str, name: str = None, **kwargs) -> APIResponse:
         """Create a new space in a team."""
         if isinstance(request, str):
             # Legacy support: first parameter is team_id, second is name
             if name is None:
                 raise ValueError("name parameter is required when using legacy format")
-            request = CreateSpaceRequest(team_id=request, name=name, **kwargs)
-        data = extract_create_space_data(request)
+            request = Space.create_request(request, name, **kwargs)
+        data = request.extract_create_data()
         return await self.client.post(f"/team/{request.team_id}/space", data=data)
 
     # Folder operations
-    async def get_folders(self, request: FoldersRequest | str) -> APIResponse:
+    async def get_folders(self, request: Folder | str) -> APIResponse:
         """Get all folders in a space."""
         if isinstance(request, str):
-            request = FoldersRequest(space_id=request)
+            request = Folder.list_request(request)
         return await self.client.get(f"/space/{request.space_id}/folder")
 
-    async def get_folder(self, request: FolderRequest | str) -> APIResponse:
+    async def get_folder(self, request: Folder | str) -> APIResponse:
         """Get a specific folder by ID."""
         if isinstance(request, str):
-            request = FolderRequest(folder_id=request)
+            request = Folder.get_request(request)
         return await self.client.get(f"/folder/{request.folder_id}")
 
-    async def create_folder(self, request: CreateFolderRequest | str, name: str = None) -> APIResponse:
+    async def create_folder(self, request: Folder | str, name: str = None) -> APIResponse:
         """Create a new folder in a space."""
         if isinstance(request, str):
             # Legacy support: first parameter is space_id, second is name
             if name is None:
                 raise ValueError("name parameter is required when using legacy format")
-            request = CreateFolderRequest(space_id=request, name=name)
-        data = {"name": request.name}
+            request = Folder.create_request(request, name)
+        data = request.extract_create_data()
         return await self.client.post(f"/space/{request.space_id}/folder", data=data)
 
     # List operations
-    async def get_lists(self, request: ListsRequest = None, folder_id: Optional[str] = None, space_id: Optional[str] = None) -> APIResponse:
+    async def get_lists(self, request: List = None, folder_id: Optional[str] = None, space_id: Optional[str] = None) -> APIResponse:
         """Get lists from a folder or space."""
         if request is None:
             # Legacy support: using keyword arguments
             if folder_id is None and space_id is None:
                 raise ValueError("Either folder_id or space_id must be provided")
-            request = ListsRequest(folder_id=folder_id, space_id=space_id)
+            request = List.list_request(folder_id=folder_id, space_id=space_id)
         
         if request.folder_id:
             return await self.client.get(f"/folder/{request.folder_id}/list")
@@ -115,13 +126,13 @@ class ClickUpResourceClient:
         else:
             raise ValueError("Either folder_id or space_id must be provided")
 
-    async def get_list(self, request: ListRequest | str) -> APIResponse:
+    async def get_list(self, request: List | str) -> APIResponse:
         """Get a specific list by ID."""
         if isinstance(request, str):
-            request = ListRequest(list_id=request)
+            request = List.get_request(request)
         return await self.client.get(f"/list/{request.list_id}")
 
-    async def create_list(self, request: CreateListRequest | str, name: str = None, folder_id: Optional[str] = None, space_id: Optional[str] = None, **kwargs) -> APIResponse:
+    async def create_list(self, request: List | str, name: str = None, folder_id: Optional[str] = None, space_id: Optional[str] = None, **kwargs) -> APIResponse:
         """Create a new list in a folder or space."""
         if isinstance(request, str):
             # Legacy support: first parameter is name, then folder_id/space_id
@@ -130,14 +141,14 @@ class ClickUpResourceClient:
                 actual_name = request
                 if name == folder_id or name == space_id:
                     # The name parameter is actually an ID, fix the parameters
-                    request = CreateListRequest(name=actual_name, folder_id=folder_id, space_id=space_id, **kwargs)
+                    request = List.create_request(name=actual_name, folder_id=folder_id, space_id=space_id, **kwargs)
                 else:
-                    request = CreateListRequest(name=actual_name, folder_id=name, space_id=space_id, **kwargs)
+                    request = List.create_request(name=actual_name, folder_id=name, space_id=space_id, **kwargs)
             else:
                 # Legacy support: request is name, use folder_id/space_id from kwargs
-                request = CreateListRequest(name=request, folder_id=folder_id, space_id=space_id, **kwargs)
+                request = List.create_request(name=request, folder_id=folder_id, space_id=space_id, **kwargs)
         
-        data = extract_create_list_data(request)
+        data = request.extract_create_data()
 
         if request.folder_id:
             return await self.client.post(f"/folder/{request.folder_id}/list", data=data)
@@ -147,20 +158,20 @@ class ClickUpResourceClient:
             raise ValueError("Either folder_id or space_id must be provided")
 
     # Task operations
-    async def get_tasks(self, request: TasksRequest | str, **kwargs) -> APIResponse:
+    async def get_tasks(self, request: Task | str, **kwargs) -> APIResponse:
         """Get tasks from a list with optional filtering."""
         if isinstance(request, str):
             # Legacy support: first parameter is list_id, other parameters as kwargs
-            request = TasksRequest(list_id=request, **kwargs)
-        params = extract_tasks_params(request)
+            request = Task.list_request(request, **kwargs)
+        params = request.extract_list_params()
         return await self.client.get(f"/list/{request.list_id}/task", params=params)
 
-    async def get_task(self, request: TaskRequest | str, custom_task_ids: Optional[bool] = None, team_id: Optional[str] = None) -> APIResponse:
+    async def get_task(self, request: Task | str, custom_task_ids: Optional[bool] = None, team_id: Optional[str] = None) -> APIResponse:
         """Get a specific task by ID."""
         if isinstance(request, str):
             # Legacy support: first parameter is task_id, other parameters as kwargs
-            request = TaskRequest(
-                task_id=request,
+            request = Task.get_request(
+                request,
                 custom_task_ids=custom_task_ids if custom_task_ids is not None else False,
                 team_id=team_id
             )
@@ -170,7 +181,7 @@ class ClickUpResourceClient:
 
         return await self.client.get(f"/task/{request.task_id}", params=params)
 
-    async def create_task(self, request: CreateTaskRequest | str, name: str = None, **kwargs) -> APIResponse:
+    async def create_task(self, request: Task | str, name: str = None, **kwargs) -> APIResponse:
         """Create a new task in a list."""
         if isinstance(request, str):
             # Legacy support: first parameter is list_id, second is name
@@ -191,11 +202,11 @@ class ClickUpResourceClient:
                 ]
                 kwargs["custom_fields"] = custom_field_objects
             
-            request = CreateTaskRequest(list_id=request, name=name, **kwargs)
-        data = extract_create_task_data(request)
+            request = Task.create_request(request, name, **kwargs)
+        data = request.extract_create_data()
         return await self.client.post(f"/list/{request.list_id}/task", data=data)
 
-    async def update_task(self, request: UpdateTaskRequest | str, **kwargs) -> APIResponse:
+    async def update_task(self, request: Task | str, **kwargs) -> APIResponse:
         """Update a task with the provided fields."""
         if isinstance(request, str):
             # Legacy support: first parameter is task_id, other parameters as kwargs
@@ -213,16 +224,16 @@ class ClickUpResourceClient:
                 ]
                 kwargs["custom_fields"] = custom_field_objects
             
-            request = UpdateTaskRequest(task_id=request, **kwargs)
-        data = extract_update_task_data(request)
+            request = Task.update_request(request, **kwargs)
+        data = request.extract_update_data()
         return await self.client.put(f"/task/{request.task_id}", data=data)
 
-    async def delete_task(self, request: DeleteTaskRequest | str, custom_task_ids: Optional[bool] = None, team_id: Optional[str] = None) -> APIResponse:
+    async def delete_task(self, request: Task | str, custom_task_ids: Optional[bool] = None, team_id: Optional[str] = None) -> APIResponse:
         """Delete a task by ID."""
         if isinstance(request, str):
             # Legacy support: first parameter is task_id, other parameters as kwargs
-            request = DeleteTaskRequest(
-                task_id=request,
+            request = Task.delete_request(
+                request,
                 custom_task_ids=custom_task_ids if custom_task_ids is not None else False,
                 team_id=team_id
             )
@@ -233,61 +244,63 @@ class ClickUpResourceClient:
         return await self.client.delete(f"/task/{request.task_id}", params=params)
 
     # User operations
-    async def get_user(self, request: UserRequest = UserRequest()) -> APIResponse:
+    async def get_user(self, request: User = None) -> APIResponse:
         """Get the authenticated user's information."""
+        if request is None:
+            request = User.get_request()
         return await self.client.get("/user")
 
-    async def get_team_members(self, request: TeamMembersRequest | str) -> APIResponse:
+    async def get_team_members(self, request: Team | str) -> APIResponse:
         """Get all members of a team."""
         if isinstance(request, str):
-            request = TeamMembersRequest(team_id=request)
+            request = Team.get_members_request(request)
         return await self.client.get(f"/team/{request.team_id}/member")
 
     # Backward compatibility methods - maintaining existing API
     async def get_team_by_id(self, team_id: str) -> APIResponse:
         """Get a specific team by ID (backward compatibility)."""
-        return await self.get_team(TeamRequest(team_id=team_id))
+        return await self.get_team(Team.get_request(team_id))
 
     async def get_spaces_by_team_id(self, team_id: str) -> APIResponse:
         """Get all spaces in a team (backward compatibility)."""
-        return await self.get_spaces(SpacesRequest(team_id=team_id))
+        return await self.get_spaces(Space.list_request(team_id))
 
     async def get_space_by_id(self, space_id: str) -> APIResponse:
         """Get a specific space by ID (backward compatibility)."""
-        return await self.get_space(SpaceRequest(space_id=space_id))
+        return await self.get_space(Space.get_request(space_id))
 
     async def create_space_legacy(self, team_id: str, name: str, **kwargs) -> APIResponse:
         """Create a new space in a team (backward compatibility)."""
-        request = CreateSpaceRequest(team_id=team_id, name=name, **kwargs)
+        request = Space.create_request(team_id, name, **kwargs)
         return await self.create_space(request)
 
     async def get_folders_by_space_id(self, space_id: str) -> APIResponse:
         """Get all folders in a space (backward compatibility)."""
-        return await self.get_folders(FoldersRequest(space_id=space_id))
+        return await self.get_folders(Folder.list_request(space_id))
 
     async def get_folder_by_id(self, folder_id: str) -> APIResponse:
         """Get a specific folder by ID (backward compatibility)."""
-        return await self.get_folder(FolderRequest(folder_id=folder_id))
+        return await self.get_folder(Folder.get_request(folder_id))
 
     async def create_folder_legacy(self, space_id: str, name: str) -> APIResponse:
         """Create a new folder in a space (backward compatibility)."""
-        request = CreateFolderRequest(space_id=space_id, name=name)
+        request = Folder.create_request(space_id, name)
         return await self.create_folder(request)
 
     async def get_lists_legacy(self, folder_id: Optional[str] = None, space_id: Optional[str] = None) -> APIResponse:
         """Get lists from a folder or space (backward compatibility)."""
-        request = ListsRequest(folder_id=folder_id, space_id=space_id)
+        request = List.list_request(folder_id=folder_id, space_id=space_id)
         return await self.get_lists(request)
 
     async def get_list_by_id(self, list_id: str) -> APIResponse:
         """Get a specific list by ID (backward compatibility)."""
-        return await self.get_list(ListRequest(list_id=list_id))
+        return await self.get_list(List.get_request(list_id))
 
     async def create_list_legacy(
         self, name: str, folder_id: Optional[str] = None, space_id: Optional[str] = None, **kwargs
     ) -> APIResponse:
         """Create a new list in a folder or space (backward compatibility)."""
-        request = CreateListRequest(name=name, folder_id=folder_id, space_id=space_id, **kwargs)
+        request = List.create_request(name=name, folder_id=folder_id, space_id=space_id, **kwargs)
         return await self.create_list(request)
 
     async def get_tasks_legacy(
@@ -297,20 +310,20 @@ class ClickUpResourceClient:
         order_by: str = "created",
         reverse: bool = False,
         subtasks: bool = False,
-        statuses: Optional[List[str]] = None,
+        statuses: Optional[ListType[str]] = None,
         include_closed: bool = False,
-        assignees: Optional[List[str]] = None,
-        tags: Optional[List[str]] = None,
+        assignees: Optional[ListType[str]] = None,
+        tags: Optional[ListType[str]] = None,
         due_date_gt: Optional[int] = None,
         due_date_lt: Optional[int] = None,
         date_created_gt: Optional[int] = None,
         date_created_lt: Optional[int] = None,
         date_updated_gt: Optional[int] = None,
         date_updated_lt: Optional[int] = None,
-        custom_fields: Optional[List[Dict[str, Any]]] = None,
+        custom_fields: Optional[ListType[Dict[str, Any]]] = None,
     ) -> APIResponse:
         """Get tasks from a list with optional filtering (backward compatibility)."""
-        request = TasksRequest(
+        request = Task.list_request(
             list_id=list_id,
             page=page,
             order_by=order_by,
@@ -332,7 +345,7 @@ class ClickUpResourceClient:
 
     async def get_task_by_id(self, task_id: str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> APIResponse:
         """Get a specific task by ID (backward compatibility)."""
-        request = TaskRequest(task_id=task_id, custom_task_ids=custom_task_ids, team_id=team_id)
+        request = Task.get_request(task_id=task_id, custom_task_ids=custom_task_ids, team_id=team_id)
         return await self.get_task(request)
 
     async def create_task_legacy(
@@ -340,8 +353,8 @@ class ClickUpResourceClient:
         list_id: str,
         name: str,
         description: Optional[str] = None,
-        assignees: Optional[List[str]] = None,
-        tags: Optional[List[str]] = None,
+        assignees: Optional[ListType[str]] = None,
+        tags: Optional[ListType[str]] = None,
         status: Optional[str] = None,
         priority: Optional[int] = None,
         due_date: Optional[int] = None,
@@ -353,7 +366,7 @@ class ClickUpResourceClient:
         parent: Optional[str] = None,
         links_to: Optional[str] = None,
         check_required_custom_fields: Optional[bool] = True,
-        custom_fields: Optional[List[Dict[str, Any]]] = None,
+        custom_fields: Optional[ListType[Dict[str, Any]]] = None,
     ) -> APIResponse:
         """Create a new task in a list (backward compatibility)."""
         # Convert dict custom_fields to CustomField objects if needed
@@ -369,7 +382,7 @@ class ClickUpResourceClient:
                 for field in custom_fields
             ]
 
-        request = CreateTaskRequest(
+        request = Task.create_request(
             list_id=list_id,
             name=name,
             description=description,
@@ -406,14 +419,14 @@ class ClickUpResourceClient:
             ]
             kwargs["custom_fields"] = custom_field_objects
 
-        request = UpdateTaskRequest(task_id=task_id, **kwargs)
+        request = Task.update_request(task_id=task_id, **kwargs)
         return await self.update_task(request)
 
     async def delete_task_by_id(
         self, task_id: str, custom_task_ids: bool = False, team_id: Optional[str] = None
     ) -> APIResponse:
         """Delete a task by ID (backward compatibility)."""
-        request = DeleteTaskRequest(task_id=task_id, custom_task_ids=custom_task_ids, team_id=team_id)
+        request = Task.delete_request(task_id=task_id, custom_task_ids=custom_task_ids, team_id=team_id)
         return await self.delete_task(request)
 
     async def get_user_info(self) -> APIResponse:
@@ -422,7 +435,7 @@ class ClickUpResourceClient:
 
     async def get_team_members_by_id(self, team_id: str) -> APIResponse:
         """Get all members of a team (backward compatibility)."""
-        request = TeamMembersRequest(team_id=team_id)
+        request = Team.get_members_request(team_id)
         return await self.get_team_members(request)
 
 

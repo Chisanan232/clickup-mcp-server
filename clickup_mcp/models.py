@@ -312,7 +312,7 @@ class Task(ClickUpBaseModel):
     parent: Optional[str] = Field(None, description="Parent task ID for subtasks")
     links_to: Optional[str] = Field(None, description="Link to another task")
     check_required_custom_fields: Optional[bool] = Field(True, description="Check required custom fields")
-    custom_fields: Optional[ListType[CustomField]] = Field(None, description="Custom field values")
+    custom_fields: Optional[ListType[Union[CustomField, Dict[str, Any]]]] = Field(None, description="Custom field values or filters")
     custom_task_ids: Optional[bool] = Field(False, description="Use custom task IDs")
     team_id: Optional[str] = Field(None, description="The team ID")
     
@@ -397,7 +397,9 @@ class Task(ClickUpBaseModel):
             data["check_required_custom_fields"] = self.check_required_custom_fields
         if self.custom_fields:
             data["custom_fields"] = [
-                {"field_id": field.id, "value": field.value} for field in self.custom_fields
+                {"field_id": field.id, "value": field.value} if isinstance(field, CustomField) 
+                else {"field_id": field.get("id", field.get("field_id", "")), "value": field.get("value", None)}
+                for field in self.custom_fields
             ]
         
         return data
@@ -426,7 +428,9 @@ class Task(ClickUpBaseModel):
             data["start_date"] = self.start_date
         if self.custom_fields:
             data["custom_fields"] = [
-                {"field_id": field.id, "value": field.value} for field in self.custom_fields
+                {"field_id": field.id, "value": field.value} if isinstance(field, CustomField) 
+                else {"field_id": field.get("id", field.get("field_id", "")), "value": field.get("value", None)}
+                for field in self.custom_fields
             ]
         
         return data
