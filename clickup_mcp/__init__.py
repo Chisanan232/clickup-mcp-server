@@ -28,20 +28,32 @@ from .exceptions import (
     ValidationError,
 )
 from .models import (
+    # Domain models (new preferred approach)
+    Team,
+    Space,
+    Folder,
+    List,
+    Task,
+    User,
+    CustomField,
+    
+    # Response models
     ClickUpFolder,
     ClickUpList,
     ClickUpSpace,
     ClickUpTask,
     ClickUpTeam,
     ClickUpUser,
+    
+    # Legacy request models (for backward compatibility)
     CreateFolderRequest,
     CreateListRequest,
     CreateSpaceRequest,
     CreateTaskRequest,
-    CustomField,
     DeleteTaskRequest,
     FolderRequest,
     FoldersRequest,
+    FolderListRequest,
     ListRequest,
     ListsRequest,
     SpaceRequest,
@@ -95,7 +107,16 @@ __all__ = [
     "RetryExhaustedError",
     "MCPError",
     "MCPToolError",
-    # Data Models - Request Models
+    # Domain Models (new preferred approach)
+    "Team",
+    "Space", 
+    "Folder",
+    "List",
+    "Task",
+    "User",
+    "CustomField",
+    
+    # Legacy Request Models (for backward compatibility)
     "TeamRequest",
     "TeamMembersRequest",
     "SpaceRequest",
@@ -103,6 +124,7 @@ __all__ = [
     "CreateSpaceRequest",
     "FolderRequest",
     "FoldersRequest",
+    "FolderListRequest",
     "CreateFolderRequest",
     "ListRequest",
     "ListsRequest",
@@ -113,8 +135,8 @@ __all__ = [
     "UpdateTaskRequest",
     "DeleteTaskRequest",
     "UserRequest",
-    "CustomField",
-    # Data Models - Response Models
+    
+    # Response Models
     "ClickUpUser",
     "ClickUpTeam",
     "ClickUpSpace",
