@@ -7,21 +7,22 @@ and responses, following PEP 484/585 standards for type hints and domain-driven 
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any, Dict, List as ListType, Optional, Union
+from typing import Any, Dict
+from typing import List as ListType
+from typing import Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 def snake_to_camel(field: str) -> str:
     """Convert snake_case to camelCase for ClickUp API compatibility."""
-    parts = field.split('_')
-    return parts[0] + ''.join(p.title() for p in parts[1:])
+    parts = field.split("_")
+    return parts[0] + "".join(p.title() for p in parts[1:])
 
 
 class ClickUpBaseModel(BaseModel):
     """Base model for all ClickUp data models."""
-    
+
     model_config = ConfigDict(
         populate_by_name=True,
         alias_generator=snake_to_camel,
@@ -33,23 +34,26 @@ class ClickUpBaseModel(BaseModel):
 
 # Domain Models with Converged Logic
 
+
 class Team(ClickUpBaseModel):
     """Domain model for ClickUp Team operations."""
+
     team_id: str = Field(..., description="The team ID")
-    
+
     @classmethod
-    def get_request(cls, team_id: str) -> 'Team':
+    def get_request(cls, team_id: str) -> "Team":
         """Create a request for getting a specific team."""
         return cls(team_id=team_id)
-    
+
     @classmethod
-    def get_members_request(cls, team_id: str) -> 'Team':
+    def get_members_request(cls, team_id: str) -> "Team":
         """Create a request for getting team members."""
         return cls(team_id=team_id)
 
 
 class Space(ClickUpBaseModel):
     """Domain model for ClickUp Space operations."""
+
     space_id: Optional[str] = Field(None, description="The space ID")
     team_id: Optional[str] = Field(None, description="The team ID")
     name: Optional[str] = Field(None, description="The space name")
@@ -57,33 +61,33 @@ class Space(ClickUpBaseModel):
     multiple_assignees: Optional[bool] = Field(None, description="Allow multiple assignees")
     features: Optional[Dict[str, Any]] = Field(None, description="Space features configuration")
     private: Optional[bool] = Field(None, description="Private space flag")
-    
+
     @classmethod
-    def get_request(cls, space_id: str) -> 'Space':
+    def get_request(cls, space_id: str) -> "Space":
         """Create a request for getting a specific space."""
         return cls(space_id=space_id)
-    
+
     @classmethod
-    def list_request(cls, team_id: str) -> 'Space':
+    def list_request(cls, team_id: str) -> "Space":
         """Create a request for listing spaces in a team."""
         return cls(team_id=team_id)
-    
+
     @classmethod
-    def create_request(cls, team_id: str, name: str, **kwargs) -> 'Space':
+    def create_request(cls, team_id: str, name: str, **kwargs) -> "Space":
         """Create a request for creating a new space."""
         return cls(team_id=team_id, name=name, **kwargs)
-    
-    @model_validator(mode='after')
+
+    @model_validator(mode="after")
     def validate_create_request(self):
         """Validate create request has required fields."""
         if self.name and not self.team_id:
             raise ValueError("team_id is required when creating a space")
         return self
-    
+
     def extract_create_data(self) -> Dict[str, Any]:
         """Extract data for space creation."""
         data = {"name": self.name}
-        
+
         if self.description:
             data["description"] = self.description
         if self.multiple_assignees is not None:
@@ -92,38 +96,39 @@ class Space(ClickUpBaseModel):
             data["features"] = self.features
         if self.private is not None:
             data["private"] = self.private
-        
+
         return data
 
 
 class Folder(ClickUpBaseModel):
     """Domain model for ClickUp Folder operations."""
+
     folder_id: Optional[str] = Field(None, description="The folder ID")
     space_id: Optional[str] = Field(None, description="The space ID")
     name: Optional[str] = Field(None, description="The folder name")
-    
+
     @classmethod
-    def get_request(cls, folder_id: str) -> 'Folder':
+    def get_request(cls, folder_id: str) -> "Folder":
         """Create a request for getting a specific folder."""
         return cls(folder_id=folder_id)
-    
+
     @classmethod
-    def list_request(cls, space_id: str) -> 'Folder':
+    def list_request(cls, space_id: str) -> "Folder":
         """Create a request for listing folders in a space."""
         return cls(space_id=space_id)
-    
+
     @classmethod
-    def create_request(cls, space_id: str, name: str) -> 'Folder':
+    def create_request(cls, space_id: str, name: str) -> "Folder":
         """Create a request for creating a new folder."""
         return cls(space_id=space_id, name=name)
-    
-    @model_validator(mode='after')
+
+    @model_validator(mode="after")
     def validate_create_request(self):
         """Validate create request has required fields."""
         if self.name and not self.space_id:
             raise ValueError("space_id is required when creating a folder")
         return self
-    
+
     def extract_create_data(self) -> Dict[str, Any]:
         """Extract data for folder creation."""
         return {"name": self.name}
@@ -131,6 +136,7 @@ class Folder(ClickUpBaseModel):
 
 class ClickUpListDomain(ClickUpBaseModel):
     """Domain model for ClickUp List operations."""
+
     list_id: Optional[str] = Field(None, description="The list ID")
     folder_id: Optional[str] = Field(None, description="The folder ID")
     space_id: Optional[str] = Field(None, description="The space ID")
@@ -141,37 +147,37 @@ class ClickUpListDomain(ClickUpBaseModel):
     priority: Optional[int] = Field(None, description="Priority level")
     assignee: Optional[str] = Field(None, description="Assignee ID")
     status: Optional[str] = Field(None, description="Status")
-    
+
     @classmethod
-    def get_request(cls, list_id: str) -> 'ClickUpListDomain':
+    def get_request(cls, list_id: str) -> "ClickUpListDomain":
         """Create a request for getting a specific list."""
         return cls(list_id=list_id)
-    
+
     @classmethod
-    def list_request(cls, folder_id: str = None, space_id: str = None) -> 'ClickUpListDomain':
+    def list_request(cls, folder_id: str = None, space_id: str = None) -> "ClickUpListDomain":
         """Create a request for listing lists in a folder or space."""
         if not folder_id and not space_id:
             raise ValueError("Either folder_id or space_id must be provided")
         return cls(folder_id=folder_id, space_id=space_id)
-    
+
     @classmethod
-    def create_request(cls, name: str, folder_id: str = None, space_id: str = None, **kwargs) -> 'ClickUpListDomain':
+    def create_request(cls, name: str, folder_id: str = None, space_id: str = None, **kwargs) -> "ClickUpListDomain":
         """Create a request for creating a new list."""
         if not folder_id and not space_id:
             raise ValueError("Either folder_id or space_id must be provided")
         return cls(name=name, folder_id=folder_id, space_id=space_id, **kwargs)
-    
-    @model_validator(mode='after')
+
+    @model_validator(mode="after")
     def validate_list_request(self):
         """Validate list request has required fields."""
         if self.name and not self.folder_id and not self.space_id:
             raise ValueError("Either folder_id or space_id must be provided when creating a list")
         return self
-    
+
     def extract_create_data(self) -> Dict[str, Any]:
         """Extract data for list creation."""
         data = {"name": self.name}
-        
+
         if self.content:
             data["content"] = self.content
         if self.due_date:
@@ -184,7 +190,7 @@ class ClickUpListDomain(ClickUpBaseModel):
             data["assignee"] = self.assignee
         if self.status:
             data["status"] = self.status
-        
+
         return data
 
 
@@ -194,6 +200,7 @@ List = ClickUpListDomain
 
 class CustomField(ClickUpBaseModel):
     """Model for custom field configuration."""
+
     id: str = Field(..., description="Custom field ID")
     name: str = Field(..., description="Custom field name")
     type: str = Field(..., description="Custom field type")
@@ -202,6 +209,7 @@ class CustomField(ClickUpBaseModel):
 
 class Task(ClickUpBaseModel):
     """Domain model for ClickUp Task operations."""
+
     task_id: Optional[str] = Field(None, description="The task ID")
     list_id: Optional[str] = Field(None, description="The list ID")
     name: Optional[str] = Field(None, description="Task name")
@@ -219,10 +227,12 @@ class Task(ClickUpBaseModel):
     parent: Optional[str] = Field(None, description="Parent task ID for subtasks")
     links_to: Optional[str] = Field(None, description="Link to another task")
     check_required_custom_fields: Optional[bool] = Field(True, description="Check required custom fields")
-    custom_fields: Optional[ListType[Union[CustomField, Dict[str, Any]]]] = Field(None, description="Custom field values or filters")
+    custom_fields: Optional[ListType[Union[CustomField, Dict[str, Any]]]] = Field(
+        None, description="Custom field values or filters"
+    )
     custom_task_ids: Optional[bool] = Field(False, description="Use custom task IDs")
     team_id: Optional[str] = Field(None, description="The team ID")
-    
+
     # Task list filtering options
     page: Optional[int] = Field(0, description="Page number for pagination")
     order_by: Optional[str] = Field("created", description="Field to order by")
@@ -236,44 +246,44 @@ class Task(ClickUpBaseModel):
     date_created_lt: Optional[int] = Field(None, description="Created date less than (Unix timestamp)")
     date_updated_gt: Optional[int] = Field(None, description="Updated date greater than (Unix timestamp)")
     date_updated_lt: Optional[int] = Field(None, description="Updated date less than (Unix timestamp)")
-    
+
     @classmethod
-    def get_request(cls, task_id: str, custom_task_ids: bool = False, team_id: str = None) -> 'Task':
+    def get_request(cls, task_id: str, custom_task_ids: bool = False, team_id: str = None) -> "Task":
         """Create a request for getting a specific task."""
         return cls(task_id=task_id, custom_task_ids=custom_task_ids, team_id=team_id)
-    
+
     @classmethod
-    def list_request(cls, list_id: str, **kwargs) -> 'Task':
+    def list_request(cls, list_id: str, **kwargs) -> "Task":
         """Create a request for listing tasks in a list."""
         return cls(list_id=list_id, **kwargs)
-    
+
     @classmethod
-    def create_request(cls, list_id: str, name: str, **kwargs) -> 'Task':
+    def create_request(cls, list_id: str, name: str, **kwargs) -> "Task":
         """Create a request for creating a new task."""
         return cls(list_id=list_id, name=name, **kwargs)
-    
+
     @classmethod
-    def update_request(cls, task_id: str, **kwargs) -> 'Task':
+    def update_request(cls, task_id: str, **kwargs) -> "Task":
         """Create a request for updating a task."""
         return cls(task_id=task_id, **kwargs)
-    
+
     @classmethod
-    def delete_request(cls, task_id: str, custom_task_ids: bool = False, team_id: str = None) -> 'Task':
+    def delete_request(cls, task_id: str, custom_task_ids: bool = False, team_id: str = None) -> "Task":
         """Create a request for deleting a task."""
         return cls(task_id=task_id, custom_task_ids=custom_task_ids, team_id=team_id)
-    
-    @field_validator('priority')
+
+    @field_validator("priority")
     @classmethod
     def validate_priority(cls, v):
         """Validate priority is between 0-4."""
         if v is not None and (v < 0 or v > 4):
             raise ValueError("Priority must be between 0 (no priority) and 4 (low)")
         return v
-    
+
     def extract_create_data(self) -> Dict[str, Any]:
         """Extract data for task creation."""
         data = {"name": self.name}
-        
+
         if self.description:
             data["description"] = self.description
         if self.assignees:
@@ -304,17 +314,20 @@ class Task(ClickUpBaseModel):
             data["check_required_custom_fields"] = self.check_required_custom_fields
         if self.custom_fields:
             data["custom_fields"] = [
-                {"field_id": field.id, "value": field.value} if isinstance(field, CustomField) 
-                else {"field_id": field.get("id", field.get("field_id", "")), "value": field.get("value", None)}
+                (
+                    {"field_id": field.id, "value": field.value}
+                    if isinstance(field, CustomField)
+                    else {"field_id": field.get("id", field.get("field_id", "")), "value": field.get("value", None)}
+                )
                 for field in self.custom_fields
             ]
-        
+
         return data
-    
+
     def extract_update_data(self) -> Dict[str, Any]:
         """Extract data for task update."""
         data = {}
-        
+
         if self.name:
             data["name"] = self.name
         if self.description:
@@ -335,13 +348,16 @@ class Task(ClickUpBaseModel):
             data["start_date"] = self.start_date
         if self.custom_fields:
             data["custom_fields"] = [
-                {"field_id": field.id, "value": field.value} if isinstance(field, CustomField) 
-                else {"field_id": field.get("id", field.get("field_id", "")), "value": field.get("value", None)}
+                (
+                    {"field_id": field.id, "value": field.value}
+                    if isinstance(field, CustomField)
+                    else {"field_id": field.get("id", field.get("field_id", "")), "value": field.get("value", None)}
+                )
                 for field in self.custom_fields
             ]
-        
+
         return data
-    
+
     def extract_list_params(self) -> Dict[str, Any]:
         """Extract parameters for task listing."""
         params = {
@@ -351,7 +367,7 @@ class Task(ClickUpBaseModel):
             "subtasks": self.subtasks,
             "include_closed": self.include_closed,
         }
-        
+
         # Add optional parameters if provided
         if self.statuses:
             params["statuses[]"] = self.statuses
@@ -373,15 +389,15 @@ class Task(ClickUpBaseModel):
             params["date_updated_lt"] = self.date_updated_lt
         if self.custom_fields:
             params["custom_fields"] = self.custom_fields
-        
+
         return params
 
 
 class User(ClickUpBaseModel):
     """Domain model for ClickUp User operations."""
-    
+
     @classmethod
-    def get_request(cls) -> 'User':
+    def get_request(cls) -> "User":
         """Create a request for getting the authenticated user."""
         return cls()
 
@@ -389,6 +405,7 @@ class User(ClickUpBaseModel):
 # Response Models
 class ClickUpUser(ClickUpBaseModel):
     """Model for ClickUp user data."""
+
     id: str = Field(..., description="User ID")
     username: str = Field(..., description="Username")
     email: str = Field(..., description="Email address")
@@ -402,6 +419,7 @@ class ClickUpUser(ClickUpBaseModel):
 
 class ClickUpTeam(ClickUpBaseModel):
     """Model for ClickUp team data."""
+
     id: str = Field(..., description="Team ID")
     name: str = Field(..., description="Team name")
     color: Optional[str] = Field(None, description="Team color")
@@ -411,6 +429,7 @@ class ClickUpTeam(ClickUpBaseModel):
 
 class ClickUpSpace(ClickUpBaseModel):
     """Model for ClickUp space data."""
+
     id: str = Field(..., description="Space ID")
     name: str = Field(..., description="Space name")
     color: Optional[str] = Field(None, description="Space color")
@@ -424,6 +443,7 @@ class ClickUpSpace(ClickUpBaseModel):
 
 class ClickUpFolder(ClickUpBaseModel):
     """Model for ClickUp folder data."""
+
     id: str = Field(..., description="Folder ID")
     name: str = Field(..., description="Folder name")
     orderindex: Optional[int] = Field(None, description="Order index")
@@ -436,6 +456,7 @@ class ClickUpFolder(ClickUpBaseModel):
 
 class ClickUpList(ClickUpBaseModel):
     """Model for ClickUp list data."""
+
     id: str = Field(..., description="List ID")
     name: str = Field(..., description="List name")
     orderindex: Optional[int] = Field(None, description="Order index")
@@ -457,6 +478,7 @@ class ClickUpList(ClickUpBaseModel):
 
 class ClickUpTask(ClickUpBaseModel):
     """Model for ClickUp task data."""
+
     id: str = Field(..., description="Task ID")
     custom_id: Optional[str] = Field(None, description="Custom task ID")
     name: str = Field(..., description="Task name")

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import patch, Mock, AsyncMock
-import json
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -727,11 +726,12 @@ class TestClickUpResourceClientParameterValidation(BaseAPIClientTestSuite):
         with patch.object(resource_client.client, "delete", return_value=APIResponse(status_code=200)) as mock_delete:
             # Create a test task and explicitly set team_id
             from clickup_mcp.models import Task
+
             task = Task.delete_request("task123", team_id="team456")
-            
+
             # Call delete_task with the task request
             await resource_client.delete_task(task)
-            
+
             # Verify params contain both custom_task_ids and team_id
             mock_delete.assert_called_once()
             call_args = mock_delete.call_args
@@ -956,7 +956,7 @@ class TestBackwardCompatibilityMethods(BaseAPIClientTestSuite):
                 date_created_lt=1640995200000,
                 date_updated_gt=1640995200000,
                 date_updated_lt=1641081600000,
-                custom_fields=[{"field_id": "cf1", "operator": "=", "value": "test"}]
+                custom_fields=[{"field_id": "cf1", "operator": "=", "value": "test"}],
             )
             mock_get.assert_called_once()
             args, kwargs = mock_get.call_args
@@ -1010,7 +1010,7 @@ class TestBackwardCompatibilityMethods(BaseAPIClientTestSuite):
                 parent="parent123",
                 links_to="link123",
                 check_required_custom_fields=False,
-                custom_fields=[{"id": "cf1", "value": "test"}]
+                custom_fields=[{"id": "cf1", "value": "test"}],
             )
             mock_post.assert_called_once()
             args, kwargs = mock_post.call_args
@@ -1041,7 +1041,7 @@ class TestBackwardCompatibilityMethods(BaseAPIClientTestSuite):
         with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200)) as mock_post:
             custom_fields = [
                 {"id": "cf1", "name": "Priority", "type": "drop_down", "value": "High"},
-                {"id": "cf2", "name": "Budget", "type": "number", "value": 1000}
+                {"id": "cf2", "name": "Budget", "type": "number", "value": 1000},
             ]
             await resource_client.create_task_legacy("list123", "Test Task", custom_fields=custom_fields)
             mock_post.assert_called_once()
@@ -1062,7 +1062,7 @@ class TestBackwardCompatibilityMethods(BaseAPIClientTestSuite):
                 name="Updated Task",
                 description="Updated description",
                 priority=2,
-                custom_fields=[{"id": "cf1", "value": "updated"}]
+                custom_fields=[{"id": "cf1", "value": "updated"}],
             )
             mock_put.assert_called_once()
             args, kwargs = mock_put.call_args
@@ -1081,7 +1081,7 @@ class TestBackwardCompatibilityMethods(BaseAPIClientTestSuite):
         with patch.object(resource_client.client, "put", return_value=APIResponse(status_code=200)) as mock_put:
             custom_fields = [
                 {"id": "cf1", "name": "Status", "type": "drop_down", "value": "Complete"},
-                {"id": "cf2", "name": "Score", "type": "number", "value": 95}
+                {"id": "cf2", "name": "Score", "type": "number", "value": 95},
             ]
             await resource_client.update_task_legacy("task123", custom_fields=custom_fields)
             mock_put.assert_called_once()
@@ -1174,7 +1174,7 @@ class TestClickUpResourceClientEdgeCaseParameters(BaseAPIClientTestSuite):
     async def test_get_lists_with_request_only(self, resource_client: ClickUpResourceClient) -> None:
         """Test get_lists with a request object containing folder_id."""
         from clickup_mcp.models import List
-        
+
         request = List.list_request(folder_id="folder123")
         with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
             await resource_client.get_lists(request)
@@ -1184,7 +1184,7 @@ class TestClickUpResourceClientEdgeCaseParameters(BaseAPIClientTestSuite):
     async def test_get_lists_with_request_and_params(self, resource_client: ClickUpResourceClient) -> None:
         """Test get_lists with both request object and folder_id/space_id params (request should take precedence)."""
         from clickup_mcp.models import List
-        
+
         request = List.list_request(folder_id="folder_from_request")
         with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
             # Even though we pass folder_id and space_id, the request object should take precedence
@@ -1336,29 +1336,26 @@ class TestCustomFieldConversion(BaseAPIClientTestSuite):
     @pytest.mark.asyncio
     async def test_create_task_with_dict_custom_fields(self, resource_client: ClickUpResourceClient) -> None:
         """Test creating a task with dictionary custom_fields gets properly converted."""
-        from clickup_mcp.models import Task, CustomField
-        
+        from clickup_mcp.models import CustomField, Task
+
         custom_fields = [
             {"id": "field1", "name": "Field 1", "type": "text", "value": "Test Value"},
-            {"field_id": "field2", "name": "Field 2", "type": "number", "value": 456}
+            {"field_id": "field2", "name": "Field 2", "type": "number", "value": 456},
         ]
-        
+
         # Create a mock task
         mock_task = Mock(spec=Task)
         mock_task.list_id = "list123"
         mock_task.extract_create_data.return_value = {
             "name": "Task Name",
-            "custom_fields": [
-                {"id": "field1", "value": "Test Value"},
-                {"id": "field2", "value": 456}
-            ]
+            "custom_fields": [{"id": "field1", "value": "Test Value"}, {"id": "field2", "value": 456}],
         }
-        
+
         # Mock the Task.create_request to return our mock task
         with patch("clickup_mcp.models.Task.create_request", return_value=mock_task) as mock_create:
             with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200)) as mock_post:
                 await resource_client.create_task("list123", "Task Name", custom_fields=custom_fields)
-                
+
                 # Verify custom field objects were created
                 custom_fields_arg = mock_create.call_args[1]["custom_fields"]
                 assert len(custom_fields_arg) == 2
@@ -1366,7 +1363,7 @@ class TestCustomFieldConversion(BaseAPIClientTestSuite):
                 assert isinstance(custom_fields_arg[1], CustomField)
                 assert custom_fields_arg[0].id == "field1"
                 assert custom_fields_arg[1].id == "field2"
-                
+
                 # Check that the post was called correctly
                 mock_post.assert_called_once()
                 url = mock_post.call_args[0][0]
@@ -1378,28 +1375,25 @@ class TestCustomFieldConversion(BaseAPIClientTestSuite):
     @pytest.mark.asyncio
     async def test_update_task_with_dict_custom_fields(self, resource_client: ClickUpResourceClient) -> None:
         """Test updating a task with dictionary custom_fields gets properly converted."""
-        from clickup_mcp.models import Task, CustomField
-        
+        from clickup_mcp.models import CustomField, Task
+
         custom_fields = [
             {"id": "field1", "name": "Field 1", "type": "text", "value": "Updated Value"},
-            {"field_id": "field2", "name": "Field 2", "type": "number", "value": 456}
+            {"field_id": "field2", "name": "Field 2", "type": "number", "value": 456},
         ]
-        
+
         # Create a mock task
         mock_task = Mock(spec=Task)
         mock_task.task_id = "task123"
         mock_task.extract_update_data.return_value = {
-            "custom_fields": [
-                {"id": "field1", "value": "Updated Value"},
-                {"id": "field2", "value": 456}
-            ]
+            "custom_fields": [{"id": "field1", "value": "Updated Value"}, {"id": "field2", "value": 456}]
         }
-        
+
         # Mock the Task.update_request to return our mock task
         with patch("clickup_mcp.models.Task.update_request", return_value=mock_task) as mock_update:
             with patch.object(resource_client.client, "put", return_value=APIResponse(status_code=200)) as mock_put:
                 await resource_client.update_task("task123", custom_fields=custom_fields)
-                
+
                 # Verify custom field objects were created
                 custom_fields_arg = mock_update.call_args[1]["custom_fields"]
                 assert len(custom_fields_arg) == 2
@@ -1407,7 +1401,7 @@ class TestCustomFieldConversion(BaseAPIClientTestSuite):
                 assert isinstance(custom_fields_arg[1], CustomField)
                 assert custom_fields_arg[0].id == "field1"
                 assert custom_fields_arg[1].id == "field2"
-                
+
                 # Check that the put was called correctly
                 mock_put.assert_called_once()
                 url = mock_put.call_args[0][0]
@@ -1421,7 +1415,7 @@ class TestCustomFieldConversion(BaseAPIClientTestSuite):
         """Test get_task with both custom_task_ids and team_id parameters."""
         with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
             await resource_client.get_task("task123", custom_task_ids=True, team_id="team456")
-            
+
             # Verify correct parameters were passed
             call_args = mock_get.call_args
             assert call_args is not None
@@ -1435,7 +1429,7 @@ class TestCustomFieldConversion(BaseAPIClientTestSuite):
         """Test delete_task with both custom_task_ids and team_id parameters."""
         with patch.object(resource_client.client, "delete", return_value=APIResponse(status_code=200)) as mock_delete:
             await resource_client.delete_task("task123", custom_task_ids=True, team_id="team456")
-            
+
             # Verify correct parameters were passed
             call_args = mock_delete.call_args
             assert call_args is not None
@@ -1448,16 +1442,16 @@ class TestCustomFieldConversion(BaseAPIClientTestSuite):
     async def test_delete_task_without_team_id(self, resource_client: ClickUpResourceClient) -> None:
         """Test delete_task with a Task object that doesn't have team_id (to cover line 132)."""
         from clickup_mcp.models import Task
-        
+
         # Create a mock task that has custom_task_ids but no team_id
         mock_task = Mock(spec=Task)
         mock_task.task_id = "task123"
         mock_task.custom_task_ids = True
         mock_task.team_id = None
-        
+
         with patch.object(resource_client.client, "delete", return_value=APIResponse(status_code=200)) as mock_delete:
             await resource_client.delete_task(mock_task)
-            
+
             # Verify correct parameters were passed (no team_id in params)
             mock_delete.assert_called_once()
             url = mock_delete.call_args[0][0]

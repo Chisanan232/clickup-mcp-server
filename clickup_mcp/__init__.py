@@ -27,23 +27,20 @@ from .exceptions import (
     TimeoutError,
     ValidationError,
 )
-from .models import (
-    # Domain models (new preferred approach)
-    Team,
-    Space,
-    Folder,
-    List,
-    Task,
-    User,
-    CustomField,
-    
-    # Response models
+from .models import (  # Domain models (new preferred approach); Response models
     ClickUpFolder,
     ClickUpList,
     ClickUpSpace,
     ClickUpTask,
     ClickUpTeam,
     ClickUpUser,
+    CustomField,
+    Folder,
+    List,
+    Space,
+    Task,
+    Team,
+    User,
 )
 from .utils import (
     ClickUpURLBuilder,
@@ -89,13 +86,12 @@ __all__ = [
     "MCPToolError",
     # Domain Models (new preferred approach)
     "Team",
-    "Space", 
+    "Space",
     "Folder",
     "List",
     "Task",
     "User",
     "CustomField",
-
     # Response Models
     "ClickUpUser",
     "ClickUpTeam",
