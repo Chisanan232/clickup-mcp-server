@@ -1143,10 +1143,10 @@ class TestClickUpResourceClientErrorHandling(BaseAPIClientTestSuite):
     @pytest.mark.asyncio
     async def test_create_list_missing_name_parameter(self, resource_client: ClickUpResourceClient) -> None:
         """Test error when creating list using str folder_id without name parameter."""
-        with patch("clickup_mcp.models.List.create_request") as mock_create:
+        with patch("clickup_mcp.models.ClickUpList.create_request") as mock_create:
             # This simulates what happens inside create_list when name is missing
-            mock_create.side_effect = ValueError("name parameter is required when using legacy format")
-            with pytest.raises(ValueError, match="name parameter is required when using legacy format"):
+            mock_create.side_effect = ValueError("Either folder_id or space_id must be provided")
+            with pytest.raises(ValueError, match="Either folder_id or space_id must be provided"):
                 await resource_client.create_list("folder123")
 
     @pytest.mark.asyncio
@@ -1173,9 +1173,9 @@ class TestClickUpResourceClientEdgeCaseParameters(BaseAPIClientTestSuite):
     @pytest.mark.asyncio
     async def test_get_lists_with_request_only(self, resource_client: ClickUpResourceClient) -> None:
         """Test get_lists with a request object containing folder_id."""
-        from clickup_mcp.models import List
+        from clickup_mcp.models import ClickUpList
 
-        request = List.list_request(folder_id="folder123")
+        request = ClickUpList(folder_id="folder123")
         with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
             await resource_client.get_lists(request)
             mock_get.assert_called_once_with("/folder/folder123/list")
@@ -1183,9 +1183,9 @@ class TestClickUpResourceClientEdgeCaseParameters(BaseAPIClientTestSuite):
     @pytest.mark.asyncio
     async def test_get_lists_with_request_and_params(self, resource_client: ClickUpResourceClient) -> None:
         """Test get_lists with both request object and folder_id/space_id params (request should take precedence)."""
-        from clickup_mcp.models import List
+        from clickup_mcp.models import ClickUpList
 
-        request = List.list_request(folder_id="folder_from_request")
+        request = ClickUpList(folder_id="folder_from_request")
         with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200)) as mock_get:
             # Even though we pass folder_id and space_id, the request object should take precedence
             await resource_client.get_lists(request, folder_id="folder_from_param", space_id="space_from_param")
@@ -1204,10 +1204,10 @@ class TestClickUpResourceClientEdgeCaseParameters(BaseAPIClientTestSuite):
     @pytest.mark.asyncio
     async def test_get_lists_request_with_empty_ids(self, resource_client: ClickUpResourceClient) -> None:
         """Test get_lists with a request that has no IDs to cover line 101."""
-        from clickup_mcp.models import List
+        from clickup_mcp.models import ClickUpList
 
         # Create a request with both IDs as None
-        mock_request = Mock(spec=List)
+        mock_request = Mock(spec=ClickUpList)
         mock_request.folder_id = None
         mock_request.space_id = None
 
@@ -1217,15 +1217,15 @@ class TestClickUpResourceClientEdgeCaseParameters(BaseAPIClientTestSuite):
     @pytest.mark.asyncio
     async def test_create_list_complex_legacy_params_folder_id(self, resource_client: ClickUpResourceClient) -> None:
         """Test create_list legacy parameter handling when name equals folder_id (lines 115-118)."""
-        from clickup_mcp.models import List
+        from clickup_mcp.models import ClickUpList
 
-        # Create a mock for List.create_request that returns a properly configured mock
-        mock_list = Mock(spec=List)
+        # Create a mock for ClickUpList.create_request that returns a properly configured mock
+        mock_list = Mock(spec=ClickUpList)
         mock_list.folder_id = "folder123"
         mock_list.space_id = None
         mock_list.extract_create_data.return_value = {"name": "Test List"}
 
-        with patch("clickup_mcp.models.List.create_request", return_value=mock_list) as mock_create:
+        with patch("clickup_mcp.models.ClickUpList.create_request", return_value=mock_list) as mock_create:
             with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200)) as mock_post:
                 # Call with string name and matching folder_id to trigger the special case
                 await resource_client.create_list("Test List", name="folder123", folder_id="folder123")
@@ -1242,15 +1242,15 @@ class TestClickUpResourceClientEdgeCaseParameters(BaseAPIClientTestSuite):
     @pytest.mark.asyncio
     async def test_create_list_complex_legacy_params_space_id(self, resource_client: ClickUpResourceClient) -> None:
         """Test create_list legacy parameter handling when name equals space_id (lines 115-118)."""
-        from clickup_mcp.models import List
+        from clickup_mcp.models import ClickUpList
 
-        # Create a mock for List.create_request that returns a properly configured mock
-        mock_list = Mock(spec=List)
+        # Create a mock for ClickUpList.create_request that returns a properly configured mock
+        mock_list = Mock(spec=ClickUpList)
         mock_list.folder_id = None
         mock_list.space_id = "space123"
         mock_list.extract_create_data.return_value = {"name": "Test List"}
 
-        with patch("clickup_mcp.models.List.create_request", return_value=mock_list) as mock_create:
+        with patch("clickup_mcp.models.ClickUpList.create_request", return_value=mock_list) as mock_create:
             with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200)) as mock_post:
                 # Call with string name and matching space_id to trigger the special case
                 await resource_client.create_list("Test List", name="space123", space_id="space123")
@@ -1267,15 +1267,15 @@ class TestClickUpResourceClientEdgeCaseParameters(BaseAPIClientTestSuite):
     @pytest.mark.asyncio
     async def test_create_list_name_as_folder_id(self, resource_client: ClickUpResourceClient) -> None:
         """Test create_list when name is treated as folder_id (line 120)."""
-        from clickup_mcp.models import List
+        from clickup_mcp.models import ClickUpList
 
-        # Create a mock for List.create_request that returns a properly configured mock
-        mock_list = Mock(spec=List)
+        # Create a mock for ClickUpList.create_request that returns a properly configured mock
+        mock_list = Mock(spec=ClickUpList)
         mock_list.folder_id = "folder123"
         mock_list.space_id = None
         mock_list.extract_create_data.return_value = {"name": "Test List"}
 
-        with patch("clickup_mcp.models.List.create_request", return_value=mock_list) as mock_create:
+        with patch("clickup_mcp.models.ClickUpList.create_request", return_value=mock_list) as mock_create:
             with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200)) as mock_post:
                 # Call with string name and non-matching name param to trigger the else branch
                 await resource_client.create_list("Test List", name="folder123")
@@ -1292,10 +1292,10 @@ class TestClickUpResourceClientEdgeCaseParameters(BaseAPIClientTestSuite):
     @pytest.mark.asyncio
     async def test_create_list_request_with_empty_ids(self, resource_client: ClickUpResourceClient) -> None:
         """Test create_list with a request that has no IDs to cover line 132."""
-        from clickup_mcp.models import List
+        from clickup_mcp.models import ClickUpList
 
         # Create a request with both IDs as None
-        mock_list = Mock(spec=List)
+        mock_list = Mock(spec=ClickUpList)
         mock_list.folder_id = None
         mock_list.space_id = None
         mock_list.extract_create_data.return_value = {"name": "Test List"}

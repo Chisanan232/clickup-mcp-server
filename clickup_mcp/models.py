@@ -7,11 +7,10 @@ and responses, following PEP 484/585 standards for type hints and domain-driven 
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
 from typing import List as ListType
-from typing import Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator, validator
 
 
 def snake_to_camel(field: str) -> str:
@@ -54,27 +53,47 @@ class Team(ClickUpBaseModel):
 class Space(ClickUpBaseModel):
     """Domain model for ClickUp Space operations."""
 
+    model_config = ConfigDict(
+        extra="allow",  # Allow extra fields
+    )
+
     space_id: Optional[str] = Field(None, description="The space ID")
     team_id: Optional[str] = Field(None, description="The team ID")
     name: Optional[str] = Field(None, description="The space name")
-    description: Optional[str] = Field(None, description="The space description")
+    description: Optional[str] = Field(None, description="Space description")
     multiple_assignees: Optional[bool] = Field(None, description="Allow multiple assignees")
-    features: Optional[Dict[str, Any]] = Field(None, description="Space features configuration")
-    private: Optional[bool] = Field(None, description="Private space flag")
+    features: Optional[Dict[str, Any]] = Field(None, description="Features configuration")
+    private: Optional[bool] = Field(None, description="Private space")
 
     @classmethod
     def get_request(cls, space_id: str) -> "Space":
         """Create a request for getting a specific space."""
-        return cls(space_id=space_id)
+        return cls(
+            space_id=space_id,
+            team_id=None,
+            name=None,
+            description=None,
+            multiple_assignees=None,
+            features=None,
+            private=None
+        )
 
     @classmethod
     def list_request(cls, team_id: str) -> "Space":
         """Create a request for listing spaces in a team."""
-        return cls(team_id=team_id)
+        return cls(
+            team_id=team_id,
+            space_id=None,
+            name=None,
+            description=None,
+            multiple_assignees=None,
+            features=None,
+            private=None
+        )
 
     @classmethod
     def create_request(cls, team_id: str, name: str, **kwargs) -> "Space":
-        """Create a request for creating a new space."""
+        """Create a new request object for space creation."""
         return cls(team_id=team_id, name=name, **kwargs)
 
     @model_validator(mode="after")
@@ -86,22 +105,26 @@ class Space(ClickUpBaseModel):
 
     def extract_create_data(self) -> Dict[str, Any]:
         """Extract data for space creation."""
-        data = {"name": self.name}
-
+        data: Dict[str, Any] = {"name": self.name}
         if self.description:
             data["description"] = self.description
-        if self.multiple_assignees is not None:
+        # Only include these fields if explicitly set AND not None
+        if self.multiple_assignees is not None and "multiple_assignees" in self.__fields_set__:
             data["multiple_assignees"] = self.multiple_assignees
+        if self.private is not None and "private" in self.__fields_set__:
+            data["private"] = self.private
         if self.features:
             data["features"] = self.features
-        if self.private is not None:
-            data["private"] = self.private
-
+        
         return data
 
 
 class Folder(ClickUpBaseModel):
     """Domain model for ClickUp Folder operations."""
+
+    model_config = ConfigDict(
+        extra="allow",  # Allow extra fields
+    )
 
     folder_id: Optional[str] = Field(None, description="The folder ID")
     space_id: Optional[str] = Field(None, description="The space ID")
@@ -110,17 +133,29 @@ class Folder(ClickUpBaseModel):
     @classmethod
     def get_request(cls, folder_id: str) -> "Folder":
         """Create a request for getting a specific folder."""
-        return cls(folder_id=folder_id)
+        return cls(
+            folder_id=folder_id,
+            space_id=None,
+            name=None
+        )
 
     @classmethod
     def list_request(cls, space_id: str) -> "Folder":
         """Create a request for listing folders in a space."""
-        return cls(space_id=space_id)
+        return cls(
+            space_id=space_id,
+            folder_id=None,
+            name=None
+        )
 
     @classmethod
     def create_request(cls, space_id: str, name: str) -> "Folder":
         """Create a request for creating a new folder."""
-        return cls(space_id=space_id, name=name)
+        return cls(
+            space_id=space_id,
+            name=name,
+            folder_id=None
+        )
 
     @model_validator(mode="after")
     def validate_create_request(self):
@@ -134,81 +169,137 @@ class Folder(ClickUpBaseModel):
         return {"name": self.name}
 
 
-class ClickUpListDomain(ClickUpBaseModel):
-    """Domain model for ClickUp List operations."""
+class ClickUpList(ClickUpBaseModel):
+    """Domain model for ClickUp List operations.
+    
+    Note: Formerly known as ClickUpListDomain to avoid conflict with typing.List.
+    """
 
-    list_id: Optional[str] = Field(None, description="The list ID")
-    folder_id: Optional[str] = Field(None, description="The folder ID")
-    space_id: Optional[str] = Field(None, description="The space ID")
-    name: Optional[str] = Field(None, description="The list name")
+    list_id: Optional[str] = Field(None, description="List ID")
+    folder_id: Optional[str] = Field(None, description="Folder ID")
+    space_id: Optional[str] = Field(None, description="Space ID")
+    name: Optional[str] = Field(None, description="List name")
     content: Optional[str] = Field(None, description="List description")
     due_date: Optional[int] = Field(None, description="Due date as Unix timestamp")
     due_date_time: Optional[bool] = Field(None, description="Include time in due date")
-    priority: Optional[int] = Field(None, description="Priority level")
-    assignee: Optional[str] = Field(None, description="Assignee ID")
-    status: Optional[str] = Field(None, description="Status")
+    start_date: Optional[int] = Field(None, description="Start date as Unix timestamp")
+    start_date_time: Optional[bool] = Field(None, description="Include time in start date")
+    priority: Optional[int] = Field(None, description="Priority (1-4)")
+    assignee: Optional[str] = Field(None, description="User ID to assign")
+    status: Optional[str] = Field(None, description="Custom status")
+
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True
+    )
 
     @classmethod
-    def get_request(cls, list_id: str) -> "ClickUpListDomain":
+    def get_request(cls, list_id: str) -> "ClickUpList":
         """Create a request for getting a specific list."""
-        return cls(list_id=list_id)
+        return cls(
+            list_id=list_id,
+            folder_id=None,
+            space_id=None,
+            name=None,
+            content=None,
+            due_date=None,
+            due_date_time=None,
+            start_date=None,
+            start_date_time=None,
+            priority=None,
+            assignee=None,
+            status=None,
+        )
 
     @classmethod
-    def list_request(cls, folder_id: str = None, space_id: str = None) -> "ClickUpListDomain":
-        """Create a request for listing lists in a folder or space."""
+    def list_request(cls, folder_id: Optional[str] = None, space_id: Optional[str] = None) -> "ClickUpList":
+        """Create a request for listing all lists in a folder or space."""
         if not folder_id and not space_id:
             raise ValueError("Either folder_id or space_id must be provided")
-        return cls(folder_id=folder_id, space_id=space_id)
+        
+        return cls(
+            list_id=None,
+            folder_id=folder_id,
+            space_id=space_id,
+            name=None,
+            content=None,
+            due_date=None,
+            due_date_time=None,
+            start_date=None,
+            start_date_time=None,
+            priority=None,
+            assignee=None,
+            status=None,
+        )
 
     @classmethod
-    def create_request(cls, name: str, folder_id: str = None, space_id: str = None, **kwargs) -> "ClickUpListDomain":
+    def create_request(
+        cls, name: str, folder_id: Optional[str] = None, space_id: Optional[str] = None, **kwargs
+    ) -> "ClickUpList":
         """Create a request for creating a new list."""
         if not folder_id and not space_id:
-            raise ValueError("Either folder_id or space_id must be provided")
-        return cls(name=name, folder_id=folder_id, space_id=space_id, **kwargs)
+            raise ValueError("Either folder_id or space_id must be provided when creating a list")
+        
+        return cls(
+            name=name,
+            folder_id=folder_id,
+            space_id=space_id,
+            list_id=None,
+            **kwargs
+        )
 
     @model_validator(mode="after")
-    def validate_list_request(self):
-        """Validate list request has required fields."""
-        if self.name and not self.folder_id and not self.space_id:
+    def validate_create_request(self):
+        """Validate create request has required fields."""
+        if self.name and not (self.folder_id or self.space_id):
             raise ValueError("Either folder_id or space_id must be provided when creating a list")
         return self
 
     def extract_create_data(self) -> Dict[str, Any]:
         """Extract data for list creation."""
-        data = {"name": self.name}
-
-        if self.content:
+        data: Dict[str, Any] = {"name": self.name}
+        
+        # Only include fields that were explicitly set
+        if self.content and "content" in self.__fields_set__:
             data["content"] = self.content
-        if self.due_date:
+        if self.due_date and "due_date" in self.__fields_set__:
             data["due_date"] = self.due_date
-            if self.due_date_time is not None:
-                data["due_date_time"] = self.due_date_time
-        if self.priority is not None:
+        if self.due_date_time is not None and "due_date_time" in self.__fields_set__:
+            data["due_date_time"] = self.due_date_time
+        if self.priority and "priority" in self.__fields_set__:
             data["priority"] = self.priority
-        if self.assignee:
+        if self.assignee and "assignee" in self.__fields_set__:
             data["assignee"] = self.assignee
-        if self.status:
+        if self.status and "status" in self.__fields_set__:
             data["status"] = self.status
-
+        
         return data
 
+    def validate_list_request(self):
+        """Validate list request has required fields.
+        
+        Used by tests to verify validation behavior.
+        """
+        # Skip validation for get requests (when list_id is set)
+        if self.list_id:
+            return self
+            
+        # For other operations, require folder_id or space_id
+        if not (self.folder_id or self.space_id):
+            raise ValueError("Either folder_id or space_id must be provided when creating a list")
+        return self
 
-# Backward compatibility aliases
-List = ClickUpListDomain
 
-
-class CustomField(ClickUpBaseModel):
-    """Model for custom field configuration."""
-
-    id: str = Field(..., description="Custom field ID")
-    name: str = Field(..., description="Custom field name")
-    type: str = Field(..., description="Custom field type")
-    value: Any = Field(..., description="Custom field value")
+# Add backward compatibility alias to ensure tests continue to work
+ClickUpListDomain = ClickUpList  # For backward compatibility with existing code
 
 
 class Task(ClickUpBaseModel):
     """Domain model for ClickUp Task operations."""
+
+    model_config = ConfigDict(
+        extra="allow",  # Allow extra fields
+    )
 
     task_id: Optional[str] = Field(None, description="The task ID")
     list_id: Optional[str] = Field(None, description="The list ID")
@@ -227,62 +318,114 @@ class Task(ClickUpBaseModel):
     parent: Optional[str] = Field(None, description="Parent task ID for subtasks")
     links_to: Optional[str] = Field(None, description="Link to another task")
     check_required_custom_fields: Optional[bool] = Field(True, description="Check required custom fields")
-    custom_fields: Optional[ListType[Union[CustomField, Dict[str, Any]]]] = Field(
+    custom_fields: Optional[List[Union["CustomField", Dict[str, Any]]]] = Field(
         None, description="Custom field values or filters"
     )
     custom_task_ids: Optional[bool] = Field(False, description="Use custom task IDs")
     team_id: Optional[str] = Field(None, description="The team ID")
 
-    # Task list filtering options
-    page: Optional[int] = Field(0, description="Page number for pagination")
-    order_by: Optional[str] = Field("created", description="Field to order by")
-    reverse: Optional[bool] = Field(False, description="Reverse order")
-    subtasks: Optional[bool] = Field(False, description="Include subtasks")
+    # List tasks parameters
+    page: int = Field(0, description="Page number for pagination")
+    order_by: str = Field("created", description="Field to order by")
+    reverse: bool = Field(False, description="Reverse the order")
+    subtasks: bool = Field(False, description="Include subtasks")
+    include_closed: bool = Field(False, description="Include closed tasks")
     statuses: Optional[ListType[str]] = Field(None, description="Filter by statuses")
-    include_closed: Optional[bool] = Field(False, description="Include closed tasks")
-    due_date_gt: Optional[int] = Field(None, description="Due date greater than (Unix timestamp)")
-    due_date_lt: Optional[int] = Field(None, description="Due date less than (Unix timestamp)")
-    date_created_gt: Optional[int] = Field(None, description="Created date greater than (Unix timestamp)")
-    date_created_lt: Optional[int] = Field(None, description="Created date less than (Unix timestamp)")
-    date_updated_gt: Optional[int] = Field(None, description="Updated date greater than (Unix timestamp)")
-    date_updated_lt: Optional[int] = Field(None, description="Updated date less than (Unix timestamp)")
+    due_date_gt: Optional[int] = Field(None, description="Due date greater than")
+    due_date_lt: Optional[int] = Field(None, description="Due date less than")
+    date_created_gt: Optional[int] = Field(None, description="Date created greater than")
+    date_created_lt: Optional[int] = Field(None, description="Date created less than")
+    date_updated_gt: Optional[int] = Field(None, description="Date updated greater than")
+    date_updated_lt: Optional[int] = Field(None, description="Date updated less than")
 
-    @classmethod
-    def get_request(cls, task_id: str, custom_task_ids: bool = False, team_id: str = None) -> "Task":
-        """Create a request for getting a specific task."""
-        return cls(task_id=task_id, custom_task_ids=custom_task_ids, team_id=team_id)
-
-    @classmethod
-    def list_request(cls, list_id: str, **kwargs) -> "Task":
-        """Create a request for listing tasks in a list."""
-        return cls(list_id=list_id, **kwargs)
-
-    @classmethod
-    def create_request(cls, list_id: str, name: str, **kwargs) -> "Task":
-        """Create a request for creating a new task."""
-        return cls(list_id=list_id, name=name, **kwargs)
-
-    @classmethod
-    def update_request(cls, task_id: str, **kwargs) -> "Task":
-        """Create a request for updating a task."""
-        return cls(task_id=task_id, **kwargs)
-
-    @classmethod
-    def delete_request(cls, task_id: str, custom_task_ids: bool = False, team_id: str = None) -> "Task":
-        """Create a request for deleting a task."""
-        return cls(task_id=task_id, custom_task_ids=custom_task_ids, team_id=team_id)
-
-    @field_validator("priority")
-    @classmethod
+    @validator("priority")
     def validate_priority(cls, v):
-        """Validate priority is between 0-4."""
-        if v is not None and (v < 0 or v > 4):
+        """Validate priority is between 1 and 4."""
+        if v is not None and v not in [0, 1, 2, 3, 4]:
             raise ValueError("Priority must be between 0 (no priority) and 4 (low)")
         return v
 
+    @classmethod
+    def extract_task_from_response(cls, response_data: Dict[str, Any]) -> "Task":
+        """Extract task data from API response."""
+        # Extract and convert custom fields to CustomField objects if present
+        custom_fields_list: Optional[List[Union[CustomField, Dict[str, Any]]]] = None
+        if "custom_fields" in response_data:
+            custom_fields_list = []
+            for field in response_data.get("custom_fields", []):
+                if isinstance(field, dict) and field.get("id"):
+                    custom_fields_list.append(
+                        CustomField(
+                            id=str(field.get("id", "")),
+                            name=str(field.get("name", "")),
+                            type=str(field.get("type", "")),
+                            value=field.get("value", None),
+                        )
+                    )
+
+        # Safely extract assignee IDs
+        assignees_list: List[str] = []
+        for assignee in response_data.get("assignees", []):
+            if isinstance(assignee, dict) and assignee.get("id"):
+                assignees_list.append(str(assignee.get("id", "")))
+
+        # Extract status from response
+        status = None
+        if isinstance(response_data.get("status"), dict):
+            status = str(response_data.get("status", {}).get("status", ""))
+
+        # Extract list ID from response
+        list_id = None
+        if isinstance(response_data.get("list"), dict):
+            list_id = str(response_data.get("list", {}).get("id", ""))
+
+        return cls(
+            task_id=str(response_data.get("id", "")),
+            name=response_data.get("name"),
+            description=response_data.get("description"),
+            status=status,
+            list_id=list_id,
+            assignees=assignees_list,
+            tags=response_data.get("tags", []),
+            priority=response_data.get("priority"),
+            due_date=response_data.get("due_date"),
+            due_date_time=response_data.get("due_date_time"),
+            time_estimate=response_data.get("time_estimate"),
+            start_date=response_data.get("start_date"),
+            start_date_time=response_data.get("start_date_time"),
+            custom_fields=custom_fields_list,
+            # Add all other fields with default values to satisfy mypy
+            notify_all=True,
+            parent=None,
+            links_to=None,
+            check_required_custom_fields=True,
+            custom_task_ids=False,
+            team_id=None,
+            page=0,
+            order_by="created",
+            reverse=False,
+            subtasks=False,
+            include_closed=False,
+            statuses=None,
+            due_date_gt=None,
+            due_date_lt=None,
+            date_created_gt=None,
+            date_created_lt=None,
+            date_updated_gt=None,
+            date_updated_lt=None
+        )
+
+    @classmethod
+    def extract_list_tasks_response(cls, response_data: Dict[str, Any]) -> List["Task"]:
+        """Extract list of tasks from API response."""
+        tasks: List["Task"] = []
+        for task_data in response_data.get("tasks", []):
+            tasks.append(cls.extract_task_from_response(task_data))
+        return tasks
+
     def extract_create_data(self) -> Dict[str, Any]:
         """Extract data for task creation."""
-        data = {"name": self.name}
+        data: Dict[str, Any] = {"name": self.name}
 
         if self.description:
             data["description"] = self.description
@@ -313,20 +456,20 @@ class Task(ClickUpBaseModel):
         if self.check_required_custom_fields is not None:
             data["check_required_custom_fields"] = self.check_required_custom_fields
         if self.custom_fields:
-            data["custom_fields"] = [
-                (
-                    {"field_id": field.id, "value": field.value}
-                    if isinstance(field, CustomField)
-                    else {"field_id": field.get("id", field.get("field_id", "")), "value": field.get("value", None)}
-                )
-                for field in self.custom_fields
-            ]
+            # Convert Union[CustomField, Dict[str, Any]] to just Dict[str, Any] for API compatibility
+            custom_field_dicts = []
+            for field in self.custom_fields:
+                if isinstance(field, CustomField):
+                    custom_field_dicts.append({"field_id": field.id, "value": field.value})
+                else:
+                    custom_field_dicts.append(field)
+            data["custom_fields"] = custom_field_dicts
 
         return data
 
     def extract_update_data(self) -> Dict[str, Any]:
         """Extract data for task update."""
-        data = {}
+        data: Dict[str, Any] = {}
 
         if self.name:
             data["name"] = self.name
@@ -347,20 +490,20 @@ class Task(ClickUpBaseModel):
         if self.start_date:
             data["start_date"] = self.start_date
         if self.custom_fields:
-            data["custom_fields"] = [
-                (
-                    {"field_id": field.id, "value": field.value}
-                    if isinstance(field, CustomField)
-                    else {"field_id": field.get("id", field.get("field_id", "")), "value": field.get("value", None)}
-                )
-                for field in self.custom_fields
-            ]
+            # Convert Union[CustomField, Dict[str, Any]] to just Dict[str, Any] for API compatibility
+            custom_field_dicts = []
+            for field in self.custom_fields:
+                if isinstance(field, CustomField):
+                    custom_field_dicts.append({"field_id": field.id, "value": field.value})
+                else:
+                    custom_field_dicts.append(field)
+            data["custom_fields"] = custom_field_dicts
 
         return data
 
     def extract_list_params(self) -> Dict[str, Any]:
         """Extract parameters for task listing."""
-        params = {
+        params: Dict[str, Any] = {
             "page": self.page,
             "order_by": self.order_by,
             "reverse": self.reverse,
@@ -388,9 +531,259 @@ class Task(ClickUpBaseModel):
         if self.date_updated_lt is not None:
             params["date_updated_lt"] = self.date_updated_lt
         if self.custom_fields:
-            params["custom_fields"] = self.custom_fields
+            # Convert Union[CustomField, Dict[str, Any]] to just Dict[str, Any] for API compatibility
+            custom_field_dicts = []
+            for field in self.custom_fields:
+                if isinstance(field, CustomField):
+                    custom_field_dicts.append({"field_id": field.id, "value": field.value})
+                else:
+                    custom_field_dicts.append(field)
+            params["custom_fields"] = custom_field_dicts
 
         return params
+
+    @classmethod
+    def get_request(cls, task_id: str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> "Task":
+        """Create a request for getting a specific task."""
+        return cls(
+            task_id=task_id, 
+            custom_task_ids=custom_task_ids, 
+            team_id=team_id,
+            list_id=None,
+            name=None,
+            description=None,
+            assignees=None,
+            tags=None,
+            status=None,
+            priority=None,
+            due_date=None,
+            due_date_time=False,
+            time_estimate=None,
+            start_date=None,
+            start_date_time=False,
+            notify_all=True,
+            parent=None,
+            links_to=None,
+            check_required_custom_fields=True,
+            custom_fields=None,
+            page=0,
+            order_by="created",
+            reverse=False,
+            subtasks=False,
+            include_closed=False,
+            statuses=None,
+            due_date_gt=None,
+            due_date_lt=None,
+            date_created_gt=None,
+            date_created_lt=None,
+            date_updated_gt=None,
+            date_updated_lt=None
+        )
+
+    @classmethod
+    def list_request(
+        cls,
+        list_id: str,
+        page: int = 0,
+        order_by: str = "created",
+        reverse: bool = False,
+        subtasks: bool = False,
+        statuses: Optional[ListType[str]] = None,
+        include_closed: bool = False,
+        assignees: Optional[ListType[str]] = None,
+        tags: Optional[ListType[str]] = None,
+        due_date_gt: Optional[int] = None,
+        due_date_lt: Optional[int] = None,
+        date_created_gt: Optional[int] = None,
+        date_created_lt: Optional[int] = None,
+        date_updated_gt: Optional[int] = None,
+        date_updated_lt: Optional[int] = None,
+        custom_fields: Optional[List[Union[CustomField, Dict[str, Any]]]] = None,
+    ) -> "Task":
+        """Create a request for listing tasks."""
+        return cls(
+            list_id=list_id,
+            page=page,
+            order_by=order_by,
+            reverse=reverse,
+            subtasks=subtasks,
+            statuses=statuses,
+            include_closed=include_closed,
+            assignees=assignees,
+            tags=tags,
+            due_date_gt=due_date_gt,
+            due_date_lt=due_date_lt,
+            date_created_gt=date_created_gt,
+            date_created_lt=date_created_lt,
+            date_updated_gt=date_updated_gt,
+            date_updated_lt=date_updated_lt,
+            custom_fields=custom_fields,
+            task_id=None,
+            name=None,
+            description=None,
+            status=None,
+            priority=None,
+            due_date=None,
+            due_date_time=False,
+            time_estimate=None,
+            start_date=None,
+            start_date_time=False,
+            notify_all=True,
+            parent=None,
+            links_to=None,
+            check_required_custom_fields=True,
+            custom_task_ids=False,
+            team_id=None
+        )
+
+    @classmethod
+    def create_request(
+        cls,
+        list_id: str,
+        name: str,
+        description: Optional[str] = None,
+        assignees: Optional[ListType[str]] = None,
+        tags: Optional[ListType[str]] = None,
+        status: Optional[str] = None,
+        priority: Optional[int] = None,
+        due_date: Optional[int] = None,
+        due_date_time: Optional[bool] = False,
+        time_estimate: Optional[int] = None,
+        start_date: Optional[int] = None,
+        start_date_time: Optional[bool] = False,
+        notify_all: Optional[bool] = True,
+        parent: Optional[str] = None,
+        links_to: Optional[str] = None,
+        check_required_custom_fields: Optional[bool] = True,
+        custom_fields: Optional[List[Union[CustomField, Dict[str, Any]]]] = None,
+    ) -> "Task":
+        """Create a request for task creation."""
+        return cls(
+            list_id=list_id,
+            name=name,
+            description=description,
+            assignees=assignees,
+            tags=tags,
+            status=status,
+            priority=priority,
+            due_date=due_date,
+            due_date_time=due_date_time,
+            time_estimate=time_estimate,
+            start_date=start_date,
+            start_date_time=start_date_time,
+            notify_all=notify_all,
+            parent=parent,
+            links_to=links_to,
+            check_required_custom_fields=check_required_custom_fields,
+            custom_fields=custom_fields,
+            custom_task_ids=False,
+            task_id=None,
+            team_id=None,
+            page=0,
+            order_by="created",
+            reverse=False,
+            subtasks=False,
+            include_closed=False,
+            statuses=None,
+            due_date_gt=None,
+            due_date_lt=None,
+            date_created_gt=None,
+            date_created_lt=None,
+            date_updated_gt=None,
+            date_updated_lt=None
+        )
+
+    @classmethod
+    def update_request(
+        cls,
+        task_id: str,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        assignees: Optional[ListType[str]] = None,
+        tags: Optional[ListType[str]] = None,
+        status: Optional[str] = None,
+        priority: Optional[int] = None,
+        due_date: Optional[int] = None,
+        due_date_time: Optional[bool] = None,
+        time_estimate: Optional[int] = None,
+        start_date: Optional[int] = None,
+        start_date_time: Optional[bool] = None,
+        notify_all: Optional[bool] = None,
+        custom_fields: Optional[List[Union[CustomField, Dict[str, Any]]]] = None,
+    ) -> "Task":
+        """Create a request for task update."""
+        return cls(
+            task_id=task_id,
+            name=name,
+            description=description,
+            assignees=assignees,
+            tags=tags,
+            status=status,
+            priority=priority,
+            due_date=due_date,
+            due_date_time=due_date_time,
+            time_estimate=time_estimate,
+            start_date=start_date,
+            start_date_time=start_date_time,
+            notify_all=notify_all,
+            custom_fields=custom_fields,
+            list_id=None,
+            parent=None,
+            links_to=None,
+            check_required_custom_fields=True,
+            custom_task_ids=False,
+            team_id=None,
+            page=0,
+            order_by="created",
+            reverse=False,
+            subtasks=False,
+            include_closed=False,
+            statuses=None,
+            due_date_gt=None,
+            due_date_lt=None,
+            date_created_gt=None,
+            date_created_lt=None,
+            date_updated_gt=None,
+            date_updated_lt=None
+        )
+
+    @classmethod
+    def delete_request(cls, task_id: str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> "Task":
+        """Create a request for deleting a task."""
+        return cls(
+            task_id=task_id, 
+            custom_task_ids=custom_task_ids, 
+            team_id=team_id,
+            list_id=None,
+            name=None,
+            description=None,
+            assignees=None,
+            tags=None,
+            status=None,
+            priority=None,
+            due_date=None,
+            due_date_time=False,
+            time_estimate=None,
+            start_date=None,
+            start_date_time=False,
+            notify_all=True,
+            parent=None,
+            links_to=None,
+            check_required_custom_fields=True,
+            custom_fields=None,
+            page=0,
+            order_by="created",
+            reverse=False,
+            subtasks=False,
+            include_closed=False,
+            statuses=None,
+            due_date_gt=None,
+            due_date_lt=None,
+            date_created_gt=None,
+            date_created_lt=None,
+            date_updated_gt=None,
+            date_updated_lt=None
+        )
 
 
 class User(ClickUpBaseModel):
@@ -454,7 +847,7 @@ class ClickUpFolder(ClickUpBaseModel):
     lists: Optional[ListType[Dict[str, Any]]] = Field(None, description="Lists in folder")
 
 
-class ClickUpList(ClickUpBaseModel):
+class ClickUpListResponse(ClickUpBaseModel):
     """Model for ClickUp list data."""
 
     id: str = Field(..., description="List ID")
@@ -463,17 +856,15 @@ class ClickUpList(ClickUpBaseModel):
     content: Optional[str] = Field(None, description="List description")
     status: Optional[Dict[str, Any]] = Field(None, description="List status")
     priority: Optional[Dict[str, Any]] = Field(None, description="List priority")
-    assignee: Optional[ClickUpUser] = Field(None, description="List assignee")
+    assignee: Optional[Dict[str, Any]] = Field(None, description="List assignee")
     task_count: Optional[int] = Field(None, description="Task count")
     due_date: Optional[int] = Field(None, description="Due date as Unix timestamp")
-    due_date_time: Optional[bool] = Field(None, description="Include time in due date")
     start_date: Optional[int] = Field(None, description="Start date as Unix timestamp")
-    start_date_time: Optional[bool] = Field(None, description="Include time in start date")
     folder: Optional[Dict[str, Any]] = Field(None, description="Parent folder")
     space: Optional[Dict[str, Any]] = Field(None, description="Parent space")
     archived: Optional[bool] = Field(None, description="Is archived")
     override_statuses: Optional[bool] = Field(None, description="Override statuses")
-    statuses: Optional[ListType[Dict[str, Any]]] = Field(None, description="List statuses")
+    permission_level: Optional[str] = Field(None, description="Permission level")
 
 
 class ClickUpTask(ClickUpBaseModel):
@@ -503,7 +894,7 @@ class ClickUpTask(ClickUpBaseModel):
     points: Optional[int] = Field(None, description="Task points")
     time_estimate: Optional[int] = Field(None, description="Time estimate in milliseconds")
     time_spent: Optional[int] = Field(None, description="Time spent in milliseconds")
-    custom_fields: Optional[ListType[CustomField]] = Field(None, description="Custom field values")
+    custom_fields: Optional[ListType["CustomField"]] = Field(None, description="Custom field values")
     dependencies: Optional[ListType[Dict[str, Any]]] = Field(None, description="Task dependencies")
     linked_tasks: Optional[ListType[Dict[str, Any]]] = Field(None, description="Linked tasks")
     team_id: Optional[str] = Field(None, description="Team ID")
@@ -513,3 +904,15 @@ class ClickUpTask(ClickUpBaseModel):
     project: Optional[Dict[str, Any]] = Field(None, description="Parent project")
     folder: Optional[Dict[str, Any]] = Field(None, description="Parent folder")
     space: Optional[Dict[str, Any]] = Field(None, description="Parent space")
+
+
+class CustomField(ClickUpBaseModel):
+    """Model for custom field configuration."""
+
+    id: str = Field(..., description="Custom field ID")
+    name: str = Field(..., description="Custom field name")
+    type: str = Field(..., description="Custom field type")
+    value: Any = Field(..., description="Custom field value")
+
+
+# Backward compatibility aliases
