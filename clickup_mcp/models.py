@@ -7,10 +7,7 @@ and responses, following PEP 484/585 standards for type hints and domain-driven 
 
 from __future__ import annotations
 
-from typing import Any, Dict
-from typing import List
-from typing import List as ListType
-from typing import Optional, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator, validator
 
@@ -286,8 +283,8 @@ class Task(ClickUpBaseModel):
     list_id: Optional[str] = Field(None, description="The list ID")
     name: Optional[str] = Field(None, description="Task name")
     description: Optional[str] = Field(None, description="Task description")
-    assignees: Optional[ListType[str]] = Field(None, description="List of assignee IDs")
-    tags: Optional[ListType[str]] = Field(None, description="List of tags")
+    assignees: Optional[List[str]] = Field(None, description="List of assignee IDs")
+    tags: Optional[List[str]] = Field(None, description="List of tags")
     status: Optional[str] = Field(None, description="Task status")
     priority: Optional[int] = Field(None, description="Priority level (1-4)")
     due_date: Optional[int] = Field(None, description="Due date as Unix timestamp")
@@ -299,7 +296,7 @@ class Task(ClickUpBaseModel):
     parent: Optional[str] = Field(None, description="Parent task ID for subtasks")
     links_to: Optional[str] = Field(None, description="Link to another task")
     check_required_custom_fields: Optional[bool] = Field(True, description="Check required custom fields")
-    custom_fields: Optional[List[Union["CustomField", Dict[str, Any]]]] = Field(
+    custom_fields: Optional[List["CustomField" | Dict[str, Any]]] = Field(
         None, description="Custom field values or filters"
     )
     custom_task_ids: Optional[bool] = Field(False, description="Use custom task IDs")
@@ -311,7 +308,7 @@ class Task(ClickUpBaseModel):
     reverse: bool = Field(False, description="Reverse the order")
     subtasks: bool = Field(False, description="Include subtasks")
     include_closed: bool = Field(False, description="Include closed tasks")
-    statuses: Optional[ListType[str]] = Field(None, description="Filter by statuses")
+    statuses: Optional[List[str]] = Field(None, description="Filter by statuses")
     due_date_gt: Optional[int] = Field(None, description="Due date greater than")
     due_date_lt: Optional[int] = Field(None, description="Due date less than")
     date_created_gt: Optional[int] = Field(None, description="Date created greater than")
@@ -330,7 +327,7 @@ class Task(ClickUpBaseModel):
     def extract_task_from_response(cls, response_data: Dict[str, Any]) -> "Task":
         """Extract task data from API response."""
         # Extract and convert custom fields to CustomField objects if present
-        custom_fields_list: Optional[List[Union[CustomField, Dict[str, Any]]]] = None
+        custom_fields_list: Optional[List["CustomField" | Dict[str, Any]]] = None
         if "custom_fields" in response_data:
             custom_fields_list = []
             for field in response_data.get("custom_fields", []):
@@ -437,7 +434,7 @@ class Task(ClickUpBaseModel):
         if self.check_required_custom_fields is not None:
             data["check_required_custom_fields"] = self.check_required_custom_fields
         if self.custom_fields:
-            # Convert Union[CustomField, Dict[str, Any]] to just Dict[str, Any] for API compatibility
+            # Convert CustomField | Dict[str, Any] to just Dict[str, Any] for API compatibility
             custom_field_dicts = []
             for field in self.custom_fields:
                 if isinstance(field, CustomField):
@@ -471,7 +468,7 @@ class Task(ClickUpBaseModel):
         if self.start_date:
             data["start_date"] = self.start_date
         if self.custom_fields:
-            # Convert Union[CustomField, Dict[str, Any]] to just Dict[str, Any] for API compatibility
+            # Convert CustomField | Dict[str, Any] to just Dict[str, Any] for API compatibility
             custom_field_dicts = []
             for field in self.custom_fields:
                 if isinstance(field, CustomField):
@@ -512,7 +509,7 @@ class Task(ClickUpBaseModel):
         if self.date_updated_lt is not None:
             params["date_updated_lt"] = self.date_updated_lt
         if self.custom_fields:
-            # Convert Union[CustomField, Dict[str, Any]] to just Dict[str, Any] for API compatibility
+            # Convert CustomField | Dict[str, Any] to just Dict[str, Any] for API compatibility
             custom_field_dicts = []
             for field in self.custom_fields:
                 if isinstance(field, CustomField):
@@ -569,17 +566,17 @@ class Task(ClickUpBaseModel):
         order_by: str = "created",
         reverse: bool = False,
         subtasks: bool = False,
-        statuses: Optional[ListType[str]] = None,
+        statuses: Optional[List[str]] = None,
         include_closed: bool = False,
-        assignees: Optional[ListType[str]] = None,
-        tags: Optional[ListType[str]] = None,
+        assignees: Optional[List[str]] = None,
+        tags: Optional[List[str]] = None,
         due_date_gt: Optional[int] = None,
         due_date_lt: Optional[int] = None,
         date_created_gt: Optional[int] = None,
         date_created_lt: Optional[int] = None,
         date_updated_gt: Optional[int] = None,
         date_updated_lt: Optional[int] = None,
-        custom_fields: Optional[List[Union[CustomField, Dict[str, Any]]]] = None,
+        custom_fields: Optional[List["CustomField" | Dict[str, Any]]] = None,
     ) -> "Task":
         """Create a request for listing tasks."""
         return cls(
@@ -623,8 +620,8 @@ class Task(ClickUpBaseModel):
         list_id: str,
         name: str,
         description: Optional[str] = None,
-        assignees: Optional[ListType[str]] = None,
-        tags: Optional[ListType[str]] = None,
+        assignees: Optional[List[str]] = None,
+        tags: Optional[List[str]] = None,
         status: Optional[str] = None,
         priority: Optional[int] = None,
         due_date: Optional[int] = None,
@@ -636,7 +633,7 @@ class Task(ClickUpBaseModel):
         parent: Optional[str] = None,
         links_to: Optional[str] = None,
         check_required_custom_fields: Optional[bool] = True,
-        custom_fields: Optional[List[Union[CustomField, Dict[str, Any]]]] = None,
+        custom_fields: Optional[List["CustomField" | Dict[str, Any]]] = None,
     ) -> "Task":
         """Create a request for task creation."""
         return cls(
@@ -680,8 +677,8 @@ class Task(ClickUpBaseModel):
         task_id: str,
         name: Optional[str] = None,
         description: Optional[str] = None,
-        assignees: Optional[ListType[str]] = None,
-        tags: Optional[ListType[str]] = None,
+        assignees: Optional[List[str]] = None,
+        tags: Optional[List[str]] = None,
         status: Optional[str] = None,
         priority: Optional[int] = None,
         due_date: Optional[int] = None,
@@ -690,7 +687,7 @@ class Task(ClickUpBaseModel):
         start_date: Optional[int] = None,
         start_date_time: Optional[bool] = None,
         notify_all: Optional[bool] = None,
-        custom_fields: Optional[List[Union[CustomField, Dict[str, Any]]]] = None,
+        custom_fields: Optional[List["CustomField" | Dict[str, Any]]] = None,
     ) -> "Task":
         """Create a request for task update."""
         return cls(
@@ -798,7 +795,7 @@ class ClickUpTeam(ClickUpBaseModel):
     name: str = Field(..., description="Team name")
     color: Optional[str] = Field(None, description="Team color")
     avatar: Optional[str] = Field(None, description="Team avatar URL")
-    members: Optional[ListType[ClickUpUser]] = Field(None, description="Team members")
+    members: Optional[List["ClickUpUser"]] = Field(None, description="Team members")
 
 
 class ClickUpSpace(ClickUpBaseModel):
@@ -810,7 +807,7 @@ class ClickUpSpace(ClickUpBaseModel):
     private: Optional[bool] = Field(None, description="Is private space")
     avatar: Optional[str] = Field(None, description="Space avatar URL")
     admin_can_manage: Optional[bool] = Field(None, description="Admin can manage")
-    statuses: Optional[ListType[Dict[str, Any]]] = Field(None, description="Space statuses")
+    statuses: Optional[List[Dict[str, Any]]] = Field(None, description="Space statuses")
     multiple_assignees: Optional[bool] = Field(None, description="Allow multiple assignees")
     features: Optional[Dict[str, Any]] = Field(None, description="Space features")
 
@@ -825,7 +822,7 @@ class ClickUpFolder(ClickUpBaseModel):
     hidden: Optional[bool] = Field(None, description="Is hidden")
     space: Optional[Dict[str, Any]] = Field(None, description="Parent space")
     task_count: Optional[int] = Field(None, description="Task count")
-    lists: Optional[ListType[Dict[str, Any]]] = Field(None, description="Lists in folder")
+    lists: Optional[List[Dict[str, Any]]] = Field(None, description="Lists in folder")
 
 
 class ClickUpListResponse(ClickUpBaseModel):
@@ -863,11 +860,11 @@ class ClickUpTask(ClickUpBaseModel):
     date_closed: Optional[int] = Field(None, description="Date closed as Unix timestamp")
     date_done: Optional[int] = Field(None, description="Date done as Unix timestamp")
     archived: Optional[bool] = Field(None, description="Is archived")
-    creator: Optional[ClickUpUser] = Field(None, description="Task creator")
-    assignees: Optional[ListType[ClickUpUser]] = Field(None, description="Task assignees")
-    watchers: Optional[ListType[ClickUpUser]] = Field(None, description="Task watchers")
-    checklists: Optional[ListType[Dict[str, Any]]] = Field(None, description="Task checklists")
-    tags: Optional[ListType[Dict[str, Any]]] = Field(None, description="Task tags")
+    creator: Optional["ClickUpUser"] = Field(None, description="Task creator")
+    assignees: Optional[List["ClickUpUser"]] = Field(None, description="Task assignees")
+    watchers: Optional[List["ClickUpUser"]] = Field(None, description="Task watchers")
+    checklists: Optional[List[Dict[str, Any]]] = Field(None, description="Task checklists")
+    tags: Optional[List[Dict[str, Any]]] = Field(None, description="Task tags")
     parent: Optional[str] = Field(None, description="Parent task ID")
     priority: Optional[Dict[str, Any]] = Field(None, description="Task priority")
     due_date: Optional[int] = Field(None, description="Due date as Unix timestamp")
@@ -875,9 +872,9 @@ class ClickUpTask(ClickUpBaseModel):
     points: Optional[int] = Field(None, description="Task points")
     time_estimate: Optional[int] = Field(None, description="Time estimate in milliseconds")
     time_spent: Optional[int] = Field(None, description="Time spent in milliseconds")
-    custom_fields: Optional[ListType["CustomField"]] = Field(None, description="Custom field values")
-    dependencies: Optional[ListType[Dict[str, Any]]] = Field(None, description="Task dependencies")
-    linked_tasks: Optional[ListType[Dict[str, Any]]] = Field(None, description="Linked tasks")
+    custom_fields: Optional[List["CustomField"]] = Field(None, description="Custom field values")
+    dependencies: Optional[List[Dict[str, Any]]] = Field(None, description="Task dependencies")
+    linked_tasks: Optional[List[Dict[str, Any]]] = Field(None, description="Linked tasks")
     team_id: Optional[str] = Field(None, description="Team ID")
     url: Optional[str] = Field(None, description="Task URL")
     permission_level: Optional[str] = Field(None, description="Permission level")

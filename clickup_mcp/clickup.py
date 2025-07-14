@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 # Import for backward compatibility
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from .client import APIResponse, ClickUpAPIClient, create_clickup_client
 from .models import (  # Domain models (preferred approach)
@@ -32,26 +32,26 @@ class ClickUpResourceClient:
         """Get all teams for the authenticated user."""
         return await self.client.get("/team")
 
-    async def get_team(self, request: Union[Team, str]) -> APIResponse:
+    async def get_team(self, request: Team | str) -> APIResponse:
         """Get a specific team by ID."""
         if isinstance(request, str):
             request = Team.get_request(request)
         return await self.client.get(f"/team/{request.team_id}")
 
     # Space operations
-    async def get_spaces(self, request: Union[Space, str]) -> APIResponse:
+    async def get_spaces(self, request: Space | str) -> APIResponse:
         """Get all spaces in a team."""
         if isinstance(request, str):
             request = Space.list_request(request)
         return await self.client.get(f"/team/{request.team_id}/space")
 
-    async def get_space(self, request: Union[Space, str]) -> APIResponse:
+    async def get_space(self, request: Space | str) -> APIResponse:
         """Get a specific space by ID."""
         if isinstance(request, str):
             request = Space.get_request(request)
         return await self.client.get(f"/space/{request.space_id}")
 
-    async def create_space(self, request: Union[Space, str], name: Optional[str] = None, **kwargs) -> APIResponse:
+    async def create_space(self, request: Space | str, name: Optional[str] = None, **kwargs) -> APIResponse:
         """Create a new space in a team."""
         if isinstance(request, str):
             # Legacy support: first parameter is team_id, second is name
@@ -59,7 +59,7 @@ class ClickUpResourceClient:
                 raise ValueError("name parameter is required when using legacy format")
 
             # Handle custom fields conversion if present in kwargs
-            custom_field_objects: Optional[List[Union[CustomField, Dict[str, Any]]]] = None
+            custom_field_objects: Optional[List[CustomField | Dict[str, Any]]] = None
             if "custom_fields" in kwargs:
                 custom_field_objects = []
                 for field in kwargs["custom_fields"]:
@@ -90,19 +90,19 @@ class ClickUpResourceClient:
         return await self.client.post(f"/team/{request.team_id}/space", data=data)
 
     # Folder operations
-    async def get_folders(self, request: Union[Folder, str]) -> APIResponse:
+    async def get_folders(self, request: Folder | str) -> APIResponse:
         """Get all folders in a space."""
         if isinstance(request, str):
             request = Folder.list_request(request)
         return await self.client.get(f"/space/{request.space_id}/folder")
 
-    async def get_folder(self, request: Union[Folder, str]) -> APIResponse:
+    async def get_folder(self, request: Folder | str) -> APIResponse:
         """Get a specific folder by ID."""
         if isinstance(request, str):
             request = Folder.get_request(request)
         return await self.client.get(f"/folder/{request.folder_id}")
 
-    async def create_folder(self, request: Union[Folder, str], name: Optional[str] = None) -> APIResponse:
+    async def create_folder(self, request: Folder | str, name: Optional[str] = None) -> APIResponse:
         """Create a new folder in a space."""
         if isinstance(request, str):
             # Legacy support: first parameter is space_id, second is name
@@ -115,7 +115,7 @@ class ClickUpResourceClient:
     # List operations
     async def get_lists(
         self,
-        request: Optional[Union[ClickUpList, str]] = None,
+        request: Optional[ClickUpList | str] = None,
         folder_id: Optional[str] = None,
         space_id: Optional[str] = None,
     ) -> APIResponse:
@@ -166,7 +166,7 @@ class ClickUpResourceClient:
             else:
                 raise ValueError("Either folder_id or space_id must be provided")
 
-    async def get_list(self, request: Union[ClickUpList, str]) -> APIResponse:
+    async def get_list(self, request: ClickUpList | str) -> APIResponse:
         """Get a specific list by ID."""
         if isinstance(request, str):
             request = ClickUpList.get_request(request)
@@ -174,7 +174,7 @@ class ClickUpResourceClient:
 
     async def create_list(
         self,
-        name_or_request: Optional[Union[ClickUpList, str]] = None,
+        name_or_request: Optional[ClickUpList | str] = None,
         folder_id: Optional[str] = None,
         space_id: Optional[str] = None,
         **kwargs,
@@ -310,7 +310,7 @@ class ClickUpResourceClient:
             raise TypeError(f"Expected str, ClickUpList or None as first parameter, got {type(name_or_request)}")
 
     # Task operations
-    async def get_tasks(self, request: Union[Task, str], **kwargs) -> APIResponse:
+    async def get_tasks(self, request: Task | str, **kwargs) -> APIResponse:
         """Get tasks from a list with optional filtering."""
         if isinstance(request, str):
             # Legacy support: first parameter is list_id, other parameters as kwargs
@@ -318,7 +318,7 @@ class ClickUpResourceClient:
         params = request.extract_list_params()
         return await self.client.get(f"/list/{request.list_id}/task", params=params)
 
-    async def get_task(self, request: Union[Task, str], **kwargs) -> APIResponse:
+    async def get_task(self, request: Task | str, **kwargs) -> APIResponse:
         """Get a task by ID."""
         task_id = request if isinstance(request, str) else request.task_id
 
@@ -338,7 +338,7 @@ class ClickUpResourceClient:
 
     async def create_task(
         self,
-        request: Union[Task, str],
+        request: Task | str,
         name: Optional[str] = None,
         description: Optional[str] = None,
         assignees: Optional[List[str]] = None,
@@ -354,7 +354,7 @@ class ClickUpResourceClient:
         parent: Optional[str] = None,
         links_to: Optional[str] = None,
         check_required_custom_fields: Optional[bool] = True,
-        custom_fields: Optional[List[Union[CustomField, Dict[str, Any]]]] = None,
+        custom_fields: Optional[List[CustomField | Dict[str, Any]]] = None,
     ) -> APIResponse:
         """Create a new task in a list."""
         if isinstance(request, str):
@@ -363,7 +363,7 @@ class ClickUpResourceClient:
                 raise ValueError("name parameter is required when using legacy format")
 
             # Handle custom fields conversion if present in kwargs
-            custom_field_objects: Optional[List[Union[CustomField, Dict[str, Any]]]] = None
+            custom_field_objects: Optional[List[CustomField | Dict[str, Any]]] = None
             if custom_fields:
                 custom_field_objects = []
                 for field in custom_fields:
@@ -409,7 +409,7 @@ class ClickUpResourceClient:
         data = request.extract_create_data()
         return await self.client.post(f"/list/{request.list_id}/task", data=data)
 
-    async def update_task(self, request: Union[Task, str], task_id: Optional[str] = None, **kwargs: Any) -> APIResponse:
+    async def update_task(self, request: Task | str, task_id: Optional[str] = None, **kwargs: Any) -> APIResponse:
         """Update a task by ID."""
         # Handle both Task object and task_id string
         if isinstance(request, str):
@@ -420,7 +420,7 @@ class ClickUpResourceClient:
                 update_id = task_id
 
             # Handle custom fields conversion if present in kwargs
-            custom_field_objects: Optional[List[Union[CustomField, Dict[str, Any]]]] = None
+            custom_field_objects: Optional[List[CustomField | Dict[str, Any]]] = None
             if "custom_fields" in kwargs:
                 custom_field_objects = []
                 for field in kwargs["custom_fields"]:
@@ -488,7 +488,7 @@ class ClickUpResourceClient:
         return await self.client.put(f"/task/{request.task_id}", data=data)
 
     async def delete_task(
-        self, request: Union[Task, str], custom_task_ids: bool = False, team_id: Optional[str] = None
+        self, request: Task | str, custom_task_ids: bool = False, team_id: Optional[str] = None
     ) -> APIResponse:
         """Delete a task by ID."""
         if isinstance(request, str):
@@ -507,7 +507,7 @@ class ClickUpResourceClient:
         """Get the authenticated user's information."""
         return await self.client.get("/user")
 
-    async def get_team_members(self, request: Union[Team, str]) -> APIResponse:
+    async def get_team_members(self, request: Team | str) -> APIResponse:
         """Get all members of a team."""
         if isinstance(request, str):
             request = Team.get_members_request(request)
@@ -581,7 +581,7 @@ class ClickUpResourceClient:
     ) -> APIResponse:
         """Get tasks from a list with optional filtering (backward compatibility)."""
         # Convert dict custom_fields to proper format
-        custom_field_objects: Optional[List[Union[CustomField, Dict[str, Any]]]] = None
+        custom_field_objects: Optional[List[CustomField | Dict[str, Any]]] = None
         if custom_fields:
             custom_field_objects = []
             for field in custom_fields:
@@ -640,11 +640,11 @@ class ClickUpResourceClient:
         parent: Optional[str] = None,
         links_to: Optional[str] = None,
         check_required_custom_fields: Optional[bool] = True,
-        custom_fields: Optional[List[Union[CustomField, Dict[str, Any]]]] = None,
+        custom_fields: Optional[List[CustomField | Dict[str, Any]]] = None,
     ) -> APIResponse:
         """Create a new task in a list (backward compatibility)."""
         # Convert dict custom_fields to CustomField objects if needed
-        custom_field_objects: Optional[List[Union[CustomField, Dict[str, Any]]]] = None
+        custom_field_objects: Optional[List[CustomField | Dict[str, Any]]] = None
         if custom_fields:
             custom_field_objects = []
             for field in custom_fields:
@@ -692,7 +692,7 @@ class ClickUpResourceClient:
         """Update a task with the provided fields (backward compatibility)."""
         # Convert dict custom_fields to CustomField objects if needed
         if "custom_fields" in kwargs and kwargs["custom_fields"]:
-            custom_field_objects: List[Union[CustomField, Dict[str, Any]]] = []
+            custom_field_objects: List[CustomField | Dict[str, Any]] = []
             for field in kwargs["custom_fields"]:
                 if isinstance(field, dict):
                     # Convert dicts to CustomField objects
