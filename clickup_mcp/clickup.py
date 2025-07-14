@@ -283,7 +283,7 @@ class ListAPI:
         """Initialize with an API client instance."""
         self.client = client
 
-    async def get_all(self, container_id: str, container_type: str = "folder") -> list[ClickUpListResponse]:
+    async def get_all(self, container_id: str, container_type: str = "folder") -> list[ClickUpList]:
         """
         Get all lists in a container (folder or space).
 
@@ -292,14 +292,14 @@ class ListAPI:
             container_type: Type of container, either 'folder' or 'space'
 
         Returns:
-            List of ClickUpListResponse instances
+            List of ClickUpList instances
         """
         if container_type not in ["folder", "space"]:
             raise ValueError("container_type must be either 'folder' or 'space'")
         response = await self.client.get(f"/{container_type}/{container_id}/list")
-        return response.extract_list(ClickUpListResponse, list_key="lists")
+        return response.extract_list(ClickUpList, list_key="lists")
 
-    async def get(self, list_id: str | ClickUpList) -> ClickUpListResponse:
+    async def get(self, list_id: str | ClickUpList) -> ClickUpList:
         """
         Get a specific list by ID.
 
@@ -307,18 +307,18 @@ class ListAPI:
             list_id: List ID or ClickUpList instance
 
         Returns:
-            ClickUpListResponse instance
+            ClickUpList instance
         """
         if isinstance(list_id, str):
             request = ClickUpList.get_request(list_id)
         else:
             request = list_id
         response = await self.client.get(f"/list/{request.list_id}")
-        return response.to_domain_model(ClickUpListResponse)
+        return response.to_domain_model(ClickUpList)
 
     async def create(
         self, container_id: str, list_obj: ClickUpList | str, container_type: str = "folder", **kwargs
-    ) -> ClickUpListResponse:
+    ) -> ClickUpList:
         """
         Create a new list in a container (folder or space).
 
@@ -329,7 +329,7 @@ class ListAPI:
             **kwargs: Additional parameters for legacy support
 
         Returns:
-            ClickUpListResponse instance for the created list
+            ClickUpList instance for the created list
         """
         if container_type not in ["folder", "space"]:
             raise ValueError("container_type must be either 'folder' or 'space'")
@@ -350,9 +350,9 @@ class ListAPI:
 
         data = list_obj.extract_create_data()
         response = await self.client.post(f"/{container_type}/{container_id}/list", data=data)
-        return response.to_domain_model(ClickUpListResponse)
+        return response.to_domain_model(ClickUpList)
 
-    async def update(self, list_id: str, data: Dict[str, Any] | ClickUpList) -> ClickUpListResponse:
+    async def update(self, list_id: str, data: Dict[str, Any] | ClickUpList) -> ClickUpList:
         """
         Update an existing list.
 
@@ -361,14 +361,14 @@ class ListAPI:
             data: ClickUpList instance or dictionary with update data
 
         Returns:
-            ClickUpListResponse instance for the updated list
+            ClickUpList instance for the updated list
         """
         if isinstance(data, ClickUpList):
             update_data = data.extract_update_data()
         else:
             update_data = data
         response = await self.client.put(f"/list/{list_id}", data=update_data)
-        return response.to_domain_model(ClickUpListResponse)
+        return response.to_domain_model(ClickUpList)
 
     async def delete(self, list_id: str) -> APIResponse:
         """
@@ -809,7 +809,7 @@ class ClickUpResourceClient:
     # List operations
     async def get_lists(
         self, request: ClickUpList | str | Dict[str, Any], container_type: str = "folder"
-    ) -> list[ClickUpListResponse]:
+    ) -> list[ClickUpList]:
         """Get all lists in a container (folder or space)."""
         if isinstance(request, str):
             return await self.list.get_all(request, container_type=container_type)
@@ -828,13 +828,13 @@ class ClickUpResourceClient:
             else:
                 raise ValueError("Container ID not found in request object")
 
-    async def get_list(self, request: ClickUpList | str) -> ClickUpListResponse:
+    async def get_list(self, request: ClickUpList | str) -> ClickUpList:
         """Get a specific list by ID."""
         return await self.list.get(request)
 
     async def create_list(
         self, request: ClickUpList | str, name: Optional[str] = None, container_type: str = "folder", **kwargs
-    ) -> ClickUpListResponse:
+    ) -> ClickUpList:
         """Create a new list in a container (folder or space)."""
         if isinstance(request, str):
             # Legacy support: first parameter is container_id, second is name
@@ -853,7 +853,7 @@ class ClickUpResourceClient:
 
     async def update_list(
         self, request: ClickUpList | str, data: Optional[Dict[str, Any]] = None, **kwargs
-    ) -> ClickUpListResponse:
+    ) -> ClickUpList:
         """Update an existing list."""
         if isinstance(request, str):
             # Legacy support: first parameter is list_id, second is data
