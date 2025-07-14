@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 # Import for backward compatibility
-from typing import List  # For backward compatibility with tests
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict
+from typing import List as ListType
+from typing import Optional, Union
 
 from .client import APIResponse, ClickUpAPIClient, create_clickup_client
 from .models import (  # Domain models (preferred approach)
