@@ -5,8 +5,6 @@ This module tests all Pydantic models used in the ClickUp MCP server,
 including validation, serialization, and helper functions.
 """
 
-from typing import List
-
 import pytest
 from pydantic import ValidationError
 
@@ -192,7 +190,7 @@ class TestDomainModels:
         assert create_data["status"] == "in progress"
 
         # Test backward compatibility
-        list_instance = List.create_request(name="Backwards", folder_id="folder456")
+        list_instance = ClickUpList.create_request(name="Backwards", folder_id="folder456")
         assert isinstance(list_instance, ClickUpListDomain)
 
     def test_task_operations(self):

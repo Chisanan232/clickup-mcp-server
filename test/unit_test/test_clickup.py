@@ -534,7 +534,7 @@ class TestClickUpResourceClientEdgeCases(BaseAPIClientTestSuite):
                 "time_estimate": 3600000,
             }
 
-            await resource_client.update_task("task123", **complex_data)
+            await resource_client.update_task("task123", **complex_data)  # type: ignore[arg-type]
 
             mock_put.assert_called_once_with("/task/task123", data=complex_data)
 
@@ -1043,7 +1043,8 @@ class TestBackwardCompatibilityMethods(BaseAPIClientTestSuite):
                 {"id": "cf1", "name": "Priority", "type": "drop_down", "value": "High"},
                 {"id": "cf2", "name": "Budget", "type": "number", "value": 1000},
             ]
-            await resource_client.create_task_legacy("list123", "Test Task", custom_fields=custom_fields)
+            await resource_client.create_task_legacy("list123", "Test Task", custom_fields=custom_fields)  # type: ignore[arg-type]
+
             mock_post.assert_called_once()
             args, kwargs = mock_post.call_args
             data = kwargs["data"]
@@ -1084,6 +1085,7 @@ class TestBackwardCompatibilityMethods(BaseAPIClientTestSuite):
                 {"id": "cf2", "name": "Score", "type": "number", "value": 95},
             ]
             await resource_client.update_task_legacy("task123", custom_fields=custom_fields)
+
             mock_put.assert_called_once()
             args, kwargs = mock_put.call_args
             data = kwargs["data"]
@@ -1354,7 +1356,7 @@ class TestCustomFieldConversion(BaseAPIClientTestSuite):
         # Mock the Task.create_request to return our mock task
         with patch("clickup_mcp.models.Task.create_request", return_value=mock_task) as mock_create:
             with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200)) as mock_post:
-                await resource_client.create_task("list123", "Task Name", custom_fields=custom_fields)
+                await resource_client.create_task("list123", "Task Name", custom_fields=custom_fields)  # type: ignore[arg-type]
 
                 # Verify custom field objects were created
                 custom_fields_arg = mock_create.call_args[1]["custom_fields"]
