@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any, Optional
+from typing import Any, Optional, TypeVar, Generic, Type, Dict, cast
 
 import httpx
 from pydantic import BaseModel, Field
@@ -23,15 +23,67 @@ from .exceptions import (
 
 logger = logging.getLogger(__name__)
 
+# Type variable for generic returns
+T = TypeVar('T')
 
-class APIResponse(BaseModel):
-    """Standard API response model."""
+
+class APIResponse(BaseModel, Generic[T]):
+    """Standard API response model with support for typed data."""
 
     status_code: int
-    data: Optional[dict[str, Any]] = None
+    data: Optional[Dict[str, Any]] = None
     headers: dict[str, str] = Field(default_factory=dict)
     success: bool = Field(default=True)
     error: Optional[str] = None
+    
+    def to_domain_model(self, model_class: Type[T]) -> T:
+        """
+        Convert raw API response data to a domain model instance.
+        
+        Args:
+            model_class: The domain model class to instantiate
+            
+        Returns:
+            An instance of the specified domain model
+        """
+        if self.data is None:
+            raise ValueError("Cannot convert empty response data to domain model")
+        
+        # Handle different response formats
+        if "data" in self.data:
+            # Some API endpoints nest data under a 'data' key
+            model_data = self.data["data"]
+        else:
+            model_data = self.data
+            
+        # Create an instance of the domain model
+        return model_class(**model_data)
+    
+    def extract_list(self, model_class: Type[T], list_key: str = "data") -> list[T]:
+        """
+        Extract a list of domain models from the API response.
+        
+        Args:
+            model_class: The domain model class to instantiate for each item
+            list_key: The key in the response data containing the list
+            
+        Returns:
+            A list of domain model instances
+        """
+        if self.data is None:
+            return []
+        
+        # Handle different response formats for lists
+        if list_key in self.data:
+            items = self.data[list_key]
+        else:
+            # Some endpoints return the list directly
+            items = self.data
+        
+        if not isinstance(items, list):
+            return []
+            
+        return [model_class(**item) for item in items]
 
 
 class ClickUpAPIClient:
