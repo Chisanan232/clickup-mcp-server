@@ -39,6 +39,18 @@ class Team(ClickUpBaseModel):
     team_id: str = Field(..., description="The team ID")
 
     @classmethod
+    def initial(cls, team_id: str) -> "Team":
+        """Create a new Team instance with required fields.
+        
+        Args:
+            team_id: The team ID
+            
+        Returns:
+            Initialized Team instance
+        """
+        return cls(team_id=team_id)
+
+    @classmethod
     def get_request(cls, team_id: str) -> "Team":
         """Create a request for getting a specific team."""
         return cls(team_id=team_id)
@@ -63,6 +75,79 @@ class Space(ClickUpBaseModel):
     multiple_assignees: Optional[bool] = Field(None, description="Allow multiple assignees")
     features: Optional[Dict[str, Any]] = Field(None, description="Features configuration")
     private: Optional[bool] = Field(None, description="Private space")
+
+    @classmethod
+    def initial(
+        cls, 
+        name: str, 
+        team_id: str, 
+        description: Optional[str] = None, 
+        multiple_assignees: Optional[bool] = None, 
+        features: Optional[Dict[str, Any]] = None,
+        private: Optional[bool] = None,
+        **kwargs
+    ) -> "Space":
+        """Create a new Space instance with required fields.
+        
+        Args:
+            name: The space name
+            team_id: The team ID
+            description: Space description
+            multiple_assignees: Allow multiple assignees
+            features: Features configuration
+            private: Whether space is private
+            **kwargs: Additional attributes
+            
+        Returns:
+            Initialized Space instance
+        """
+        return cls(
+            name=name, 
+            team_id=team_id,
+            description=description,
+            multiple_assignees=multiple_assignees,
+            features=features,
+            private=private,
+            **kwargs
+        )
+
+    @classmethod
+    def update_data(
+        cls,
+        name: Optional[str] = None, 
+        description: Optional[str] = None, 
+        multiple_assignees: Optional[bool] = None, 
+        features: Optional[Dict[str, Any]] = None,
+        private: Optional[bool] = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Create update data dictionary for a space.
+        
+        Args:
+            name: The space name
+            description: Space description
+            multiple_assignees: Allow multiple assignees
+            features: Features configuration
+            private: Whether space is private
+            **kwargs: Additional attributes to update
+            
+        Returns:
+            Dictionary with update data
+        """
+        data: Dict[str, Any] = {}
+        if name is not None:
+            data["name"] = name
+        if description is not None:
+            data["description"] = description
+        if multiple_assignees is not None:
+            data["multiple_assignees"] = multiple_assignees
+        if features is not None:
+            data["features"] = features
+        if private is not None:
+            data["private"] = private
+        # Add any additional kwargs
+        data.update({k: v for k, v in kwargs.items() if v is not None})
+        return data
 
     @classmethod
     def get_request(cls, space_id: str) -> "Space":
@@ -130,6 +215,38 @@ class Folder(ClickUpBaseModel):
     name: Optional[str] = Field(None, description="The folder name")
 
     @classmethod
+    def initial(cls, name: str, space_id: Optional[str] = None, **kwargs) -> "Folder":
+        """Create a new Folder instance with required fields.
+        
+        Args:
+            name: The folder name
+            space_id: The space ID
+            **kwargs: Additional attributes
+            
+        Returns:
+            Initialized Folder instance
+        """
+        return cls(name=name, space_id=space_id, **kwargs)
+
+    @classmethod
+    def update_data(cls, name: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+        """Create update data dictionary for a folder.
+        
+        Args:
+            name: The folder name
+            **kwargs: Additional attributes to update
+            
+        Returns:
+            Dictionary with update data
+        """
+        data: Dict[str, Any] = {}
+        if name is not None:
+            data["name"] = name
+        # Add any additional kwargs
+        data.update({k: v for k, v in kwargs.items() if v is not None})
+        return data
+
+    @classmethod
     def get_request(cls, folder_id: str) -> "Folder":
         """Create a request for getting a specific folder."""
         return cls(folder_id=folder_id, space_id=None, name=None)
@@ -176,6 +293,113 @@ class ClickUpList(ClickUpBaseModel):
     status: Optional[str] = Field(None, description="Custom status")
 
     model_config = ConfigDict(extra="allow", populate_by_name=True)
+
+    @classmethod
+    def initial(
+        cls,
+        name: str,
+        folder_id: Optional[str] = None,
+        space_id: Optional[str] = None,
+        content: Optional[str] = None,
+        due_date: Optional[int] = None,
+        due_date_time: Optional[bool] = None,
+        start_date: Optional[int] = None,
+        start_date_time: Optional[bool] = None,
+        priority: Optional[int] = None,
+        assignee: Optional[str] = None,
+        status: Optional[str] = None,
+        **kwargs
+    ) -> "ClickUpList":
+        """Create a new ClickUpList instance with required fields.
+        
+        Args:
+            name: The list name
+            folder_id: The folder ID
+            space_id: The space ID
+            content: List description
+            due_date: Due date as Unix timestamp
+            due_date_time: Include time in due date
+            start_date: Start date as Unix timestamp
+            start_date_time: Include time in start date
+            priority: Priority (1-4)
+            assignee: User ID to assign
+            status: Custom status
+            **kwargs: Additional attributes
+            
+        Returns:
+            Initialized ClickUpList instance
+        """
+        if not folder_id and not space_id:
+            raise ValueError("Either folder_id or space_id must be provided")
+            
+        return cls(
+            name=name,
+            folder_id=folder_id,
+            space_id=space_id,
+            content=content,
+            due_date=due_date,
+            due_date_time=due_date_time,
+            start_date=start_date,
+            start_date_time=start_date_time,
+            priority=priority,
+            assignee=assignee,
+            status=status,
+            **kwargs
+        )
+
+    @classmethod
+    def update_data(
+        cls,
+        name: Optional[str] = None,
+        content: Optional[str] = None,
+        due_date: Optional[int] = None,
+        due_date_time: Optional[bool] = None,
+        start_date: Optional[int] = None,
+        start_date_time: Optional[bool] = None,
+        priority: Optional[int] = None,
+        assignee: Optional[str] = None,
+        status: Optional[str] = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Create update data dictionary for a list.
+        
+        Args:
+            name: The list name
+            content: List description
+            due_date: Due date as Unix timestamp
+            due_date_time: Include time in due date
+            start_date: Start date as Unix timestamp
+            start_date_time: Include time in start date
+            priority: Priority (1-4)
+            assignee: User ID to assign
+            status: Custom status
+            **kwargs: Additional attributes to update
+            
+        Returns:
+            Dictionary with update data
+        """
+        data: Dict[str, Any] = {}
+        if name is not None:
+            data["name"] = name
+        if content is not None:
+            data["content"] = content
+        if due_date is not None:
+            data["due_date"] = due_date
+        if due_date_time is not None:
+            data["due_date_time"] = due_date_time
+        if start_date is not None:
+            data["start_date"] = start_date
+        if start_date_time is not None:
+            data["start_date_time"] = start_date_time
+        if priority is not None:
+            data["priority"] = priority
+        if assignee is not None:
+            data["assignee"] = assignee
+        if status is not None:
+            data["status"] = status
+        # Add any additional kwargs
+        data.update({k: v for k, v in kwargs.items() if v is not None})
+        return data
 
     @classmethod
     def get_request(cls, list_id: str) -> "ClickUpList":
@@ -401,124 +625,152 @@ class Task(ClickUpBaseModel):
             tasks.append(cls.extract_task_from_response(task_data))
         return tasks
 
-    def extract_create_data(self) -> Dict[str, Any]:
-        """Extract data for task creation."""
-        data: Dict[str, Any] = {"name": self.name}
+    @classmethod
+    def initial(
+        cls,
+        name: str,
+        list_id: Optional[str] = None,
+        description: Optional[str] = None,
+        assignees: Optional[List[str]] = None,
+        tags: Optional[List[str]] = None,
+        status: Optional[str] = None,
+        priority: Optional[int] = None,
+        due_date: Optional[int] = None,
+        due_date_time: Optional[bool] = False,
+        time_estimate: Optional[int] = None,
+        start_date: Optional[int] = None,
+        start_date_time: Optional[bool] = False,
+        notify_all: Optional[bool] = True,
+        parent: Optional[str] = None,
+        links_to: Optional[str] = None,
+        check_required_custom_fields: Optional[bool] = True,
+        custom_fields: Optional[List["CustomField" | Dict[str, Any]]] = None,
+        **kwargs
+    ) -> "Task":
+        """Create a new Task instance with required fields.
+        
+        Args:
+            name: The task name
+            list_id: The list ID
+            description: Task description
+            assignees: List of assignee IDs
+            tags: List of tags
+            status: Task status
+            priority: Priority level (1-4)
+            due_date: Due date as Unix timestamp
+            due_date_time: Include time in due date
+            time_estimate: Time estimate in milliseconds
+            start_date: Start date as Unix timestamp
+            start_date_time: Include time in start date
+            notify_all: Notify all team members
+            parent: Parent task ID for subtasks
+            links_to: Link to another task
+            check_required_custom_fields: Check required custom fields
+            custom_fields: Custom field values
+            **kwargs: Additional attributes
+            
+        Returns:
+            Initialized Task instance
+        """
+        return cls(
+            name=name,
+            list_id=list_id,
+            description=description,
+            assignees=assignees,
+            tags=tags,
+            status=status,
+            priority=priority,
+            due_date=due_date,
+            due_date_time=due_date_time,
+            time_estimate=time_estimate,
+            start_date=start_date,
+            start_date_time=start_date_time,
+            notify_all=notify_all,
+            parent=parent,
+            links_to=links_to,
+            check_required_custom_fields=check_required_custom_fields,
+            custom_fields=custom_fields,
+            **kwargs
+        )
 
-        if self.description:
-            data["description"] = self.description
-        if self.assignees:
-            data["assignees"] = self.assignees
-        if self.tags:
-            data["tags"] = self.tags
-        if self.status:
-            data["status"] = self.status
-        if self.priority is not None:
-            data["priority"] = self.priority
-        if self.due_date:
-            data["due_date"] = self.due_date
-            if self.due_date_time is not None:
-                data["due_date_time"] = self.due_date_time
-        if self.time_estimate:
-            data["time_estimate"] = self.time_estimate
-        if self.start_date:
-            data["start_date"] = self.start_date
-            if self.start_date_time is not None:
-                data["start_date_time"] = self.start_date_time
-        if self.notify_all is not None:
-            data["notify_all"] = self.notify_all
-        if self.parent:
-            data["parent"] = self.parent
-        if self.links_to:
-            data["links_to"] = self.links_to
-        if self.check_required_custom_fields is not None:
-            data["check_required_custom_fields"] = self.check_required_custom_fields
-        if self.custom_fields:
-            # Convert CustomField | Dict[str, Any] to just Dict[str, Any] for API compatibility
-            custom_field_dicts = []
-            for field in self.custom_fields:
-                if isinstance(field, CustomField):
-                    custom_field_dicts.append({"field_id": field.id, "value": field.value})
-                else:
-                    custom_field_dicts.append(field)
-            data["custom_fields"] = custom_field_dicts
-
-        return data
-
-    def extract_update_data(self) -> Dict[str, Any]:
-        """Extract data for task update."""
+    @classmethod
+    def update_data(
+        cls,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        assignees: Optional[List[str]] = None,
+        tags: Optional[List[str]] = None,
+        status: Optional[str] = None,
+        priority: Optional[int] = None,
+        due_date: Optional[int] = None,
+        due_date_time: Optional[bool] = None,
+        time_estimate: Optional[int] = None,
+        start_date: Optional[int] = None,
+        start_date_time: Optional[bool] = None,
+        notify_all: Optional[bool] = None,
+        custom_fields: Optional[List["CustomField" | Dict[str, Any]]] = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Create update data dictionary for a task.
+        
+        Args:
+            name: The task name
+            description: Task description
+            assignees: List of assignee IDs
+            tags: List of tags
+            status: Task status
+            priority: Priority level (1-4)
+            due_date: Due date as Unix timestamp
+            due_date_time: Include time in due date
+            time_estimate: Time estimate in milliseconds
+            start_date: Start date as Unix timestamp
+            start_date_time: Include time in start date
+            notify_all: Notify all team members
+            custom_fields: Custom field values
+            **kwargs: Additional attributes to update
+            
+        Returns:
+            Dictionary with update data
+        """
         data: Dict[str, Any] = {}
-
-        if self.name:
-            data["name"] = self.name
-        if self.description:
-            data["description"] = self.description
-        if self.assignees:
-            data["assignees"] = self.assignees
-        if self.tags:
-            data["tags"] = self.tags
-        if self.status:
-            data["status"] = self.status
-        if self.priority is not None:
-            data["priority"] = self.priority
-        if self.due_date:
-            data["due_date"] = self.due_date
-        if self.time_estimate:
-            data["time_estimate"] = self.time_estimate
-        if self.start_date:
-            data["start_date"] = self.start_date
-        if self.custom_fields:
-            # Convert CustomField | Dict[str, Any] to just Dict[str, Any] for API compatibility
-            custom_field_dicts = []
-            for field in self.custom_fields:
-                if isinstance(field, CustomField):
-                    custom_field_dicts.append({"field_id": field.id, "value": field.value})
-                else:
-                    custom_field_dicts.append(field)
-            data["custom_fields"] = custom_field_dicts
-
+        if name is not None:
+            data["name"] = name
+        if description is not None:
+            data["description"] = description
+        if assignees is not None:
+            data["assignees"] = assignees
+        if tags is not None:
+            data["tags"] = tags
+        if status is not None:
+            data["status"] = status
+        if priority is not None:
+            data["priority"] = priority
+        if due_date is not None:
+            data["due_date"] = due_date
+        if due_date_time is not None:
+            data["due_date_time"] = due_date_time
+        if time_estimate is not None:
+            data["time_estimate"] = time_estimate
+        if start_date is not None:
+            data["start_date"] = start_date
+        if start_date_time is not None:
+            data["start_date_time"] = start_date_time
+        if notify_all is not None:
+            data["notify_all"] = notify_all
+            
+        # Handle custom fields specially
+        if custom_fields is not None:
+            custom_fields_data = []
+            for field in custom_fields:
+                if isinstance(field, dict):
+                    custom_fields_data.append(field)
+                elif hasattr(field, "id") and hasattr(field, "value"):
+                    custom_fields_data.append({"field_id": field.id, "value": field.value})
+            data["custom_fields"] = custom_fields_data
+            
+        # Add any additional kwargs
+        data.update({k: v for k, v in kwargs.items() if v is not None})
         return data
-
-    def extract_list_params(self) -> Dict[str, Any]:
-        """Extract parameters for task listing."""
-        params: Dict[str, Any] = {
-            "page": self.page,
-            "order_by": self.order_by,
-            "reverse": self.reverse,
-            "subtasks": self.subtasks,
-            "include_closed": self.include_closed,
-        }
-
-        # Add optional parameters if provided
-        if self.statuses:
-            params["statuses[]"] = self.statuses
-        if self.assignees:
-            params["assignees[]"] = self.assignees
-        if self.tags:
-            params["tags[]"] = self.tags
-        if self.due_date_gt is not None:
-            params["due_date_gt"] = self.due_date_gt
-        if self.due_date_lt is not None:
-            params["due_date_lt"] = self.due_date_lt
-        if self.date_created_gt is not None:
-            params["date_created_gt"] = self.date_created_gt
-        if self.date_created_lt is not None:
-            params["date_created_lt"] = self.date_created_lt
-        if self.date_updated_gt is not None:
-            params["date_updated_gt"] = self.date_updated_gt
-        if self.date_updated_lt is not None:
-            params["date_updated_lt"] = self.date_updated_lt
-        if self.custom_fields:
-            # Convert CustomField | Dict[str, Any] to just Dict[str, Any] for API compatibility
-            custom_field_dicts = []
-            for field in self.custom_fields:
-                if isinstance(field, CustomField):
-                    custom_field_dicts.append({"field_id": field.id, "value": field.value})
-                else:
-                    custom_field_dicts.append(field)
-            params["custom_fields"] = custom_field_dicts
-
-        return params
 
     @classmethod
     def get_request(cls, task_id: str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> "Task":
@@ -766,6 +1018,15 @@ class Task(ClickUpBaseModel):
 
 class User(ClickUpBaseModel):
     """Domain model for ClickUp User operations."""
+    
+    @classmethod
+    def initial(cls) -> "User":
+        """Create a new User instance.
+        
+        Returns:
+            Initialized User instance
+        """
+        return cls()
 
     @classmethod
     def get_request(cls) -> "User":
