@@ -1242,45 +1242,6 @@ class ClickUpListResponse(ClickUpBaseModel):
     permission_level: Optional[str] = Field(None, description="Permission level")
 
 
-class ClickUpTask(ClickUpBaseModel):
-    """Model for ClickUp task data."""
-
-    id: str = Field(..., description="Task ID")
-    custom_id: Optional[str] = Field(None, description="Custom task ID")
-    name: str = Field(..., description="Task name")
-    text_content: Optional[str] = Field(None, description="Task text content")
-    description: Optional[str] = Field(None, description="Task description")
-    status: Optional[Dict[str, Any]] = Field(None, description="Task status")
-    orderindex: Optional[str] = Field(None, description="Order index")
-    date_created: Optional[int] = Field(None, description="Date created as Unix timestamp")
-    date_updated: Optional[int] = Field(None, description="Date updated as Unix timestamp")
-    date_closed: Optional[int] = Field(None, description="Date closed as Unix timestamp")
-    date_done: Optional[int] = Field(None, description="Date done as Unix timestamp")
-    archived: Optional[bool] = Field(None, description="Is archived")
-    creator: Optional["ClickUpUser"] = Field(None, description="Task creator")
-    assignees: Optional[List["ClickUpUser"]] = Field(None, description="Task assignees")
-    watchers: Optional[List["ClickUpUser"]] = Field(None, description="Task watchers")
-    checklists: Optional[List[Dict[str, Any]]] = Field(None, description="Task checklists")
-    tags: Optional[List[Dict[str, Any]]] = Field(None, description="Task tags")
-    parent: Optional[str] = Field(None, description="Parent task ID")
-    priority: Optional[Dict[str, Any]] = Field(None, description="Task priority")
-    due_date: Optional[int] = Field(None, description="Due date as Unix timestamp")
-    start_date: Optional[int] = Field(None, description="Start date as Unix timestamp")
-    points: Optional[int] = Field(None, description="Task points")
-    time_estimate: Optional[int] = Field(None, description="Time estimate in milliseconds")
-    time_spent: Optional[int] = Field(None, description="Time spent in milliseconds")
-    custom_fields: Optional[List["CustomField"]] = Field(None, description="Custom field values")
-    dependencies: Optional[List[Dict[str, Any]]] = Field(None, description="Task dependencies")
-    linked_tasks: Optional[List[Dict[str, Any]]] = Field(None, description="Linked tasks")
-    team_id: Optional[str] = Field(None, description="Team ID")
-    url: Optional[str] = Field(None, description="Task URL")
-    permission_level: Optional[str] = Field(None, description="Permission level")
-    list: Optional[Dict[str, Any]] = Field(None, description="Parent list")
-    project: Optional[Dict[str, Any]] = Field(None, description="Parent project")
-    folder: Optional[Dict[str, Any]] = Field(None, description="Parent folder")
-    space: Optional[Dict[str, Any]] = Field(None, description="Parent space")
-
-
 class CustomField(ClickUpBaseModel):
     """Model for custom field configuration."""
 

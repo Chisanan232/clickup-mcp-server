@@ -14,7 +14,6 @@ from clickup_mcp.models import (  # Base models; Domain models; Task models; Res
     ClickUpList,
     ClickUpListDomain,
     ClickUpSpace,
-    ClickUpTask,
     ClickUpTeam,
     ClickUpUser,
     CustomField,

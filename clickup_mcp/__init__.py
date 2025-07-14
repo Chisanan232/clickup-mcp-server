@@ -31,7 +31,6 @@ from .models import (  # Domain models (new preferred approach); Response models
     ClickUpFolder,
     ClickUpList,
     ClickUpSpace,
-    ClickUpTask,
     ClickUpTeam,
     ClickUpUser,
     CustomField,
@@ -98,7 +97,6 @@ __all__ = [
     "ClickUpSpace",
     "ClickUpFolder",
     "ClickUpList",
-    "ClickUpTask",
     # Utilities
     "validate_clickup_id",
     "format_clickup_date",
