@@ -1,21 +1,20 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Union, cast
-from typing import List as ListType  # Revert to standard import for compatibility with tests
+# Import for backward compatibility
+from typing import List  # For backward compatibility with tests
+from typing import Any, Dict, Optional, Union
 
 from .client import APIResponse, ClickUpAPIClient, create_clickup_client
 from .models import (  # Domain models (preferred approach)
     ClickUpList,
-    CustomField, 
+    CustomField,
     Folder,
-    Space, 
+    Space,
     Task,
     Team,
     User,
 )
 
-# Import for backward compatibility
-from typing import List  # For backward compatibility with tests
 
 class ClickUpResourceClient:
     """
@@ -59,7 +58,7 @@ class ClickUpResourceClient:
             # Legacy support: first parameter is team_id, second is name
             if name is None:
                 raise ValueError("name parameter is required when using legacy format")
-            
+
             # Handle custom fields conversion if present in kwargs
             custom_field_objects: Optional[ListType[Union[CustomField, Dict[str, Any]]]] = None
             if "custom_fields" in kwargs:
@@ -85,12 +84,9 @@ class ClickUpResourceClient:
                         custom_field_objects.append(field)
 
             request = Space.create_request(
-                team_id=request,
-                name=name,
-                custom_fields=custom_field_objects,  # Use processed custom fields
-                **kwargs
+                team_id=request, name=name, custom_fields=custom_field_objects, **kwargs  # Use processed custom fields
             )
-        
+
         data = request.extract_create_data()
         return await self.client.post(f"/team/{request.team_id}/space", data=data)
 
@@ -119,7 +115,10 @@ class ClickUpResourceClient:
 
     # List operations
     async def get_lists(
-        self, request: Optional[Union[ClickUpList, str]] = None, folder_id: Optional[str] = None, space_id: Optional[str] = None
+        self,
+        request: Optional[Union[ClickUpList, str]] = None,
+        folder_id: Optional[str] = None,
+        space_id: Optional[str] = None,
     ) -> APIResponse:
         """Get lists from a folder or space."""
         # Case 1: No parameters
@@ -148,7 +147,7 @@ class ClickUpResourceClient:
                 else:
                     # Domain object with no IDs, fall through to other parameters
                     pass
-                    
+
             # Special handling for List objects imported from typing
             # If we reach here, it means request is not None but doesn't have the expected attributes
             if folder_id is not None:
@@ -158,7 +157,7 @@ class ClickUpResourceClient:
             else:
                 # No way to determine what to do
                 raise ValueError("Either folder_id or space_id must be provided")
-                
+
         except (AttributeError, TypeError):
             # If any exception happens when accessing the object, fall back to direct params
             if folder_id is not None:
@@ -174,10 +173,15 @@ class ClickUpResourceClient:
             request = ClickUpList.get_request(request)
         return await self.client.get(f"/list/{request.list_id}")
 
-    async def create_list(self, name_or_request: Optional[Union[ClickUpList, str]] = None, 
-                        folder_id: Optional[str] = None, space_id: Optional[str] = None, **kwargs) -> APIResponse:
+    async def create_list(
+        self,
+        name_or_request: Optional[Union[ClickUpList, str]] = None,
+        folder_id: Optional[str] = None,
+        space_id: Optional[str] = None,
+        **kwargs,
+    ) -> APIResponse:
         """Create a list in a folder or space.
-        
+
         Can be called in several ways:
         1. create_list(name, folder_id=folder_id, **kwargs)
         2. create_list(name, space_id=space_id, **kwargs)
@@ -191,7 +195,7 @@ class ClickUpResourceClient:
                 data = request.extract_create_data()
             except (AttributeError, TypeError):
                 data = {"name": getattr(request, "name", "Untitled List")}
-                
+
             # Determine target
             if request.folder_id:
                 return await self.client.post(f"/folder/{request.folder_id}/list", data=data)
@@ -199,10 +203,10 @@ class ClickUpResourceClient:
                 return await self.client.post(f"/space/{request.space_id}/list", data=data)
             else:
                 raise ValueError("Either folder_id or space_id must be provided")
-                
+
         # Extract name parameter if passed in kwargs
         name = kwargs.pop("name", None) if kwargs else None
-            
+
         # Handle legacy and new parameter formats
         # Most common case in tests: First parameter is the name, with folder_id/space_id in kwargs
         if isinstance(name_or_request, str):
@@ -214,20 +218,20 @@ class ClickUpResourceClient:
                 request = ClickUpList.create_request(
                     name=name_or_request,  # Use first parameter as name
                     folder_id=name,  # Use name from kwargs as folder_id
-                    **kwargs
+                    **kwargs,
                 )
-                
+
                 # Use name from kwargs as folder_id
                 folder_id = name
                 target_path = f"/folder/{folder_id}/list"
-                
+
                 try:
                     data = request.extract_create_data()
                 except (AttributeError, TypeError):
                     data = {"name": name_or_request}  # Use first parameter as name
-                    
+
                 return await self.client.post(target_path, data=data)
-                
+
             # Check if this is actually a folder_id being passed (legacy format)
             elif not folder_id and not space_id:
                 # Legacy format where first parameter might be folder_id
@@ -235,21 +239,17 @@ class ClickUpResourceClient:
                     # First parameter is folder_id, name is in kwargs
                     data = {"name": name}
                     folder_id = name_or_request
-                    
+
                     # Call create_request to satisfy tests expecting it
-                    request = ClickUpList.create_request(
-                        name=name,
-                        folder_id=folder_id,
-                        **kwargs
-                    )
-                    
+                    request = ClickUpList.create_request(name=name, folder_id=folder_id, **kwargs)
+
                     try:
                         data = request.extract_create_data()
                     except (AttributeError, TypeError):
                         data = {"name": name}
                         # Keep other kwargs
                         data.update(kwargs)
-                        
+
                     target_path = f"/folder/{folder_id}/list"
                 else:
                     # First parameter is the name but no folder_id/space_id
@@ -259,19 +259,16 @@ class ClickUpResourceClient:
                 # Normal case: first parameter is name
                 # Call create_request to satisfy tests expecting it
                 request = ClickUpList.create_request(
-                    name=name_or_request,
-                    folder_id=folder_id,
-                    space_id=space_id,
-                    **kwargs
+                    name=name_or_request, folder_id=folder_id, space_id=space_id, **kwargs
                 )
-                
+
                 try:
                     data = request.extract_create_data()
                 except (AttributeError, TypeError):
                     data = {"name": name_or_request}
                     # Keep other kwargs
                     data.update(kwargs)
-                
+
                 # Determine target (folder or space)
                 if folder_id is not None:
                     target_path = f"/folder/{folder_id}/list"
@@ -279,40 +276,35 @@ class ClickUpResourceClient:
                     target_path = f"/space/{space_id}/list"
                 else:
                     raise ValueError("Either folder_id or space_id must be provided")
-                
+
             return await self.client.post(target_path, data=data)
-            
+
         # None passed as first parameter, check for folder_id/space_id
         elif name_or_request is None:
             # Use folder_id/space_id in kwargs
             if not folder_id and not space_id:
                 raise ValueError("Either folder_id or space_id must be provided")
-                
+
             # Create request via factory
             name = kwargs.pop("name", None)
             if not name:
                 raise ValueError("name parameter is required when using legacy format")
-                
-            request = ClickUpList.create_request(
-                name=name,
-                folder_id=folder_id,
-                space_id=space_id,
-                **kwargs
-            )
-            
+
+            request = ClickUpList.create_request(name=name, folder_id=folder_id, space_id=space_id, **kwargs)
+
             try:
                 data = request.extract_create_data()
             except (AttributeError, TypeError):
                 data = {"name": name}
                 # Keep other kwargs
                 data.update(kwargs)
-                
+
             # Determine target (folder or space)
             if folder_id is not None:
                 target_path = f"/folder/{folder_id}/list"
             else:
                 target_path = f"/space/{space_id}/list"
-                
+
             return await self.client.post(target_path, data=data)
         else:
             # Unknown type passed as first parameter
@@ -330,17 +322,17 @@ class ClickUpResourceClient:
     async def get_task(self, request: Task | str, **kwargs) -> APIResponse:
         """Get a task by ID."""
         task_id = request if isinstance(request, str) else request.task_id
-        
+
         # Always include custom_task_ids=False in params unless explicitly overridden
         params = {"custom_task_ids": False}  # Default
-        
+
         if kwargs:
             if "team_id" in kwargs:
                 params["team_id"] = kwargs["team_id"]
             if "custom_task_ids" in kwargs:
                 params["custom_task_ids"] = kwargs["custom_task_ids"]
 
-        # Handle backward compatibility with test expectations                
+        # Handle backward compatibility with test expectations
         if hasattr(self.client, "get") and callable(self.client.get):
             return await self.client.get(f"/task/{task_id}", params=params)
         return APIResponse(status_code=200, data={"id": task_id})
@@ -370,7 +362,7 @@ class ClickUpResourceClient:
             # Legacy support: first parameter is list_id, second is name
             if name is None:
                 raise ValueError("name parameter is required when using legacy format")
-            
+
             # Handle custom fields conversion if present in kwargs
             custom_field_objects: Optional[ListType[Union[CustomField, Dict[str, Any]]]] = None
             if custom_fields:
@@ -414,7 +406,7 @@ class ClickUpResourceClient:
                 check_required_custom_fields=check_required_custom_fields,
                 custom_fields=custom_field_objects,  # Use processed custom fields
             )
-        
+
         data = request.extract_create_data()
         return await self.client.post(f"/list/{request.list_id}/task", data=data)
 
@@ -422,7 +414,7 @@ class ClickUpResourceClient:
         """Update a task."""
         if isinstance(request, str):
             task_id = request
-            
+
             # Convert custom_fields from dict to CustomField objects if needed
             custom_field_objects = None
             if "custom_fields" in kwargs:
@@ -437,7 +429,7 @@ class ClickUpResourceClient:
                                     id=field_id,
                                     name=field.get("name", ""),
                                     type=field.get("type", ""),
-                                    value=field.get("value", None)
+                                    value=field.get("value", None),
                                 )
                             )
                         else:
@@ -446,7 +438,7 @@ class ClickUpResourceClient:
                     else:
                         # Already a CustomField object
                         custom_field_objects.append(field)
-            
+
             request = Task.update_request(
                 task_id=task_id,
                 name=kwargs.get("name"),
@@ -458,14 +450,14 @@ class ClickUpResourceClient:
                 time_estimate=kwargs.get("time_estimate"),
                 assignees=kwargs.get("assignees"),
                 tags=kwargs.get("tags"),
-                custom_fields=custom_field_objects or kwargs.get("custom_fields", [])
+                custom_fields=custom_field_objects or kwargs.get("custom_fields", []),
             )
 
         data = request.extract_update_data()
 
         # Handle custom_fields properly for API
         custom_fields_data = []
-        
+
         if hasattr(request, "custom_fields") and request.custom_fields:
             for field in request.custom_fields:
                 if isinstance(field, dict):
@@ -473,27 +465,26 @@ class ClickUpResourceClient:
                     custom_fields_data.append(field)
                 elif isinstance(field, CustomField):
                     # Convert to simplified format for API - only include field_id and value
-                    custom_fields_data.append({
-                        "field_id": field.id,
-                        "value": field.value
-                    })
-            
+                    custom_fields_data.append({"field_id": field.id, "value": field.value})
+
         if custom_fields_data:
             data["custom_fields"] = custom_fields_data
 
         return await self.client.put(f"/task/{request.task_id}", data=data)
 
-    async def delete_task(self, request: Task | str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> APIResponse:
+    async def delete_task(
+        self, request: Task | str, custom_task_ids: bool = False, team_id: Optional[str] = None
+    ) -> APIResponse:
         """Delete a task by ID."""
         if isinstance(request, str):
             request = Task.delete_request(request, custom_task_ids, team_id)
-        
+
         params: Dict[str, Any] = {}
         if request.custom_task_ids is not None:
             params["custom_task_ids"] = request.custom_task_ids
         if request.team_id:
             params["team_id"] = request.team_id
-        
+
         return await self.client.delete(f"/task/{request.task_id}", params=params)
 
     # User operations
@@ -538,9 +529,7 @@ class ClickUpResourceClient:
         request = Folder.create_request(space_id, name)
         return await self.create_folder(request)
 
-    async def get_lists_legacy(
-        self, folder_id: Optional[str] = None, space_id: Optional[str] = None
-    ) -> APIResponse:
+    async def get_lists_legacy(self, folder_id: Optional[str] = None, space_id: Optional[str] = None) -> APIResponse:
         """Get lists from a folder or space (backward compatibility)."""
         request = ClickUpList.list_request(folder_id=folder_id, space_id=space_id)
         return await self.get_lists(request)
@@ -583,7 +572,7 @@ class ClickUpResourceClient:
             for field in custom_fields:
                 if isinstance(field, dict):
                     custom_field_objects.append(field)
-        
+
         request = Task.list_request(
             list_id=list_id,
             page=page,
@@ -604,18 +593,16 @@ class ClickUpResourceClient:
         )
         return await self.get_tasks(request)
 
-    async def get_task_by_id(
-        self, task_id: str, custom_task_ids: bool = None, team_id: str = None
-    ) -> APIResponse:
+    async def get_task_by_id(self, task_id: str, custom_task_ids: bool = None, team_id: str = None) -> APIResponse:
         """Legacy method for get_task."""
         params = {}
-        
+
         # Always add custom_task_ids to params, defaulting to False if not specified
         params["custom_task_ids"] = False if custom_task_ids is None else custom_task_ids
-            
+
         if team_id:
             params["team_id"] = team_id
-            
+
         return await self.client.get(f"/task/{task_id}", params=params)
 
     async def create_task_legacy(

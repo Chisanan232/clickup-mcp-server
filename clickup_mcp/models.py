@@ -7,8 +7,10 @@ and responses, following PEP 484/585 standards for type hints and domain-driven 
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
+from typing import Any, Dict
+from typing import List
 from typing import List as ListType
+from typing import Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator, validator
 
@@ -75,7 +77,7 @@ class Space(ClickUpBaseModel):
             description=None,
             multiple_assignees=None,
             features=None,
-            private=None
+            private=None,
         )
 
     @classmethod
@@ -88,7 +90,7 @@ class Space(ClickUpBaseModel):
             description=None,
             multiple_assignees=None,
             features=None,
-            private=None
+            private=None,
         )
 
     @classmethod
@@ -115,7 +117,7 @@ class Space(ClickUpBaseModel):
             data["private"] = self.private
         if self.features:
             data["features"] = self.features
-        
+
         return data
 
 
@@ -133,29 +135,17 @@ class Folder(ClickUpBaseModel):
     @classmethod
     def get_request(cls, folder_id: str) -> "Folder":
         """Create a request for getting a specific folder."""
-        return cls(
-            folder_id=folder_id,
-            space_id=None,
-            name=None
-        )
+        return cls(folder_id=folder_id, space_id=None, name=None)
 
     @classmethod
     def list_request(cls, space_id: str) -> "Folder":
         """Create a request for listing folders in a space."""
-        return cls(
-            space_id=space_id,
-            folder_id=None,
-            name=None
-        )
+        return cls(space_id=space_id, folder_id=None, name=None)
 
     @classmethod
     def create_request(cls, space_id: str, name: str) -> "Folder":
         """Create a request for creating a new folder."""
-        return cls(
-            space_id=space_id,
-            name=name,
-            folder_id=None
-        )
+        return cls(space_id=space_id, name=name, folder_id=None)
 
     @model_validator(mode="after")
     def validate_create_request(self):
@@ -171,7 +161,7 @@ class Folder(ClickUpBaseModel):
 
 class ClickUpList(ClickUpBaseModel):
     """Domain model for ClickUp List operations.
-    
+
     Note: Formerly known as ClickUpListDomain to avoid conflict with typing.List.
     """
 
@@ -188,10 +178,7 @@ class ClickUpList(ClickUpBaseModel):
     assignee: Optional[str] = Field(None, description="User ID to assign")
     status: Optional[str] = Field(None, description="Custom status")
 
-    model_config = ConfigDict(
-        extra="allow",
-        populate_by_name=True
-    )
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     @classmethod
     def get_request(cls, list_id: str) -> "ClickUpList":
@@ -216,7 +203,7 @@ class ClickUpList(ClickUpBaseModel):
         """Create a request for listing all lists in a folder or space."""
         if not folder_id and not space_id:
             raise ValueError("Either folder_id or space_id must be provided")
-        
+
         return cls(
             list_id=None,
             folder_id=folder_id,
@@ -239,14 +226,8 @@ class ClickUpList(ClickUpBaseModel):
         """Create a request for creating a new list."""
         if not folder_id and not space_id:
             raise ValueError("Either folder_id or space_id must be provided when creating a list")
-        
-        return cls(
-            name=name,
-            folder_id=folder_id,
-            space_id=space_id,
-            list_id=None,
-            **kwargs
-        )
+
+        return cls(name=name, folder_id=folder_id, space_id=space_id, list_id=None, **kwargs)
 
     @model_validator(mode="after")
     def validate_create_request(self):
@@ -258,7 +239,7 @@ class ClickUpList(ClickUpBaseModel):
     def extract_create_data(self) -> Dict[str, Any]:
         """Extract data for list creation."""
         data: Dict[str, Any] = {"name": self.name}
-        
+
         # Only include fields that were explicitly set
         if self.content and "content" in self.__fields_set__:
             data["content"] = self.content
@@ -272,18 +253,18 @@ class ClickUpList(ClickUpBaseModel):
             data["assignee"] = self.assignee
         if self.status and "status" in self.__fields_set__:
             data["status"] = self.status
-        
+
         return data
 
     def validate_list_request(self):
         """Validate list request has required fields.
-        
+
         Used by tests to verify validation behavior.
         """
         # Skip validation for get requests (when list_id is set)
         if self.list_id:
             return self
-            
+
         # For other operations, require folder_id or space_id
         if not (self.folder_id or self.space_id):
             raise ValueError("Either folder_id or space_id must be provided when creating a list")
@@ -412,7 +393,7 @@ class Task(ClickUpBaseModel):
             date_created_gt=None,
             date_created_lt=None,
             date_updated_gt=None,
-            date_updated_lt=None
+            date_updated_lt=None,
         )
 
     @classmethod
@@ -546,8 +527,8 @@ class Task(ClickUpBaseModel):
     def get_request(cls, task_id: str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> "Task":
         """Create a request for getting a specific task."""
         return cls(
-            task_id=task_id, 
-            custom_task_ids=custom_task_ids, 
+            task_id=task_id,
+            custom_task_ids=custom_task_ids,
             team_id=team_id,
             list_id=None,
             name=None,
@@ -577,7 +558,7 @@ class Task(ClickUpBaseModel):
             date_created_gt=None,
             date_created_lt=None,
             date_updated_gt=None,
-            date_updated_lt=None
+            date_updated_lt=None,
         )
 
     @classmethod
@@ -633,7 +614,7 @@ class Task(ClickUpBaseModel):
             links_to=None,
             check_required_custom_fields=True,
             custom_task_ids=False,
-            team_id=None
+            team_id=None,
         )
 
     @classmethod
@@ -690,7 +671,7 @@ class Task(ClickUpBaseModel):
             date_created_gt=None,
             date_created_lt=None,
             date_updated_gt=None,
-            date_updated_lt=None
+            date_updated_lt=None,
         )
 
     @classmethod
@@ -744,15 +725,15 @@ class Task(ClickUpBaseModel):
             date_created_gt=None,
             date_created_lt=None,
             date_updated_gt=None,
-            date_updated_lt=None
+            date_updated_lt=None,
         )
 
     @classmethod
     def delete_request(cls, task_id: str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> "Task":
         """Create a request for deleting a task."""
         return cls(
-            task_id=task_id, 
-            custom_task_ids=custom_task_ids, 
+            task_id=task_id,
+            custom_task_ids=custom_task_ids,
             team_id=team_id,
             list_id=None,
             name=None,
@@ -782,7 +763,7 @@ class Task(ClickUpBaseModel):
             date_created_gt=None,
             date_created_lt=None,
             date_updated_gt=None,
-            date_updated_lt=None
+            date_updated_lt=None,
         )
 
 
