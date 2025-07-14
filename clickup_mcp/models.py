@@ -1015,6 +1015,142 @@ class Task(ClickUpBaseModel):
             date_updated_lt=None,
         )
 
+    def extract_create_data(self) -> Dict[str, Any]:
+        """Extract data for task creation."""
+        data: Dict[str, Any] = {"name": self.name}
+        
+        # Add optional fields if they are set
+        if self.description:
+            data["description"] = self.description
+        if self.assignees:
+            data["assignees"] = self.assignees
+        if self.tags:
+            data["tags"] = self.tags
+        if self.status:
+            data["status"] = self.status
+        if self.priority is not None:
+            data["priority"] = self.priority
+        if self.due_date is not None:
+            data["due_date"] = self.due_date
+        if self.due_date_time is not None:
+            data["due_date_time"] = self.due_date_time
+        if self.time_estimate is not None:
+            data["time_estimate"] = self.time_estimate
+        if self.start_date is not None:
+            data["start_date"] = self.start_date
+        if self.start_date_time is not None:
+            data["start_date_time"] = self.start_date_time
+        if self.notify_all is not None:
+            data["notify_all"] = self.notify_all
+        if self.parent:
+            data["parent"] = self.parent
+        if self.links_to:
+            data["links_to"] = self.links_to
+        if self.check_required_custom_fields is not None:
+            data["check_required_custom_fields"] = self.check_required_custom_fields
+        
+        # Handle custom fields
+        if self.custom_fields:
+            custom_fields_data = []
+            for field in self.custom_fields:
+                if isinstance(field, dict):
+                    custom_fields_data.append(field)
+                elif hasattr(field, "id") and hasattr(field, "value"):
+                    custom_fields_data.append({"field_id": field.id, "value": field.value})
+            data["custom_fields"] = custom_fields_data
+        
+        return data
+
+    def extract_update_data(self) -> Dict[str, Any]:
+        """Extract data for task update."""
+        data: Dict[str, Any] = {}
+        
+        # Add fields that are not None
+        if self.name:
+            data["name"] = self.name
+        if self.description:
+            data["description"] = self.description
+        if self.assignees:
+            data["assignees"] = self.assignees
+        if self.tags:
+            data["tags"] = self.tags
+        if self.status:
+            data["status"] = self.status
+        if self.priority is not None:
+            data["priority"] = self.priority
+        if self.due_date is not None:
+            data["due_date"] = self.due_date
+        if self.due_date_time is not None:
+            data["due_date_time"] = self.due_date_time
+        if self.time_estimate is not None:
+            data["time_estimate"] = self.time_estimate
+        if self.start_date is not None:
+            data["start_date"] = self.start_date
+        if self.start_date_time is not None:
+            data["start_date_time"] = self.start_date_time
+        if self.notify_all is not None:
+            data["notify_all"] = self.notify_all
+        if self.parent:
+            data["parent"] = self.parent
+        if self.links_to:
+            data["links_to"] = self.links_to
+        
+        # Handle custom fields
+        if self.custom_fields:
+            custom_fields_data = []
+            for field in self.custom_fields:
+                if isinstance(field, dict):
+                    custom_fields_data.append(field)
+                elif hasattr(field, "id") and hasattr(field, "value"):
+                    custom_fields_data.append({"field_id": field.id, "value": field.value})
+            data["custom_fields"] = custom_fields_data
+        
+        return data
+
+    def extract_list_params(self) -> Dict[str, Any]:
+        """Extract parameters for listing tasks."""
+        params: Dict[str, Any] = {}
+        
+        if self.page is not None:
+            params["page"] = self.page
+        if self.order_by:
+            params["order_by"] = self.order_by
+        if self.reverse is not None:
+            params["reverse"] = self.reverse
+        if self.subtasks is not None:
+            params["subtasks"] = self.subtasks
+        if self.include_closed is not None:
+            params["include_closed"] = self.include_closed
+        if self.statuses:
+            params["statuses[]"] = self.statuses
+        if self.assignees:
+            params["assignees[]"] = self.assignees
+        if self.tags:
+            params["tags[]"] = self.tags
+        if self.due_date_gt is not None:
+            params["due_date_gt"] = self.due_date_gt
+        if self.due_date_lt is not None:
+            params["due_date_lt"] = self.due_date_lt
+        if self.date_created_gt is not None:
+            params["date_created_gt"] = self.date_created_gt
+        if self.date_created_lt is not None:
+            params["date_created_lt"] = self.date_created_lt
+        if self.date_updated_gt is not None:
+            params["date_updated_gt"] = self.date_updated_gt
+        if self.date_updated_lt is not None:
+            params["date_updated_lt"] = self.date_updated_lt
+        if self.custom_fields:
+            # Convert custom fields to params format
+            custom_fields_data = []
+            for field in self.custom_fields:
+                if isinstance(field, dict):
+                    custom_fields_data.append(field)
+                elif hasattr(field, "id") and hasattr(field, "value"):
+                    custom_fields_data.append({"field_id": field.id, "value": field.value})
+            params["custom_fields"] = custom_fields_data
+        
+        return params
+
 
 class User(ClickUpBaseModel):
     """Domain model for ClickUp User operations."""

@@ -337,11 +337,10 @@ class ListAPI:
         if isinstance(list_obj, str):
             # Legacy support: second parameter is name
             name = list_obj
-            list_obj = ClickUpList.initial(name=name, **kwargs)
             if container_type == "folder":
-                list_obj.folder_id = container_id
+                list_obj = ClickUpList.initial(name=name, folder_id=container_id, **kwargs)
             else:
-                list_obj.space_id = container_id
+                list_obj = ClickUpList.initial(name=name, space_id=container_id, **kwargs)
         else:
             # Make sure the list object has the proper container ID
             if container_type == "folder" and not list_obj.folder_id:
@@ -467,7 +466,7 @@ class TaskAPI:
             name = task
             # Handle custom fields conversion if present in kwargs
             custom_field_objects: Optional[List[Union[CustomField, Dict[str, Any]]]] = None
-            if "custom_fields" in kwargs:
+            if "custom_fields" in kwargs and kwargs["custom_fields"] is not None:
                 custom_field_objects = []
                 for field in kwargs["custom_fields"]:
                     if isinstance(field, dict):
@@ -878,9 +877,12 @@ class ClickUpResourceClient:
         """Get all tasks in a list."""
         if isinstance(request, str):
             # Legacy support: first parameter is list_id
+            if params is None:
+                # Create a default Task instance with default parameters  
+                params = Task(name="", list_id=request, page=0, order_by="created", reverse=False)
             return await self.task.get_all(request, params)
         else:
-            return await self.task.get_all(request.list_id, params)
+            return await self.task.get_all(request.list_id, request)
 
     async def get_task(self, request: Task | str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> Task:
         """Get a specific task by ID."""
