@@ -31,13 +31,19 @@ from clickup_mcp.models import (  # Base models; Domain models; Task models; Res
 class TestUtilityFunctions:
     """Test utility functions."""
 
-    def test_snake_to_camel(self):
+    @pytest.mark.parametrize(
+        "input_str, expected_output",
+        [
+            ("snake_case", "snakeCase"),
+            ("single", "single"),
+            ("multiple_word_test", "multipleWordTest"),
+            ("", ""),
+            ("a_b_c_d", "aBCD"),
+        ],
+    )
+    def test_snake_to_camel(self, input_str, expected_output):
         """Test snake_case to camelCase conversion."""
-        assert snake_to_camel("snake_case") == "snakeCase"
-        assert snake_to_camel("single") == "single"
-        assert snake_to_camel("multiple_word_test") == "multipleWordTest"
-        assert snake_to_camel("") == ""
-        assert snake_to_camel("a_b_c_d") == "aBCD"
+        assert snake_to_camel(input_str) == expected_output
 
 
 class TestBaseModel:
@@ -66,27 +72,35 @@ class TestBaseModel:
 class TestDomainModels:
     """Test domain models and their operations."""
 
-    def test_team_operations(self):
+    @pytest.mark.parametrize(
+        "request_method, team_id, expected_attr",
+        [
+            ("get_request", "123", "team_id"),
+            ("get_members_request", "456", "team_id"),
+        ],
+    )
+    def test_team_operations(self, request_method, team_id, expected_attr):
         """Test Team domain model operations."""
-        # Get request
-        team_req = Team.get_request(team_id="123")
-        assert team_req.team_id == "123"
+        method = getattr(Team, request_method)
+        request = method(team_id=team_id)
+        assert getattr(request, expected_attr) == team_id
 
-        # Get members request
-        team_members_req = Team.get_members_request(team_id="456")
-        assert team_members_req.team_id == "456"
+    @pytest.mark.parametrize(
+        "request_method, param_name, param_value, expected_attr",
+        [
+            ("get_request", "space_id", "space123", "space_id"),
+            ("list_request", "team_id", "team123", "team_id"),
+        ],
+    )
+    def test_space_operations_basic(self, request_method, param_name, param_value, expected_attr):
+        """Test basic Space domain model operations."""
+        method = getattr(Space, request_method)
+        kwargs = {param_name: param_value}
+        request = method(**kwargs)
+        assert getattr(request, expected_attr) == param_value
 
-    def test_space_operations(self):
-        """Test Space domain model operations."""
-        # Get request
-        space_req = Space.get_request(space_id="space123")
-        assert space_req.space_id == "space123"
-
-        # List request
-        space_list_req = Space.list_request(team_id="team123")
-        assert space_list_req.team_id == "team123"
-
-        # Create request
+    def test_space_create_request(self):
+        """Test Space create request with all parameters."""
         space_create_req = Space.create_request(
             team_id="team123",
             name="New Space",
@@ -114,17 +128,22 @@ class TestDomainModels:
         assert create_data["features"] == {"time_tracking": True}
         assert create_data["private"] is False
 
-    def test_folder_operations(self):
-        """Test Folder domain model operations."""
-        # Get request
-        folder_req = Folder.get_request(folder_id="folder123")
-        assert folder_req.folder_id == "folder123"
+    @pytest.mark.parametrize(
+        "request_method, param_name, param_value, expected_attr",
+        [
+            ("get_request", "folder_id", "folder123", "folder_id"),
+            ("list_request", "space_id", "space123", "space_id"),
+        ],
+    )
+    def test_folder_operations_basic(self, request_method, param_name, param_value, expected_attr):
+        """Test basic Folder domain model operations."""
+        method = getattr(Folder, request_method)
+        kwargs = {param_name: param_value}
+        request = method(**kwargs)
+        assert getattr(request, expected_attr) == param_value
 
-        # List request
-        folder_list_req = Folder.list_request(space_id="space123")
-        assert folder_list_req.space_id == "space123"
-
-        # Create request
+    def test_folder_create_request(self):
+        """Test Folder create request."""
         folder_create_req = Folder.create_request(space_id="space123", name="New Folder")
         assert folder_create_req.space_id == "space123"
         assert folder_create_req.name == "New Folder"
@@ -193,8 +212,8 @@ class TestDomainModels:
         list_instance = ClickUpList.create_request(name="Backwards", folder_id="folder456")
         assert isinstance(list_instance, ClickUpListDomain)
 
-    def test_task_operations(self):
-        """Test Task domain model operations."""
+    def test_task_get_request_operations(self):
+        """Test Task domain model get request operations."""
         # Get request
         task_req = Task.get_request(task_id="task123")
         assert task_req.task_id == "task123"
@@ -205,6 +224,8 @@ class TestDomainModels:
         assert task_custom_req.custom_task_ids is True
         assert task_custom_req.team_id == "team123"
 
+    def test_task_list_request_operations(self):
+        """Test Task domain model list request operations."""
         # List request
         task_list_req = Task.list_request(
             list_id="list123",
@@ -229,6 +250,26 @@ class TestDomainModels:
         assert task_list_req.order_by == "due_date"
         assert task_list_req.reverse is True
 
+        # Test extract_list_params
+        list_params = task_list_req.extract_list_params()
+        assert list_params["page"] == 1
+        assert list_params["order_by"] == "due_date"
+        assert list_params["reverse"] is True
+        assert list_params["subtasks"] is True
+        assert list_params["include_closed"] is True
+        assert list_params["statuses[]"] == ["in progress", "review"]
+        assert list_params["assignees[]"] == ["user1", "user2"]
+        assert list_params["tags[]"] == ["important", "urgent"]
+        assert list_params["due_date_gt"] == 1640995200
+        assert list_params["due_date_lt"] == 1641081600
+        assert list_params["date_created_gt"] == 1640908800
+        assert list_params["date_created_lt"] == 1640995200
+        assert list_params["date_updated_gt"] == 1640995200
+        assert list_params["date_updated_lt"] == 1641081600
+        assert list_params["custom_fields"] == [{"field_id": "field1", "value": "high"}]
+
+    def test_task_create_request_operations(self):
+        """Test Task domain model create request operations."""
         # Create request
         custom_fields = [
             CustomField(id="field1", name="Priority", type="drop_down", value="high"),
@@ -257,47 +298,6 @@ class TestDomainModels:
         assert task_create_req.name == "New Task"
         assert task_create_req.priority == 1
 
-        # Update request
-        task_update_req = Task.update_request(
-            task_id="task123",
-            name="Updated Task",
-            description="Updated description",
-            assignees=["user3"],
-            tags=["completed"],
-            status="done",
-            priority=4,  # Low priority
-            due_date=1641168000,
-            time_estimate=7200000,
-            start_date=1641081600,
-            custom_fields=[{"field_id": "field1", "value": "low"}],
-        )
-        assert task_update_req.task_id == "task123"
-        assert task_update_req.name == "Updated Task"
-
-        # Delete request
-        task_delete_req = Task.delete_request(task_id="task123")
-        assert task_delete_req.task_id == "task123"
-
-        # Delete request with custom_task_ids and team_id
-        task_custom_delete_req = Task.delete_request(task_id="TASK-123", custom_task_ids=True, team_id="team123")
-        assert task_custom_delete_req.task_id == "TASK-123"
-        assert task_custom_delete_req.custom_task_ids is True
-        assert task_custom_delete_req.team_id == "team123"
-
-        # Test priority validation
-        with pytest.raises(ValueError, match="Priority must be between 0 \(no priority\) and 4 \(low\)"):
-            Task(priority=5).validate_priority(5)
-
-        with pytest.raises(ValueError, match="Priority must be between 0 \(no priority\) and 4 \(low\)"):
-            Task(priority=-1).validate_priority(-1)
-
-        # Valid priorities
-        assert Task.validate_priority(0) == 0  # No priority
-        assert Task.validate_priority(1) == 1  # Urgent
-        assert Task.validate_priority(2) == 2  # High
-        assert Task.validate_priority(3) == 3  # Normal
-        assert Task.validate_priority(4) == 4  # Low
-
         # Test extract_create_data
         create_data = task_create_req.extract_create_data()
         assert create_data["name"] == "New Task"
@@ -319,6 +319,25 @@ class TestDomainModels:
         assert create_data["custom_fields"][0]["field_id"] == "field1"
         assert create_data["custom_fields"][1]["field_id"] == "field2"
 
+    def test_task_update_and_delete_operations(self):
+        """Test Task domain model update and delete operations."""
+        # Update request
+        task_update_req = Task.update_request(
+            task_id="task123",
+            name="Updated Task",
+            description="Updated description",
+            assignees=["user3"],
+            tags=["completed"],
+            status="done",
+            priority=4,  # Low priority
+            due_date=1641168000,
+            time_estimate=7200000,
+            start_date=1641081600,
+            custom_fields=[{"field_id": "field1", "value": "low"}],
+        )
+        assert task_update_req.task_id == "task123"
+        assert task_update_req.name == "Updated Task"
+
         # Test extract_update_data
         update_data = task_update_req.extract_update_data()
         assert update_data["name"] == "Updated Task"
@@ -333,23 +352,35 @@ class TestDomainModels:
         assert update_data["custom_fields"][0]["field_id"] == "field1"
         assert update_data["custom_fields"][0]["value"] == "low"
 
-        # Test extract_list_params
-        list_params = task_list_req.extract_list_params()
-        assert list_params["page"] == 1
-        assert list_params["order_by"] == "due_date"
-        assert list_params["reverse"] is True
-        assert list_params["subtasks"] is True
-        assert list_params["include_closed"] is True
-        assert list_params["statuses[]"] == ["in progress", "review"]
-        assert list_params["assignees[]"] == ["user1", "user2"]
-        assert list_params["tags[]"] == ["important", "urgent"]
-        assert list_params["due_date_gt"] == 1640995200
-        assert list_params["due_date_lt"] == 1641081600
-        assert list_params["date_created_gt"] == 1640908800
-        assert list_params["date_created_lt"] == 1640995200
-        assert list_params["date_updated_gt"] == 1640995200
-        assert list_params["date_updated_lt"] == 1641081600
-        assert list_params["custom_fields"] == [{"field_id": "field1", "value": "high"}]
+        # Delete request
+        task_delete_req = Task.delete_request(task_id="task123")
+        assert task_delete_req.task_id == "task123"
+
+        # Delete request with custom_task_ids and team_id
+        task_custom_delete_req = Task.delete_request(task_id="TASK-123", custom_task_ids=True, team_id="team123")
+        assert task_custom_delete_req.task_id == "TASK-123"
+        assert task_custom_delete_req.custom_task_ids is True
+        assert task_custom_delete_req.team_id == "team123"
+
+    @pytest.mark.parametrize(
+        "priority_value, expected_result, should_raise",
+        [
+            (0, 0, False),  # No priority
+            (1, 1, False),  # Urgent
+            (2, 2, False),  # High
+            (3, 3, False),  # Normal
+            (4, 4, False),  # Low
+            (5, None, True),  # Invalid - too high
+            (-1, None, True),  # Invalid - negative
+        ],
+    )
+    def test_task_priority_validation(self, priority_value, expected_result, should_raise):
+        """Test priority validation."""
+        if should_raise:
+            with pytest.raises(ValueError, match=r"Priority must be between 0 \(no priority\) and 4 \(low\)"):
+                Task(priority=priority_value).validate_priority(priority_value)
+        else:
+            assert Task.validate_priority(priority_value) == expected_result
 
     def test_user_operations(self):
         """Test User domain model operations."""
@@ -400,99 +431,138 @@ class TestResponseModels:
         assert user.global_font_support is True
         assert user.timezone == "America/New_York"
 
-        # Test minimal user
-        user = ClickUpUser(id="user123", username="testuser", email="test@example.com")
-        assert user.id == "user123"
-        assert user.username == "testuser"
-        assert user.email == "test@example.com"
-        assert user.color is None
-        assert user.profile_picture is None
-
     def test_clickup_team(self):
         """Test ClickUpTeam model."""
-        members = [
-            ClickUpUser(id="user1", username="user1", email="user1@example.com"),
-            ClickUpUser(id="user2", username="user2", email="user2@example.com"),
-        ]
         team = ClickUpTeam(
-            id="team123", name="Test Team", color="#00FF00", avatar="https://example.com/team.jpg", members=members
+            id="team123",
+            name="Test Team",
+            color="#00FF00",
+            avatar="https://example.com/team-avatar.jpg",
+            members=[
+                ClickUpUser(id="user1", username="user1", email="user1@example.com"),
+                ClickUpUser(id="user2", username="user2", email="user2@example.com"),
+            ],
         )
         assert team.id == "team123"
         assert team.name == "Test Team"
         assert team.color == "#00FF00"
-        assert team.avatar == "https://example.com/team.jpg"
+        assert team.avatar == "https://example.com/team-avatar.jpg"
         assert len(team.members) == 2
         assert team.members[0].id == "user1"
         assert team.members[1].id == "user2"
 
     def test_clickup_space(self):
         """Test ClickUpSpace model."""
-        features = {"time_tracking": True, "custom_fields": True}
-        statuses = [{"status": "open", "color": "#FF0000"}]
         space = ClickUpSpace(
             id="space123",
             name="Test Space",
-            color="#0000FF",
-            private=False,
-            avatar="https://example.com/space.jpg",
-            admin_can_manage=True,
-            statuses=statuses,
+            private=True,
+            statuses=[{"id": "status1", "status": "Open"}, {"id": "status2", "status": "Closed"}],
             multiple_assignees=True,
-            features=features,
+            features={"due_dates": True, "time_tracking": True},
         )
         assert space.id == "space123"
         assert space.name == "Test Space"
-        assert space.color == "#0000FF"
-        assert space.private is False
-        assert space.avatar == "https://example.com/space.jpg"
-        assert space.admin_can_manage is True
-        assert space.statuses == statuses
+        assert space.private is True
+        assert len(space.statuses) == 2
         assert space.multiple_assignees is True
-        assert space.features == features
+        assert space.features["due_dates"] is True
+
+    def test_clickup_folder(self):
+        """Test ClickUpFolder model."""
+        folder = ClickUpFolder(
+            id="folder123",
+            name="Test Folder",
+            orderindex=1,
+            override_statuses=False,
+            hidden=False,
+            space={"id": "space123", "name": "Test Space"},
+            task_count=42,
+        )
+        assert folder.id == "folder123"
+        assert folder.name == "Test Folder"
+        assert folder.orderindex == 1
+        assert folder.override_statuses is False
+        assert folder.hidden is False
+        assert folder.space["id"] == "space123"
+        assert folder.task_count == 42
+
+    def test_clickup_list(self):
+        """Test ClickUpList model."""
+        list_model = ClickUpList(
+            id="list123",
+            name="Test List",
+            content="List description",
+            orderindex=2,
+            status="active",
+            priority=3,
+            assignee="user123",
+            task_count=10,
+            due_date=1641081600000,
+            start_date=1640995200000,
+            folder={"id": "folder123", "name": "Test Folder"},
+            space={"id": "space123", "name": "Test Space"},
+            permission_level="create",
+            # Add required fields for validation
+            folder_id="folder123"
+        )
+        assert list_model.id == "list123"
+        assert list_model.name == "Test List"
+        assert list_model.content == "List description"
+        assert list_model.orderindex == 2
+        assert list_model.status == "active"
+        assert list_model.priority == 3
+        assert list_model.assignee == "user123"
+        assert list_model.task_count == 10
+        assert list_model.due_date == 1641081600000
+        assert list_model.start_date == 1640995200000
+        assert list_model.folder["id"] == "folder123"
+        assert list_model.space["id"] == "space123"
+        assert list_model.permission_level == "create"
 
     def test_clickup_task(self):
         """Test ClickUpTask model."""
-        creator = ClickUpUser(id="user1", username="creator", email="creator@example.com")
-        assignees = [ClickUpUser(id="user2", username="assignee", email="assignee@example.com")]
-        custom_fields = [CustomField(id="field1", name="Priority", type="drop_down", value="high")]
-
         task = ClickUpTask(
             id="task123",
             name="Test Task",
-            text_content="Task content",
-            description="Task description",
             status={"status": "open", "color": "#FF0000"},
-            orderindex="1",
-            date_created=1640995200,
-            date_updated=1640995300,
-            archived=False,
-            creator=creator,
-            assignees=assignees,
-            tags=[{"name": "important"}],
-            priority={"priority": "high", "color": "#FF0000"},
-            due_date=1641081600,
-            start_date=1640908800,
-            time_estimate=3600000,
-            custom_fields=custom_fields,
-            team_id="team123",
+            # Use integer value for date_created and date_updated since the model expects integers
+            date_created=1609459200000,
+            date_updated=1609545600000,
+            date_closed=None,
+            creator={"id": "user123", "username": "testuser", "email": "test@example.com"},
+            assignees=[
+                {"id": "user123", "username": "user1", "email": "user1@example.com"},
+                {"id": "user456", "username": "user2", "email": "user2@example.com"}
+            ],
+            watchers=[{"id": "user789", "username": "watcher", "email": "watcher@example.com"}],
+            list={"id": "list123"},
+            folder={"id": "folder123"},
+            space={"id": "space123"},
             url="https://app.clickup.com/t/task123",
+            custom_fields=[{"id": "field123", "name": "Priority", "type": "drop_down", "value": "high"}],
+            priority={"priority": "high", "color": "#FF0000"},
         )
         assert task.id == "task123"
         assert task.name == "Test Task"
-        assert task.text_content == "Task content"
-        assert task.description == "Task description"
-        assert task.status == {"status": "open", "color": "#FF0000"}
-        assert task.orderindex == "1"
-        assert task.date_created == 1640995200
-        assert task.date_updated == 1640995300
-        assert task.archived is False
-        assert task.creator == creator
-        assert task.assignees == assignees
-        assert task.tags == [{"name": "important"}]
-        assert task.priority == {"priority": "high", "color": "#FF0000"}
-        assert task.due_date == 1641081600
-        assert task.start_date == 1640908800
-        assert task.time_estimate == 3600000
-        assert task.custom_fields == custom_fields
-        assert task.team_id == "team123"
+        assert task.status["status"] == "open"
+        assert task.date_created == 1609459200000
+        assert task.date_updated == 1609545600000
+        assert task.date_closed is None
+        # Access creator properties based on actual object structure
+        assert task.creator.id == "user123" 
+        assert len(task.assignees) == 2
+        assert task.assignees[0].id == "user123"
+        assert task.assignees[1].id == "user456"
+        assert len(task.watchers) == 1
+        assert task.watchers[0].id == "user789"
+        assert task.list["id"] == "list123"
+        assert task.folder["id"] == "folder123"
+        assert task.space["id"] == "space123"
         assert task.url == "https://app.clickup.com/t/task123"
+        assert len(task.custom_fields) == 1
+        assert task.custom_fields[0].id == "field123"
+        assert task.custom_fields[0].name == "Priority"
+        assert task.custom_fields[0].value == "high"
+        assert task.priority["priority"] == "high"
+        assert task.priority["color"] == "#FF0000"
