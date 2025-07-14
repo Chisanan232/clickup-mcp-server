@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 # Import for backward compatibility
-from typing import Any, Dict, List, Optional, Union, TypeVar, Generic, cast
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 from .client import APIResponse, ClickUpAPIClient, create_clickup_client
 from .models import (  # Domain models (preferred approach)
+    ClickUpFolder,
     ClickUpList,
     ClickUpListResponse,
+    ClickUpSpace,
     ClickUpTeam,
     ClickUpUser,
-    ClickUpSpace,
-    ClickUpFolder,
     CustomField,
     Folder,
     Space,
@@ -20,7 +20,7 @@ from .models import (  # Domain models (preferred approach)
 )
 
 # Type variables for generic return types
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class TeamAPI:
@@ -33,7 +33,7 @@ class TeamAPI:
     async def get_all(self) -> list[ClickUpTeam]:
         """
         Get all teams for the authenticated user.
-        
+
         Returns:
             List of ClickUpTeam instances
         """
@@ -43,10 +43,10 @@ class TeamAPI:
     async def get(self, team_id: str | Team) -> ClickUpTeam:
         """
         Get a specific team by ID.
-        
+
         Args:
             team_id: Team ID or Team instance
-            
+
         Returns:
             ClickUpTeam instance
         """
@@ -68,10 +68,10 @@ class SpaceAPI:
     async def get_all(self, team_id: str | Team) -> list[ClickUpSpace]:
         """
         Get all spaces in a team.
-        
+
         Args:
             team_id: Team ID or Team instance
-            
+
         Returns:
             List of ClickUpSpace instances
         """
@@ -85,10 +85,10 @@ class SpaceAPI:
     async def get(self, space_id: str | Space) -> ClickUpSpace:
         """
         Get a specific space by ID.
-        
+
         Args:
             space_id: Space ID or Space instance
-            
+
         Returns:
             ClickUpSpace instance
         """
@@ -102,12 +102,12 @@ class SpaceAPI:
     async def create(self, team_id: str, space: Space | str, **kwargs) -> ClickUpSpace:
         """
         Create a new space in a team.
-        
+
         Args:
             team_id: Team ID
             space: Space instance or name string
             **kwargs: Additional parameters for legacy support
-            
+
         Returns:
             ClickUpSpace instance of the created space
         """
@@ -141,7 +141,7 @@ class SpaceAPI:
             space = Space.initial(
                 team_id=team_id, name=name, custom_fields=custom_field_objects, **kwargs  # Use processed custom fields
             )
-        elif not hasattr(space, 'team_id') or not space.team_id:
+        elif not hasattr(space, "team_id") or not space.team_id:
             # If space object is provided but team_id is missing
             space.team_id = team_id
 
@@ -152,11 +152,11 @@ class SpaceAPI:
     async def update(self, space_id: str, data: Dict[str, Any] | Space) -> ClickUpSpace:
         """
         Update an existing space.
-        
+
         Args:
             space_id: Space ID
             data: Space instance or dictionary with update data
-            
+
         Returns:
             ClickUpSpace instance of the updated space
         """
@@ -170,10 +170,10 @@ class SpaceAPI:
     async def delete(self, space_id: str) -> APIResponse:
         """
         Delete a space.
-        
+
         Args:
             space_id: Space ID
-            
+
         Returns:
             API response confirming deletion
         """
@@ -190,10 +190,10 @@ class FolderAPI:
     async def get_all(self, space_id: str | Space) -> list[ClickUpFolder]:
         """
         Get all folders in a space.
-        
+
         Args:
             space_id: Space ID or Space instance
-            
+
         Returns:
             List of ClickUpFolder instances
         """
@@ -207,10 +207,10 @@ class FolderAPI:
     async def get(self, folder_id: str | Folder) -> ClickUpFolder:
         """
         Get a specific folder by ID.
-        
+
         Args:
             folder_id: Folder ID or Folder instance
-            
+
         Returns:
             ClickUpFolder instance
         """
@@ -224,12 +224,12 @@ class FolderAPI:
     async def create(self, space_id: str, folder: Folder | str, **kwargs) -> ClickUpFolder:
         """
         Create a new folder in a space.
-        
+
         Args:
             space_id: Space ID
             folder: Folder instance or name string
             **kwargs: Additional parameters for legacy support
-            
+
         Returns:
             ClickUpFolder instance for the created folder
         """
@@ -237,7 +237,7 @@ class FolderAPI:
             # Legacy support: second parameter is name
             name = folder
             folder = Folder.initial(name=name, space_id=space_id, **kwargs)
-        elif not hasattr(folder, 'space_id') or not folder.space_id:
+        elif not hasattr(folder, "space_id") or not folder.space_id:
             # If folder object is provided but space_id is missing
             folder.space_id = space_id
 
@@ -248,11 +248,11 @@ class FolderAPI:
     async def update(self, folder_id: str, data: Dict[str, Any] | Folder) -> ClickUpFolder:
         """
         Update an existing folder.
-        
+
         Args:
             folder_id: Folder ID
             data: Folder instance or dictionary with update data
-            
+
         Returns:
             ClickUpFolder instance for the updated folder
         """
@@ -266,10 +266,10 @@ class FolderAPI:
     async def delete(self, folder_id: str) -> APIResponse:
         """
         Delete a folder.
-        
+
         Args:
             folder_id: Folder ID
-            
+
         Returns:
             API response confirming deletion
         """
@@ -286,11 +286,11 @@ class ListAPI:
     async def get_all(self, container_id: str, container_type: str = "folder") -> list[ClickUpListResponse]:
         """
         Get all lists in a container (folder or space).
-        
+
         Args:
             container_id: ID of the container (folder or space)
             container_type: Type of container, either 'folder' or 'space'
-            
+
         Returns:
             List of ClickUpListResponse instances
         """
@@ -302,10 +302,10 @@ class ListAPI:
     async def get(self, list_id: str | ClickUpList) -> ClickUpListResponse:
         """
         Get a specific list by ID.
-        
+
         Args:
             list_id: List ID or ClickUpList instance
-            
+
         Returns:
             ClickUpListResponse instance
         """
@@ -317,21 +317,17 @@ class ListAPI:
         return response.to_domain_model(ClickUpListResponse)
 
     async def create(
-        self, 
-        container_id: str, 
-        list_obj: ClickUpList | str, 
-        container_type: str = "folder", 
-        **kwargs
+        self, container_id: str, list_obj: ClickUpList | str, container_type: str = "folder", **kwargs
     ) -> ClickUpListResponse:
         """
         Create a new list in a container (folder or space).
-        
+
         Args:
             container_id: ID of the container (folder or space)
             list_obj: ClickUpList instance or name string
             container_type: Type of container, either 'folder' or 'space'
             **kwargs: Additional parameters for legacy support
-            
+
         Returns:
             ClickUpListResponse instance for the created list
         """
@@ -360,11 +356,11 @@ class ListAPI:
     async def update(self, list_id: str, data: Dict[str, Any] | ClickUpList) -> ClickUpListResponse:
         """
         Update an existing list.
-        
+
         Args:
             list_id: List ID
             data: ClickUpList instance or dictionary with update data
-            
+
         Returns:
             ClickUpListResponse instance for the updated list
         """
@@ -378,10 +374,10 @@ class ListAPI:
     async def delete(self, list_id: str) -> APIResponse:
         """
         Delete a list.
-        
+
         Args:
             list_id: List ID
-            
+
         Returns:
             API response confirming deletion
         """
@@ -398,11 +394,11 @@ class TaskAPI:
     async def get_all(self, list_id: str, params: Optional[Dict[str, Any] | Task] = None) -> list[Task]:
         """
         Get all tasks in a list with optional filtering.
-        
+
         Args:
             list_id: List ID
             params: Task instance or dictionary with filter parameters
-            
+
         Returns:
             List of Task instances
         """
@@ -413,7 +409,7 @@ class TaskAPI:
         else:
             query_params = params
         response = await self.client.get(f"/list/{list_id}/task", params=query_params)
-        
+
         # Extract tasks from response
         if response.data and "tasks" in response.data:
             tasks = []
@@ -422,20 +418,15 @@ class TaskAPI:
             return tasks
         return []
 
-    async def get(
-        self, 
-        task_id: str | Task, 
-        custom_task_ids: bool = False, 
-        team_id: Optional[str] = None
-    ) -> Task:
+    async def get(self, task_id: str | Task, custom_task_ids: bool = False, team_id: Optional[str] = None) -> Task:
         """
         Get a specific task by ID.
-        
+
         Args:
             task_id: Task ID or Task instance
             custom_task_ids: Whether to use custom task IDs
             team_id: Team ID (required if using custom task IDs)
-            
+
         Returns:
             Task instance
         """
@@ -453,26 +444,21 @@ class TaskAPI:
             params = {}
 
         response = await self.client.get(endpoint, params=params)
-        
+
         # Extract task from response
         if response.data:
             return Task.extract_task_from_response(response.data)
         raise ValueError("Failed to extract task from response")
 
-    async def create(
-        self,
-        list_id: str,
-        task: Task | str,
-        **kwargs
-    ) -> Task:
+    async def create(self, list_id: str, task: Task | str, **kwargs) -> Task:
         """
         Create a new task in a list.
-        
+
         Args:
             list_id: List ID
             task: Task instance or name string
             **kwargs: Additional parameters for legacy support
-            
+
         Returns:
             Task instance for the created task
         """
@@ -504,39 +490,35 @@ class TaskAPI:
                         custom_field_objects.append(field)
 
             task = Task.initial(
-                list_id=list_id, 
+                list_id=list_id,
                 name=name,
                 custom_fields=custom_field_objects,
-                **{k: v for k, v in kwargs.items() if k != "custom_fields"}
+                **{k: v for k, v in kwargs.items() if k != "custom_fields"},
             )
-        elif not hasattr(task, 'list_id') or not task.list_id:
+        elif not hasattr(task, "list_id") or not task.list_id:
             # If task object is provided but list_id is missing
             task.list_id = list_id
 
         data = task.extract_create_data()
         response = await self.client.post(f"/list/{task.list_id}/task", data=data)
-        
+
         # Extract task from response
         if response.data:
             return Task.extract_task_from_response(response.data)
         raise ValueError("Failed to extract task from response")
 
     async def update(
-        self,
-        task_id: str,
-        data: Dict[str, Any] | Task,
-        custom_task_ids: bool = False,
-        team_id: Optional[str] = None
+        self, task_id: str, data: Dict[str, Any] | Task, custom_task_ids: bool = False, team_id: Optional[str] = None
     ) -> Task:
         """
         Update an existing task.
-        
+
         Args:
             task_id: Task ID
             data: Task instance or dictionary with update data
             custom_task_ids: Whether to use custom task IDs
             team_id: Team ID (required if using custom task IDs)
-            
+
         Returns:
             Task instance for the updated task
         """
@@ -564,26 +546,23 @@ class TaskAPI:
             params = {}
 
         response = await self.client.put(endpoint, data=update_data, params=params)
-        
+
         # Extract task from response
         if response.data:
             return Task.extract_task_from_response(response.data)
         raise ValueError("Failed to extract task from response")
 
     async def delete(
-        self, 
-        task_id: str | Task, 
-        custom_task_ids: bool = False, 
-        team_id: Optional[str] = None
+        self, task_id: str | Task, custom_task_ids: bool = False, team_id: Optional[str] = None
     ) -> APIResponse:
         """
         Delete a task.
-        
+
         Args:
             task_id: Task ID or Task instance
             custom_task_ids: Whether to use custom task IDs
             team_id: Team ID (required if using custom task IDs)
-            
+
         Returns:
             API response confirming deletion
         """
@@ -602,73 +581,70 @@ class TaskAPI:
             params = {}
 
         return await self.client.delete(endpoint, params=params)
-        
+
     async def add_comment(self, task_id: str, comment: str) -> Dict[str, Any]:
         """
         Add a comment to a task.
-        
+
         Args:
             task_id: ID of the task
             comment: Comment text to add
-            
+
         Returns:
             Comment data from the response
         """
         response = await self.client.post(f"/task/{task_id}/comment", data={"comment_text": comment})
         return response.data["comment"] if response.data and "comment" in response.data else {}
-        
+
     async def get_comments(self, task_id: str) -> list[Dict[str, Any]]:
         """
         Get all comments for a task.
-        
+
         Args:
             task_id: ID of the task
-            
+
         Returns:
             List of comment data dictionaries
         """
         response = await self.client.get(f"/task/{task_id}/comment")
         return response.data["comments"] if response.data and "comments" in response.data else []
-        
+
     async def update_comment(self, task_id: str, comment_id: str, comment: str) -> Dict[str, Any]:
         """
         Update a comment on a task.
-        
+
         Args:
             task_id: ID of the task
             comment_id: ID of the comment to update
             comment: New comment text
-            
+
         Returns:
             Updated comment data
         """
-        response = await self.client.put(
-            f"/task/{task_id}/comment/{comment_id}", 
-            data={"comment_text": comment}
-        )
+        response = await self.client.put(f"/task/{task_id}/comment/{comment_id}", data={"comment_text": comment})
         return response.data["comment"] if response.data and "comment" in response.data else {}
-        
+
     async def delete_comment(self, task_id: str, comment_id: str) -> APIResponse:
         """
         Delete a comment from a task.
-        
+
         Args:
             task_id: ID of the task
             comment_id: ID of the comment to delete
-            
+
         Returns:
             API response confirming deletion
         """
         return await self.client.delete(f"/task/{task_id}/comment/{comment_id}")
-        
+
     async def add_tag(self, task_id: str, tag: str) -> Task:
         """
         Add a tag to a task.
-        
+
         Args:
             task_id: ID of the task
             tag: Tag name to add
-            
+
         Returns:
             Updated Task instance
         """
@@ -676,28 +652,28 @@ class TaskAPI:
         if response.data:
             return Task.extract_task_from_response(response.data)
         raise ValueError("Failed to extract task from response")
-        
+
     async def get_tags(self, task_id: str) -> list[str]:
         """
         Get all tags for a task.
-        
+
         Args:
             task_id: ID of the task
-            
+
         Returns:
             List of tag names
         """
         response = await self.client.get(f"/task/{task_id}/tag")
         return response.data["tags"] if response.data and "tags" in response.data else []
-        
+
     async def delete_tag(self, task_id: str, tag: str) -> Task:
         """
         Delete a tag from a task.
-        
+
         Args:
             task_id: ID of the task
             tag: Tag name to delete
-            
+
         Returns:
             Updated Task instance
         """
@@ -717,12 +693,13 @@ class UserAPI:
     async def get(self) -> ClickUpUser:
         """
         Get the authenticated user.
-        
+
         Returns:
             ClickUpUser instance
         """
         response = await self.client.get("/user")
         return response.to_domain_model(ClickUpUser)
+
 
 class ClickUpResourceClient:
     """
@@ -735,7 +712,7 @@ class ClickUpResourceClient:
     def __init__(self, api_client: ClickUpAPIClient):
         """Initialize with an API client instance and set up resource managers."""
         self.client = api_client
-        
+
         # Initialize resource-specific API managers
         self.team = TeamAPI(api_client)
         self.space = SpaceAPI(api_client)
@@ -811,7 +788,9 @@ class ClickUpResourceClient:
             return await self.folder.create(request, name, **kwargs)
         return await self.folder.create(request.space_id, request, **kwargs)
 
-    async def update_folder(self, request: Folder | str, data: Optional[Dict[str, Any]] = None, **kwargs) -> ClickUpFolder:
+    async def update_folder(
+        self, request: Folder | str, data: Optional[Dict[str, Any]] = None, **kwargs
+    ) -> ClickUpFolder:
         """Update an existing folder."""
         if isinstance(request, str):
             # Legacy support: first parameter is folder_id, second is data
@@ -829,7 +808,9 @@ class ClickUpResourceClient:
         return await self.folder.delete(folder_id)
 
     # List operations
-    async def get_lists(self, request: ClickUpList | str | Dict[str, Any], container_type: str = "folder") -> list[ClickUpListResponse]:
+    async def get_lists(
+        self, request: ClickUpList | str | Dict[str, Any], container_type: str = "folder"
+    ) -> list[ClickUpListResponse]:
         """Get all lists in a container (folder or space)."""
         if isinstance(request, str):
             return await self.list.get_all(request, container_type=container_type)
@@ -853,11 +834,7 @@ class ClickUpResourceClient:
         return await self.list.get(request)
 
     async def create_list(
-        self,
-        request: ClickUpList | str,
-        name: Optional[str] = None,
-        container_type: str = "folder",
-        **kwargs
+        self, request: ClickUpList | str, name: Optional[str] = None, container_type: str = "folder", **kwargs
     ) -> ClickUpListResponse:
         """Create a new list in a container (folder or space)."""
         if isinstance(request, str):
@@ -875,7 +852,9 @@ class ClickUpResourceClient:
             else:
                 raise ValueError("Container ID not found in request object")
 
-    async def update_list(self, request: ClickUpList | str, data: Optional[Dict[str, Any]] = None, **kwargs) -> ClickUpListResponse:
+    async def update_list(
+        self, request: ClickUpList | str, data: Optional[Dict[str, Any]] = None, **kwargs
+    ) -> ClickUpListResponse:
         """Update an existing list."""
         if isinstance(request, str):
             # Legacy support: first parameter is list_id, second is data
@@ -903,9 +882,7 @@ class ClickUpResourceClient:
         else:
             return await self.task.get_all(request.list_id, params)
 
-    async def get_task(
-        self, request: Task | str, custom_task_ids: bool = False, team_id: Optional[str] = None
-    ) -> Task:
+    async def get_task(self, request: Task | str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> Task:
         """Get a specific task by ID."""
         return await self.task.get(request, custom_task_ids, team_id)
 
@@ -971,7 +948,7 @@ class ClickUpResourceClient:
         if isinstance(request, str):
             # Legacy support: first parameter is task_id
             task_id = request
-            
+
             # If data is provided, use it directly
             if data:
                 update_data = data
@@ -1002,7 +979,7 @@ class ClickUpResourceClient:
                     update_data["links_to"] = links_to
                 if custom_fields is not None:
                     update_data["custom_fields"] = custom_fields
-                
+
             return await self.task.update(task_id, update_data, custom_task_ids, team_id)
         return await self.task.update(request.task_id, request, request.custom_task_ids, request.team_id)
 

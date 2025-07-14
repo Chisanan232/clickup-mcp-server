@@ -41,10 +41,10 @@ class Team(ClickUpBaseModel):
     @classmethod
     def initial(cls, team_id: str) -> "Team":
         """Create a new Team instance with required fields.
-        
+
         Args:
             team_id: The team ID
-            
+
         Returns:
             Initialized Team instance
         """
@@ -78,17 +78,17 @@ class Space(ClickUpBaseModel):
 
     @classmethod
     def initial(
-        cls, 
-        name: str, 
-        team_id: str, 
-        description: Optional[str] = None, 
-        multiple_assignees: Optional[bool] = None, 
+        cls,
+        name: str,
+        team_id: str,
+        description: Optional[str] = None,
+        multiple_assignees: Optional[bool] = None,
         features: Optional[Dict[str, Any]] = None,
         private: Optional[bool] = None,
-        **kwargs
+        **kwargs,
     ) -> "Space":
         """Create a new Space instance with required fields.
-        
+
         Args:
             name: The space name
             team_id: The team ID
@@ -97,32 +97,32 @@ class Space(ClickUpBaseModel):
             features: Features configuration
             private: Whether space is private
             **kwargs: Additional attributes
-            
+
         Returns:
             Initialized Space instance
         """
         return cls(
-            name=name, 
+            name=name,
             team_id=team_id,
             description=description,
             multiple_assignees=multiple_assignees,
             features=features,
             private=private,
-            **kwargs
+            **kwargs,
         )
 
     @classmethod
     def update_data(
         cls,
-        name: Optional[str] = None, 
-        description: Optional[str] = None, 
-        multiple_assignees: Optional[bool] = None, 
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        multiple_assignees: Optional[bool] = None,
         features: Optional[Dict[str, Any]] = None,
         private: Optional[bool] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Create update data dictionary for a space.
-        
+
         Args:
             name: The space name
             description: Space description
@@ -130,7 +130,7 @@ class Space(ClickUpBaseModel):
             features: Features configuration
             private: Whether space is private
             **kwargs: Additional attributes to update
-            
+
         Returns:
             Dictionary with update data
         """
@@ -217,12 +217,12 @@ class Folder(ClickUpBaseModel):
     @classmethod
     def initial(cls, name: str, space_id: Optional[str] = None, **kwargs) -> "Folder":
         """Create a new Folder instance with required fields.
-        
+
         Args:
             name: The folder name
             space_id: The space ID
             **kwargs: Additional attributes
-            
+
         Returns:
             Initialized Folder instance
         """
@@ -231,11 +231,11 @@ class Folder(ClickUpBaseModel):
     @classmethod
     def update_data(cls, name: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         """Create update data dictionary for a folder.
-        
+
         Args:
             name: The folder name
             **kwargs: Additional attributes to update
-            
+
         Returns:
             Dictionary with update data
         """
@@ -308,10 +308,10 @@ class ClickUpList(ClickUpBaseModel):
         priority: Optional[int] = None,
         assignee: Optional[str] = None,
         status: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> "ClickUpList":
         """Create a new ClickUpList instance with required fields.
-        
+
         Args:
             name: The list name
             folder_id: The folder ID
@@ -325,13 +325,13 @@ class ClickUpList(ClickUpBaseModel):
             assignee: User ID to assign
             status: Custom status
             **kwargs: Additional attributes
-            
+
         Returns:
             Initialized ClickUpList instance
         """
         if not folder_id and not space_id:
             raise ValueError("Either folder_id or space_id must be provided")
-            
+
         return cls(
             name=name,
             folder_id=folder_id,
@@ -344,7 +344,7 @@ class ClickUpList(ClickUpBaseModel):
             priority=priority,
             assignee=assignee,
             status=status,
-            **kwargs
+            **kwargs,
         )
 
     @classmethod
@@ -359,10 +359,10 @@ class ClickUpList(ClickUpBaseModel):
         priority: Optional[int] = None,
         assignee: Optional[str] = None,
         status: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Create update data dictionary for a list.
-        
+
         Args:
             name: The list name
             content: List description
@@ -374,7 +374,7 @@ class ClickUpList(ClickUpBaseModel):
             assignee: User ID to assign
             status: Custom status
             **kwargs: Additional attributes to update
-            
+
         Returns:
             Dictionary with update data
         """
@@ -645,10 +645,10 @@ class Task(ClickUpBaseModel):
         links_to: Optional[str] = None,
         check_required_custom_fields: Optional[bool] = True,
         custom_fields: Optional[List["CustomField" | Dict[str, Any]]] = None,
-        **kwargs
+        **kwargs,
     ) -> "Task":
         """Create a new Task instance with required fields.
-        
+
         Args:
             name: The task name
             list_id: The list ID
@@ -668,7 +668,7 @@ class Task(ClickUpBaseModel):
             check_required_custom_fields: Check required custom fields
             custom_fields: Custom field values
             **kwargs: Additional attributes
-            
+
         Returns:
             Initialized Task instance
         """
@@ -690,7 +690,7 @@ class Task(ClickUpBaseModel):
             links_to=links_to,
             check_required_custom_fields=check_required_custom_fields,
             custom_fields=custom_fields,
-            **kwargs
+            **kwargs,
         )
 
     @classmethod
@@ -709,10 +709,10 @@ class Task(ClickUpBaseModel):
         start_date_time: Optional[bool] = None,
         notify_all: Optional[bool] = None,
         custom_fields: Optional[List["CustomField" | Dict[str, Any]]] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Create update data dictionary for a task.
-        
+
         Args:
             name: The task name
             description: Task description
@@ -728,7 +728,7 @@ class Task(ClickUpBaseModel):
             notify_all: Notify all team members
             custom_fields: Custom field values
             **kwargs: Additional attributes to update
-            
+
         Returns:
             Dictionary with update data
         """
@@ -757,7 +757,7 @@ class Task(ClickUpBaseModel):
             data["start_date_time"] = start_date_time
         if notify_all is not None:
             data["notify_all"] = notify_all
-            
+
         # Handle custom fields specially
         if custom_fields is not None:
             custom_fields_data = []
@@ -767,7 +767,7 @@ class Task(ClickUpBaseModel):
                 elif hasattr(field, "id") and hasattr(field, "value"):
                     custom_fields_data.append({"field_id": field.id, "value": field.value})
             data["custom_fields"] = custom_fields_data
-            
+
         # Add any additional kwargs
         data.update({k: v for k, v in kwargs.items() if v is not None})
         return data
@@ -1018,11 +1018,11 @@ class Task(ClickUpBaseModel):
 
 class User(ClickUpBaseModel):
     """Domain model for ClickUp User operations."""
-    
+
     @classmethod
     def initial(cls) -> "User":
         """Create a new User instance.
-        
+
         Returns:
             Initialized User instance
         """
