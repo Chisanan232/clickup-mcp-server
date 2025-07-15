@@ -1260,37 +1260,64 @@ class Task(ClickUpBaseModel):
         return params
 
 
-class User(ClickUpBaseModel):
-    """Domain model for ClickUp User operations."""
-
-    @classmethod
-    def initial(cls) -> "User":
-        """Create a new User instance.
-
-        Returns:
-            Initialized User instance
-        """
-        return cls()
-
-    @classmethod
-    def get_request(cls) -> "User":
-        """Create a request for getting the authenticated user."""
-        return cls()
-
-
-# Response Models
 class ClickUpUser(ClickUpBaseModel):
-    """Model for ClickUp user data."""
+    """Model for ClickUp user operations and data.
+    
+    Used for both API requests and response handling.
+    """
 
-    id: str = Field(..., description="User ID")
-    username: str = Field(..., description="Username")
-    email: str = Field(..., description="Email address")
+    model_config = ConfigDict(
+        extra="allow",  # Allow extra fields
+        populate_by_name=True,  # Allow population by field name and alias
+    )
+
+    user_id: Optional[str] = Field(None, alias="id", description="User ID")
+    username: Optional[str] = Field(None, description="Username")
+    email: Optional[str] = Field(None, description="Email address")
     color: Optional[str] = Field(None, description="User color")
     profile_picture: Optional[str] = Field(None, description="Profile picture URL")
     initials: Optional[str] = Field(None, description="User initials")
     week_start_day: Optional[int] = Field(None, description="Week start day")
     global_font_support: Optional[bool] = Field(None, description="Global font support")
     timezone: Optional[str] = Field(None, description="User timezone")
+    
+    @property
+    def id(self) -> Optional[str]:
+        """Property for backwards compatibility with code expecting 'id' attribute.
+        
+        Returns:
+            The user_id value
+        """
+        return self.user_id
+        
+    def model_dump(self, **kwargs) -> Dict[str, Any]:
+        """Override model_dump to include 'id' in serialization for backward compatibility.
+        
+        Returns:
+            Dict with both 'user_id' and 'id' fields if user_id is set
+        """
+        data = super().model_dump(**kwargs)
+        if self.user_id is not None:
+            data["id"] = self.user_id
+        return data
+
+    @classmethod
+    def initial(cls) -> "ClickUpUser":
+        """Create a new ClickUpUser instance.
+
+        Returns:
+            Initialized ClickUpUser instance
+        """
+        return cls()
+
+    @classmethod
+    def get_request(cls) -> "ClickUpUser":
+        """Create a request for getting the authenticated user."""
+        return cls()
+
+
+# Add backward compatibility alias to ensure tests continue to work
+User = ClickUpUser  # For backward compatibility with existing code
 
 
 class ClickUpTeam(ClickUpBaseModel):
