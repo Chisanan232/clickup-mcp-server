@@ -7,10 +7,9 @@ and responses, following PEP 484/585 standards for type hints and domain-driven 
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
-
+from typing import Any, Dict, List, Optional, Union, get_origin, get_args
 from pydantic import BaseModel, ConfigDict, Field, model_validator, validator
-
+from typing_extensions import get_type_hints
 
 def snake_to_camel(field: str) -> str:
     """Convert snake_case to camelCase for ClickUp API compatibility."""
@@ -29,7 +28,113 @@ class ClickUpBaseModel(BaseModel):
         str_strip_whitespace=True,
         validate_assignment=True,
     )
+    
+    def serialize(self, include_none: bool = False) -> Dict[str, Any]:
+        """
+        Serialize model to dictionary.
+        
+        Args:
+            include_none: Whether to include fields with None values
+            
+        Returns:
+            Dict representation of the model
+        """
+        result = {}
+        
+        # Get all field values using model_fields.keys()
+        for field_name in self.model_fields.keys():
+            if hasattr(self, field_name):
+                field_value = getattr(self, field_name)
+                
+                # Skip None values if not including them
+                if field_value is None and not include_none:
+                    continue
+                    
+                # Handle nested objects
+                if isinstance(field_value, ClickUpBaseModel):
+                    result[field_name] = field_value.serialize(include_none)
+                elif isinstance(field_value, list) and field_value:
+                    # Process lists with potential nested objects
+                    result[field_name] = [
+                        item.serialize(include_none) if isinstance(item, ClickUpBaseModel) else item
+                        for item in field_value
+                    ]
+                elif isinstance(field_value, dict) and field_value:
+                    # Process dictionaries with potential nested objects
+                    result[field_name] = {
+                        k: v.serialize(include_none) if isinstance(v, ClickUpBaseModel) else v
+                        for k, v in field_value.items()
+                    }
+                else:
+                    # Regular value
+                    result[field_name] = field_value
+        
+        return result
 
+    @classmethod
+    def deserialize(cls, data: Dict[str, Any]) -> "ClickUpBaseModel":
+        """
+        Deserialize dictionary to model.
+        
+        Args:
+            data: Dictionary containing model data
+            
+        Returns:
+            Instance of the model
+        """
+        if data is None:
+            return None
+            
+        # Create a clean copy of input data
+        processed_data = {}
+        
+        # Process each field in the input data
+        for field_name, field_value in data.items():
+            # Skip None values
+            if field_value is None:
+                processed_data[field_name] = None
+                continue
+                
+            # Check if field exists in the model
+            if field_name in cls.model_fields:
+                field_info = cls.model_fields[field_name]
+                field_type = field_info.annotation
+                
+                # Handle nested model objects
+                if (isinstance(field_value, dict) and 
+                    hasattr(field_type, "__origin__") is False and 
+                    isinstance(field_type, type) and 
+                    issubclass(field_type, ClickUpBaseModel)):
+                    processed_data[field_name] = field_type.deserialize(field_value)
+                    
+                # Handle list of models
+                elif (isinstance(field_value, list) and
+                     hasattr(field_type, "__origin__") and
+                     field_type.__origin__ is list and
+                     len(field_type.__args__) > 0 and
+                     issubclass(field_type.__args__[0], ClickUpBaseModel)):
+                    inner_type = field_type.__args__[0]
+                    processed_data[field_name] = [
+                        inner_type.deserialize(item) if isinstance(item, dict) else item
+                        for item in field_value
+                    ]
+                    
+                # Regular value, pass through
+                else:
+                    processed_data[field_name] = field_value
+            else:
+                # Field not in model, pass through as-is
+                processed_data[field_name] = field_value
+                
+        # Create instance with processed data
+        return cls(**processed_data)
+        
+def issubclass_safe(cls, class_or_tuple):
+    """Safe version of issubclass that handles non-class objects."""
+    try:
+        return issubclass(cls, class_or_tuple)
+    except TypeError:
+        return False
 
 class ClickUpSpace(ClickUpBaseModel):
     """Model for ClickUp space operations and data.
@@ -75,6 +180,51 @@ class ClickUpSpace(ClickUpBaseModel):
         return data
 
     @classmethod
+    def from_api_response(cls, response_data: Dict[str, Any]) -> "ClickUpSpace":
+        """Create a space instance from API response data.
+        
+        Args:
+            response_data: API response data dictionary
+            
+        Returns:
+            Populated ClickUpSpace instance
+        """
+        return cls.deserialize(response_data)
+        
+    @classmethod
+    def create_request_data(
+        cls,
+        name: str,
+        description: Optional[str] = None,
+        multiple_assignees: Optional[bool] = None,
+        features: Optional[Dict[str, Any]] = None,
+        private: Optional[bool] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """Create request data for space creation.
+        
+        Args:
+            name: The space name
+            description: Space description
+            multiple_assignees: Allow multiple assignees
+            features: Features configuration
+            private: Whether space is private
+            **kwargs: Additional attributes
+            
+        Returns:
+            Dictionary with request data
+        """
+        space = cls(
+            name=name,
+            description=description,
+            multiple_assignees=multiple_assignees,
+            features=features,
+            private=private,
+            **kwargs
+        )
+        return space.serialize(include_none=False)
+        
+    @classmethod
     def initial(
         cls,
         name: str,
@@ -108,7 +258,7 @@ class ClickUpSpace(ClickUpBaseModel):
             private=private,
             **kwargs,
         )
-
+        
     @classmethod
     def update_data(
         cls,
@@ -146,32 +296,16 @@ class ClickUpSpace(ClickUpBaseModel):
         # Add any additional kwargs
         data.update({k: v for k, v in kwargs.items() if v is not None})
         return data
-
+        
     @classmethod
     def get_request(cls, space_id: str) -> "ClickUpSpace":
         """Create a request for getting a specific space."""
-        return cls(
-            space_id=space_id,
-            team_id=None,
-            name=None,
-            description=None,
-            multiple_assignees=None,
-            features=None,
-            private=None,
-        )
+        return cls(space_id=space_id)
 
     @classmethod
     def list_request(cls, team_id: str) -> "ClickUpSpace":
         """Create a request for listing spaces in a team."""
-        return cls(
-            team_id=team_id,
-            space_id=None,
-            name=None,
-            description=None,
-            multiple_assignees=None,
-            features=None,
-            private=None,
-        )
+        return cls(team_id=team_id)
 
     @classmethod
     def create_request(cls, team_id: str, name: str, **kwargs) -> "ClickUpSpace":
@@ -194,16 +328,21 @@ class ClickUpSpace(ClickUpBaseModel):
         data: Dict[str, Any] = {"name": self.name}
         if self.description:
             data["description"] = self.description
-        # Only include these fields if explicitly set AND not None
-        if self.multiple_assignees is not None and "multiple_assignees" in self.__fields_set__:
+        if self.multiple_assignees is not None:
             data["multiple_assignees"] = self.multiple_assignees
-        if self.private is not None and "private" in self.__fields_set__:
+        if self.private is not None:
             data["private"] = self.private
         if self.features:
             data["features"] = self.features
-
         return data
-
+        
+    def extract_update_data(self) -> Dict[str, Any]:
+        """Extract data for space update."""
+        data = self.serialize(include_none=False)
+        # Remove fields that shouldn't be included in update
+        for field in ["space_id", "team_id", "id"]:
+            data.pop(field, None)
+        return data
 
 class ClickUpFolder(ClickUpBaseModel):
     """Model for ClickUp folder operations and data.

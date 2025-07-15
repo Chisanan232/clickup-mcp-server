@@ -70,11 +70,9 @@ class SpaceAPI:
         Returns:
             List of ClickUpSpace instances
         """
-        if isinstance(team_id, str):
-            request = ClickUpSpace.list_request(team_id)
-        else:
-            request = ClickUpSpace.list_request(team_id.team_id)
-        response = await self.client.get(f"/team/{request.team_id}/space")
+        # Extract team_id from a team instance if provided
+        team_id_value = team_id.team_id if isinstance(team_id, ClickUpTeam) else team_id
+        response = await self.client.get(f"/team/{team_id_value}/space")
         return response.extract_list(ClickUpSpace, list_key="spaces")
 
     async def get(self, space_id: str | ClickUpSpace) -> ClickUpSpace:
@@ -87,11 +85,9 @@ class SpaceAPI:
         Returns:
             ClickUpSpace instance
         """
-        if isinstance(space_id, str):
-            request = ClickUpSpace.get_request(space_id)
-        else:
-            request = space_id
-        response = await self.client.get(f"/space/{request.space_id}")
+        # Extract space_id from a space instance if provided
+        space_id_value = space_id.space_id if isinstance(space_id, ClickUpSpace) else space_id
+        response = await self.client.get(f"/space/{space_id_value}")
         return response.to_domain_model(ClickUpSpace)
 
     async def create(self, team_id: str, space: ClickUpSpace | str, **kwargs) -> ClickUpSpace:
@@ -133,15 +129,31 @@ class SpaceAPI:
                         # Already a CustomField
                         custom_field_objects.append(field)
 
-            space = ClickUpSpace.initial(
-                team_id=team_id, name=name, custom_fields=custom_field_objects, **kwargs  # Use processed custom fields
+            # Create space object from name
+            space = ClickUpSpace(
+                name=name, 
+                team_id=team_id, 
+                custom_fields=custom_field_objects, 
+                **kwargs
             )
         elif not hasattr(space, "team_id") or not space.team_id:
             # If space object is provided but team_id is missing
             space.team_id = team_id
 
-        data = space.extract_create_data()
-        response = await self.client.post(f"/team/{space.team_id}/space", data=data)
+        # Create request data from space object
+        data = space.serialize(include_none=False)
+        # Ensure only needed fields are included in create request
+        create_data = {
+            "name": data.get("name"),
+            "description": data.get("description"),
+            "multiple_assignees": data.get("multiple_assignees"),
+            "features": data.get("features"),
+            "private": data.get("private"),
+        }
+        # Filter out None values
+        create_data = {k: v for k, v in create_data.items() if v is not None}
+        
+        response = await self.client.post(f"/team/{space.team_id}/space", data=create_data)
         return response.to_domain_model(ClickUpSpace)
 
     async def update(self, space_id: str, data: Dict[str, Any] | ClickUpSpace) -> ClickUpSpace:
@@ -156,9 +168,13 @@ class SpaceAPI:
             ClickUpSpace instance of the updated space
         """
         if isinstance(data, ClickUpSpace):
-            update_data = data.extract_update_data()
+            update_data = data.serialize(include_none=False)
+            # Remove fields that shouldn't be included in update
+            for field in ["space_id", "team_id", "id"]:
+                update_data.pop(field, None)
         else:
             update_data = data
+            
         response = await self.client.put(f"/space/{space_id}", data=update_data)
         return response.to_domain_model(ClickUpSpace)
 
