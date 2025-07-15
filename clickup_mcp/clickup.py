@@ -11,11 +11,7 @@ from .models import (  # Domain models (preferred approach)
     ClickUpTeam,
     ClickUpUser,
     CustomField,
-    Folder,
-    Space,
     Task,
-    Team,
-    User,
 )
 
 # Type variables for generic return types
@@ -39,7 +35,7 @@ class TeamAPI:
         response = await self.client.get("/team")
         return response.extract_list(ClickUpTeam, list_key="teams")
 
-    async def get(self, team_id: str | Team) -> ClickUpTeam:
+    async def get(self, team_id: str | ClickUpTeam) -> ClickUpTeam:
         """
         Get a specific team by ID.
 
@@ -50,7 +46,7 @@ class TeamAPI:
             ClickUpTeam instance
         """
         if isinstance(team_id, str):
-            team = Team.get_request(team_id)
+            team = ClickUpTeam.get_request(team_id)
         else:
             team = team_id
         response = await self.client.get(f"/team/{team.team_id}")
@@ -64,7 +60,7 @@ class SpaceAPI:
         """Initialize with an API client instance."""
         self.client = client
 
-    async def get_all(self, team_id: str | Team) -> list[ClickUpSpace]:
+    async def get_all(self, team_id: str | ClickUpTeam) -> list[ClickUpSpace]:
         """
         Get all spaces in a team.
 
@@ -75,13 +71,13 @@ class SpaceAPI:
             List of ClickUpSpace instances
         """
         if isinstance(team_id, str):
-            request = Space.list_request(team_id)
+            request = ClickUpSpace.list_request(team_id)
         else:
-            request = Space.list_request(team_id.team_id)
+            request = ClickUpSpace.list_request(team_id.team_id)
         response = await self.client.get(f"/team/{request.team_id}/space")
         return response.extract_list(ClickUpSpace, list_key="spaces")
 
-    async def get(self, space_id: str | Space) -> ClickUpSpace:
+    async def get(self, space_id: str | ClickUpSpace) -> ClickUpSpace:
         """
         Get a specific space by ID.
 
@@ -92,13 +88,13 @@ class SpaceAPI:
             ClickUpSpace instance
         """
         if isinstance(space_id, str):
-            request = Space.get_request(space_id)
+            request = ClickUpSpace.get_request(space_id)
         else:
             request = space_id
         response = await self.client.get(f"/space/{request.space_id}")
         return response.to_domain_model(ClickUpSpace)
 
-    async def create(self, team_id: str, space: Space | str, **kwargs) -> ClickUpSpace:
+    async def create(self, team_id: str, space: ClickUpSpace | str, **kwargs) -> ClickUpSpace:
         """
         Create a new space in a team.
 
@@ -137,7 +133,7 @@ class SpaceAPI:
                         # Already a CustomField
                         custom_field_objects.append(field)
 
-            space = Space.initial(
+            space = ClickUpSpace.initial(
                 team_id=team_id, name=name, custom_fields=custom_field_objects, **kwargs  # Use processed custom fields
             )
         elif not hasattr(space, "team_id") or not space.team_id:
@@ -148,7 +144,7 @@ class SpaceAPI:
         response = await self.client.post(f"/team/{space.team_id}/space", data=data)
         return response.to_domain_model(ClickUpSpace)
 
-    async def update(self, space_id: str, data: Dict[str, Any] | Space) -> ClickUpSpace:
+    async def update(self, space_id: str, data: Dict[str, Any] | ClickUpSpace) -> ClickUpSpace:
         """
         Update an existing space.
 
@@ -159,7 +155,7 @@ class SpaceAPI:
         Returns:
             ClickUpSpace instance of the updated space
         """
-        if isinstance(data, Space):
+        if isinstance(data, ClickUpSpace):
             update_data = data.extract_update_data()
         else:
             update_data = data
@@ -186,7 +182,7 @@ class FolderAPI:
         """Initialize with an API client instance."""
         self.client = client
 
-    async def get_all(self, space_id: str | Space) -> list[ClickUpFolder]:
+    async def get_all(self, space_id: str | ClickUpSpace) -> list[ClickUpFolder]:
         """
         Get all folders in a space.
 
@@ -197,13 +193,13 @@ class FolderAPI:
             List of ClickUpFolder instances
         """
         if isinstance(space_id, str):
-            request = Folder.list_request(space_id)
+            request = ClickUpFolder.list_request(space_id)
         else:
-            request = Folder.list_request(space_id.space_id)
+            request = ClickUpFolder.list_request(space_id.space_id)
         response = await self.client.get(f"/space/{request.space_id}/folder")
         return response.extract_list(ClickUpFolder, list_key="folders")
 
-    async def get(self, folder_id: str | Folder) -> ClickUpFolder:
+    async def get(self, folder_id: str | ClickUpFolder) -> ClickUpFolder:
         """
         Get a specific folder by ID.
 
@@ -214,13 +210,13 @@ class FolderAPI:
             ClickUpFolder instance
         """
         if isinstance(folder_id, str):
-            request = Folder.get_request(folder_id)
+            request = ClickUpFolder.get_request(folder_id)
         else:
             request = folder_id
         response = await self.client.get(f"/folder/{request.folder_id}")
         return response.to_domain_model(ClickUpFolder)
 
-    async def create(self, space_id: str, folder: Folder | str, **kwargs) -> ClickUpFolder:
+    async def create(self, space_id: str, folder: ClickUpFolder | str, **kwargs) -> ClickUpFolder:
         """
         Create a new folder in a space.
 
@@ -235,7 +231,7 @@ class FolderAPI:
         if isinstance(folder, str):
             # Legacy support: second parameter is name
             name = folder
-            folder = Folder.initial(name=name, space_id=space_id, **kwargs)
+            folder = ClickUpFolder.initial(name=name, space_id=space_id, **kwargs)
         elif not hasattr(folder, "space_id") or not folder.space_id:
             # If folder object is provided but space_id is missing
             folder.space_id = space_id
@@ -244,7 +240,7 @@ class FolderAPI:
         response = await self.client.post(f"/space/{folder.space_id}/folder", data=data)
         return response.to_domain_model(ClickUpFolder)
 
-    async def update(self, folder_id: str, data: Dict[str, Any] | Folder) -> ClickUpFolder:
+    async def update(self, folder_id: str, data: Dict[str, Any] | ClickUpFolder) -> ClickUpFolder:
         """
         Update an existing folder.
 
@@ -255,7 +251,7 @@ class FolderAPI:
         Returns:
             ClickUpFolder instance for the updated folder
         """
-        if isinstance(data, Folder):
+        if isinstance(data, ClickUpFolder):
             update_data = data.extract_update_data()
         else:
             update_data = data
@@ -725,22 +721,22 @@ class ClickUpResourceClient:
         """Get all teams for the authenticated user."""
         return await self.team.get_all()
 
-    async def get_team(self, request: Team | str) -> ClickUpTeam:
+    async def get_team(self, request: ClickUpTeam | str) -> ClickUpTeam:
         """Get a specific team by ID."""
         return await self.team.get(request)
 
     # Space operations
-    async def get_spaces(self, request: Space | str) -> list[ClickUpSpace]:
+    async def get_spaces(self, request: ClickUpSpace | str) -> list[ClickUpSpace]:
         """Get all spaces in a team."""
         if isinstance(request, str):
             return await self.space.get_all(request)
         return await self.space.get_all(request.team_id)
 
-    async def get_space(self, request: Space | str) -> ClickUpSpace:
+    async def get_space(self, request: ClickUpSpace | str) -> ClickUpSpace:
         """Get a specific space by ID."""
         return await self.space.get(request)
 
-    async def create_space(self, request: Space | str, name: Optional[str] = None, **kwargs) -> ClickUpSpace:
+    async def create_space(self, request: ClickUpSpace | str, name: Optional[str] = None, **kwargs) -> ClickUpSpace:
         """Create a new space in a team."""
         if isinstance(request, str):
             # Legacy support: first parameter is team_id, second is name
@@ -749,7 +745,7 @@ class ClickUpResourceClient:
             return await self.space.create(request, name, **kwargs)
         return await self.space.create(request.team_id, request, **kwargs)
 
-    async def update_space(self, request: Space | str, data: Optional[Dict[str, Any]] = None, **kwargs) -> ClickUpSpace:
+    async def update_space(self, request: ClickUpSpace | str, data: Optional[Dict[str, Any]] = None, **kwargs) -> ClickUpSpace:
         """Update an existing space."""
         if isinstance(request, str):
             # Legacy support: first parameter is space_id, second is data
@@ -758,7 +754,7 @@ class ClickUpResourceClient:
             return await self.space.update(space_id, update_data)
         return await self.space.update(request.space_id, request)
 
-    async def delete_space(self, request: Space | str) -> APIResponse:
+    async def delete_space(self, request: ClickUpSpace | str) -> APIResponse:
         """Delete a space."""
         if isinstance(request, str):
             space_id = request
@@ -767,17 +763,17 @@ class ClickUpResourceClient:
         return await self.space.delete(space_id)
 
     # Folder operations
-    async def get_folders(self, request: Folder | str) -> list[ClickUpFolder]:
+    async def get_folders(self, request: ClickUpFolder | str) -> list[ClickUpFolder]:
         """Get all folders in a space."""
         if isinstance(request, str):
             return await self.folder.get_all(request)
         return await self.folder.get_all(request.space_id)
 
-    async def get_folder(self, request: Folder | str) -> ClickUpFolder:
+    async def get_folder(self, request: ClickUpFolder | str) -> ClickUpFolder:
         """Get a specific folder by ID."""
         return await self.folder.get(request)
 
-    async def create_folder(self, request: Folder | str, name: Optional[str] = None, **kwargs) -> ClickUpFolder:
+    async def create_folder(self, request: ClickUpFolder | str, name: Optional[str] = None, **kwargs) -> ClickUpFolder:
         """Create a new folder in a space."""
         if isinstance(request, str):
             # Legacy support: first parameter is space_id, second is name
@@ -787,7 +783,7 @@ class ClickUpResourceClient:
         return await self.folder.create(request.space_id, request, **kwargs)
 
     async def update_folder(
-        self, request: Folder | str, data: Optional[Dict[str, Any]] = None, **kwargs
+        self, request: ClickUpFolder | str, data: Optional[Dict[str, Any]] = None, **kwargs
     ) -> ClickUpFolder:
         """Update an existing folder."""
         if isinstance(request, str):
@@ -797,7 +793,7 @@ class ClickUpResourceClient:
             return await self.folder.update(folder_id, update_data)
         return await self.folder.update(request.folder_id, request)
 
-    async def delete_folder(self, request: Folder | str) -> APIResponse:
+    async def delete_folder(self, request: ClickUpFolder | str) -> APIResponse:
         """Delete a folder."""
         if isinstance(request, str):
             folder_id = request

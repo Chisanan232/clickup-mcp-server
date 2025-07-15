@@ -205,10 +205,6 @@ class ClickUpSpace(ClickUpBaseModel):
         return data
 
 
-# Add backward compatibility alias to ensure tests continue to work
-Space = ClickUpSpace  # For backward compatibility with existing code
-
-
 class ClickUpFolder(ClickUpBaseModel):
     """Model for ClickUp folder operations and data.
     
@@ -311,10 +307,6 @@ class ClickUpFolder(ClickUpBaseModel):
     def extract_create_data(self) -> Dict[str, Any]:
         """Extract data for folder creation."""
         return {"name": self.name}
-
-
-# Add backward compatibility alias to ensure tests continue to work
-Folder = ClickUpFolder  # For backward compatibility with existing code
 
 
 class ClickUpList(ClickUpBaseModel):
@@ -568,10 +560,6 @@ class ClickUpList(ClickUpBaseModel):
         if self.list_id is not None:
             data["id"] = self.list_id
         return data
-
-
-# Add backward compatibility alias to ensure tests continue to work
-ClickUpListDomain = ClickUpList  # For backward compatibility with existing code
 
 
 class Task(ClickUpBaseModel):
@@ -1286,10 +1274,6 @@ class ClickUpUser(ClickUpBaseModel):
         return cls()
 
 
-# Add backward compatibility alias to ensure tests continue to work
-User = ClickUpUser  # For backward compatibility with existing code
-
-
 class ClickUpTeam(ClickUpBaseModel):
     """Model for ClickUp team operations and data.
     
@@ -1348,10 +1332,6 @@ class ClickUpTeam(ClickUpBaseModel):
     def get_members_request(cls, team_id: str) -> "ClickUpTeam":
         """Create a request for getting team members."""
         return cls(team_id=team_id)
-
-
-# Add backward compatibility alias to ensure tests continue to work
-Team = ClickUpTeam  # For backward compatibility with existing code
 
 
 class CustomField(ClickUpBaseModel):

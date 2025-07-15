@@ -34,12 +34,7 @@ from .models import (  # Domain models (new preferred approach); Response models
     ClickUpTeam,
     ClickUpUser,
     CustomField,
-    Folder,
-    List,
-    Space,
     Task,
-    Team,
-    User,
 )
 from .utils import (
     ClickUpURLBuilder,
@@ -83,15 +78,9 @@ __all__ = [
     "RetryExhaustedError",
     "MCPError",
     "MCPToolError",
-    # Domain Models (new preferred approach)
-    "Team",
-    "Space",
-    "Folder",
-    "List",
+    # Domain Models (new preferred approach, also as response models)
     "Task",
-    "User",
     "CustomField",
-    # Response Models
     "ClickUpUser",
     "ClickUpTeam",
     "ClickUpSpace",

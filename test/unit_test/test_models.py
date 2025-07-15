@@ -12,17 +12,11 @@ from clickup_mcp.models import (  # Base models; Domain models; Task models; Res
     ClickUpBaseModel,
     ClickUpFolder,
     ClickUpList,
-    ClickUpListDomain,
     ClickUpSpace,
     ClickUpTeam,
     ClickUpUser,
     CustomField,
-    Folder,
-    List,
-    Space,
     Task,
-    Team,
-    User,
     snake_to_camel,
 )
 
@@ -80,7 +74,7 @@ class TestDomainModels:
     )
     def test_team_operations(self, request_method, team_id, expected_attr):
         """Test Team domain model operations."""
-        method = getattr(Team, request_method)
+        method = getattr(ClickUpTeam, request_method)
         request = method(team_id=team_id)
         assert getattr(request, expected_attr) == team_id
 
@@ -93,14 +87,14 @@ class TestDomainModels:
     )
     def test_space_operations_basic(self, request_method, param_name, param_value, expected_attr):
         """Test basic Space domain model operations."""
-        method = getattr(Space, request_method)
+        method = getattr(ClickUpSpace, request_method)
         kwargs = {param_name: param_value}
         request = method(**kwargs)
         assert getattr(request, expected_attr) == param_value
 
     def test_space_create_request(self):
         """Test Space create request with all parameters."""
-        space_create_req = Space.create_request(
+        space_create_req = ClickUpSpace.create_request(
             team_id="team123",
             name="New Space",
             description="Test space",
@@ -117,7 +111,7 @@ class TestDomainModels:
 
         # Test validation
         with pytest.raises(ValueError, match="team_id is required when creating a space"):
-            Space(name="Test Space").validate_create_request()
+            ClickUpSpace(name="Test Space").validate_create_request()
 
         # Test extract_create_data
         create_data = space_create_req.extract_create_data()
@@ -136,45 +130,45 @@ class TestDomainModels:
     )
     def test_folder_operations_basic(self, request_method, param_name, param_value, expected_attr):
         """Test basic Folder domain model operations."""
-        method = getattr(Folder, request_method)
+        method = getattr(ClickUpFolder, request_method)
         kwargs = {param_name: param_value}
         request = method(**kwargs)
         assert getattr(request, expected_attr) == param_value
 
     def test_folder_create_request(self):
         """Test Folder create request."""
-        folder_create_req = Folder.create_request(space_id="space123", name="New Folder")
+        folder_create_req = ClickUpFolder.create_request(space_id="space123", name="New Folder")
         assert folder_create_req.space_id == "space123"
         assert folder_create_req.name == "New Folder"
 
         # Test validation
         with pytest.raises(ValueError, match="space_id is required when creating a folder"):
-            Folder(name="Test Folder").validate_create_request()
+            ClickUpFolder(name="Test Folder").validate_create_request()
 
         # Test extract_create_data
         create_data = folder_create_req.extract_create_data()
         assert create_data["name"] == "New Folder"
 
     def test_list_operations(self):
-        """Test ClickUpListDomain model operations."""
+        """Test ClickUpList model operations."""
         # Get request
-        list_req = ClickUpListDomain.get_request(list_id="list123")
+        list_req = ClickUpList.get_request(list_id="list123")
         assert list_req.list_id == "list123"
 
         # List request with folder_id
-        list_folder_req = ClickUpListDomain.list_request(folder_id="folder123")
+        list_folder_req = ClickUpList.list_request(folder_id="folder123")
         assert list_folder_req.folder_id == "folder123"
 
         # List request with space_id
-        list_space_req = ClickUpListDomain.list_request(space_id="space123")
+        list_space_req = ClickUpList.list_request(space_id="space123")
         assert list_space_req.space_id == "space123"
 
         # Test list request validation error
         with pytest.raises(ValueError, match="Either folder_id or space_id must be provided"):
-            ClickUpListDomain.list_request()
+            ClickUpList.list_request()
 
         # Create request with folder_id
-        list_create_folder_req = ClickUpListDomain.create_request(
+        list_create_folder_req = ClickUpList.create_request(
             name="New List",
             folder_id="folder123",
             content="List description",
@@ -189,13 +183,13 @@ class TestDomainModels:
         assert list_create_folder_req.content == "List description"
 
         # Create request with space_id
-        list_create_space_req = ClickUpListDomain.create_request(name="New List", space_id="space123")
+        list_create_space_req = ClickUpList.create_request(name="New List", space_id="space123")
         assert list_create_space_req.name == "New List"
         assert list_create_space_req.space_id == "space123"
 
         # Test validation
         with pytest.raises(ValueError, match="Either folder_id or space_id must be provided when creating a list"):
-            ClickUpListDomain(name="Test List").validate_create_request()
+            ClickUpList(name="Test List").validate_create_request()
 
         # Test extract_create_data with all fields
         create_data = list_create_folder_req.extract_create_data()
@@ -209,7 +203,7 @@ class TestDomainModels:
 
         # Test backward compatibility
         list_instance = ClickUpList.create_request(name="Backwards", folder_id="folder456")
-        assert isinstance(list_instance, ClickUpListDomain)
+        assert isinstance(list_instance, ClickUpList)
 
     def test_task_get_request_operations(self):
         """Test Task domain model get request operations."""
@@ -384,13 +378,13 @@ class TestDomainModels:
     def test_user_operations(self):
         """Test User domain model operations."""
         # Get request
-        user_req = User.get_request()
-        assert isinstance(user_req, User)
+        user_req = ClickUpUser.get_request()
+        assert isinstance(user_req, ClickUpUser)
 
     def test_space_update_data(self):
         """Test Space update_data method."""
         # Test with all parameters
-        update_data = Space.update_data(
+        update_data = ClickUpSpace.update_data(
             name="Updated Space",
             description="Updated description",
             multiple_assignees=False,
@@ -406,7 +400,7 @@ class TestDomainModels:
         assert update_data["custom_field"] == "custom_value"
 
         # Test with partial parameters
-        partial_update = Space.update_data(name="Updated Space", description="Updated description")
+        partial_update = ClickUpSpace.update_data(name="Updated Space", description="Updated description")
         assert partial_update["name"] == "Updated Space"
         assert partial_update["description"] == "Updated description"
         assert "multiple_assignees" not in partial_update
@@ -414,7 +408,7 @@ class TestDomainModels:
         assert "private" not in partial_update
         
         # Test with None values
-        none_update = Space.update_data(name=None, description="Updated description")
+        none_update = ClickUpSpace.update_data(name=None, description="Updated description")
         assert "name" not in none_update
         assert none_update["description"] == "Updated description"
 
@@ -443,7 +437,7 @@ class TestDomainModels:
     )
     def test_space_initial(self, space_params):
         """Test Space initial method with various parameters."""
-        space = Space.initial(**space_params)
+        space = ClickUpSpace.initial(**space_params)
         
         # Check all parameters were correctly set
         for key, value in space_params.items():
@@ -452,11 +446,11 @@ class TestDomainModels:
     def test_folder_update_data(self):
         """Test Folder update_data method."""
         # Test with name only
-        update_data = Folder.update_data(name="Updated Folder")
+        update_data = ClickUpFolder.update_data(name="Updated Folder")
         assert update_data["name"] == "Updated Folder"
         
         # Test with additional parameters
-        update_data_with_extras = Folder.update_data(
+        update_data_with_extras = ClickUpFolder.update_data(
             name="Updated Folder",
             custom_field="custom_value",
             another_field=123
@@ -466,7 +460,7 @@ class TestDomainModels:
         assert update_data_with_extras["another_field"] == 123
         
         # Test with None name
-        none_update = Folder.update_data(name=None, custom_field="value")
+        none_update = ClickUpFolder.update_data(name=None, custom_field="value")
         assert "name" not in none_update
         assert none_update["custom_field"] == "value"
 
@@ -486,7 +480,7 @@ class TestDomainModels:
     )
     def test_folder_initial(self, folder_params):
         """Test Folder initial method with various parameters."""
-        folder = Folder.initial(**folder_params)
+        folder = ClickUpFolder.initial(**folder_params)
         
         # Check all parameters were correctly set
         for key, value in folder_params.items():
@@ -782,12 +776,12 @@ class TestUserModel:
     def test_user_model_methods(self):
         """Test User domain model methods."""
         # Test initial method
-        user = User.initial()
-        assert isinstance(user, User)
+        user = ClickUpUser.initial()
+        assert isinstance(user, ClickUpUser)
         
         # Test get_request method
-        user_req = User.get_request()
-        assert isinstance(user_req, User)
+        user_req = ClickUpUser.get_request()
+        assert isinstance(user_req, ClickUpUser)
         
         # Test model serialization
         serialized = user_req.model_dump()
@@ -801,13 +795,13 @@ class TestEdgeCases:
         "model_class, method_args, should_raise, error_msg",
         [
             (
-                Space,
+                ClickUpSpace,
                 {"name": "Test Space", "team_id": "team123"},  # Added team_id to make it valid
                 False,
                 "team_id is required when creating a space"
             ),
             (
-                Folder,
+                ClickUpFolder,
                 {"name": "Test Folder", "space_id": "space123"},  # Added space_id to make it valid
                 False,
                 "space_id is required when creating a folder"
@@ -840,12 +834,12 @@ class TestEdgeCases:
         "model_class, invalid_args, error_msg",
         [
             (
-                Space,
+                ClickUpSpace,
                 {"name": "Test Space"},  # Missing team_id
                 "team_id is required when creating a space"
             ),
             (
-                Folder,
+                ClickUpFolder,
                 {"name": "Test Folder"},  # Missing space_id
                 "space_id is required when creating a folder"
             ),
