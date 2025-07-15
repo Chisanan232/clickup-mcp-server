@@ -33,34 +33,6 @@ class ClickUpBaseModel(BaseModel):
 # Domain Models with Converged Logic
 
 
-class Team(ClickUpBaseModel):
-    """Domain model for ClickUp Team operations."""
-
-    team_id: str = Field(..., description="The team ID")
-
-    @classmethod
-    def initial(cls, team_id: str) -> "Team":
-        """Create a new Team instance with required fields.
-
-        Args:
-            team_id: The team ID
-
-        Returns:
-            Initialized Team instance
-        """
-        return cls(team_id=team_id)
-
-    @classmethod
-    def get_request(cls, team_id: str) -> "Team":
-        """Create a request for getting a specific team."""
-        return cls(team_id=team_id)
-
-    @classmethod
-    def get_members_request(cls, team_id: str) -> "Team":
-        """Create a request for getting team members."""
-        return cls(team_id=team_id)
-
-
 class ClickUpSpace(ClickUpBaseModel):
     """Model for ClickUp space operations and data.
     
@@ -802,85 +774,6 @@ class Task(ClickUpBaseModel):
         )
 
     @classmethod
-    def update_data(
-        cls,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-        assignees: Optional[List[str]] = None,
-        tags: Optional[List[str]] = None,
-        status: Optional[str] = None,
-        priority: Optional[int] = None,
-        due_date: Optional[int] = None,
-        due_date_time: Optional[bool] = None,
-        time_estimate: Optional[int] = None,
-        start_date: Optional[int] = None,
-        start_date_time: Optional[bool] = None,
-        notify_all: Optional[bool] = None,
-        custom_fields: Optional[List["CustomField" | Dict[str, Any]]] = None,
-        **kwargs,
-    ) -> Dict[str, Any]:
-        """Create update data dictionary for a task.
-
-        Args:
-            name: The task name
-            description: Task description
-            assignees: List of assignee IDs
-            tags: List of tags
-            status: Task status
-            priority: Priority level (1-4)
-            due_date: Due date as Unix timestamp
-            due_date_time: Include time in due date
-            time_estimate: Time estimate in milliseconds
-            start_date: Start date as Unix timestamp
-            start_date_time: Include time in start date
-            notify_all: Notify all team members
-            custom_fields: Custom field values
-            **kwargs: Additional attributes to update
-
-        Returns:
-            Dictionary with update data
-        """
-        data: Dict[str, Any] = {}
-        if name is not None:
-            data["name"] = name
-        if description is not None:
-            data["description"] = description
-        if assignees is not None:
-            data["assignees"] = assignees
-        if tags is not None:
-            data["tags"] = tags
-        if status is not None:
-            data["status"] = status
-        if priority is not None:
-            data["priority"] = priority
-        if due_date is not None:
-            data["due_date"] = due_date
-        if due_date_time is not None:
-            data["due_date_time"] = due_date_time
-        if time_estimate is not None:
-            data["time_estimate"] = time_estimate
-        if start_date is not None:
-            data["start_date"] = start_date
-        if start_date_time is not None:
-            data["start_date_time"] = start_date_time
-        if notify_all is not None:
-            data["notify_all"] = notify_all
-
-        # Handle custom fields specially
-        if custom_fields is not None:
-            custom_fields_data = []
-            for field in custom_fields:
-                if isinstance(field, dict):
-                    custom_fields_data.append(field)
-                elif hasattr(field, "id") and hasattr(field, "value"):
-                    custom_fields_data.append({"field_id": field.id, "value": field.value})
-            data["custom_fields"] = custom_fields_data
-
-        # Add any additional kwargs
-        data.update({k: v for k, v in kwargs.items() if v is not None})
-        return data
-
-    @classmethod
     def get_request(cls, task_id: str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> "Task":
         """Create a request for getting a specific task."""
         return cls(
@@ -1259,6 +1152,85 @@ class Task(ClickUpBaseModel):
         
         return params
 
+    @classmethod
+    def update_data(
+        cls,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        assignees: Optional[List[str]] = None,
+        tags: Optional[List[str]] = None,
+        status: Optional[str] = None,
+        priority: Optional[int] = None,
+        due_date: Optional[int] = None,
+        due_date_time: Optional[bool] = None,
+        time_estimate: Optional[int] = None,
+        start_date: Optional[int] = None,
+        start_date_time: Optional[bool] = None,
+        notify_all: Optional[bool] = None,
+        custom_fields: Optional[List["CustomField" | Dict[str, Any]]] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """Create update data dictionary for a task.
+
+        Args:
+            name: The task name
+            description: Task description
+            assignees: List of assignee IDs
+            tags: List of tags
+            status: Task status
+            priority: Priority level (1-4)
+            due_date: Due date as Unix timestamp
+            due_date_time: Include time in due date
+            time_estimate: Time estimate in milliseconds
+            start_date: Start date as Unix timestamp
+            start_date_time: Include time in start date
+            notify_all: Notify all team members
+            custom_fields: Custom field values
+            **kwargs: Additional attributes to update
+
+        Returns:
+            Dictionary with update data
+        """
+        data: Dict[str, Any] = {}
+        if name is not None:
+            data["name"] = name
+        if description is not None:
+            data["description"] = description
+        if assignees is not None:
+            data["assignees"] = assignees
+        if tags is not None:
+            data["tags"] = tags
+        if status is not None:
+            data["status"] = status
+        if priority is not None:
+            data["priority"] = priority
+        if due_date is not None:
+            data["due_date"] = due_date
+        if due_date_time is not None:
+            data["due_date_time"] = due_date_time
+        if time_estimate is not None:
+            data["time_estimate"] = time_estimate
+        if start_date is not None:
+            data["start_date"] = start_date
+        if start_date_time is not None:
+            data["start_date_time"] = start_date_time
+        if notify_all is not None:
+            data["notify_all"] = notify_all
+
+        # Handle custom fields specially
+        if custom_fields is not None:
+            custom_fields_data = []
+            for field in custom_fields:
+                if isinstance(field, dict):
+                    custom_fields_data.append(field)
+                elif hasattr(field, "id") and hasattr(field, "value"):
+                    custom_fields_data.append({"field_id": field.id, "value": field.value})
+            data["custom_fields"] = custom_fields_data
+
+        # Add any additional kwargs
+        data.update({k: v for k, v in kwargs.items() if v is not None})
+        return data
+
 
 class ClickUpUser(ClickUpBaseModel):
     """Model for ClickUp user operations and data.
@@ -1321,13 +1293,67 @@ User = ClickUpUser  # For backward compatibility with existing code
 
 
 class ClickUpTeam(ClickUpBaseModel):
-    """Model for ClickUp team data."""
+    """Model for ClickUp team operations and data.
+    
+    Used for both API requests and response handling.
+    """
 
-    id: str = Field(..., description="Team ID")
-    name: str = Field(..., description="Team name")
+    model_config = ConfigDict(
+        extra="allow",  # Allow extra fields
+        populate_by_name=True,  # Allow population by field name and alias
+    )
+
+    team_id: Optional[str] = Field(None, alias="id", description="Team ID")
+    name: Optional[str] = Field(None, description="Team name")
     color: Optional[str] = Field(None, description="Team color")
     avatar: Optional[str] = Field(None, description="Team avatar URL")
     members: Optional[List["ClickUpUser"]] = Field(None, description="Team members")
+    
+    @property
+    def id(self) -> Optional[str]:
+        """Property for backwards compatibility with code expecting 'id' attribute.
+        
+        Returns:
+            The team_id value
+        """
+        return self.team_id
+        
+    def model_dump(self, **kwargs) -> Dict[str, Any]:
+        """Override model_dump to include 'id' in serialization for backward compatibility.
+        
+        Returns:
+            Dict with both 'team_id' and 'id' fields if team_id is set
+        """
+        data = super().model_dump(**kwargs)
+        if self.team_id is not None:
+            data["id"] = self.team_id
+        return data
+
+    @classmethod
+    def initial(cls, team_id: str) -> "ClickUpTeam":
+        """Create a new ClickUpTeam instance with required fields.
+
+        Args:
+            team_id: The team ID
+
+        Returns:
+            Initialized ClickUpTeam instance
+        """
+        return cls(team_id=team_id)
+
+    @classmethod
+    def get_request(cls, team_id: str) -> "ClickUpTeam":
+        """Create a request for getting a specific team."""
+        return cls(team_id=team_id)
+
+    @classmethod
+    def get_members_request(cls, team_id: str) -> "ClickUpTeam":
+        """Create a request for getting team members."""
+        return cls(team_id=team_id)
+
+
+# Add backward compatibility alias to ensure tests continue to work
+Team = ClickUpTeam  # For backward compatibility with existing code
 
 
 class CustomField(ClickUpBaseModel):
