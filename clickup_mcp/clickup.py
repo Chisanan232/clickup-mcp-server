@@ -7,7 +7,6 @@ from .client import APIResponse, ClickUpAPIClient, create_clickup_client
 from .models import (  # Domain models (preferred approach)
     ClickUpFolder,
     ClickUpList,
-    ClickUpListResponse,
     ClickUpSpace,
     ClickUpTeam,
     ClickUpUser,

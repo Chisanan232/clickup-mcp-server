@@ -1256,26 +1256,6 @@ class ClickUpFolder(ClickUpBaseModel):
     lists: Optional[List[Dict[str, Any]]] = Field(None, description="Lists in folder")
 
 
-class ClickUpListResponse(ClickUpBaseModel):
-    """Model for ClickUp list data."""
-
-    id: str = Field(..., description="List ID")
-    name: str = Field(..., description="List name")
-    orderindex: Optional[int] = Field(None, description="Order index")
-    content: Optional[str] = Field(None, description="List description")
-    status: Optional[Dict[str, Any]] = Field(None, description="List status")
-    priority: Optional[Dict[str, Any]] = Field(None, description="List priority")
-    assignee: Optional[Dict[str, Any]] = Field(None, description="List assignee")
-    task_count: Optional[int] = Field(None, description="Task count")
-    due_date: Optional[int] = Field(None, description="Due date as Unix timestamp")
-    start_date: Optional[int] = Field(None, description="Start date as Unix timestamp")
-    folder: Optional[Dict[str, Any]] = Field(None, description="Parent folder")
-    space: Optional[Dict[str, Any]] = Field(None, description="Parent space")
-    archived: Optional[bool] = Field(None, description="Is archived")
-    override_statuses: Optional[bool] = Field(None, description="Override statuses")
-    permission_level: Optional[str] = Field(None, description="Permission level")
-
-
 class CustomField(ClickUpBaseModel):
     """Model for custom field configuration."""
 
@@ -1283,6 +1263,3 @@ class CustomField(ClickUpBaseModel):
     name: str = Field(..., description="Custom field name")
     type: str = Field(..., description="Custom field type")
     value: Any = Field(..., description="Custom field value")
-
-
-# Backward compatibility aliases
