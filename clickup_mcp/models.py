@@ -61,20 +61,48 @@ class Team(ClickUpBaseModel):
         return cls(team_id=team_id)
 
 
-class Space(ClickUpBaseModel):
-    """Domain model for ClickUp Space operations."""
+class ClickUpSpace(ClickUpBaseModel):
+    """Model for ClickUp space operations and data.
+    
+    Used for both API requests and response handling.
+    """
 
     model_config = ConfigDict(
         extra="allow",  # Allow extra fields
+        populate_by_name=True,  # Allow population by field name and alias
     )
 
-    space_id: Optional[str] = Field(None, description="The space ID")
+    space_id: Optional[str] = Field(None, alias="id", description="Space ID")
+    name: Optional[str] = Field(None, description="Space name")
     team_id: Optional[str] = Field(None, description="The team ID")
-    name: Optional[str] = Field(None, description="The space name")
     description: Optional[str] = Field(None, description="Space description")
+    color: Optional[str] = Field(None, description="Space color")
+    private: Optional[bool] = Field(None, description="Is private space")
+    avatar: Optional[str] = Field(None, description="Space avatar URL")
+    admin_can_manage: Optional[bool] = Field(None, description="Admin can manage")
+    statuses: Optional[List[Dict[str, Any]]] = Field(None, description="Space statuses")
     multiple_assignees: Optional[bool] = Field(None, description="Allow multiple assignees")
-    features: Optional[Dict[str, Any]] = Field(None, description="Features configuration")
-    private: Optional[bool] = Field(None, description="Private space")
+    features: Optional[Dict[str, Any]] = Field(None, description="Space features")
+
+    @property
+    def id(self) -> Optional[str]:
+        """Property for backwards compatibility with code expecting 'id' attribute.
+        
+        Returns:
+            The space_id value
+        """
+        return self.space_id
+
+    def model_dump(self, **kwargs) -> Dict[str, Any]:
+        """Override model_dump to include 'id' in serialization for backward compatibility.
+        
+        Returns:
+            Dict with both 'space_id' and 'id' fields if space_id is set
+        """
+        data = super().model_dump(**kwargs)
+        if self.space_id is not None:
+            data["id"] = self.space_id
+        return data
 
     @classmethod
     def initial(
@@ -86,8 +114,8 @@ class Space(ClickUpBaseModel):
         features: Optional[Dict[str, Any]] = None,
         private: Optional[bool] = None,
         **kwargs,
-    ) -> "Space":
-        """Create a new Space instance with required fields.
+    ) -> "ClickUpSpace":
+        """Create a new ClickUpSpace instance with required fields.
 
         Args:
             name: The space name
@@ -99,7 +127,7 @@ class Space(ClickUpBaseModel):
             **kwargs: Additional attributes
 
         Returns:
-            Initialized Space instance
+            Initialized ClickUpSpace instance
         """
         return cls(
             name=name,
@@ -150,7 +178,7 @@ class Space(ClickUpBaseModel):
         return data
 
     @classmethod
-    def get_request(cls, space_id: str) -> "Space":
+    def get_request(cls, space_id: str) -> "ClickUpSpace":
         """Create a request for getting a specific space."""
         return cls(
             space_id=space_id,
@@ -163,7 +191,7 @@ class Space(ClickUpBaseModel):
         )
 
     @classmethod
-    def list_request(cls, team_id: str) -> "Space":
+    def list_request(cls, team_id: str) -> "ClickUpSpace":
         """Create a request for listing spaces in a team."""
         return cls(
             team_id=team_id,
@@ -176,13 +204,17 @@ class Space(ClickUpBaseModel):
         )
 
     @classmethod
-    def create_request(cls, team_id: str, name: str, **kwargs) -> "Space":
+    def create_request(cls, team_id: str, name: str, **kwargs) -> "ClickUpSpace":
         """Create a new request object for space creation."""
         return cls(team_id=team_id, name=name, **kwargs)
 
     @model_validator(mode="after")
     def validate_create_request(self):
         """Validate create request has required fields."""
+        # Skip validation if this is an API response (has space_id but may not have team_id)
+        if self.space_id is not None:
+            return self
+            
         if self.name and not self.team_id:
             raise ValueError("team_id is required when creating a space")
         return self
@@ -203,20 +235,54 @@ class Space(ClickUpBaseModel):
         return data
 
 
-class Folder(ClickUpBaseModel):
-    """Domain model for ClickUp Folder operations."""
+# Add backward compatibility alias to ensure tests continue to work
+Space = ClickUpSpace  # For backward compatibility with existing code
+
+
+class ClickUpFolder(ClickUpBaseModel):
+    """Model for ClickUp folder operations and data.
+    
+    Used for both API requests and response handling.
+    """
 
     model_config = ConfigDict(
         extra="allow",  # Allow extra fields
+        populate_by_name=True,  # Allow population by field name and alias
     )
 
-    folder_id: Optional[str] = Field(None, description="The folder ID")
+    folder_id: Optional[str] = Field(None, alias="id", description="Folder ID")
+    name: Optional[str] = Field(None, description="Folder name")
     space_id: Optional[str] = Field(None, description="The space ID")
-    name: Optional[str] = Field(None, description="The folder name")
+    orderindex: Optional[int] = Field(None, description="Order index")
+    override_statuses: Optional[bool] = Field(None, description="Override statuses")
+    hidden: Optional[bool] = Field(None, description="Is hidden")
+    space: Optional[Dict[str, Any]] = Field(None, description="Parent space")
+    task_count: Optional[int] = Field(None, description="Task count")
+    lists: Optional[List[Dict[str, Any]]] = Field(None, description="Lists in folder")
+
+    @property
+    def id(self) -> Optional[str]:
+        """Property for backwards compatibility with code expecting 'id' attribute.
+        
+        Returns:
+            The folder_id value
+        """
+        return self.folder_id
+
+    def model_dump(self, **kwargs) -> Dict[str, Any]:
+        """Override model_dump to include 'id' in serialization for backward compatibility.
+        
+        Returns:
+            Dict with both 'folder_id' and 'id' fields if folder_id is set
+        """
+        data = super().model_dump(**kwargs)
+        if self.folder_id is not None:
+            data["id"] = self.folder_id
+        return data
 
     @classmethod
-    def initial(cls, name: str, space_id: Optional[str] = None, **kwargs) -> "Folder":
-        """Create a new Folder instance with required fields.
+    def initial(cls, name: str, space_id: Optional[str] = None, **kwargs) -> "ClickUpFolder":
+        """Create a new ClickUpFolder instance with required fields.
 
         Args:
             name: The folder name
@@ -224,7 +290,7 @@ class Folder(ClickUpBaseModel):
             **kwargs: Additional attributes
 
         Returns:
-            Initialized Folder instance
+            Initialized ClickUpFolder instance
         """
         return cls(name=name, space_id=space_id, **kwargs)
 
@@ -247,23 +313,27 @@ class Folder(ClickUpBaseModel):
         return data
 
     @classmethod
-    def get_request(cls, folder_id: str) -> "Folder":
+    def get_request(cls, folder_id: str) -> "ClickUpFolder":
         """Create a request for getting a specific folder."""
         return cls(folder_id=folder_id, space_id=None, name=None)
 
     @classmethod
-    def list_request(cls, space_id: str) -> "Folder":
+    def list_request(cls, space_id: str) -> "ClickUpFolder":
         """Create a request for listing folders in a space."""
         return cls(space_id=space_id, folder_id=None, name=None)
 
     @classmethod
-    def create_request(cls, space_id: str, name: str) -> "Folder":
+    def create_request(cls, space_id: str, name: str) -> "ClickUpFolder":
         """Create a request for creating a new folder."""
         return cls(space_id=space_id, name=name, folder_id=None)
 
     @model_validator(mode="after")
     def validate_create_request(self):
         """Validate create request has required fields."""
+        # Skip validation if this is an API response (has folder_id but may not have space_id)
+        if self.folder_id is not None:
+            return self
+            
         if self.name and not self.space_id:
             raise ValueError("space_id is required when creating a folder")
         return self
@@ -271,6 +341,10 @@ class Folder(ClickUpBaseModel):
     def extract_create_data(self) -> Dict[str, Any]:
         """Extract data for folder creation."""
         return {"name": self.name}
+
+
+# Add backward compatibility alias to ensure tests continue to work
+Folder = ClickUpFolder  # For backward compatibility with existing code
 
 
 class ClickUpList(ClickUpBaseModel):
@@ -1227,33 +1301,6 @@ class ClickUpTeam(ClickUpBaseModel):
     color: Optional[str] = Field(None, description="Team color")
     avatar: Optional[str] = Field(None, description="Team avatar URL")
     members: Optional[List["ClickUpUser"]] = Field(None, description="Team members")
-
-
-class ClickUpSpace(ClickUpBaseModel):
-    """Model for ClickUp space data."""
-
-    id: str = Field(..., description="Space ID")
-    name: str = Field(..., description="Space name")
-    color: Optional[str] = Field(None, description="Space color")
-    private: Optional[bool] = Field(None, description="Is private space")
-    avatar: Optional[str] = Field(None, description="Space avatar URL")
-    admin_can_manage: Optional[bool] = Field(None, description="Admin can manage")
-    statuses: Optional[List[Dict[str, Any]]] = Field(None, description="Space statuses")
-    multiple_assignees: Optional[bool] = Field(None, description="Allow multiple assignees")
-    features: Optional[Dict[str, Any]] = Field(None, description="Space features")
-
-
-class ClickUpFolder(ClickUpBaseModel):
-    """Model for ClickUp folder data."""
-
-    id: str = Field(..., description="Folder ID")
-    name: str = Field(..., description="Folder name")
-    orderindex: Optional[int] = Field(None, description="Order index")
-    override_statuses: Optional[bool] = Field(None, description="Override statuses")
-    hidden: Optional[bool] = Field(None, description="Is hidden")
-    space: Optional[Dict[str, Any]] = Field(None, description="Parent space")
-    task_count: Optional[int] = Field(None, description="Task count")
-    lists: Optional[List[Dict[str, Any]]] = Field(None, description="Lists in folder")
 
 
 class CustomField(ClickUpBaseModel):
