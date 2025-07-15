@@ -270,14 +270,14 @@ class TestClickUpResourceClient(BaseAPIClientTestSuite):
         request_type: str, list_id: str, kwargs: dict, expected_params: dict
     ) -> None:
         """Test getting tasks with different parameter scenarios."""
-        from clickup_mcp.models import Task
+        from clickup_mcp.models import ClickUpTask
         
         with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200, data={"tasks": []})) as mock_get:
             if request_type == "string":
                 await resource_client.get_tasks(list_id, **kwargs)
             else:
                 # Create a task request object
-                task_request = Task.list_request(list_id=list_id, **kwargs)
+                task_request = ClickUpTask.list_request(list_id=list_id, **kwargs)
                 await resource_client.get_tasks(task_request)
             
             mock_get.assert_called_once()
@@ -333,11 +333,11 @@ class TestClickUpResourceClient(BaseAPIClientTestSuite):
     @pytest.mark.asyncio
     async def test_create_task_full(self, resource_client: ClickUpResourceClient) -> None:
         """Test creating a task with all optional data."""
-        from clickup_mcp.models import Task
+        from clickup_mcp.models import ClickUpTask
         
         with patch.object(resource_client.client, "post", return_value=APIResponse(status_code=200, data={"id": "task123", "name": "Test Task"})) as mock_post:
             # Create a task request with all parameters
-            task_request = Task.create_request(
+            task_request = ClickUpTask.create_request(
                 list_id="list123",
                 name="Test Task",
                 description="A test task",
@@ -636,8 +636,8 @@ class TestClickUpResourceClientStringParameterTypes(BaseAPIClientTestSuite):
         """Test getting tasks with string parameters."""
         with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200, data={"tasks": []})) as mock_get:
             # Create a Task object with parameters
-            from clickup_mcp.models import Task
-            task_params = Task(
+            from clickup_mcp.models import ClickUpTask
+            task_params = ClickUpTask(
                 list_id="list123",
                 name="",
                 order_by="updated",
@@ -700,8 +700,8 @@ class TestClickUpResourceClientParameterValidation(BaseAPIClientTestSuite):
     async def test_get_tasks_with_large_page_number(self, resource_client: ClickUpResourceClient) -> None:
         """Test getting tasks with large page numbers."""
         with patch.object(resource_client.client, "get", return_value=APIResponse(status_code=200, data={"tasks": []})) as mock_get:
-            from clickup_mcp.models import Task
-            task_params = Task(list_id="list123", name="", page=999999)
+            from clickup_mcp.models import ClickUpTask
+            task_params = ClickUpTask(list_id="list123", name="", page=999999)
             await resource_client.get_tasks(task_params)
 
             mock_get.assert_called_once()

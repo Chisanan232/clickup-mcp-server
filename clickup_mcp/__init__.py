@@ -34,7 +34,7 @@ from .models import (  # Domain models (new preferred approach); Response models
     ClickUpTeam,
     ClickUpUser,
     CustomField,
-    Task,
+    ClickUpTask,
 )
 from .utils import (
     ClickUpURLBuilder,
@@ -79,7 +79,7 @@ __all__ = [
     "MCPError",
     "MCPToolError",
     # Domain Models (new preferred approach, also as response models)
-    "Task",
+    "ClickUpTask",
     "CustomField",
     "ClickUpUser",
     "ClickUpTeam",

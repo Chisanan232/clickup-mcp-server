@@ -562,7 +562,7 @@ class ClickUpList(ClickUpBaseModel):
         return data
 
 
-class Task(ClickUpBaseModel):
+class ClickUpTask(ClickUpBaseModel):
     """Domain model for ClickUp Task operations."""
 
     model_config = ConfigDict(
@@ -614,7 +614,7 @@ class Task(ClickUpBaseModel):
         return v
 
     @classmethod
-    def extract_task_from_response(cls, response_data: Dict[str, Any]) -> "Task":
+    def extract_task_from_response(cls, response_data: Dict[str, Any]) -> "ClickUpTask":
         """Extract task data from API response."""
         # Extract and convert custom fields to CustomField objects if present
         custom_fields_list: Optional[List["CustomField" | Dict[str, Any]]] = None
@@ -684,9 +684,9 @@ class Task(ClickUpBaseModel):
         )
 
     @classmethod
-    def extract_list_tasks_response(cls, response_data: Dict[str, Any]) -> List["Task"]:
+    def extract_list_tasks_response(cls, response_data: Dict[str, Any]) -> List["ClickUpTask"]:
         """Extract list of tasks from API response."""
-        tasks: List["Task"] = []
+        tasks: List["ClickUpTask"] = []
         for task_data in response_data.get("tasks", []):
             tasks.append(cls.extract_task_from_response(task_data))
         return tasks
@@ -712,7 +712,7 @@ class Task(ClickUpBaseModel):
         check_required_custom_fields: Optional[bool] = True,
         custom_fields: Optional[List["CustomField" | Dict[str, Any]]] = None,
         **kwargs,
-    ) -> "Task":
+    ) -> "ClickUpTask":
         """Create a new Task instance with required fields.
 
         Args:
@@ -760,7 +760,7 @@ class Task(ClickUpBaseModel):
         )
 
     @classmethod
-    def get_request(cls, task_id: str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> "Task":
+    def get_request(cls, task_id: str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> "ClickUpTask":
         """Create a request for getting a specific task."""
         return cls(
             task_id=task_id,
@@ -816,7 +816,7 @@ class Task(ClickUpBaseModel):
         date_updated_gt: Optional[int] = None,
         date_updated_lt: Optional[int] = None,
         custom_fields: Optional[List["CustomField" | Dict[str, Any]]] = None,
-    ) -> "Task":
+    ) -> "ClickUpTask":
         """Create a request for listing tasks."""
         return cls(
             list_id=list_id,
@@ -873,7 +873,7 @@ class Task(ClickUpBaseModel):
         links_to: Optional[str] = None,
         check_required_custom_fields: Optional[bool] = True,
         custom_fields: Optional[List["CustomField" | Dict[str, Any]]] = None,
-    ) -> "Task":
+    ) -> "ClickUpTask":
         """Create a request for task creation."""
         return cls(
             list_id=list_id,
@@ -927,7 +927,7 @@ class Task(ClickUpBaseModel):
         start_date_time: Optional[bool] = None,
         notify_all: Optional[bool] = None,
         custom_fields: Optional[List["CustomField" | Dict[str, Any]]] = None,
-    ) -> "Task":
+    ) -> "ClickUpTask":
         """Create a request for task update."""
         return cls(
             task_id=task_id,
@@ -965,7 +965,7 @@ class Task(ClickUpBaseModel):
         )
 
     @classmethod
-    def delete_request(cls, task_id: str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> "Task":
+    def delete_request(cls, task_id: str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> "ClickUpTask":
         """Create a request for deleting a task."""
         return cls(
             task_id=task_id,

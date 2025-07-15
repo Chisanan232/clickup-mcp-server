@@ -16,7 +16,7 @@ from clickup_mcp.models import (  # Base models; Domain models; Task models; Res
     ClickUpTeam,
     ClickUpUser,
     CustomField,
-    Task,
+    ClickUpTask,
     snake_to_camel,
 )
 
@@ -208,11 +208,11 @@ class TestDomainModels:
     def test_task_get_request_operations(self):
         """Test Task domain model get request operations."""
         # Get request
-        task_req = Task.get_request(task_id="task123")
+        task_req = ClickUpTask.get_request(task_id="task123")
         assert task_req.task_id == "task123"
 
         # Get request with custom_task_ids and team_id
-        task_custom_req = Task.get_request(task_id="TASK-123", custom_task_ids=True, team_id="team123")
+        task_custom_req = ClickUpTask.get_request(task_id="TASK-123", custom_task_ids=True, team_id="team123")
         assert task_custom_req.task_id == "TASK-123"
         assert task_custom_req.custom_task_ids is True
         assert task_custom_req.team_id == "team123"
@@ -220,7 +220,7 @@ class TestDomainModels:
     def test_task_list_request_operations(self):
         """Test Task domain model list request operations."""
         # List request
-        task_list_req = Task.list_request(
+        task_list_req = ClickUpTask.list_request(
             list_id="list123",
             page=1,
             order_by="due_date",
@@ -268,7 +268,7 @@ class TestDomainModels:
             CustomField(id="field1", name="Priority", type="drop_down", value="high"),
             {"field_id": "field2", "value": "medium"},
         ]
-        task_create_req = Task.create_request(
+        task_create_req = ClickUpTask.create_request(
             list_id="list123",
             name="New Task",
             description="Task description",
@@ -315,7 +315,7 @@ class TestDomainModels:
     def test_task_update_and_delete_operations(self):
         """Test Task domain model update and delete operations."""
         # Update request
-        task_update_req = Task.update_request(
+        task_update_req = ClickUpTask.update_request(
             task_id="task123",
             name="Updated Task",
             description="Updated description",
@@ -346,11 +346,11 @@ class TestDomainModels:
         assert update_data["custom_fields"][0]["value"] == "low"
 
         # Delete request
-        task_delete_req = Task.delete_request(task_id="task123")
+        task_delete_req = ClickUpTask.delete_request(task_id="task123")
         assert task_delete_req.task_id == "task123"
 
         # Delete request with custom_task_ids and team_id
-        task_custom_delete_req = Task.delete_request(task_id="TASK-123", custom_task_ids=True, team_id="team123")
+        task_custom_delete_req = ClickUpTask.delete_request(task_id="TASK-123", custom_task_ids=True, team_id="team123")
         assert task_custom_delete_req.task_id == "TASK-123"
         assert task_custom_delete_req.custom_task_ids is True
         assert task_custom_delete_req.team_id == "team123"
@@ -371,9 +371,9 @@ class TestDomainModels:
         """Test priority validation."""
         if should_raise:
             with pytest.raises(ValueError, match=r"Priority must be between 0 \(no priority\) and 4 \(low\)"):
-                Task(priority=priority_value).validate_priority(priority_value)
+                ClickUpTask(priority=priority_value).validate_priority(priority_value)
         else:
-            assert Task.validate_priority(priority_value) == expected_result
+            assert ClickUpTask.validate_priority(priority_value) == expected_result
 
     def test_user_operations(self):
         """Test User domain model operations."""
@@ -581,7 +581,7 @@ class TestTaskModels:
         }
         
         # Using the correct method name from the Task model
-        task = Task.extract_task_from_response(response_data)
+        task = ClickUpTask.extract_task_from_response(response_data)
         
         assert task.task_id == "task123"
         assert task.name == "Test Task"
@@ -617,7 +617,7 @@ class TestTaskModels:
         # Using individual extraction since there's no bulk extraction method
         tasks = []
         for task_data in response_data.get("tasks", []):
-            tasks.append(Task.extract_task_from_response(task_data))
+            tasks.append(ClickUpTask.extract_task_from_response(task_data))
         
         assert len(tasks) == 2
         assert tasks[0].task_id == "task1"  # Using task_id instead of id
@@ -644,7 +644,7 @@ class TestTaskModels:
     )
     def test_extract_list_params(self, params, expected_attrs):
         """Test extracting list parameters."""
-        task = Task.list_request(**params)
+        task = ClickUpTask.list_request(**params)
         extracted_params = task.extract_list_params()
         
         # List ID is used internally but not included in the extracted params
@@ -662,7 +662,7 @@ class TestTaskModels:
             "status": "in progress",
             "priority": 2,
         }
-        task = Task.create_request(**task_data)  # Use create_request factory method
+        task = ClickUpTask.create_request(**task_data)  # Use create_request factory method
         create_data = task.extract_create_data()
         
         # Check that all expected attributes are in the create data
@@ -686,7 +686,7 @@ class TestTaskModels:
             "priority": 3,
             "due_date": 1567780450202,
         }
-        task = Task.update_request(**update_data)  # Use update_request factory method
+        task = ClickUpTask.update_request(**update_data)  # Use update_request factory method
         extracted_data = task.extract_update_data()
         
         # Check that all expected attributes are in the update data
@@ -912,7 +912,7 @@ class TestEdgeCases:
     )
     def test_task_specialized_param_extraction(self, task_attrs, expected_params):
         """Test specialized parameter extraction in Task list_request."""
-        task = Task.list_request(**task_attrs)
+        task = ClickUpTask.list_request(**task_attrs)
         params = task.extract_list_params()
     
         # Check for the expected params instead of looking for list_id

@@ -11,7 +11,7 @@ from .models import (  # Domain models (preferred approach)
     ClickUpTeam,
     ClickUpUser,
     CustomField,
-    Task,
+    ClickUpTask,
 )
 
 # Type variables for generic return types
@@ -385,7 +385,7 @@ class TaskAPI:
         """Initialize with an API client instance."""
         self.client = client
 
-    async def get_all(self, list_id: str, params: Optional[Dict[str, Any] | Task] = None) -> list[Task]:
+    async def get_all(self, list_id: str, params: Optional[Dict[str, Any] | ClickUpTask] = None) -> list[ClickUpTask]:
         """
         Get all tasks in a list with optional filtering.
 
@@ -396,7 +396,7 @@ class TaskAPI:
         Returns:
             List of Task instances
         """
-        if isinstance(params, Task):
+        if isinstance(params, ClickUpTask):
             query_params = params.extract_list_params()
         elif params is None:
             query_params = {}
@@ -408,11 +408,11 @@ class TaskAPI:
         if response.data and "tasks" in response.data:
             tasks = []
             for task_data in response.data["tasks"]:
-                tasks.append(Task.extract_task_from_response(task_data))
+                tasks.append(ClickUpTask.extract_task_from_response(task_data))
             return tasks
         return []
 
-    async def get(self, task_id: str | Task, custom_task_ids: bool = False, team_id: Optional[str] = None) -> Task:
+    async def get(self, task_id: str | ClickUpTask, custom_task_ids: bool = False, team_id: Optional[str] = None) -> ClickUpTask:
         """
         Get a specific task by ID.
 
@@ -425,7 +425,7 @@ class TaskAPI:
             Task instance
         """
         if isinstance(task_id, str):
-            request = Task.get_request(task_id, custom_task_ids, team_id)
+            request = ClickUpTask.get_request(task_id, custom_task_ids, team_id)
         else:
             request = task_id
 
@@ -441,10 +441,10 @@ class TaskAPI:
 
         # Extract task from response
         if response.data:
-            return Task.extract_task_from_response(response.data)
+            return ClickUpTask.extract_task_from_response(response.data)
         raise ValueError("Failed to extract task from response")
 
-    async def create(self, list_id: str, task: Task | str, **kwargs) -> Task:
+    async def create(self, list_id: str, task: ClickUpTask | str, **kwargs) -> ClickUpTask:
         """
         Create a new task in a list.
 
@@ -483,7 +483,7 @@ class TaskAPI:
                         # Already a CustomField
                         custom_field_objects.append(field)
 
-            task = Task.initial(
+            task = ClickUpTask.initial(
                 list_id=list_id,
                 name=name,
                 custom_fields=custom_field_objects,
@@ -498,12 +498,12 @@ class TaskAPI:
 
         # Extract task from response
         if response.data:
-            return Task.extract_task_from_response(response.data)
+            return ClickUpTask.extract_task_from_response(response.data)
         raise ValueError("Failed to extract task from response")
 
     async def update(
-        self, task_id: str, data: Dict[str, Any] | Task, custom_task_ids: bool = False, team_id: Optional[str] = None
-    ) -> Task:
+        self, task_id: str, data: Dict[str, Any] | ClickUpTask, custom_task_ids: bool = False, team_id: Optional[str] = None
+    ) -> ClickUpTask:
         """
         Update an existing task.
 
@@ -517,7 +517,7 @@ class TaskAPI:
             Task instance for the updated task
         """
         # Handle both Task objects and raw data dicts
-        if isinstance(data, Task):
+        if isinstance(data, ClickUpTask):
             update_data = data.extract_update_data()
         else:
             # Special handling for custom fields when provided as dict
@@ -543,11 +543,11 @@ class TaskAPI:
 
         # Extract task from response
         if response.data:
-            return Task.extract_task_from_response(response.data)
+            return ClickUpTask.extract_task_from_response(response.data)
         raise ValueError("Failed to extract task from response")
 
     async def delete(
-        self, task_id: str | Task, custom_task_ids: bool = False, team_id: Optional[str] = None
+        self, task_id: str | ClickUpTask, custom_task_ids: bool = False, team_id: Optional[str] = None
     ) -> APIResponse:
         """
         Delete a task.
@@ -560,7 +560,7 @@ class TaskAPI:
         Returns:
             API response confirming deletion
         """
-        if isinstance(task_id, Task):
+        if isinstance(task_id, ClickUpTask):
             request = task_id
             task_id = request.task_id
             custom_task_ids = request.custom_task_ids
@@ -631,7 +631,7 @@ class TaskAPI:
         """
         return await self.client.delete(f"/task/{task_id}/comment/{comment_id}")
 
-    async def add_tag(self, task_id: str, tag: str) -> Task:
+    async def add_tag(self, task_id: str, tag: str) -> ClickUpTask:
         """
         Add a tag to a task.
 
@@ -644,7 +644,7 @@ class TaskAPI:
         """
         response = await self.client.post(f"/task/{task_id}/tag/{tag}")
         if response.data:
-            return Task.extract_task_from_response(response.data)
+            return ClickUpTask.extract_task_from_response(response.data)
         raise ValueError("Failed to extract task from response")
 
     async def get_tags(self, task_id: str) -> list[str]:
@@ -660,7 +660,7 @@ class TaskAPI:
         response = await self.client.get(f"/task/{task_id}/tag")
         return response.data["tags"] if response.data and "tags" in response.data else []
 
-    async def delete_tag(self, task_id: str, tag: str) -> Task:
+    async def delete_tag(self, task_id: str, tag: str) -> ClickUpTask:
         """
         Delete a tag from a task.
 
@@ -673,7 +673,7 @@ class TaskAPI:
         """
         response = await self.client.delete(f"/task/{task_id}/tag/{tag}")
         if response.data:
-            return Task.extract_task_from_response(response.data)
+            return ClickUpTask.extract_task_from_response(response.data)
         raise ValueError("Failed to extract task from response")
 
 
@@ -868,24 +868,24 @@ class ClickUpResourceClient:
         return await self.list.delete(list_id)
 
     # Task operations
-    async def get_tasks(self, request: Task | str, params: Optional[Dict[str, Any]] = None) -> list[Task]:
+    async def get_tasks(self, request: ClickUpTask | str, params: Optional[Dict[str, Any]] = None) -> list[ClickUpTask]:
         """Get all tasks in a list."""
         if isinstance(request, str):
             # Legacy support: first parameter is list_id
             if params is None:
                 # Create a default Task instance with default parameters  
-                params = Task(name="", list_id=request, page=0, order_by="created", reverse=False)
+                params = ClickUpTask(name="", list_id=request, page=0, order_by="created", reverse=False)
             return await self.task.get_all(request, params)
         else:
             return await self.task.get_all(request.list_id, request)
 
-    async def get_task(self, request: Task | str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> Task:
+    async def get_task(self, request: ClickUpTask | str, custom_task_ids: bool = False, team_id: Optional[str] = None) -> ClickUpTask:
         """Get a specific task by ID."""
         return await self.task.get(request, custom_task_ids, team_id)
 
     async def create_task(
         self,
-        request: Task | str,
+        request: ClickUpTask | str,
         name: Optional[str] = None,
         description: Optional[str] = None,
         assignees: Optional[List[str]] = None,
@@ -899,7 +899,7 @@ class ClickUpResourceClient:
         links_to: Optional[str] = None,
         check_required_custom_fields: Optional[bool] = None,
         custom_fields: Optional[List[CustomField | Dict[str, Any]]] = None,
-    ) -> Task:
+    ) -> ClickUpTask:
         """Create a new task in a list."""
         if isinstance(request, str):
             # Legacy support: first parameter is list_id, second is name
@@ -924,7 +924,7 @@ class ClickUpResourceClient:
 
     async def update_task(
         self,
-        request: Task | str,
+        request: ClickUpTask | str,
         data: Optional[Dict[str, Any]] = None,
         name: Optional[str] = None,
         description: Optional[str] = None,
@@ -940,7 +940,7 @@ class ClickUpResourceClient:
         custom_task_ids: bool = False,
         team_id: Optional[str] = None,
         custom_fields: Optional[List[CustomField | Dict[str, Any]]] = None,
-    ) -> Task:
+    ) -> ClickUpTask:
         """Update an existing task."""
         if isinstance(request, str):
             # Legacy support: first parameter is task_id
@@ -981,7 +981,7 @@ class ClickUpResourceClient:
         return await self.task.update(request.task_id, request, request.custom_task_ids, request.team_id)
 
     async def delete_task(
-        self, request: Task | str, custom_task_ids: bool = False, team_id: Optional[str] = None
+        self, request: ClickUpTask | str, custom_task_ids: bool = False, team_id: Optional[str] = None
     ) -> APIResponse:
         """Delete a task."""
         return await self.task.delete(request, custom_task_ids, team_id)
@@ -1002,7 +1002,7 @@ class ClickUpResourceClient:
         """Delete a comment from a task."""
         return await self.task.delete_comment(task_id, comment_id)
 
-    async def add_task_tag(self, task_id: str, tag: str) -> Task:
+    async def add_task_tag(self, task_id: str, tag: str) -> ClickUpTask:
         """Add a tag to a task."""
         return await self.task.add_tag(task_id, tag)
 
@@ -1010,7 +1010,7 @@ class ClickUpResourceClient:
         """Get all tags for a task."""
         return await self.task.get_tags(task_id)
 
-    async def delete_task_tag(self, task_id: str, tag: str) -> Task:
+    async def delete_task_tag(self, task_id: str, tag: str) -> ClickUpTask:
         """Delete a tag from a task."""
         return await self.task.delete_tag(task_id, tag)
 
