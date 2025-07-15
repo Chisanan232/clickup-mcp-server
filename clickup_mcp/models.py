@@ -17,6 +17,7 @@ def snake_to_camel(field: str) -> str:
     parts = field.split("_")
     return parts[0] + "".join(p.title() for p in parts[1:])
 
+# Domain Models with Converged Logic
 
 class ClickUpBaseModel(BaseModel):
     """Base model for all ClickUp data models."""
@@ -28,9 +29,6 @@ class ClickUpBaseModel(BaseModel):
         str_strip_whitespace=True,
         validate_assignment=True,
     )
-
-
-# Domain Models with Converged Logic
 
 
 class ClickUpSpace(ClickUpBaseModel):
