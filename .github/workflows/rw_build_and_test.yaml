@@ -33,11 +33,11 @@ jobs:
 #    with:
 #      shell_arg: test/e2e_test/
 
-#  prep_contract-test:
-##    name: Prepare all integration test items
-#    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_get_tests.yaml@v7.3
-#    with:
-#      shell_arg: test/contract_test/
+  prep_contract-test:
+#    name: Prepare all integration test items
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_get_tests.yaml@v7.3
+    with:
+      shell_arg: test/contract_test/
 
   run_unit-test:
 #    name: Run all unit test items
@@ -69,14 +69,14 @@ jobs:
 #    secrets:
 #      e2e_test_slack_bot_token: ${{ secrets.e2e_test_slack_bot_token }}
 
-#  run_contract-test:
-##    name: Run all contract test items
-#    needs: prep_contract-test
-#    uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
-#    with:
-#      test_type: contract-test
-#      all_test_items_paths: ${{needs.prep_contract-test.outputs.all_test_items}}
-#      install_dependency_with_group: 'dev'
+  run_contract-test:
+#    name: Run all contract test items
+    needs: prep_contract-test
+    uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
+    with:
+      test_type: contract-test
+      all_test_items_paths: ${{needs.prep_contract-test.outputs.all_test_items}}
+      install_dependency_with_group: 'dev'
 
   unit-test_codecov:
 #    name: For unit test, organize and generate the testing report and upload it to Codecov
@@ -102,13 +102,13 @@ jobs:
 #    with:
 #      test_type: e2e-test
 
-#  contract-test_codecov:
-##    name: For end-to-end test, organize and generate the testing report and upload it to Codecov
-#    if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'|| (github.event_name == 'push' && github.ref_name == 'master') }}
-#    needs: run_contract-test
-#    uses: ./.github/workflows/rw_organize_test_cov_reports.yaml
-#    with:
-#      test_type: contract-test
+  contract-test_codecov:
+#    name: For end-to-end test, organize and generate the testing report and upload it to Codecov
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'|| (github.event_name == 'push' && github.ref_name == 'master') }}
+    needs: run_contract-test
+    uses: ./.github/workflows/rw_organize_test_cov_reports.yaml
+    with:
+      test_type: contract-test
 
   all_test_not_e2e_test_codecov:
 #    name: Organize and generate the testing report and upload it to Codecov
