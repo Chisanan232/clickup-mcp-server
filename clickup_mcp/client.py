@@ -15,12 +15,13 @@ from typing import Any, Dict, Generic, Optional, Type, TypeVar
 import httpx
 from pydantic import BaseModel, Field
 
+from clickup_mcp.models.dto.base import BaseResponseDTO
+
 from .exceptions import (
     AuthenticationError,
     ClickUpAPIError,
     RateLimitError,
 )
-from clickup_mcp.models.dto.base import BaseResponseDTO
 
 logger = logging.getLogger(__name__)
 
