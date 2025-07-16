@@ -5,13 +5,11 @@ This package provides a comprehensive API client and MCP server for interacting
 with ClickUp's API, enabling AI assistants to manage tasks, projects, and teams.
 """
 
-from .clickup import ClickUpResourceClient, create_resource_client
 from .client import (
     APIResponse,
     ClickUpAPIClient,
     create_clickup_client,
 )
-from .config import ClickUpConfig, get_default_config, load_config_from_env
 from .exceptions import (
     AuthenticationError,
     AuthorizationError,
@@ -27,26 +25,6 @@ from .exceptions import (
     TimeoutError,
     ValidationError,
 )
-from .models import (  # Domain models (new preferred approach); Response models
-    ClickUpFolder,
-    ClickUpList,
-    ClickUpSpace,
-    ClickUpTeam,
-    ClickUpUser,
-    CustomField,
-    ClickUpTask,
-)
-from .utils import (
-    ClickUpURLBuilder,
-    build_query_params,
-    extract_clickup_ids_from_url,
-    format_clickup_date,
-    format_priority,
-    format_status,
-    parse_clickup_date,
-    sanitize_task_name,
-    validate_clickup_id,
-)
 
 __version__ = "0.0.0"
 __author__ = "Chisanan232"
@@ -55,15 +33,9 @@ __email__ = "chi10211201@cycu.org.tw"
 __all__ = [
     # Client classes
     "ClickUpAPIClient",
-    "ClickUpResourceClient",
     "APIResponse",
     # Factory functions
     "create_clickup_client",
-    "create_resource_client",
-    # Configuration
-    "ClickUpConfig",
-    "load_config_from_env",
-    "get_default_config",
     # Exceptions
     "ClickUpError",
     "ClickUpAPIError",
@@ -78,22 +50,7 @@ __all__ = [
     "RetryExhaustedError",
     "MCPError",
     "MCPToolError",
-    # Domain Models (new preferred approach, also as response models)
-    "ClickUpTask",
-    "CustomField",
-    "ClickUpUser",
-    "ClickUpTeam",
-    "ClickUpSpace",
-    "ClickUpFolder",
-    "ClickUpList",
+    # DTO Models
+    # Domain Models (new preferred approach)
     # Utilities
-    "validate_clickup_id",
-    "format_clickup_date",
-    "parse_clickup_date",
-    "build_query_params",
-    "sanitize_task_name",
-    "extract_clickup_ids_from_url",
-    "format_priority",
-    "format_status",
-    "ClickUpURLBuilder",
 ]
