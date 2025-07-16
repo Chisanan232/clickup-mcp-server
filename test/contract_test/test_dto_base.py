@@ -6,11 +6,11 @@ adhere to their contract and function as expected.
 """
 
 import pytest
-from typing import Dict, List, Optional, Any, ClassVar
+from typing import Dict, Optional, Any
 
 from pydantic import Field, ConfigDict
 
-from clickup_mcp.dto.base import BaseDTO, BaseRequestDTO, BaseResponseDTO, PaginatedResponseDTO
+from clickup_mcp.models.dto.base import BaseDTO, BaseRequestDTO, BaseResponseDTO, PaginatedResponseDTO
 
 
 class TestBaseDTO:

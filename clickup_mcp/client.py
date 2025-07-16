@@ -20,7 +20,7 @@ from .exceptions import (
     ClickUpAPIError,
     RateLimitError,
 )
-from .dto.base import BaseResponseDTO, BaseDTO
+from clickup_mcp.models.dto.base import BaseResponseDTO
 
 logger = logging.getLogger(__name__)
 
