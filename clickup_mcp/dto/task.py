@@ -14,8 +14,23 @@ from .base import BaseRequestDTO, BaseResponseDTO
 class CustomFieldRequestDTO(BaseRequestDTO):
     """DTO for custom field in task requests."""
     
-    id: str
+    id: Optional[str] = None
+    field_id: Optional[str] = None
     value: Any
+    
+    def serialize(self) -> Dict[str, Any]:
+        """
+        Convert the DTO to a dictionary.
+        
+        Returns:
+            Dictionary representation of the DTO
+        """
+        data = super().serialize()
+        # If field_id is provided but id is not, use field_id for id
+        if data.get("field_id") and not data.get("id"):
+            data["id"] = data["field_id"]
+            data.pop("field_id", None)
+        return data
 
 
 class TaskRequestDTO(BaseRequestDTO):
@@ -127,14 +142,14 @@ class TaskResponseDTO(BaseResponseDTO):
     custom_id: Optional[str] = None
     name: str
     description: Optional[str] = None
-    status: TaskStatusResponseDTO
-    orderindex: str
-    date_created: str
-    date_updated: str
+    status: Optional[TaskStatusResponseDTO] = None
+    orderindex: Optional[str] = None
+    date_created: Optional[str] = None
+    date_updated: Optional[str] = None
     date_closed: Optional[str] = None
-    archived: bool
-    creator: TaskCreatorResponseDTO
-    assignees: List[TaskAssigneeResponseDTO]
+    archived: Optional[bool] = None
+    creator: Optional[TaskCreatorResponseDTO] = None
+    assignees: Optional[List[TaskAssigneeResponseDTO]] = Field(default_factory=list)
     watchers: Optional[List[Dict[str, Any]]] = None
     checklists: Optional[List[Dict[str, Any]]] = None
     tags: Optional[List[TaskTagResponseDTO]] = None
@@ -148,13 +163,13 @@ class TaskResponseDTO(BaseResponseDTO):
     custom_fields: Optional[List[CustomFieldResponseDTO]] = None
     dependencies: Optional[List[str]] = None
     linked_tasks: Optional[List[Dict[str, Any]]] = None
-    team_id: str
-    url: str
-    permission_level: str
-    list: Dict[str, Any]
+    team_id: Optional[str] = None
+    url: Optional[str] = None
+    permission_level: Optional[str] = None
+    list: Optional[Dict[str, Any]] = None
     project: Optional[Dict[str, Any]] = None
-    folder: Dict[str, Any]
-    space: Dict[str, Any]
+    folder: Optional[Dict[str, Any]] = None
+    space: Optional[Dict[str, Any]] = None
 
 
 class TasksResponseDTO(BaseResponseDTO):

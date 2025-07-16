@@ -20,11 +20,13 @@ from .exceptions import (
     ClickUpAPIError,
     RateLimitError,
 )
+from .dto.base import BaseResponseDTO, BaseDTO
 
 logger = logging.getLogger(__name__)
 
 # Type variable for generic returns
 T = TypeVar("T")
+D = TypeVar("D", bound=BaseResponseDTO)
 
 
 class APIResponse(BaseModel, Generic[T]):
@@ -59,6 +61,22 @@ class APIResponse(BaseModel, Generic[T]):
         # Create an instance of the domain model
         return model_class(**model_data)
 
+    def to_dto(self, dto_class: Type[D]) -> D:
+        """
+        Convert raw API response data to a DTO instance.
+
+        Args:
+            dto_class: The DTO class to instantiate
+
+        Returns:
+            An instance of the specified DTO
+        """
+        if self.data is None:
+            raise ValueError("Cannot convert empty response data to DTO")
+
+        # Use the DTO's deserialize method to create the DTO instance
+        return dto_class.deserialize(self.data)
+
     def extract_list(self, model_class: Type[T], list_key: str = "data") -> list[T]:
         """
         Extract a list of domain models from the API response.
@@ -83,7 +101,35 @@ class APIResponse(BaseModel, Generic[T]):
         if not isinstance(items, list):
             return []
 
+        # Create a list of domain model instances
         return [model_class(**item) for item in items]
+
+    def extract_dto_list(self, dto_class: Type[D], list_key: str = "data") -> list[D]:
+        """
+        Extract a list of DTOs from the API response.
+
+        Args:
+            dto_class: The DTO class to instantiate for each item
+            list_key: The key in the response data containing the list
+
+        Returns:
+            A list of DTO instances
+        """
+        if self.data is None:
+            return []
+
+        # Handle different response formats for lists
+        if list_key in self.data:
+            items = self.data[list_key]
+        else:
+            # Some endpoints return the list directly
+            items = self.data
+
+        if not isinstance(items, list):
+            return []
+
+        # Create a list of DTO instances
+        return [dto_class.deserialize({"data": item} if "id" in item else item) for item in items]
 
 
 class ClickUpAPIClient:

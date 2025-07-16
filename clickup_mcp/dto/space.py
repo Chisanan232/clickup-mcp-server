@@ -67,4 +67,4 @@ class SpaceResponseDTO(BaseResponseDTO):
 class SpacesResponseDTO(BaseResponseDTO):
     """DTO for spaces response."""
     
-    spaces: List[SpaceResponseDTO]
+    spaces: Optional[List[SpaceResponseDTO]] = Field(default_factory=list)

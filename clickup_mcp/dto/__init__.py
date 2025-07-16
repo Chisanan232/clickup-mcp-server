@@ -40,7 +40,7 @@ from .task import (
     CreateTaskCommentRequestDTO,
     UpdateTaskCommentRequestDTO
 )
-from .user import UserResponseDTO
+from .user import UserResponseDTO, TeamUsersResponseDTO
 
 __all__ = [
     'BaseRequestDTO', 'BaseResponseDTO',
@@ -55,5 +55,5 @@ __all__ = [
     'CreateTaskRequestDTO', 'UpdateTaskRequestDTO',
     'TaskCommentResponseDTO', 'TaskCommentsResponseDTO',
     'CreateTaskCommentRequestDTO', 'UpdateTaskCommentRequestDTO',
-    'UserResponseDTO',
+    'UserResponseDTO', 'TeamUsersResponseDTO',
 ]
