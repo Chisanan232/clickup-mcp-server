@@ -4,7 +4,7 @@ Base domain model classes.
 This module provides base classes for all domain models in the application.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from pydantic import BaseModel, ConfigDict
 
