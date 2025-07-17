@@ -13,7 +13,7 @@ import uvicorn
 from pydantic import ValidationError
 
 from clickup_mcp.models.cli import ServerConfig, LogLevel
-from clickup_mcp.web.app import create_app
+from clickup_mcp.web_server.app import create_app
 
 
 def parse_args() -> ServerConfig:

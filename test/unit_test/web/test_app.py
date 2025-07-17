@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock, AsyncMock
 
-from clickup_mcp.web.app import create_app
+from clickup_mcp.web_server.app import create_app
 
 
 class TestWebServer:
