@@ -6,9 +6,9 @@ This module tests the functionality of mounting an MCP server on FastAPI.
 
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 
-from clickup_mcp.web_server import create_app
+from clickup_mcp.web.app import create_app
 
 
 class TestWebServer:
@@ -18,13 +18,19 @@ class TestWebServer:
     def mock_mcp(self):
         """Fixture to create a mock MCP server."""
         mock = MagicMock()
-        mock.get_resource.return_value = {"name": "test_resource"}
+        # Set up synchronous method returns
+        mock.list_resources.return_value = ["resource1", "resource2"]
+        mock.list_tools.return_value = ["tool1", "tool2"]
+        
+        # Set up execute method (potentially async)
+        mock.execute = AsyncMock(return_value={"success": True, "data": "result"})
+        
         return mock
 
     @pytest.fixture
     def test_client(self, mock_mcp):
         """Fixture to create a FastAPI test client with mock MCP."""
-        with patch("clickup_mcp.web_server.get_mcp_server", return_value=mock_mcp):
+        with patch("clickup_mcp.web.app.get_mcp_server", return_value=mock_mcp):
             app = create_app()
             return TestClient(app)
 
@@ -49,8 +55,30 @@ class TestWebServer:
         # Verify the MCP server was called to list resources
         mock_mcp.list_resources.assert_called_once()
     
-    def test_mcp_integration(self, test_client, mock_mcp):
-        """Test that MCP server is properly integrated and mounted."""
-        test_client.get("/mcp/tools")
-        # Verify the MCP tools endpoint was accessed
-        mock_mcp.get_tools.assert_called_once()
+    def test_mcp_tools_endpoint(self, test_client, mock_mcp):
+        """Test that the MCP tools endpoint returns the expected tools."""
+        response = test_client.get("/mcp/tools")
+        assert response.status_code == 200
+        
+        # Verify the list_tools method was called
+        mock_mcp.list_tools.assert_called_once()
+        
+        # Verify the response contains the expected tools
+        assert response.json() == {"tools": ["tool1", "tool2"]}
+    
+    def test_execute_tool(self, test_client, mock_mcp):
+        """Test executing an MCP tool through the API."""
+        # Make the request
+        response = test_client.post(
+            "/mcp/execute/test_tool", 
+            json={"param1": "value1", "param2": "value2"}
+        )
+        
+        # Verify response
+        assert response.status_code == 200
+        assert "result" in response.json()
+        
+        # Verify the tool was executed with correct parameters
+        mock_mcp.execute.assert_awaited_once_with(
+            "test_tool", param1="value1", param2="value2"
+        )
