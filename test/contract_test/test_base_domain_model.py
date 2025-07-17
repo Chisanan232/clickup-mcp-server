@@ -27,7 +27,7 @@ class FakeDomainModel(BaseDomainModel):
     def model_dump(self, **kwargs) -> Dict[str, Any]:
         """Override model_dump to track calls and add special fields."""
         # Track that model_dump was called
-        FakeDomainModel.spy_model_dump_called = True
+        type(self).spy_model_dump_called = True
 
         # Call super implementation
         result = super().model_dump(**kwargs)
