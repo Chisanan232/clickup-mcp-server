@@ -8,6 +8,7 @@ These functions follow the FastMCP pattern for easy integration into MCP servers
 from typing import Optional
 
 from clickup_mcp.client import create_clickup_client
+
 from .app import mcp
 
 
