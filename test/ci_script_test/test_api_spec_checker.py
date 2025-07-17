@@ -4,7 +4,6 @@ import json
 import os
 from unittest import mock
 
-
 # Path to our implementation that we'll create later
 from scripts.ci.api_spec_checker import (
     ApiSpecChangeDetector,
