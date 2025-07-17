@@ -21,13 +21,3 @@ class BaseDomainModel(BaseModel):
         extra="allow",
         arbitrary_types_allowed=True,
     )
-
-    def model_dump(self, *args, **kwargs) -> Dict[str, Any]:
-        """Return a dictionary representation of the model.
-
-        This method can be overridden by subclasses to customize serialization.
-
-        Returns:
-            Dict[str, Any]: Dictionary representation of the model
-        """
-        return super().model_dump(*args, **kwargs)
