@@ -5,22 +5,23 @@ This module provides the entry point for running the FastAPI server
 that hosts the ClickUp MCP functionality.
 """
 
-import os
+import sys
 import logging
 import argparse
-from typing import Optional
 
 import uvicorn
+from pydantic import ValidationError
 
+from clickup_mcp.models.cli import ServerConfig, LogLevel
 from .web.app import create_app
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args() -> ServerConfig:
     """
-    Parse command line arguments.
+    Parse command line arguments into a ServerConfig model.
     
     Returns:
-        Parsed command line arguments
+        ServerConfig instance with parsed command line arguments
     """
     parser = argparse.ArgumentParser(description="Run the ClickUp MCP FastAPI server")
     parser.add_argument(
@@ -39,7 +40,7 @@ def parse_args() -> argparse.Namespace:
         "--log-level", 
         type=str, 
         default="info",
-        choices=["debug", "info", "warning", "error", "critical"],
+        choices=[level.value for level in LogLevel],
         help="Logging level"
     )
     parser.add_argument(
@@ -48,7 +49,16 @@ def parse_args() -> argparse.Namespace:
         help="Enable auto-reload for development"
     )
     
-    return parser.parse_args()
+    # Parse args into a dictionary
+    args_namespace = parser.parse_args()
+    args_dict = vars(args_namespace)
+    
+    try:
+        # Convert to ServerConfig model
+        return ServerConfig(**args_dict)
+    except ValidationError as e:
+        print(f"Error in server configuration: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def configure_logging(log_level: str) -> None:
@@ -68,36 +78,30 @@ def configure_logging(log_level: str) -> None:
     )
 
 
-def run_server(
-    host: str = "0.0.0.0", 
-    port: int = 8000, 
-    log_level: str = "info", 
-    reload: bool = False
-) -> None:
+def run_server(config: ServerConfig) -> None:
     """
     Run the FastAPI server with the specified configuration.
     
     Args:
-        host: Host to bind the server to
-        port: Port to bind the server to
-        log_level: Logging level
-        reload: Whether to enable auto-reload for development
+        config: Server configuration
     """
-    configure_logging(log_level)
+    configure_logging(config.log_level)
     
     # Create the FastAPI app
     app = create_app()
     
-    # Get the FastAPI app factory for Uvicorn
-    app_factory = "clickup_mcp.main:create_app_factory()"
+    # Log server startup information
+    logging.info(f"Starting server on {config.host}:{config.port}")
+    logging.info(f"Log level: {config.log_level}")
+    logging.info(f"Auto-reload: {'enabled' if config.reload else 'disabled'}")
     
     # Run the server
     uvicorn.run(
         app=app,
-        host=host,
-        port=port,
-        log_level=log_level.lower(),
-        reload=reload
+        host=config.host,
+        port=config.port,
+        log_level=config.log_level.lower(),
+        reload=config.reload
     )
 
 
@@ -115,13 +119,8 @@ def main() -> None:
     """
     Main entry point for the CLI.
     """
-    args = parse_args()
-    run_server(
-        host=args.host, 
-        port=args.port, 
-        log_level=args.log_level, 
-        reload=args.reload
-    )
+    config = parse_args()
+    run_server(config)
 
 
 if __name__ == "__main__":
