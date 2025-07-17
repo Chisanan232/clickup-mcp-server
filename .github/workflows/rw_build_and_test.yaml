@@ -39,6 +39,12 @@ jobs:
     with:
       shell_arg: test/contract_test/
 
+  prep_script-test:
+#    name: Prepare all unit test items
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_get_tests.yaml@v7.3
+    with:
+      shell_arg: test/ci_script_test/
+
   run_unit-test:
 #    name: Run all unit test items
     needs: prep_unit-test
@@ -75,6 +81,15 @@ jobs:
     uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
     with:
       test_type: contract-test
+      all_test_items_paths: ${{needs.prep_contract-test.outputs.all_test_items}}
+      install_dependency_with_group: 'dev'
+
+  run_script-test:
+#    name: Run all contract test items
+    needs: prep_script-test
+    uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
+    with:
+      test_type: ci-script-test
       all_test_items_paths: ${{needs.prep_contract-test.outputs.all_test_items}}
       install_dependency_with_group: 'dev'
 
