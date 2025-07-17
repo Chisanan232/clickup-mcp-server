@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from mcp.server import FastMCP
 
-from clickup_mcp.mcp.app import mcp as clickup_mcp
+from clickup_mcp.mcp_server.app import mcp as clickup_mcp
 
 
 def get_mcp_server() -> FastMCP:

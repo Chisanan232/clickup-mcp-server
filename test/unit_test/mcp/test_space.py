@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from clickup_mcp.mcp.space import get_space
+from clickup_mcp.mcp_server.space import get_space
 from clickup_mcp.models.domain.space import ClickUpSpace
 
 
