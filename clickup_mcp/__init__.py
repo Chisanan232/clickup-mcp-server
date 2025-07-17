@@ -23,8 +23,9 @@ from .exceptions import (
     ResourceNotFoundError,
     RetryExhaustedError,
     TimeoutError,
-    ValidationError,
 )
+from .api.space import SpaceAPI
+from .models.domain.space import ClickUpSpace, Space
 
 __version__ = "0.0.0"
 __author__ = "Chisanan232"
@@ -43,7 +44,6 @@ __all__ = [
     "AuthorizationError",
     "RateLimitError",
     "ResourceNotFoundError",
-    "ValidationError",
     "ConfigurationError",
     "NetworkError",
     "TimeoutError",
@@ -52,5 +52,9 @@ __all__ = [
     "MCPToolError",
     # DTO Models
     # Domain Models (new preferred approach)
+    "ClickUpSpace",
+    "Space",
+    # API Resource Managers
+    "SpaceAPI",
     # Utilities
 ]
