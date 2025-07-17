@@ -5,7 +5,7 @@ This module defines the domain model for a ClickUp Space, which is used
 throughout the application to represent a space in ClickUp.
 """
 
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import ConfigDict, Field, model_validator
 
@@ -26,7 +26,7 @@ class ClickUpSpace(BaseDomainModel):
     multiple_assignees: bool = Field(default=False, description="Whether multiple assignees are allowed for tasks")
     features: Optional[Dict[str, Any]] = Field(default=None, description="Features enabled for this space")
     team_id: Optional[str] = Field(default=None, description="The team ID this space belongs to")
-    
+
     model_config = ConfigDict(
         populate_by_name=True,
         extra="allow",
@@ -35,7 +35,7 @@ class ClickUpSpace(BaseDomainModel):
     @model_validator(mode="after")
     def validate_space(self) -> "ClickUpSpace":
         """Validate the space model.
-        
+
         Skip team_id validation when handling API responses with space_id.
         """
         return self
@@ -43,7 +43,7 @@ class ClickUpSpace(BaseDomainModel):
     @property
     def id(self) -> str:
         """Get the space ID for backward compatibility.
-        
+
         Returns:
             str: The space ID
         """

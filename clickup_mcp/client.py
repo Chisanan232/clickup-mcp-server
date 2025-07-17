@@ -20,10 +20,8 @@ from clickup_mcp.models.dto.base import BaseResponseDTO
 from .api.space import SpaceAPI
 from .exceptions import (
     AuthenticationError,
-    AuthorizationError,
     ClickUpAPIError,
     RateLimitError,
-    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -190,7 +188,7 @@ class ClickUpAPIClient:
             timeout=timeout,
             headers=self._headers,
         )
-        
+
         # Initialize API resource managers
         self.space = SpaceAPI(self)
 

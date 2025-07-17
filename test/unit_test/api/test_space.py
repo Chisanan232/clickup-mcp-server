@@ -2,16 +2,14 @@
 Unit tests for Space API.
 """
 
-import json
-from unittest.mock import AsyncMock, Mock, patch
+from test.unit_test._base import BaseAPIClientTestSuite
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from clickup_mcp.client import APIResponse, ClickUpAPIClient
 from clickup_mcp.api.space import SpaceAPI
+from clickup_mcp.client import APIResponse, ClickUpAPIClient
 from clickup_mcp.models.domain.space import ClickUpSpace
-
-from test.unit_test._base import BaseAPIClientTestSuite
 
 
 class TestSpaceAPI(BaseAPIClientTestSuite):
@@ -38,17 +36,10 @@ class TestSpaceAPI(BaseAPIClientTestSuite):
             "private": False,
             "statuses": [
                 {"id": "1", "status": "Open", "color": "#ff0000"},
-                {"id": "2", "status": "Closed", "color": "#00ff00"}
+                {"id": "2", "status": "Closed", "color": "#00ff00"},
             ],
             "multiple_assignees": True,
-            "features": {
-                "due_dates": {
-                    "enabled": True
-                },
-                "time_tracking": {
-                    "enabled": False
-                }
-            }
+            "features": {"due_dates": {"enabled": True}, "time_tracking": {"enabled": False}},
         }
 
     @pytest.mark.asyncio
@@ -57,10 +48,7 @@ class TestSpaceAPI(BaseAPIClientTestSuite):
         # Arrange
         space_id = "123456"
         mock_api_client.get.return_value = APIResponse(
-            success=True,
-            status_code=200,
-            data=sample_space_data,
-            headers={}
+            success=True, status_code=200, data=sample_space_data, headers={}
         )
 
         # Act
@@ -83,10 +71,7 @@ class TestSpaceAPI(BaseAPIClientTestSuite):
         # Arrange
         space_id = "nonexistent"
         mock_api_client.get.return_value = APIResponse(
-            success=False,
-            status_code=404,
-            data={"err": "Space not found"},
-            headers={}
+            success=False, status_code=404, data={"err": "Space not found"}, headers={}
         )
 
         # Act

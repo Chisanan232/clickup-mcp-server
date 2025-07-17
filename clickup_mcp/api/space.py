@@ -5,12 +5,12 @@ This module provides a resource manager for interacting with ClickUp Spaces.
 It follows the Resource Manager pattern described in the project documentation.
 """
 
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from clickup_mcp.models.domain.space import ClickUpSpace
 
 if TYPE_CHECKING:
-    from clickup_mcp.client import ClickUpAPIClient, APIResponse
+    from clickup_mcp.client import ClickUpAPIClient
 
 
 class SpaceAPI:
@@ -39,8 +39,8 @@ class SpaceAPI:
             A ClickUpSpace instance representing the space, or None if not found.
         """
         response = await self._client.get(f"/space/{space_id}")
-        
+
         if not response.success or response.status_code == 404:
             return None
-            
+
         return ClickUpSpace(**response.data)
