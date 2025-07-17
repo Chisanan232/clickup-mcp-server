@@ -1,0 +1,43 @@
+name: Check ClickUp API Specification Changes
+
+# Run daily at 00:00 UTC
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  check-api-spec:
+    name: Check API Specification Changes
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pydantic
+      
+      - name: Check API specification changes
+        id: check-api-spec
+        run: |
+          chmod +x scripts/ci/api_spec_checker.py
+          python scripts/ci/api_spec_checker.py --verbose
+      
+      - name: Create issue if changes detected
+        if: failure()
+        uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/api-spec-change-template.md
+          update_existing: true
