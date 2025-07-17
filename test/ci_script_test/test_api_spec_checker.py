@@ -6,6 +6,7 @@ from typing import Dict, Any
 
 import pytest
 from pydantic import BaseModel
+import httpx
 
 # Path to our implementation that we'll create later
 from scripts.ci.api_spec_checker import (
@@ -81,8 +82,8 @@ class TestApiSpecificationDTO:
 class TestApiSpecChecker:
     """Tests for the API specification checker."""
     
-    @mock.patch('requests.get')
-    def test_fetch_remote_spec(self, mock_get: mock.MagicMock) -> None:
+    @mock.patch('httpx.Client')
+    def test_fetch_remote_spec(self, mock_client: mock.MagicMock) -> None:
         """Test fetching the remote API specification."""
         # Setup mock response
         mock_response = mock.MagicMock()
@@ -91,7 +92,11 @@ class TestApiSpecChecker:
             "info": {"title": "ClickUp API", "version": "2.0"}
         }
         mock_response.status_code = 200
-        mock_get.return_value = mock_response
+        
+        # Configure the mock client to return our mock response
+        mock_client_instance = mock.MagicMock()
+        mock_client_instance.get.return_value = mock_response
+        mock_client.return_value.__enter__.return_value = mock_client_instance
         
         # Create checker and fetch spec
         checker = ApiSpecChecker("https://example.com/api/spec")
@@ -100,7 +105,7 @@ class TestApiSpecChecker:
         # Assertions
         assert isinstance(spec, ApiSpecificationDTO)
         assert spec.info.title == "ClickUp API"
-        mock_get.assert_called_once_with("https://example.com/api/spec")
+        mock_client_instance.get.assert_called_once_with("https://example.com/api/spec")
     
     def test_read_local_spec(self) -> None:
         """Test reading a local API specification file."""

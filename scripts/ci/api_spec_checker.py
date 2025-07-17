@@ -17,7 +17,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-import requests
+import httpx
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 
@@ -117,12 +117,13 @@ class ApiSpecChecker:
             ApiSpecificationDTO: The parsed API specification
             
         Raises:
-            requests.RequestException: If the request fails
+            httpx.HTTPError: If the request fails
         """
         logger.info(f"Fetching remote API specification from {self.spec_url}")
-        response = requests.get(self.spec_url)
-        response.raise_for_status()
-        spec_data = response.json()
+        with httpx.Client(timeout=30.0) as client:
+            response = client.get(self.spec_url)
+            response.raise_for_status()
+            spec_data = response.json()
         return ApiSpecificationDTO.model_validate(spec_data)
     
     def read_local_spec(self, file_path: str) -> ApiSpecificationDTO:
@@ -362,7 +363,7 @@ def main() -> int:
             logger.info("No changes detected in API specification")
             return 0
     
-    except requests.RequestException as e:
+    except httpx.HTTPError as e:
         logger.error(f"Failed to fetch remote API specification: {e}")
         return 1
     except json.JSONDecodeError as e:
