@@ -12,7 +12,7 @@ from typing import Optional
 
 import uvicorn
 
-from .web_server import create_app
+from .web.app import create_app
 
 
 def parse_args() -> argparse.Namespace:
