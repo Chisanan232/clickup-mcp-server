@@ -5,7 +5,7 @@ This module provides a resource manager for interacting with ClickUp Spaces.
 It follows the Resource Manager pattern described in the project documentation.
 """
 
-from typing import TYPE_CHECKING, Optional, Dict, Any
+from typing import TYPE_CHECKING, Optional
 
 from clickup_mcp.models.domain.space import ClickUpSpace
 
