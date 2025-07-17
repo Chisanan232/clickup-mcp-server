@@ -52,18 +52,6 @@ class FakeDomainModelWithIdAlias(BaseDomainModel):
         """ID property for backward compatibility."""
         return self.entity_id
 
-    def model_dump(self, **kwargs) -> Dict[str, Any]:
-        """Override model_dump to ensure 'id' is always included for backward compatibility."""
-        # First get the base serialized data
-        result = super().model_dump(**kwargs)
-
-        # The most important part of the contract for backward compatibility:
-        # ALWAYS include 'id' in the output, regardless of exclude/include settings
-        # This ensures that code relying on the 'id' field always works
-        result["id"] = self.entity_id
-
-        return result
-
 
 class TestBaseDomainModelContract:
     """Tests that verify the contract between BaseDomainModel and implementations."""
@@ -196,22 +184,25 @@ class TestBaseDomainModelContract:
         # Test basic serialization
         data = model.model_dump()
         assert "entity_id" in data, "entity_id should be in serialized data"
-        assert "id" in data, "id should be in serialized data"
+        assert "id" not in data, "id should not be in serialized data"
         assert data["entity_id"] == "test123", "entity_id should have correct value"
-        assert data["id"] == "test123", "id should have correct value"
+
+        # Test serialization with by_alias=True
+        data_with_alias = model.model_dump(by_alias=True)
+        assert "id" in data_with_alias, "id should be in serialized data"
+        assert data_with_alias["id"] == "test123", "id should have correct value"
+        assert "entity_id" not in data_with_alias, "entity_id should not be in serialized data"
 
         # Test exclude entity_id but keep id
         data = model.model_dump(exclude={"entity_id"})
         assert "entity_id" not in data, "entity_id should be excluded"
-        assert "id" in data, "id should still be included for backward compatibility"
-        assert data["id"] == "test123", "id should have correct value"
+        assert "id" not in data, "id should still not be included"
 
         # Test include only name, but id should still be present
         data = model.model_dump(include={"name"})
         assert "name" in data, "name should be included"
         assert "entity_id" not in data, "entity_id should not be included"
-        assert "id" in data, "id should still be included for backward compatibility"
-        assert data["id"] == "test123", "id should have correct value"
+        assert "id" not in data, "id should still not be included"
 
 
 class TestModelInstantiation:
@@ -238,6 +229,6 @@ class TestModelInstantiation:
         assert model.entity_id == "test123", "Alias 'id' should set entity_id"
 
         # Serialize to verify both fields are present
-        data = model.model_dump()
-        assert data["entity_id"] == "test123"
+        data = model.model_dump(by_alias=True)
         assert data["id"] == "test123"
+        assert "entity_id" not in data
