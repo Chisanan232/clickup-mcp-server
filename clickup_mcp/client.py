@@ -269,7 +269,7 @@ class ClickUpAPIClient:
                 )
 
                 # Helper function to safely parse JSON
-                def safe_json_parse(response_obj):
+                def safe_json_parse(response_obj: httpx.Response) -> Optional[Dict[str, Any]]:
                     try:
                         return response_obj.json() if response_obj.content else None
                     except json.JSONDecodeError:
