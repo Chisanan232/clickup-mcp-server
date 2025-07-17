@@ -15,23 +15,25 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: '3.12'
-          cache: 'pip'
-      
-      - name: Install dependencies
+          python-version: 3.14
+
+      - name: Activate the uv virtual environment
         run: |
-          python -m pip install --upgrade pip
-          pip install httpx pydantic
+          uv venv
+          . .venv/bin/activate
+
+      - name: Install all the project dependencies
+        run: uv sync --locked --all-extras --dev
       
       - name: Check API specification changes
         id: check-api-spec
         run: |
           chmod +x scripts/ci/api_spec_checker.py
-          python scripts/ci/api_spec_checker.py --verbose
+          uv run python scripts/ci/api_spec_checker.py --verbose
       
       - name: Create issue if changes detected
         if: failure()
