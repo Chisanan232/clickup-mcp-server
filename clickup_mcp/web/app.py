@@ -7,7 +7,7 @@ for exposing ClickUp functionality through a RESTful API.
 
 from typing import Dict, Any, Optional
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Body, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -93,7 +93,7 @@ def create_app() -> FastAPI:
         return {"tools": tools}
     
     @app.post("/mcp/execute/{tool_name}", response_class=JSONResponse)
-    async def execute_tool(tool_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_tool(tool_name: str, params: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
         """
         Execute an MCP tool with the provided parameters.
         
@@ -104,7 +104,16 @@ def create_app() -> FastAPI:
         Returns:
             JSON response with the result of the tool execution
         """
-        result = await mcp_server.execute(tool_name, **params)
+        # Handle both async and sync execute methods
+        execute_method = mcp_server.execute
+        
+        # Check if the execute method is a coroutine function
+        import inspect
+        if inspect.iscoroutinefunction(execute_method):
+            result = await execute_method(tool_name, **params)
+        else:
+            result = execute_method(tool_name, **params)
+            
         return {"result": result}
     
     return app
