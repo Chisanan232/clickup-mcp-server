@@ -49,10 +49,9 @@ repos:
     rev: v1.16.1
     hooks:
       - id: mypy
-        package: <your lib src dir>,test
-  #      exclude: ^test/unit_test.{1,64}.py
+        package: clickup_mcp,test
+        exclude: ^scripts/
         args:
-  #        - --strict
           - --ignore-missing-imports
           - --show-traceback
         additional_dependencies: [types-PyYAML>=6.0.12.9]
