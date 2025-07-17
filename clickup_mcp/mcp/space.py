@@ -18,8 +18,8 @@ mcp = FastMCP()
 
 @mcp.tool(
     name="get_space",
+    title="Get ClickUp Space",
     description="Get a ClickUp space by its ID.",
-    title="Get ClickUp Space"
 )
 async def get_space(api_token: str, space_id: str) -> Optional[dict]:
     """
