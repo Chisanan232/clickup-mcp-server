@@ -10,13 +10,14 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any, Dict, Generic, Optional, Type, TypeVar
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 import httpx
 from pydantic import BaseModel, Field
 
 from clickup_mcp.models.dto.base import BaseResponseDTO
 
+from .api.space import SpaceAPI
 from .exceptions import (
     AuthenticationError,
     ClickUpAPIError,
@@ -141,11 +142,10 @@ class ClickUpAPIClient:
     and provides common methods for API interactions.
     """
 
-    BASE_URL = "https://api.clickup.com/api/v2"
-
     def __init__(
         self,
         api_token: str,
+        base_url: str = "https://api.clickup.com/api/v2",
         timeout: float = 30.0,
         max_retries: int = 3,
         retry_delay: float = 1.0,
@@ -156,29 +156,41 @@ class ClickUpAPIClient:
 
         Args:
             api_token: ClickUp API token for authentication
+            base_url: Base URL for the ClickUp API
             timeout: Request timeout in seconds
             max_retries: Maximum number of retries for failed requests
-            retry_delay: Delay between retries in seconds
+            retry_delay: Initial delay between retries in seconds
             rate_limit_requests_per_minute: Rate limit for API requests
         """
         self.api_token = api_token
+        self.base_url = base_url
         self.timeout = timeout
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         self.rate_limit = rate_limit_requests_per_minute
 
-        # Rate limiting
-        self._request_times: list[float] = []
-        self._rate_limit_lock = asyncio.Lock()
+        # Calculate seconds between requests based on rate limit
+        self._seconds_per_request = 60.0 / rate_limit_requests_per_minute
 
-        # HTTP client configuration
+        # Track request times for rate limiting
+        self._request_times: List[float] = []
+
+        # Prepare headers
         self._headers = {
             "Authorization": api_token,
             "Content-Type": "application/json",
             "User-Agent": "ClickUp-MCP-Server/1.0",
         }
 
-        self._client = httpx.AsyncClient(base_url=self.BASE_URL, headers=self._headers, timeout=self.timeout)
+        # Create httpx client
+        self._client = httpx.AsyncClient(
+            base_url=base_url,
+            timeout=timeout,
+            headers=self._headers,
+        )
+
+        # Initialize API resource managers
+        self.space = SpaceAPI(self)
 
     async def __aenter__(self) -> "ClickUpAPIClient":
         """Async context manager entry."""
@@ -195,21 +207,20 @@ class ClickUpAPIClient:
 
     async def _enforce_rate_limit(self) -> None:
         """Enforce rate limiting based on requests per minute."""
-        async with self._rate_limit_lock:
-            now = asyncio.get_event_loop().time()
+        now = asyncio.get_event_loop().time()
 
-            # Remove requests older than 1 minute
-            self._request_times = [req_time for req_time in self._request_times if now - req_time < 60]
+        # Remove requests older than 1 minute
+        self._request_times = [req_time for req_time in self._request_times if now - req_time < 60]
 
-            # Check if we're at the rate limit
-            if len(self._request_times) >= self.rate_limit:
-                sleep_time = 60 - (now - self._request_times[0])
-                if sleep_time > 0:
-                    logger.warning(f"Rate limit reached. Sleeping for {sleep_time:.2f} seconds")
-                    await asyncio.sleep(sleep_time)
+        # Check if we're at the rate limit
+        if len(self._request_times) >= self.rate_limit:
+            sleep_time = 60 - (now - self._request_times[0])
+            if sleep_time > 0:
+                logger.warning(f"Rate limit reached. Sleeping for {sleep_time:.2f} seconds")
+                await asyncio.sleep(sleep_time)
 
-            # Add current request time
-            self._request_times.append(now)
+        # Add current request time
+        self._request_times.append(now)
 
     async def _make_request(
         self,
