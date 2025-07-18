@@ -66,25 +66,25 @@ jobs:
       codecov_flags: integration-test  # Required if 'upload-to-codecov' is true
       codecov_name: clickup_mcp  # Required if 'upload-to-codecov' is true
 
-#  e2e-test_codecov_finish:
-##    name: Organize and generate the testing report and upload it to Codecov
-#    if: ${{
-#        !contains(github.event.pull_request.labels.*.name, 'dependencies') &&
-#        (
-#            (contains(fromJSON('["pull_request","workflow_dispatch","schedule"]'), github.event_name) ||
-#            (github.event_name == 'push' && github.ref_name == 'master')
-#        )) &&
-#        inputs.run_e2e == true
-#      }}
-#    needs: build-and-test
-#    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_upload_test_cov_report.yaml@v7.3
-#    secrets:
-#      codecov_token: ${{ secrets.codecov_token }}
-#    with:
-#      test_type: e2e-test
-#      upload-to-codecov: true
-#      codecov_flags: e2e-test  # Required if 'upload-to-codecov' is true
-#      codecov_name: clickup_mcp  # Required if 'upload-to-codecov' is true
+  e2e-test_codecov_finish:
+#    name: Organize and generate the testing report and upload it to Codecov
+    if: ${{
+        !contains(github.event.pull_request.labels.*.name, 'dependencies') &&
+        (
+            (contains(fromJSON('["pull_request","workflow_dispatch","schedule"]'), github.event_name) ||
+            (github.event_name == 'push' && github.ref_name == 'master')
+        )) &&
+        inputs.run_e2e == true
+      }}
+    needs: build-and-test
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_upload_test_cov_report.yaml@v7.3
+    secrets:
+      codecov_token: ${{ secrets.codecov_token }}
+    with:
+      test_type: e2e-test
+      upload-to-codecov: true
+      codecov_flags: e2e-test  # Required if 'upload-to-codecov' is true
+      codecov_name: clickup_mcp  # Required if 'upload-to-codecov' is true
 
   contract-test_codecov_finish:
 #    name: Organize and generate the testing report and upload it to Codecov
