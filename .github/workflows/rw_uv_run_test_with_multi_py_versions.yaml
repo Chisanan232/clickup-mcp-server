@@ -39,7 +39,7 @@ on:
         default: './test'
       all_test_items_paths:
         description: "The target paths of test items under test."
-        required: true
+        required: false
         type: string
       install_dependency_with_group:
         description: "Install the dependency by UV configuration with dependency group setting. This parameter receive the dependency group naming. (multiple values allowed)"
