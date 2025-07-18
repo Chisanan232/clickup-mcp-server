@@ -7,9 +7,9 @@ that hosts the ClickUp MCP functionality.
 
 import argparse
 import logging
-from typing import Any, Dict, Optional, Union, cast
-
 import sys
+from typing import Dict, Optional, Union
+
 import uvicorn
 from fastapi import FastAPI
 from pydantic import ValidationError

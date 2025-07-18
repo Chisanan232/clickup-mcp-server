@@ -6,7 +6,6 @@ functionality in the entry.py module.
 """
 
 import logging
-from typing import Any, List, Optional
 from unittest.mock import MagicMock, call, patch
 
 import pytest

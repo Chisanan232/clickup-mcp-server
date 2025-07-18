@@ -12,7 +12,7 @@ import sys
 import threading
 import time
 from contextlib import closing
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import List
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -65,7 +65,17 @@ class TestEntryIntegration:
         mock_process.poll.return_value = None  # Process still running
 
         # Start server in a mocked process
-        cmd: List[str] = [sys.executable, "-m", "clickup_mcp", "--host", "127.0.0.1", "--port", str(port), "--log-level", "info"]
+        cmd: List[str] = [
+            sys.executable,
+            "-m",
+            "clickup_mcp",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(port),
+            "--log-level",
+            "info",
+        ]
 
         # Call the subprocess
         process: subprocess.Popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -165,6 +175,6 @@ class TestEntryIntegration:
         mock_popen.assert_called_once()
         args, kwargs = mock_popen.call_args
         assert "invalid_host" in args[0]
-        
+
         # Clean up
         process.terminate()

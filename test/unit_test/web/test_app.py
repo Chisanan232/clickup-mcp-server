@@ -4,7 +4,6 @@ Unit tests for FastAPI web server integration with MCP server.
 This module tests the functionality of mounting an MCP server on FastAPI.
 """
 
-from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
