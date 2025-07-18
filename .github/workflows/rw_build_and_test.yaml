@@ -14,62 +14,28 @@ on:
         required: false
 
 jobs:
-  prep_unit-test:
-#    name: Prepare all unit test items
-    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_get_tests.yaml@v7.3
-    with:
-      shell_arg: test/unit_test/
-
-  prep_integration-test:
-#    name: Prepare all integration test items
-    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_get_tests.yaml@v7.3
-    with:
-      shell_arg: test/integration_test/
-
-  prep_e2e-test:
-#    name: Prepare all end-to-end test items
-    if: ${{ inputs.run_e2e == true }}
-    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_get_tests.yaml@v7.3
-    with:
-      shell_arg: test/e2e_test/
-
-  prep_contract-test:
-#    name: Prepare all integration test items
-    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_get_tests.yaml@v7.3
-    with:
-      shell_arg: test/contract_test/
-
-  prep_script-test:
-#    name: Prepare all unit test items
-    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_get_tests.yaml@v7.3
-    with:
-      shell_arg: test/ci_script_test/
-
   run_unit-test:
 #    name: Run all unit test items
-    needs: prep_unit-test
     uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
     with:
       test_type: unit-test
-      all_test_items_paths: ${{needs.prep_unit-test.outputs.all_test_items}}
+      test_folder: './test/unit_test'
       install_dependency_with_group: 'dev'
 
   run_integration-test:
 #    name: Run all integration test items
-    needs: prep_integration-test
     uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
     with:
       test_type: integration-test
-      all_test_items_paths: ${{needs.prep_integration-test.outputs.all_test_items}}
+      test_folder: './test/integration_test'
       install_dependency_with_group: 'dev'
 
   run_e2e-test:
 #    name: Run all end-to-end test items
-    needs: prep_e2e-test
     uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
     with:
       test_type: e2e-test
-      all_test_items_paths: ${{needs.prep_e2e-test.outputs.all_test_items}}
+      test_folder: './test/e2e_test'
       install_dependency_with_group: 'dev'
       max-parallel: 1
     secrets:
@@ -77,20 +43,18 @@ jobs:
 
   run_contract-test:
 #    name: Run all contract test items
-    needs: prep_contract-test
     uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
     with:
       test_type: contract-test
-      all_test_items_paths: ${{needs.prep_contract-test.outputs.all_test_items}}
+      test_folder: './test/contract_test'
       install_dependency_with_group: 'dev'
 
   run_script-test:
 #    name: Run all contract test items
-    needs: prep_script-test
     uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
     with:
       test_type: ci-script-test
-      all_test_items_paths: ${{needs.prep_contract-test.outputs.all_test_items}}
+      test_folder: './test/ci_script_test'
       install_dependency_with_group: 'dev'
 
   unit-test_codecov:
