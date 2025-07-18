@@ -11,6 +11,7 @@ updates:
       - "dependencies"
     commit-message:
       prefix: ⬆
+
   # Python
   - package-ecosystem: "pip"
     directory: "/"
