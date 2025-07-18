@@ -4,6 +4,7 @@ Unit tests for FastAPI web server integration with MCP server.
 This module tests the functionality of mounting an MCP server on FastAPI.
 """
 
+from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -16,7 +17,7 @@ class TestWebServer:
     """Test suite for the FastAPI web server integration."""
 
     @pytest.fixture
-    def mock_mcp(self):
+    def mock_mcp(self) -> MagicMock:
         """Fixture to create a mock MCP server."""
         mock = MagicMock()
         # Set up synchronous method returns
@@ -29,26 +30,26 @@ class TestWebServer:
         return mock
 
     @pytest.fixture
-    def test_client(self, mock_mcp):
+    def test_client(self, mock_mcp: MagicMock) -> TestClient:
         """Fixture to create a FastAPI test client with mock MCP."""
         with patch("clickup_mcp.web_server.app.get_mcp_server", return_value=mock_mcp):
             app = create_app()
             return TestClient(app)
 
-    def test_root_endpoint(self, test_client):
+    def test_root_endpoint(self, test_client: TestClient) -> None:
         """Test the root endpoint returns proper status."""
         response = test_client.get("/")
         assert response.status_code == 200
         assert "status" in response.json()
         assert response.json()["status"] == "ok"
 
-    def test_docs_endpoint(self, test_client):
+    def test_docs_endpoint(self, test_client: TestClient) -> None:
         """Test that Swagger UI docs are available."""
         response = test_client.get("/docs")
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]
 
-    def test_mcp_resource_endpoint(self, test_client, mock_mcp):
+    def test_mcp_resource_endpoint(self, test_client: TestClient, mock_mcp: MagicMock) -> None:
         """Test accessing MCP resources through FastAPI."""
         response = test_client.get("/mcp/resources")
         assert response.status_code == 200
@@ -56,7 +57,7 @@ class TestWebServer:
         # Verify the MCP server was called to list resources
         mock_mcp.list_resources.assert_called_once()
 
-    def test_mcp_tools_endpoint(self, test_client, mock_mcp):
+    def test_mcp_tools_endpoint(self, test_client: TestClient, mock_mcp: MagicMock) -> None:
         """Test that the MCP tools endpoint returns the expected tools."""
         response = test_client.get("/mcp/tools")
         assert response.status_code == 200
@@ -67,7 +68,7 @@ class TestWebServer:
         # Verify the response contains the expected tools
         assert response.json() == {"tools": ["tool1", "tool2"]}
 
-    def test_execute_tool(self, test_client, mock_mcp):
+    def test_execute_tool(self, test_client: TestClient, mock_mcp: MagicMock) -> None:
         """Test executing an MCP tool through the API."""
         # Make the request
         response = test_client.post("/mcp/execute/test_tool", json={"param1": "value1", "param2": "value2"})

@@ -7,9 +7,11 @@ that hosts the ClickUp MCP functionality.
 
 import argparse
 import logging
-import sys
+from typing import Any, Dict, Optional, Union, cast
 
+import sys
 import uvicorn
+from fastapi import FastAPI
 from pydantic import ValidationError
 
 from clickup_mcp.models.cli import LogLevel, ServerConfig
@@ -33,11 +35,11 @@ def parse_args() -> ServerConfig:
 
     # Parse args into a dictionary
     args_namespace = parser.parse_args()
-    args_dict = vars(args_namespace)
+    args_dict: Dict[str, Union[str, int, bool]] = vars(args_namespace)
 
     try:
         # Convert to ServerConfig model
-        return ServerConfig(**args_dict)
+        return ServerConfig(**args_dict)  # type: ignore[arg-type]
     except ValidationError as e:
         print(f"Error in server configuration: {e}", file=sys.stderr)
         sys.exit(1)
@@ -50,7 +52,7 @@ def configure_logging(log_level: str) -> None:
     Args:
         log_level: The logging level to use
     """
-    numeric_level = getattr(logging, log_level.upper(), None)
+    numeric_level: Optional[int] = getattr(logging, log_level.upper(), None)
     if not isinstance(numeric_level, int):
         raise ValueError(f"Invalid log level: {log_level}")
 
@@ -78,7 +80,7 @@ def run_server(config: ServerConfig) -> None:
     uvicorn.run(app=app, host=config.host, port=config.port, log_level=config.log_level.lower(), reload=config.reload)
 
 
-def create_app_factory():
+def create_app_factory() -> FastAPI:
     """
     Create the FastAPI app for Uvicorn's use with reload.
 
