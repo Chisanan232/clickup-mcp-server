@@ -112,7 +112,7 @@ jobs:
       - name: Run ${{ inputs.test_type }} tests with pytest
         if: ${{ matrix.test-path == '' && inputs.test_type != '' }}
         working-directory: ${{ inputs.test_working_directory }}
-        run: uv run pytest ${{ inputs.test_folder }}/${{ inputs.test_type }}
+        run: uv run pytest ${{ inputs.test_folder }}
         continue-on-error: ${{ inputs.keep_run_if_test_fail }}
         env:
           SLACK_BOT_TOKEN: ${{ secrets.e2e_test_slack_bot_token }}
