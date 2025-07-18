@@ -20,18 +20,18 @@ jobs:
     with:
       shell_arg: test/unit_test/
 
-#  prep_integration-test:
-##    name: Prepare all integration test items
-#    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_get_tests.yaml@v7.3
-#    with:
-#      shell_arg: test/integration_test/
+  prep_integration-test:
+#    name: Prepare all integration test items
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_get_tests.yaml@v7.3
+    with:
+      shell_arg: test/integration_test/
 
-#  prep_e2e-test:
-##    name: Prepare all end-to-end test items
-#    if: ${{ inputs.run_e2e == true }}
-#    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_get_tests.yaml@v7.3
-#    with:
-#      shell_arg: test/e2e_test/
+  prep_e2e-test:
+#    name: Prepare all end-to-end test items
+    if: ${{ inputs.run_e2e == true }}
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_get_tests.yaml@v7.3
+    with:
+      shell_arg: test/e2e_test/
 
   prep_contract-test:
 #    name: Prepare all integration test items
@@ -54,26 +54,26 @@ jobs:
       all_test_items_paths: ${{needs.prep_unit-test.outputs.all_test_items}}
       install_dependency_with_group: 'dev'
 
-#  run_integration-test:
-##    name: Run all integration test items
-#    needs: prep_integration-test
-#    uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
-#    with:
-#      test_type: integration-test
-#      all_test_items_paths: ${{needs.prep_integration-test.outputs.all_test_items}}
-#      install_dependency_with_group: 'dev'
+  run_integration-test:
+#    name: Run all integration test items
+    needs: prep_integration-test
+    uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
+    with:
+      test_type: integration-test
+      all_test_items_paths: ${{needs.prep_integration-test.outputs.all_test_items}}
+      install_dependency_with_group: 'dev'
 
-#  run_e2e-test:
-##    name: Run all end-to-end test items
-#    needs: prep_e2e-test
-#    uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
-#    with:
-#      test_type: e2e-test
-#      all_test_items_paths: ${{needs.prep_e2e-test.outputs.all_test_items}}
-#      install_dependency_with_group: 'dev'
-#      max-parallel: 1
-#    secrets:
-#      e2e_test_slack_bot_token: ${{ secrets.e2e_test_slack_bot_token }}
+  run_e2e-test:
+#    name: Run all end-to-end test items
+    needs: prep_e2e-test
+    uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
+    with:
+      test_type: e2e-test
+      all_test_items_paths: ${{needs.prep_e2e-test.outputs.all_test_items}}
+      install_dependency_with_group: 'dev'
+      max-parallel: 1
+    secrets:
+      e2e_test_slack_bot_token: ${{ secrets.e2e_test_slack_bot_token }}
 
   run_contract-test:
 #    name: Run all contract test items
@@ -101,21 +101,21 @@ jobs:
     with:
       test_type: unit-test
 
-#  integration-test_codecov:
-##    name: For unit test, organize and generate the testing report and upload it to Codecov
-#    if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'|| (github.event_name == 'push' && github.ref_name == 'master') }}
-#    needs: run_integration-test
-#    uses: ./.github/workflows/rw_organize_test_cov_reports.yaml
-#    with:
-#      test_type: integration-test
+  integration-test_codecov:
+#    name: For unit test, organize and generate the testing report and upload it to Codecov
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'|| (github.event_name == 'push' && github.ref_name == 'master') }}
+    needs: run_integration-test
+    uses: ./.github/workflows/rw_organize_test_cov_reports.yaml
+    with:
+      test_type: integration-test
 
-#  e2e-test_codecov:
-##    name: For end-to-end test, organize and generate the testing report and upload it to Codecov
-#    if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'|| (github.event_name == 'push' && github.ref_name == 'master') }}
-#    needs: run_e2e-test
-#    uses: ./.github/workflows/rw_organize_test_cov_reports.yaml
-#    with:
-#      test_type: e2e-test
+  e2e-test_codecov:
+#    name: For end-to-end test, organize and generate the testing report and upload it to Codecov
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'|| (github.event_name == 'push' && github.ref_name == 'master') }}
+    needs: run_e2e-test
+    uses: ./.github/workflows/rw_organize_test_cov_reports.yaml
+    with:
+      test_type: e2e-test
 
   contract-test_codecov:
 #    name: For end-to-end test, organize and generate the testing report and upload it to Codecov
