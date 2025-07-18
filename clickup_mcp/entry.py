@@ -39,7 +39,7 @@ def parse_args() -> ServerConfig:
 
     try:
         # Convert to ServerConfig model
-        return ServerConfig(**args_dict)  # type: ignore[arg-type]
+        return ServerConfig(**args_dict)
     except ValidationError as e:
         print(f"Error in server configuration: {e}", file=sys.stderr)
         sys.exit(1)
