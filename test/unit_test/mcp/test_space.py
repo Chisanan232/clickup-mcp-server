@@ -13,7 +13,7 @@ from clickup_mcp.models.domain.space import ClickUpSpace
 
 
 @pytest.mark.asyncio
-@patch("clickup_mcp.mcp.space.create_clickup_client")
+@patch("clickup_mcp.mcp_server.space.create_clickup_client")
 async def test_get_space_success(mock_create_client):
     """Test getting a space successfully."""
     # Test data
@@ -47,7 +47,7 @@ async def test_get_space_success(mock_create_client):
 
 
 @pytest.mark.asyncio
-@patch("clickup_mcp.mcp.space.create_clickup_client")
+@patch("clickup_mcp.mcp_server.space.create_clickup_client")
 async def test_get_space_not_found(mock_create_client):
     """Test getting a non-existent space."""
     # Test data
@@ -95,7 +95,7 @@ async def test_get_space_with_empty_space_id():
 
 
 @pytest.mark.asyncio
-@patch("clickup_mcp.mcp.space.create_clickup_client")
+@patch("clickup_mcp.mcp_server.space.create_clickup_client")
 async def test_get_space_with_error(mock_create_client):
     """Test getting a space with an API error."""
     # Test data
