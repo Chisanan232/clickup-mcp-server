@@ -32,6 +32,11 @@ on:
         required: false
         type: string
         default: './'
+      test_folder:
+        description: "The folder path for test code."
+        required: false
+        type: string
+        default: './test'
       all_test_items_paths:
         description: "The target paths of test items under test."
         required: true
@@ -94,9 +99,20 @@ jobs:
         run: |
           curl -s https://slack.com/api/auth.test -H "Authorization: Bearer $SLACK_BOT_TOKEN"
 
-      - name: Run tests with pytest
+      - name: Run the specific tests with pytest
+        if: ${{ matrix.test-path != '' && inputs.test_type == '' }}
         working-directory: ${{ inputs.test_working_directory }}
         run: uv run pytest ${{ matrix.test-path }}
+        continue-on-error: ${{ inputs.keep_run_if_test_fail }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.e2e_test_slack_bot_token }}
+          SLACK_TEST_CHANNEL: ${{ vars.SLACK_TEST_CHANNEL }}
+          SLACK_TEST_CHANNEL_ID: ${{ vars.SLACK_TEST_CHANNEL_ID }}
+
+      - name: Run ${{ inputs.test_type }} tests with pytest
+        if: ${{ matrix.test-path == '' && inputs.test_type != '' }}
+        working-directory: ${{ inputs.test_working_directory }}
+        run: uv run pytest ${{ inputs.test_folder }}/${{ inputs.test_type }}
         continue-on-error: ${{ inputs.keep_run_if_test_fail }}
         env:
           SLACK_BOT_TOKEN: ${{ secrets.e2e_test_slack_bot_token }}
