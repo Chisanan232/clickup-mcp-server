@@ -391,32 +391,41 @@ def load_api_token_from_env(env_var_name: str = "CLICKUP_API_TOKEN", env_file: s
     return os.environ.get(env_var_name)
 
 
-# Convenience function to create a configured client
-def create_clickup_client(api_token: Optional[str] = None, **kwargs) -> ClickUpAPIClient:
+def get_api_token() -> str:
     """
-    Create a ClickUp API client with the provided token and optional configuration.
+    Get the ClickUp API token from environment variables.
     
-    If api_token is not provided, it will attempt to load it from the .env file
-    or from the CLICKUP_API_TOKEN environment variable.
-
-    Args:
-        api_token: ClickUp API token (optional if set in env vars or .env file)
-        **kwargs: Additional configuration options for the client
-
+    The .env file should be loaded at the entry point of the application.
+    
     Returns:
-        Configured ClickUpAPIClient instance
+        The API token if found
         
     Raises:
-        ValueError: If API token is not provided and not found in environment
+        ValueError: If API token cannot be found
     """
-    # If api_token is not provided, try to load from environment
-    if api_token is None:
-        api_token = load_api_token_from_env()
-        if not api_token:
-            raise ValueError(
-                "ClickUp API token not found. Please provide it as an argument, "
-                "set the CLICKUP_API_TOKEN environment variable, "
-                "or add it to your .env file."
-            )
+    # Get token directly from environment (env file should be loaded at entry point)
+    token = os.environ.get("CLICKUP_API_TOKEN")
     
+    # Raise error if we don't have a token
+    if not token:
+        raise ValueError(
+            "ClickUp API token not found. Please set the CLICKUP_API_TOKEN environment variable "
+            "in your .env file and ensure it is loaded."
+        )
+    
+    return token
+
+
+# Convenience function to create a configured client
+def create_clickup_client(api_token: str, **kwargs) -> ClickUpAPIClient:
+    """
+    Create a ClickUp API client with the provided token and configuration.
+    
+    Args:
+        api_token: ClickUp API token (required)
+        **kwargs: Additional configuration options for the client
+        
+    Returns:
+        Configured ClickUpAPIClient instance
+    """
     return ClickUpAPIClient(api_token=api_token, **kwargs)
