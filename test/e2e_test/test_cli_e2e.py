@@ -48,7 +48,7 @@ def wait_for_port(port: int, timeout: int = 15) -> bool:
     return False
 
 
-def run_command(cmd: list, cwd: str = PROJECT_ROOT, timeout: int = 5) -> subprocess.CompletedProcess:
+def run_command(cmd: list, cwd: str | Path = PROJECT_ROOT, timeout: int = 5) -> subprocess.CompletedProcess:
     """Run a command and return the completed process."""
     return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout)
 
