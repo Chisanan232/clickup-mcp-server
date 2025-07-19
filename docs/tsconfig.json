@@ -1,0 +1,30 @@
+{
+  // This file is not used in compilation. It is here just for a nice editor experience.
+  "extends": "@docusaurus/tsconfig",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2023",
+    "lib": ["ESNext", "DOM"],
+    "moduleResolution": "node",
+    "jsx": "react-jsx",
+    "paths": {
+      "@site/*": ["./*"],
+      "@components/*": ["./src/components/*"],
+      "@theme/*": ["./src/theme/*"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "docusaurus.config.ts",
+    "sidebars*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist"
+  ]
+}
