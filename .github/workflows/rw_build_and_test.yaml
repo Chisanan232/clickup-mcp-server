@@ -9,7 +9,7 @@ on:
         required: false
         default: false
     secrets:
-      e2e_test_slack_bot_token:
+      e2e_test_api_token:
         description: "Set the Slack bot token for end-to-end test."
         required: false
 
@@ -39,7 +39,7 @@ jobs:
       install_dependency_with_group: 'dev'
       max-parallel: 1
     secrets:
-      e2e_test_slack_bot_token: ${{ secrets.e2e_test_slack_bot_token }}
+      e2e_test_api_token: ${{ secrets.e2e_test_api_token }}
 
   run_contract-test:
 #    name: Run all contract test items

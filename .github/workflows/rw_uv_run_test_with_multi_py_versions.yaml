@@ -57,8 +57,8 @@ on:
         required: false
         default: 0
     secrets:
-      e2e_test_slack_bot_token:
-        description: "Set the Slack bot token for end-to-end test."
+      e2e_test_api_token:
+        description: "Set the API token for end-to-end test if it needs."
         required: false
 
 jobs:
@@ -97,7 +97,7 @@ jobs:
 
       - name: Verify the ClickUp API token
         run: |
-          curl -s https://api.clickup.com/api/v2/team -H "Authorization: $CLICKUP_API_TOKEN"
+          curl -s https://api.clickup.com/api/v2/team -H "Authorization: ${{ secrets.e2e_test_api_token }}"
 
       - name: Run the specific tests with pytest
         if: ${{ matrix.test-path != '' && inputs.test_type == '' }}
@@ -105,7 +105,7 @@ jobs:
         run: uv run pytest ${{ matrix.test-path }}
         continue-on-error: ${{ inputs.keep_run_if_test_fail }}
         env:
-          CLICKUP_API_TOKEN: ${{ secrets.e2e_test_slack_bot_token }}
+          E2E_TEST_API_TOKEN: ${{ secrets.e2e_test_api_token }}
 
       - name: Run ${{ inputs.test_type }} tests with pytest
         if: ${{ matrix.test-path == '' && inputs.test_type != '' }}
@@ -113,7 +113,7 @@ jobs:
         run: uv run pytest ${{ inputs.test_folder }}
         continue-on-error: ${{ inputs.keep_run_if_test_fail }}
         env:
-          CLICKUP_API_TOKEN: ${{ secrets.e2e_test_slack_bot_token }}
+          E2E_TEST_API_TOKEN: ${{ secrets.e2e_test_api_token }}
 
       - name: Rename the code coverage result file
         working-directory: ${{ inputs.test_working_directory }}
