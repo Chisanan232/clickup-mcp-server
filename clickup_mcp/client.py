@@ -10,9 +10,12 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
+from pathlib import Path
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 import httpx
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from clickup_mcp.models.dto.base import BaseResponseDTO
@@ -368,16 +371,52 @@ class ClickUpAPIClient:
         return await self._make_request("PATCH", endpoint, params=params, data=data, headers=headers)
 
 
+def load_api_token_from_env(env_var_name: str = "CLICKUP_API_TOKEN", env_file: str = ".env") -> Optional[str]:
+    """
+    Load the ClickUp API token from environment variables or .env file.
+    
+    Args:
+        env_var_name: Environment variable name for the API token
+        env_file: Path to the .env file
+        
+    Returns:
+        API token if found, None otherwise
+    """
+    # First check if .env file exists and load it
+    env_path = Path(env_file)
+    if env_path.exists():
+        load_dotenv(env_path)
+    
+    # Get token from environment
+    return os.environ.get(env_var_name)
+
+
 # Convenience function to create a configured client
-def create_clickup_client(api_token: str, **kwargs) -> ClickUpAPIClient:
+def create_clickup_client(api_token: Optional[str] = None, **kwargs) -> ClickUpAPIClient:
     """
     Create a ClickUp API client with the provided token and optional configuration.
+    
+    If api_token is not provided, it will attempt to load it from the .env file
+    or from the CLICKUP_API_TOKEN environment variable.
 
     Args:
-        api_token: ClickUp API token
+        api_token: ClickUp API token (optional if set in env vars or .env file)
         **kwargs: Additional configuration options for the client
 
     Returns:
         Configured ClickUpAPIClient instance
+        
+    Raises:
+        ValueError: If API token is not provided and not found in environment
     """
+    # If api_token is not provided, try to load from environment
+    if api_token is None:
+        api_token = load_api_token_from_env()
+        if not api_token:
+            raise ValueError(
+                "ClickUp API token not found. Please provide it as an argument, "
+                "set the CLICKUP_API_TOKEN environment variable, "
+                "or add it to your .env file."
+            )
+    
     return ClickUpAPIClient(api_token=api_token, **kwargs)
