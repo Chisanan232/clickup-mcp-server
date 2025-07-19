@@ -95,9 +95,9 @@ jobs:
         run: |
           uv pip install --group=${{ inputs.install_dependency_with_group }}
 
-      - name: Verify the Slack bot token
+      - name: Verify the ClickUp API token
         run: |
-          curl -s https://slack.com/api/auth.test -H "Authorization: Bearer $SLACK_BOT_TOKEN"
+          curl -s https://api.clickup.com/api/v2/team -H "Authorization: $CLICKUP_API_TOKEN"
 
       - name: Run the specific tests with pytest
         if: ${{ matrix.test-path != '' && inputs.test_type == '' }}
@@ -105,9 +105,7 @@ jobs:
         run: uv run pytest ${{ matrix.test-path }}
         continue-on-error: ${{ inputs.keep_run_if_test_fail }}
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.e2e_test_slack_bot_token }}
-          SLACK_TEST_CHANNEL: ${{ vars.SLACK_TEST_CHANNEL }}
-          SLACK_TEST_CHANNEL_ID: ${{ vars.SLACK_TEST_CHANNEL_ID }}
+          CLICKUP_API_TOKEN: ${{ secrets.e2e_test_slack_bot_token }}
 
       - name: Run ${{ inputs.test_type }} tests with pytest
         if: ${{ matrix.test-path == '' && inputs.test_type != '' }}
@@ -115,9 +113,7 @@ jobs:
         run: uv run pytest ${{ inputs.test_folder }}
         continue-on-error: ${{ inputs.keep_run_if_test_fail }}
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.e2e_test_slack_bot_token }}
-          SLACK_TEST_CHANNEL: ${{ vars.SLACK_TEST_CHANNEL }}
-          SLACK_TEST_CHANNEL_ID: ${{ vars.SLACK_TEST_CHANNEL_ID }}
+          CLICKUP_API_TOKEN: ${{ secrets.e2e_test_slack_bot_token }}
 
       - name: Rename the code coverage result file
         working-directory: ${{ inputs.test_working_directory }}
