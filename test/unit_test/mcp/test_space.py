@@ -82,14 +82,14 @@ async def test_get_space_with_missing_token(mock_get_token):
     """Test getting a space when token is missing from environment."""
     # Set up mock to raise ValueError when called
     mock_get_token.side_effect = ValueError("ClickUp API token not found")
-    
+
     # Test data
     space_id = "test_space_id"
 
     # Call the function and expect the ValueError to be propagated
     with pytest.raises(ValueError, match="ClickUp API token not found"):
         await get_space(space_id)
-    
+
     # Verify the mock was called
     mock_get_token.assert_called_once()
 

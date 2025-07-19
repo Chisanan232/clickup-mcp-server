@@ -1,12 +1,10 @@
-from typing import Optional
-
 from mcp.server import FastMCP
 
 
 def create_mcp_server() -> FastMCP:
     """
     Create and configure the MCP server with the specified environment file.
-    
+
     Returns:
         Configured FastMCP server instance
     """

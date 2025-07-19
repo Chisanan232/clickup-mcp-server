@@ -7,7 +7,6 @@ that hosts the ClickUp MCP functionality.
 
 import argparse
 import logging
-import os
 import sys
 from typing import Dict, Optional, Union
 
@@ -33,7 +32,9 @@ def parse_args() -> ServerConfig:
         "--log-level", type=str, default="info", choices=[level.value for level in LogLevel], help="Logging level"
     )
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload for development")
-    parser.add_argument("--env", type=str, dest="env_file", default=".env", help="Path to the .env file for environment variables")
+    parser.add_argument(
+        "--env", type=str, dest="env_file", default=".env", help="Path to the .env file for environment variables"
+    )
 
     # Parse args into a dictionary
     args_namespace = parser.parse_args()
@@ -73,8 +74,9 @@ def run_server(config: ServerConfig) -> None:
     # Load environment variables from .env file
     if config.env_file:
         from pathlib import Path
+
         from dotenv import load_dotenv
-        
+
         env_path = Path(config.env_file)
         if env_path.exists():
             logging.info(f"Loading environment variables from {config.env_file}")

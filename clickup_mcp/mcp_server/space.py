@@ -32,7 +32,7 @@ async def get_space(space_id: str = "") -> Optional[dict]:
     # Validate inputs
     if not space_id:
         raise ValueError("Space ID is required")
-        
+
     # Get API token from environment (which was loaded at application startup)
     token = get_api_token()
 
