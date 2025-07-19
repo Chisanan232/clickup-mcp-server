@@ -7,12 +7,9 @@ These functions follow the FastMCP pattern for easy integration into MCP servers
 
 from typing import Optional
 
-from mcp.server import FastMCP
-
 from clickup_mcp.client import create_clickup_client
 
-# Define the MCP server using FastMCP
-mcp = FastMCP()
+from .app import mcp
 
 
 @mcp.tool(name="get_space", title="Get ClickUp Space", description="Get a ClickUp space by its ID.")

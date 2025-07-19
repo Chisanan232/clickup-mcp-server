@@ -40,6 +40,9 @@ dependencies = [
 Homepage = "https://github.com/Chisanan232/clickup-mcp-server"
 Repository = "https://github.com/Chisanan232/clickup-mcp-server"
 
+[project.scripts]
+clickup-mcp-server = "clickup_mcp.entry:main"
+
 [dependency-groups]
 dev = [
     "pytest>=8.1.1,<9",
