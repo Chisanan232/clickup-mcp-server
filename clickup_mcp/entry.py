@@ -7,6 +7,7 @@ that hosts the ClickUp MCP functionality.
 
 import argparse
 import logging
+import os
 import sys
 from typing import Dict, Optional, Union
 
@@ -32,6 +33,7 @@ def parse_args() -> ServerConfig:
         "--log-level", type=str, default="info", choices=[level.value for level in LogLevel], help="Logging level"
     )
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload for development")
+    parser.add_argument("--env", type=str, dest="env_file", default=".env", help="Path to the .env file for environment variables")
 
     # Parse args into a dictionary
     args_namespace = parser.parse_args()
@@ -75,6 +77,7 @@ def run_server(config: ServerConfig) -> None:
     logging.info(f"Starting server on {config.host}:{config.port}")
     logging.info(f"Log level: {config.log_level}")
     logging.info(f"Auto-reload: {'enabled' if config.reload else 'disabled'}")
+    logging.info(f"Environment file: {config.env_file}")
 
     # Run the server
     uvicorn.run(app=app, host=config.host, port=config.port, log_level=config.log_level.lower(), reload=config.reload)
@@ -87,6 +90,8 @@ def create_app_factory() -> FastAPI:
     Returns:
         The FastAPI application
     """
+    # Note: When using reload, this function is called by Uvicorn, so we can't access CLI args
+    # For environment file, the default .env will be used
     return create_app()
 
 
