@@ -70,6 +70,18 @@ def run_server(config: ServerConfig) -> None:
     """
     configure_logging(config.log_level)
 
+    # Load environment variables from .env file
+    if config.env_file:
+        from pathlib import Path
+        from dotenv import load_dotenv
+        
+        env_path = Path(config.env_file)
+        if env_path.exists():
+            logging.info(f"Loading environment variables from {config.env_file}")
+            load_dotenv(env_path)
+        else:
+            logging.warning(f"Environment file {config.env_file} not found")
+
     # Create the FastAPI app
     app = create_app()
 
