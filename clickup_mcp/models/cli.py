@@ -31,6 +31,7 @@ class ServerConfig(BaseModel):
     port: int = Field(default=8000, description="Port to bind the server to", ge=1, le=65535)
     log_level: LogLevel = Field(default=LogLevel.INFO, description="Logging level")
     reload: bool = Field(default=False, description="Enable auto-reload for development")
+    env_file: str = Field(default=".env", description="Path to the .env file for environment variables")
 
     @validator("port")
     def validate_port_range(cls, v: int) -> int:

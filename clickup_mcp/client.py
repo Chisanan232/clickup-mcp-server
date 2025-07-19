@@ -10,9 +10,12 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
+from pathlib import Path
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 import httpx
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from clickup_mcp.models.dto.base import BaseResponseDTO
@@ -368,13 +371,58 @@ class ClickUpAPIClient:
         return await self._make_request("PATCH", endpoint, params=params, data=data, headers=headers)
 
 
+def load_api_token_from_env(env_var_name: str = "CLICKUP_API_TOKEN", env_file: str = ".env") -> Optional[str]:
+    """
+    Load the ClickUp API token from environment variables or .env file.
+
+    Args:
+        env_var_name: Environment variable name for the API token
+        env_file: Path to the .env file
+
+    Returns:
+        API token if found, None otherwise
+    """
+    # First check if .env file exists and load it
+    env_path = Path(env_file)
+    if env_path.exists():
+        load_dotenv(env_path)
+
+    # Get token from environment
+    return os.environ.get(env_var_name)
+
+
+def get_api_token() -> str:
+    """
+    Get the ClickUp API token from environment variables.
+
+    The .env file should be loaded at the entry point of the application.
+
+    Returns:
+        The API token if found
+
+    Raises:
+        ValueError: If API token cannot be found
+    """
+    # Get token directly from environment (env file should be loaded at entry point)
+    token = os.environ.get("CLICKUP_API_TOKEN")
+
+    # Raise error if we don't have a token
+    if not token:
+        raise ValueError(
+            "ClickUp API token not found. Please set the CLICKUP_API_TOKEN environment variable "
+            "in your .env file and ensure it is loaded."
+        )
+
+    return token
+
+
 # Convenience function to create a configured client
 def create_clickup_client(api_token: str, **kwargs) -> ClickUpAPIClient:
     """
-    Create a ClickUp API client with the provided token and optional configuration.
+    Create a ClickUp API client with the provided token and configuration.
 
     Args:
-        api_token: ClickUp API token
+        api_token: ClickUp API token (required)
         **kwargs: Additional configuration options for the client
 
     Returns:
