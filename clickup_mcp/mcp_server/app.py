@@ -7,9 +7,6 @@ def create_mcp_server() -> FastMCP:
     """
     Create and configure the MCP server with the specified environment file.
     
-    Args:
-        env_file: Path to the .env file for environment variables
-        
     Returns:
         Configured FastMCP server instance
     """
