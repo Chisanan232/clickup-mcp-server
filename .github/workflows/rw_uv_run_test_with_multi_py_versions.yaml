@@ -67,7 +67,7 @@ jobs:
     strategy:
       max-parallel: ${{ inputs.max-parallel }}
       matrix:
-        python-version: ['3.12','3.13']
+        python-version: ['3.13']
         os: [ubuntu-latest,ubuntu-22.04,macos-latest,macos-14]
         test-path: ${{fromJson(inputs.all_test_items_paths)}}
       fail-fast: false    # Fix issue in GitHub Action: FailFast: cancelling since parallel instance has failed

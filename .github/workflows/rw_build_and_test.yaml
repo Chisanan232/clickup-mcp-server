@@ -111,7 +111,7 @@ jobs:
         inputs.run_e2e == false
       }}
 #    needs: [run_unit-test, run_integration-test, run_contract-test]
-    needs: [run_unit-test]
+    needs: [run_unit-test, run_integration-test, run_contract-test]
     uses: ./.github/workflows/rw_organize_test_cov_reports.yaml
     with:
       test_type: all-test
@@ -126,7 +126,7 @@ jobs:
         inputs.run_e2e == true
       }}
 #    needs: [run_unit-test, run_integration-test, run_contract-test, run_e2e-test]
-    needs: [run_unit-test]
+    needs: [run_unit-test, run_integration-test, run_contract-test, run_e2e-test]
     uses: ./.github/workflows/rw_organize_test_cov_reports.yaml
     with:
       test_type: all-test
