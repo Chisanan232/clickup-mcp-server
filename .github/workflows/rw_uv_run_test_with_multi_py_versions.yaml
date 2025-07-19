@@ -41,6 +41,7 @@ on:
         description: "The target paths of test items under test."
         required: false
         type: string
+        default: '["./test"]'
       install_dependency_with_group:
         description: "Install the dependency by UV configuration with dependency group setting. This parameter receive the dependency group naming. (multiple values allowed)"
         type: string
@@ -100,7 +101,7 @@ jobs:
           curl -s https://api.clickup.com/api/v2/team -H "Authorization: ${{ secrets.e2e_test_api_token }}"
 
       - name: Run the specific tests with pytest
-        if: ${{ matrix.test-path != '' && inputs.test_type == '' }}
+        if: ${{ inputs.test_type == '' }}
         working-directory: ${{ inputs.test_working_directory }}
         run: uv run pytest ${{ matrix.test-path }}
         continue-on-error: ${{ inputs.keep_run_if_test_fail }}
@@ -108,7 +109,7 @@ jobs:
           E2E_TEST_API_TOKEN: ${{ secrets.e2e_test_api_token }}
 
       - name: Run ${{ inputs.test_type }} tests with pytest
-        if: ${{ matrix.test-path == '' && inputs.test_type != '' }}
+        if: ${{ inputs.test_type != '' }}
         working-directory: ${{ inputs.test_working_directory }}
         run: uv run pytest ${{ inputs.test_folder }}
         continue-on-error: ${{ inputs.keep_run_if_test_fail }}
