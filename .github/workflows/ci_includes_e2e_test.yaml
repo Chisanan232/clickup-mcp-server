@@ -14,6 +14,6 @@ jobs:
     with:
       run_e2e: true
     secrets:
-      e2e_test_api_token: ${{ secrets.SLACK_BOT_TOKEN }}
+      e2e_test_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
       codecov_token: ${{ secrets.CODECOV_TOKEN }}
       sonar_token: ${{ secrets.SONAR_TOKEN }}
