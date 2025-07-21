@@ -11,11 +11,9 @@ import asyncio
 import json
 import logging
 import os
-from pathlib import Path
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 import httpx
-from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from clickup_mcp.models.dto.base import BaseResponseDTO
