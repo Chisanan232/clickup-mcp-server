@@ -9,11 +9,29 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from clickup_mcp.web_server.app import create_app
+from clickup_mcp.web_server.app import create_app, WebServerFactory
 
 
 class TestWebServer:
     """Test suite for the FastAPI web server integration."""
+
+    @pytest.fixture(autouse=True)
+    def reset_web_server(self):
+        """Reset the global web server instance before and after each test."""
+        # Import here to avoid circular imports
+        import clickup_mcp.web_server.app
+        
+        # Store original instance
+        self.original_web_instance = clickup_mcp.web_server.app._WEB_SERVER_INSTANCE
+        
+        # Reset before test
+        clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = None
+        
+        # Run the test
+        yield
+        
+        # Restore original after test to avoid affecting other tests
+        clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = self.original_web_instance
 
     @pytest.fixture
     def mock_mcp(self) -> MagicMock:
@@ -31,7 +49,13 @@ class TestWebServer:
     @pytest.fixture
     def test_client(self, mock_mcp: MagicMock) -> TestClient:
         """Fixture to create a FastAPI test client with mock MCP."""
+        # First create a new web server instance
+        WebServerFactory.create()
+        
+        # Then patch MCPServerFactory.get to return our mock
         with patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp):
+            # Important: We need to create the app after patching MCPServerFactory
+            # so that the route handlers capture our mock in their closures
             app = create_app()
             return TestClient(app)
 
