@@ -7,7 +7,6 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
-
 from clickup_mcp.entry import parse_args, run_server
 from clickup_mcp.models.cli import ServerConfig
 
