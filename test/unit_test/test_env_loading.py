@@ -12,46 +12,11 @@ import pytest
 from clickup_mcp.client import (
     create_clickup_client,
     get_api_token,
-    load_api_token_from_env,
 )
 
 
 class TestEnvLoading:
     """Tests for environment variable loading functions."""
-
-    def test_load_api_token_from_env_with_default_env_file(self, monkeypatch):
-        """Test loading API token from default .env file."""
-        # Create a temporary .env file
-        with tempfile.NamedTemporaryFile(prefix=".env", delete=False) as temp_file:
-            temp_file.write(b"CLICKUP_API_TOKEN=test_token_from_env_file")
-
-        try:
-            # Ensure environment is clean
-            monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
-
-            # Test loading from the temp file
-            token = load_api_token_from_env(env_file=temp_file.name)
-            assert token == "test_token_from_env_file"
-        finally:
-            # Clean up
-            Path(temp_file.name).unlink(missing_ok=True)
-
-    def test_load_api_token_from_env_with_custom_env_file(self, monkeypatch):
-        """Test loading API token from custom .env file."""
-        # Create a temporary custom .env file
-        with tempfile.NamedTemporaryFile(suffix=".env", delete=False) as temp_file:
-            temp_file.write(b"CLICKUP_API_TOKEN=test_token_from_custom_env_file")
-
-        try:
-            # Ensure environment is clean
-            monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
-
-            # Test loading from the custom file directly
-            token = load_api_token_from_env(env_file=temp_file.name)
-            assert token == "test_token_from_custom_env_file"
-        finally:
-            # Clean up
-            Path(temp_file.name).unlink(missing_ok=True)
 
     def test_get_api_token(self, monkeypatch):
         """Test getting API token from environment."""

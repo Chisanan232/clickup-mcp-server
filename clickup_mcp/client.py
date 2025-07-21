@@ -371,26 +371,6 @@ class ClickUpAPIClient:
         return await self._make_request("PATCH", endpoint, params=params, data=data, headers=headers)
 
 
-def load_api_token_from_env(env_var_name: str = "CLICKUP_API_TOKEN", env_file: str = ".env") -> Optional[str]:
-    """
-    Load the ClickUp API token from environment variables or .env file.
-
-    Args:
-        env_var_name: Environment variable name for the API token
-        env_file: Path to the .env file
-
-    Returns:
-        API token if found, None otherwise
-    """
-    # First check if .env file exists and load it
-    env_path = Path(env_file)
-    if env_path.exists():
-        load_dotenv(env_path)
-
-    # Get token from environment
-    return os.environ.get(env_var_name)
-
-
 def get_api_token() -> str:
     """
     Get the ClickUp API token from environment variables.
