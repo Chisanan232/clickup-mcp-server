@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional
 from fastapi import Body, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from mcp.server import FastMCP
 
 from clickup_mcp.mcp_server.app import MCPServerFactory
 
@@ -61,6 +62,17 @@ class WebServerFactory:
 web = WebServerFactory.create()
 
 
+def mount_service(mcp_server: FastMCP) -> None:
+    """
+    Mount a FastAPI service into the web server.
+
+    Args:
+        mcp_server: The FastAPI service to mount.
+    """
+    web.mount("/mcp/see", mcp_server.sse_app())
+    web.mount("/mcp/streaming-http", mcp_server.streamable_http_app())
+
+
 def create_app() -> FastAPI:
     """
     Create and configure the FastAPI application with MCP server mounted.
@@ -83,6 +95,7 @@ def create_app() -> FastAPI:
 
     # Mount MCP routes
     mcp_server = MCPServerFactory.get()
+    mount_service(mcp_server)
 
     # Add MCP endpoints
     @app.get("/mcp/resources", response_class=JSONResponse)
