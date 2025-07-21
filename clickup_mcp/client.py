@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 import httpx
@@ -368,13 +369,38 @@ class ClickUpAPIClient:
         return await self._make_request("PATCH", endpoint, params=params, data=data, headers=headers)
 
 
+def get_api_token() -> str:
+    """
+    Get the ClickUp API token from environment variables.
+
+    The .env file should be loaded at the entry point of the application.
+
+    Returns:
+        The API token if found
+
+    Raises:
+        ValueError: If API token cannot be found
+    """
+    # Get token directly from environment (env file should be loaded at entry point)
+    token = os.environ.get("CLICKUP_API_TOKEN")
+
+    # Raise error if we don't have a token
+    if not token:
+        raise ValueError(
+            "ClickUp API token not found. Please set the CLICKUP_API_TOKEN environment variable "
+            "in your .env file and ensure it is loaded."
+        )
+
+    return token
+
+
 # Convenience function to create a configured client
 def create_clickup_client(api_token: str, **kwargs) -> ClickUpAPIClient:
     """
-    Create a ClickUp API client with the provided token and optional configuration.
+    Create a ClickUp API client with the provided token and configuration.
 
     Args:
-        api_token: ClickUp API token
+        api_token: ClickUp API token (required)
         **kwargs: Additional configuration options for the client
 
     Returns:

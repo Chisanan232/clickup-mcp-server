@@ -7,13 +7,13 @@ These functions follow the FastMCP pattern for easy integration into MCP servers
 
 from typing import Optional
 
-from clickup_mcp.client import create_clickup_client
+from clickup_mcp.client import create_clickup_client, get_api_token
 
 from .app import mcp
 
 
 @mcp.tool(name="get_space", title="Get ClickUp Space", description="Get a ClickUp space by its ID.")
-async def get_space(api_token: str, space_id: str) -> Optional[dict]:
+async def get_space(space_id: str = "") -> Optional[dict]:
     """
     Get a ClickUp space by its ID.
 
@@ -21,23 +21,23 @@ async def get_space(api_token: str, space_id: str) -> Optional[dict]:
     the space domain model if found, or None if the space does not exist.
 
     Args:
-        api_token: The ClickUp API token to use for authentication.
         space_id: The ID of the space to retrieve.
 
     Returns:
         The ClickUpSpace domain model as a dictionary if found, or None if the space does not exist.
 
     Raises:
-        ValueError: If the API token is not provided or if the space ID is empty.
+        ValueError: If the API token is not found or if the space ID is empty.
     """
     # Validate inputs
-    if not api_token:
-        raise ValueError("API token is required")
     if not space_id:
         raise ValueError("Space ID is required")
 
-    # Create client
-    client = create_clickup_client(api_token)
+    # Get API token from environment (which was loaded at application startup)
+    token = get_api_token()
+
+    # Create client with the token
+    client = create_clickup_client(api_token=token)
 
     try:
         # Get the space using the client
