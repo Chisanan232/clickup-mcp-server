@@ -31,7 +31,7 @@ class TestWebServer:
     @pytest.fixture
     def test_client(self, mock_mcp: MagicMock) -> TestClient:
         """Fixture to create a FastAPI test client with mock MCP."""
-        with patch("clickup_mcp.web_server.app.get_mcp_server", return_value=mock_mcp):
+        with patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp):
             app = create_app()
             return TestClient(app)
 
