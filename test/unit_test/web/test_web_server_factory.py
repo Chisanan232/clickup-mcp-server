@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 from fastapi import FastAPI
-from clickup_mcp.web_server.app import WebServerFactory
+from clickup_mcp.web_server.app import WebServerFactory, mount_service
 
 
 class TestWebServerFactory:
@@ -118,3 +118,35 @@ class TestWebServerFactory:
         # instance is what's returned by get()
         clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = web_instance
         assert WebServerFactory.get() is web_instance
+
+    def test_mount_service(self):
+        """Test that mount_service correctly mounts MCP server apps."""
+        # Create a web server instance
+        with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
+            mock_web_instance = MagicMock(spec=FastAPI)
+            mock_fastapi.return_value = mock_web_instance
+            
+            # Create the web server instance
+            WebServerFactory.create()
+            
+            # Create a mock MCP server
+            mock_mcp_server = MagicMock()
+            mock_sse_app = MagicMock()
+            mock_streaming_app = MagicMock()
+            mock_mcp_server.sse_app.return_value = mock_sse_app
+            mock_mcp_server.streamable_http_app.return_value = mock_streaming_app
+            
+            # Patch the global web variable to use our mock_web_instance
+            with patch("clickup_mcp.web_server.app.web", mock_web_instance):
+                # Call mount_service
+                from clickup_mcp.web_server.app import mount_service
+                mount_service(mock_mcp_server)
+                
+                # Verify the MCP server apps were mounted correctly
+                mock_mcp_server.sse_app.assert_called_once()
+                mock_mcp_server.streamable_http_app.assert_called_once()
+                
+                # Check that the mount method was called with the correct paths and apps
+                assert mock_web_instance.mount.call_count == 2
+                mock_web_instance.mount.assert_any_call("/mcp/see", mock_sse_app)
+                mock_web_instance.mount.assert_any_call("/mcp/streaming-http", mock_streaming_app)
