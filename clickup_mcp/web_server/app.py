@@ -12,17 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from mcp.server import FastMCP
 
-from clickup_mcp.mcp_server.app import create_mcp_server
-
-
-def get_mcp_server() -> FastMCP:
-    """
-    Get the MCP server instance with the specified environment file.
-
-    Returns:
-        The configured MCP server instance
-    """
-    return create_mcp_server()
+from clickup_mcp.mcp_server.app import MCPServerFactory
 
 
 def create_app() -> FastAPI:
@@ -60,7 +50,7 @@ def create_app() -> FastAPI:
         return {"status": "ok", "server": "ClickUp MCP Server"}
 
     # Mount MCP routes
-    mcp_server = get_mcp_server()
+    mcp_server = MCPServerFactory.get()
 
     # Add MCP endpoints
     @app.get("/mcp/resources", response_class=JSONResponse)
