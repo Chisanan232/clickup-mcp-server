@@ -55,6 +55,11 @@ dev = [
     "httpx>=0.28.1,<0.29", # For FastAPI testing
     "pytest-mock>=3.14.1,<4",
 ]
+pre-commit-ci = [
+    "pre-commit>=4.2.0,<5",
+    "pylint>=3.3.7,<4",
+    "mypy>=1.16.1,<2",
+]
 
 [tool.hatch.build.targets.sdist]
 include = ["clickup_mcp/"]
