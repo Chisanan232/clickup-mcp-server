@@ -61,6 +61,12 @@ pre-commit-ci = [
     "mypy>=1.16.1,<2",
 ]
 
+[tool.uv]
+default-groups = [
+    "dev",
+    "pre-commit-ci",
+]
+
 [tool.hatch.build.targets.sdist]
 include = ["clickup_mcp/"]
 
