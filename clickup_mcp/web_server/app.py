@@ -13,12 +13,13 @@ from fastapi.responses import JSONResponse
 from mcp.server import FastMCP
 
 from clickup_mcp.mcp_server.app import MCPServerFactory
+from clickup_mcp._base import BaseServerFactory
 
 
 _WEB_SERVER_INSTANCE: Optional[FastAPI] = None
 
 
-class WebServerFactory:
+class WebServerFactory(BaseServerFactory):
     @staticmethod
     def create() -> FastAPI:
         """
