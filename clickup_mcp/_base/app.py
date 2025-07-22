@@ -1,11 +1,11 @@
 from abc import ABCMeta, abstractmethod
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 # Define a type variable for the server instance type
 T = TypeVar("T")
 
 
-class BaseServerFactory(Generic[T], metaclass=ABCMeta):
+class BaseServerFactory[T](metaclass=ABCMeta):
     @staticmethod
     @abstractmethod
     def create() -> T:
