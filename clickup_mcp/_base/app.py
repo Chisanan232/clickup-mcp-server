@@ -1,26 +1,29 @@
 from abc import ABCMeta, abstractmethod
-from typing import Any
+from typing import Any, Generic, TypeVar
+
+# Define a type variable for the server instance type
+T = TypeVar('T')
 
 
-class BaseServerFactory(metaclass=ABCMeta):
+class BaseServerFactory(Generic[T], metaclass=ABCMeta):
     @staticmethod
     @abstractmethod
-    def create() -> Any:
+    def create() -> T:
         """
         Create and configure the MCP server with the specified environment file.
 
         Returns:
-            Configured FastMCP server instance
+            Configured server instance
         """
         pass
 
     @staticmethod
     @abstractmethod
-    def get() -> Any:
+    def get() -> T:
         """
-        Get the MCP server instance
+        Get the server instance
 
         Returns:
-            Configured FastMCP server instance
+            Configured server instance
         """
         pass

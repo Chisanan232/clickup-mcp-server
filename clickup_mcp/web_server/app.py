@@ -19,7 +19,7 @@ from clickup_mcp._base import BaseServerFactory
 _WEB_SERVER_INSTANCE: Optional[FastAPI] = None
 
 
-class WebServerFactory(BaseServerFactory):
+class WebServerFactory(BaseServerFactory[FastAPI]):
     @staticmethod
     def create() -> FastAPI:
         """
@@ -51,7 +51,7 @@ class WebServerFactory(BaseServerFactory):
     @staticmethod
     def get() -> FastAPI:
         """
-        Get the MCP server instance
+        Get the web server instance
 
         Returns:
             Configured FastAPI server instance

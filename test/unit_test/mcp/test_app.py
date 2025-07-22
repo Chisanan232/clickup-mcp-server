@@ -88,7 +88,7 @@ class TestMCPServerFactory:
         with pytest.raises(AssertionError) as excinfo:
             MCPServerFactory.get()
         
-        assert "must be created MCP server first" in str(excinfo.value)
+        assert "must be created FastMCP first" in str(excinfo.value)
     
     def test_backward_compatibility_global_mcp(self):
         """Test that the global mcp instance is created for backward compatibility."""

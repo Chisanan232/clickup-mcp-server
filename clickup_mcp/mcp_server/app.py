@@ -8,7 +8,7 @@ from clickup_mcp._base import BaseServerFactory
 _MCP_SERVER_INSTANCE: Optional[FastMCP] = None
 
 
-class MCPServerFactory(BaseServerFactory):
+class MCPServerFactory(BaseServerFactory[FastMCP]):
     @staticmethod
     def create() -> FastMCP:
         """
@@ -19,7 +19,7 @@ class MCPServerFactory(BaseServerFactory):
         """
         # Create a new FastMCP instance
         global _MCP_SERVER_INSTANCE
-        assert _MCP_SERVER_INSTANCE is None, "It is not allowed to create more than one instance of MCP server."
+        assert _MCP_SERVER_INSTANCE is None, "It is not allowed to create more than one instance of FastMCP."
         _MCP_SERVER_INSTANCE = FastMCP()
         return _MCP_SERVER_INSTANCE
 
@@ -31,7 +31,7 @@ class MCPServerFactory(BaseServerFactory):
         Returns:
             Configured FastMCP server instance
         """
-        assert _MCP_SERVER_INSTANCE is not None, "It must be created MCP server first."
+        assert _MCP_SERVER_INSTANCE is not None, "It must be created FastMCP first."
         return _MCP_SERVER_INSTANCE
 
 
