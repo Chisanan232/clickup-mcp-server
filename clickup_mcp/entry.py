@@ -14,7 +14,7 @@ import uvicorn
 from fastapi import FastAPI
 from pydantic import ValidationError
 
-from clickup_mcp.models.cli import LogLevel, ServerConfig
+from clickup_mcp.models.cli import LogLevel, ServerConfig, MCPServerType
 from clickup_mcp.web_server.app import create_app
 
 
@@ -34,6 +34,13 @@ def parse_args() -> ServerConfig:
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload for development")
     parser.add_argument(
         "--env", type=str, dest="env_file", default=".env", help="Path to the .env file for environment variables"
+    )
+    parser.add_argument(
+        "--server-type", 
+        type=str, 
+        default="sse", 
+        choices=[server_type.value for server_type in MCPServerType],
+        help="Type of MCP server to run (sse or http-streaming)"
     )
 
     # Parse args into a dictionary
@@ -84,14 +91,15 @@ def run_server(config: ServerConfig) -> None:
         else:
             logging.warning(f"Environment file {config.env_file} not found")
 
-    # Create the FastAPI app
-    app = create_app()
+    # Create the FastAPI app with server configuration
+    app = create_app(config)
 
     # Log server startup information
     logging.info(f"Starting server on {config.host}:{config.port}")
     logging.info(f"Log level: {config.log_level}")
     logging.info(f"Auto-reload: {'enabled' if config.reload else 'disabled'}")
     logging.info(f"Environment file: {config.env_file}")
+    logging.info(f"MCP server type: {config.mcp_server_type}")
 
     # Run the server
     uvicorn.run(app=app, host=config.host, port=config.port, log_level=config.log_level.lower(), reload=config.reload)
