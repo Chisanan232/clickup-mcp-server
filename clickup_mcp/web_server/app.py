@@ -14,6 +14,7 @@ from mcp.server import FastMCP
 
 from clickup_mcp._base import BaseServerFactory
 from clickup_mcp.mcp_server.app import MCPServerFactory
+from clickup_mcp.models.cli import ServerConfig, MCPServerType
 
 _WEB_SERVER_INSTANCE: Optional[FastAPI] = None
 
@@ -62,25 +63,34 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
 web = WebServerFactory.create()
 
 
-def mount_service(mcp_server: FastMCP) -> None:
+def mount_service(mcp_server: FastMCP, server_type: str = MCPServerType.SSE) -> None:
     """
     Mount a FastAPI service into the web server.
 
     Args:
         mcp_server: The FastAPI service to mount.
+        server_type: The type of server to mount (sse or http-streaming).
     """
-    web.mount("/mcp/see", mcp_server.sse_app())
-    web.mount("/mcp/streaming-http", mcp_server.streamable_http_app())
+    if server_type == MCPServerType.SSE:
+        web.mount("/mcp/sse", mcp_server.sse_app())
+    elif server_type == MCPServerType.HTTP_STREAMING:
+        web.mount("/mcp/streaming-http", mcp_server.streamable_http_app())
 
 
-def create_app() -> FastAPI:
+def create_app(server_config: Optional[ServerConfig] = None) -> FastAPI:
     """
     Create and configure the FastAPI application with MCP server mounted.
 
+    Args:
+        server_config: Optional server configuration.
+        
     Returns:
         Configured FastAPI application
     """
     app = WebServerFactory.get()
+    
+    # Use default server type if no configuration is provided
+    server_type = server_config.mcp_server_type if server_config else MCPServerType.SSE
 
     # Root endpoint for health checks
     @app.get("/", response_class=JSONResponse)
@@ -95,7 +105,7 @@ def create_app() -> FastAPI:
 
     # Mount MCP routes
     mcp_server = MCPServerFactory.get()
-    mount_service(mcp_server)
+    mount_service(mcp_server, server_type)
 
     # Add MCP endpoints
     @app.get("/mcp/resources", response_class=JSONResponse)
