@@ -10,6 +10,7 @@ import pytest
 from fastapi import FastAPI
 
 from clickup_mcp.web_server.app import WebServerFactory
+from clickup_mcp.models.cli import MCPServerType
 
 
 class TestWebServerFactory:
@@ -121,8 +122,12 @@ class TestWebServerFactory:
         clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = web_instance
         assert WebServerFactory.get() is web_instance
 
-    def test_mount_service(self):
-        """Test that mount_service correctly mounts MCP server apps."""
+    @pytest.mark.parametrize("server_type,expected_path,should_call_sse,should_call_http", [
+        (MCPServerType.SSE, "/mcp/sse", True, False),
+        (MCPServerType.HTTP_STREAMING, "/mcp/streaming-http", False, True),
+    ])
+    def test_mount_service_parameterized(self, server_type, expected_path, should_call_sse, should_call_http):
+        """Test that mount_service correctly mounts MCP server apps based on server type."""
         # Create a web server instance
         with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
             mock_web_instance = MagicMock(spec=FastAPI)
@@ -141,15 +146,57 @@ class TestWebServerFactory:
             # Patch the global web variable to use our mock_web_instance
             with patch("clickup_mcp.web_server.app.web", mock_web_instance):
                 # Call mount_service
-                from clickup_mcp.web_server.app import mount_service, MCPServerType
+                from clickup_mcp.web_server.app import mount_service
 
-                # Test with the default SSE server type
-                mount_service(mock_mcp_server)
+                # Test with the specified server type
+                mount_service(mock_mcp_server, server_type)
 
-                # Verify the MCP server apps were mounted correctly
-                mock_mcp_server.sse_app.assert_called_once()
-                mock_mcp_server.streamable_http_app.assert_not_called()  # Should not be called with SSE type
+                # Verify the correct MCP server app was called
+                if should_call_sse:
+                    mock_mcp_server.sse_app.assert_called_once()
+                else:
+                    mock_mcp_server.sse_app.assert_not_called()
+                
+                if should_call_http:
+                    mock_mcp_server.streamable_http_app.assert_called_once()
+                else:
+                    mock_mcp_server.streamable_http_app.assert_not_called()
 
-                # Check that the mount method was called with the correct paths and apps
-                assert mock_web_instance.mount.call_count == 1  # Only SSE app should be mounted
-                mock_web_instance.mount.assert_called_once_with("/mcp/sse", mock_sse_app)
+                # Check that the mount method was called with the correct path and app
+                assert mock_web_instance.mount.call_count == 1
+                if should_call_sse:
+                    mock_web_instance.mount.assert_called_once_with(expected_path, mock_sse_app)
+                elif should_call_http:
+                    mock_web_instance.mount.assert_called_once_with(expected_path, mock_streaming_app)
+
+    @pytest.mark.parametrize("invalid_server_type", [
+        "invalid_type", 
+        123,
+        None
+    ])
+    def test_mount_service_invalid_type_parameterized(self, invalid_server_type):
+        """Test that mount_service raises ValueError with invalid server types."""
+        # Create a web server instance
+        with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
+            mock_web_instance = MagicMock(spec=FastAPI)
+            mock_fastapi.return_value = mock_web_instance
+
+            # Create the web server instance
+            WebServerFactory.create()
+
+            # Create a mock MCP server
+            mock_mcp_server = MagicMock()
+            
+            # Patch the global web variable to use our mock_web_instance
+            with patch("clickup_mcp.web_server.app.web", mock_web_instance):
+                # Import mount_service
+                from clickup_mcp.web_server.app import mount_service
+                
+                # Verify that ValueError is raised
+                with pytest.raises(ValueError, match=f"Unknown server type: {invalid_server_type}"):
+                    mount_service(mock_mcp_server, invalid_server_type)
+                
+                # Verify no mount calls were made
+                mock_web_instance.mount.assert_not_called()
+                mock_mcp_server.sse_app.assert_not_called()
+                mock_mcp_server.streamable_http_app.assert_not_called()
