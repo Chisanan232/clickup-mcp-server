@@ -4,7 +4,6 @@ from mcp.server import FastMCP
 
 from clickup_mcp._base import BaseServerFactory
 
-
 _MCP_SERVER_INSTANCE: Optional[FastMCP] = None
 
 

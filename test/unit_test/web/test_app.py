@@ -4,13 +4,13 @@ Unit tests for FastAPI web server integration with MCP server.
 This module tests the functionality of mounting an MCP server on FastAPI.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch, call
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from clickup_mcp.web_server.app import create_app, WebServerFactory
+from clickup_mcp.web_server.app import WebServerFactory, create_app
 
 
 class TestWebServer:
@@ -21,16 +21,16 @@ class TestWebServer:
         """Reset the global web server instance before and after each test."""
         # Import here to avoid circular imports
         import clickup_mcp.web_server.app
-        
+
         # Store original instance
         self.original_web_instance = clickup_mcp.web_server.app._WEB_SERVER_INSTANCE
-        
+
         # Reset before test
         clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = None
-        
+
         # Run the test
         yield
-        
+
         # Restore original after test to avoid affecting other tests
         clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = self.original_web_instance
 
@@ -44,7 +44,7 @@ class TestWebServer:
 
         # Set up execute method (potentially async)
         mock.execute = AsyncMock(return_value={"success": True, "data": "result"})
-        
+
         # Set up SSE and streaming HTTP apps
         mock_sse_app = MagicMock()
         mock_streamable_app = MagicMock()
@@ -58,7 +58,7 @@ class TestWebServer:
         """Fixture to create a FastAPI test client with mock MCP."""
         # First create a new web server instance
         WebServerFactory.create()
-        
+
         # Then patch MCPServerFactory.get to return our mock
         with patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp):
             # Important: We need to create the app after patching MCPServerFactory
@@ -109,25 +109,25 @@ class TestWebServer:
 
         # Verify the tool was executed with correct parameters
         mock_mcp.execute.assert_awaited_once_with("test_tool", param1="value1", param2="value2")
-        
+
     def test_mount_service_integration(self, mock_mcp: MagicMock) -> None:
         """Test that mount_service is called during app initialization and mounts services correctly."""
         # First create a web server instance
         WebServerFactory.create()
-        
+
         # Patch the mount_service function to verify it's called
         with patch("clickup_mcp.web_server.app.mount_service") as mock_mount_service:
             # Create a web app (which should call mount_service)
             with patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp):
                 create_app()
-            
+
             # Verify mount_service was called with the mock MCP server
             mock_mount_service.assert_called_once_with(mock_mcp)
-    
+
     def test_mounted_apps_are_accessible(self) -> None:
         """
         Test that the mounted apps are correctly accessible through the web server.
-        This is an integration test that verifies the mount_service function 
+        This is an integration test that verifies the mount_service function
         correctly adds the MCP server's SSE and streamable HTTP apps.
         """
         # Create mock MCP server and its apps
@@ -136,22 +136,22 @@ class TestWebServer:
         mock_streaming = MagicMock()
         mock_mcp.sse_app.return_value = mock_sse
         mock_mcp.streamable_http_app.return_value = mock_streaming
-        
+
         # Create a mock web instance
         mock_web = MagicMock(spec=FastAPI)
-        
+
         # Patch both the web global and the WebServerFactory.get() method
         with patch("clickup_mcp.web_server.app.web", mock_web):
             # Import mount_service within the patch context
             from clickup_mcp.web_server.app import mount_service
-            
+
             # Call mount_service directly
             mount_service(mock_mcp)
-            
+
             # Verify the MCP server apps were created
             mock_mcp.sse_app.assert_called_once()
             mock_mcp.streamable_http_app.assert_called_once()
-            
+
             # Verify the web instance mounted the apps correctly
             assert mock_web.mount.call_count == 2
             mock_web.mount.assert_any_call("/mcp/see", mock_sse)

@@ -12,9 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from mcp.server import FastMCP
 
-from clickup_mcp.mcp_server.app import MCPServerFactory
 from clickup_mcp._base import BaseServerFactory
-
+from clickup_mcp.mcp_server.app import MCPServerFactory
 
 _WEB_SERVER_INSTANCE: Optional[FastAPI] = None
 

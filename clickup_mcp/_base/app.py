@@ -1,8 +1,8 @@
 from abc import ABCMeta, abstractmethod
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 # Define a type variable for the server instance type
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class BaseServerFactory(Generic[T], metaclass=ABCMeta):
@@ -15,7 +15,6 @@ class BaseServerFactory(Generic[T], metaclass=ABCMeta):
         Returns:
             Configured server instance
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -26,4 +25,3 @@ class BaseServerFactory(Generic[T], metaclass=ABCMeta):
         Returns:
             Configured server instance
         """
-        pass
