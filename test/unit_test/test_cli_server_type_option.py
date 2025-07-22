@@ -57,7 +57,7 @@ class TestCliServerTypeOption:
         mock_mcp_server.sse_app.assert_called_once()
         mock_mcp_server.streamable_http_app.assert_not_called()
         assert mock_web.mount.call_count == 1
-        mock_web.mount.assert_called_with("/mcp/sse", mock_mcp_server.sse_app.return_value)
+        mock_web.mount.assert_called_with("/mcp", mock_mcp_server.sse_app.return_value)
 
     def test_mount_service_http_streaming_only(self):
         """Test that only HTTP_STREAMING endpoints are mounted when server_type is HTTP_STREAMING."""
@@ -73,7 +73,7 @@ class TestCliServerTypeOption:
         mock_mcp_server.sse_app.assert_not_called()
         mock_mcp_server.streamable_http_app.assert_called_once()
         assert mock_web.mount.call_count == 1
-        mock_web.mount.assert_called_with("/mcp/streaming-http", mock_mcp_server.streamable_http_app.return_value)
+        mock_web.mount.assert_called_with("/mcp", mock_mcp_server.streamable_http_app.return_value)
 
     @patch("clickup_mcp.mcp_server.app.MCPServerFactory.get")
     def test_create_app_with_sse_server_type(self, mock_mcp_factory):

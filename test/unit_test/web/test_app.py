@@ -138,10 +138,10 @@ class TestWebServer:
         mock_mcp.streamable_http_app.return_value = mock_streaming
 
         # Create a mock web instance
-        mock_web = MagicMock(spec=FastAPI)
+        mock_web_instance = MagicMock(spec=FastAPI)
 
         # Patch both the web global and the WebServerFactory.get() method
-        with patch("clickup_mcp.web_server.app.web", mock_web):
+        with patch("clickup_mcp.web_server.app.web", mock_web_instance):
             # Import mount_service within the patch context
             from clickup_mcp.web_server.app import mount_service
 
@@ -154,5 +154,5 @@ class TestWebServer:
             mock_mcp.streamable_http_app.assert_not_called()  # Should not be called for SSE type
 
             # Verify the web instance mounted the apps correctly
-            assert mock_web.mount.call_count == 1  # Only SSE app should be mounted
-            mock_web.mount.assert_any_call("/mcp/sse", mock_sse)
+            assert mock_web_instance.mount.call_count == 1  # Only SSE app should be mounted
+            mock_web_instance.mount.assert_any_call("/mcp", mock_sse)

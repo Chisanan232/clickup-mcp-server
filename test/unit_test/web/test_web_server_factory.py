@@ -123,8 +123,8 @@ class TestWebServerFactory:
         assert WebServerFactory.get() is web_instance
 
     @pytest.mark.parametrize("server_type,expected_path,should_call_sse,should_call_http", [
-        (MCPServerType.SSE, "/mcp/sse", True, False),
-        (MCPServerType.HTTP_STREAMING, "/mcp/streaming-http", False, True),
+        (MCPServerType.SSE, "/mcp", True, False),
+        (MCPServerType.HTTP_STREAMING, "/mcp", False, True),
     ])
     def test_mount_service_parameterized(self, server_type, expected_path, should_call_sse, should_call_http):
         """Test that mount_service correctly mounts MCP server apps based on server type."""
