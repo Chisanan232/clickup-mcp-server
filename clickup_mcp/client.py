@@ -437,18 +437,3 @@ class ClickUpAPIClientFactory(BaseServerFactory[ClickUpAPIClient]):
         """
         assert _CLICKUP_API_CLIENT is not None, "It must be created FastMCP first."
         return _CLICKUP_API_CLIENT
-
-
-# Convenience function to create a configured client
-def create_clickup_client(api_token: str, **kwargs) -> ClickUpAPIClient:
-    """
-    Create a ClickUp API client with the provided token and configuration.
-
-    Args:
-        api_token: ClickUp API token (required)
-        **kwargs: Additional configuration options for the client
-
-    Returns:
-        Configured ClickUpAPIClient instance
-    """
-    return ClickUpAPIClient(api_token=api_token, **kwargs)

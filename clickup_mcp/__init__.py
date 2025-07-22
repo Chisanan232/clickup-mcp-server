@@ -36,7 +36,6 @@ __all__ = [
     "ClickUpAPIClient",
     "APIResponse",
     # Factory functions
-    "create_clickup_client",
     # Exceptions
     "ClickUpError",
     "ClickUpAPIError",

@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 from mcp.server import FastMCP
 
 from clickup_mcp._base import BaseServerFactory
+from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
 from clickup_mcp.mcp_server.app import MCPServerFactory
 from clickup_mcp.models.cli import ServerConfig, MCPServerType
 
@@ -106,8 +107,11 @@ def create_app(server_config: Optional[ServerConfig] = None) -> FastAPI:
         """
         return {"status": "ok", "server": "ClickUp MCP Server"}
 
-    # Mount MCP routes
+    # Get API token from environment (which was loaded at application startup)
+    # Create client with the token
+    ClickUpAPIClientFactory.create(api_token=get_api_token())
     mcp_server = MCPServerFactory.get()
+    # Mount MCP routes
     mount_service(mcp_server, server_type)
 
     # Add MCP endpoints
