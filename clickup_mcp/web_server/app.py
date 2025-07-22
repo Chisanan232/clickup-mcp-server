@@ -73,9 +73,9 @@ def mount_service(mcp_server: FastMCP, server_type: str = MCPServerType.SSE) -> 
     """
     match server_type:
         case MCPServerType.SSE:
-            web.mount("/mcp/sse", mcp_server.sse_app())
+            web.mount("/mcp", mcp_server.sse_app())
         case MCPServerType.HTTP_STREAMING:
-            web.mount("/mcp/streaming-http", mcp_server.streamable_http_app())
+            web.mount("/mcp", mcp_server.streamable_http_app())
         case _:
             raise ValueError(f"Unknown server type: {server_type}")
 
