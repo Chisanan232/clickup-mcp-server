@@ -248,51 +248,51 @@ class TestMCPServerMounting:
         assert any(r.path == "/mcp/see" for r in mount_routes), "SSE app not mounted with fixed function"
         assert any(r.path == "/mcp/streaming-http" for r in mount_routes), "Streaming HTTP app not mounted with fixed function"
         
-    def test_suggestion_for_mount_service_fix(self):
-        """
-        Based on test results, provide a suggested fix for the mount_service function.
-        """
-        # Import the module to directly inspect the function
-        from clickup_mcp.web_server.app import mount_service
-        
-        # Log the current function source code
-        logger.debug(f"Current mount_service function: {inspect.getsource(mount_service)}")
-        
-        # Log the suggested fix based on async/non-async methods
-        logger.debug("""
-        Suggested fix for mount_service:
-        
-        def mount_service(mcp_server: FastMCP) -> None:
-            \"\"\"
-            Mount a FastAPI service into the web server.
-            
-            Args:
-                mcp_server: The FastAPI service to mount.
-            \"\"\"
-            # Check if methods are async
-            is_sse_async = inspect.iscoroutinefunction(mcp_server.sse_app)
-            is_stream_async = inspect.iscoroutinefunction(mcp_server.streamable_http_app)
-            
-            # Handle SSE app mounting
-            if is_sse_async:
-                # Async method needs to be awaited
-                import asyncio
-                sse_app = asyncio.run(mcp_server.sse_app())
-                web.mount("/mcp/see", sse_app)
-            else:
-                # Sync method can be called directly
-                web.mount("/mcp/see", mcp_server.sse_app())
-                
-            # Handle streaming HTTP app mounting
-            if is_stream_async:
-                # Async method needs to be awaited
-                import asyncio
-                streaming_app = asyncio.run(mcp_server.streamable_http_app())
-                web.mount("/mcp/streaming-http", streaming_app)
-            else:
-                # Sync method can be called directly
-                web.mount("/mcp/streaming-http", mcp_server.streamable_http_app())
-        """)
+    # def test_suggestion_for_mount_service_fix(self):
+    #     """
+    #     Based on test results, provide a suggested fix for the mount_service function.
+    #     """
+    #     # Import the module to directly inspect the function
+    #     from clickup_mcp.web_server.app import mount_service
+    #
+    #     # Log the current function source code
+    #     logger.debug(f"Current mount_service function: {inspect.getsource(mount_service)}")
+    #
+    #     # Log the suggested fix based on async/non-async methods
+    #     logger.debug("""
+    #     Suggested fix for mount_service:
+    #
+    #     def mount_service(mcp_server: FastMCP) -> None:
+    #         \"\"\"
+    #         Mount a FastAPI service into the web server.
+    #
+    #         Args:
+    #             mcp_server: The FastAPI service to mount.
+    #         \"\"\"
+    #         # Check if methods are async
+    #         is_sse_async = inspect.iscoroutinefunction(mcp_server.sse_app)
+    #         is_stream_async = inspect.iscoroutinefunction(mcp_server.streamable_http_app)
+    #
+    #         # Handle SSE app mounting
+    #         if is_sse_async:
+    #             # Async method needs to be awaited
+    #             import asyncio
+    #             sse_app = asyncio.run(mcp_server.sse_app())
+    #             web.mount("/mcp/see", sse_app)
+    #         else:
+    #             # Sync method can be called directly
+    #             web.mount("/mcp/see", mcp_server.sse_app())
+    #
+    #         # Handle streaming HTTP app mounting
+    #         if is_stream_async:
+    #             # Async method needs to be awaited
+    #             import asyncio
+    #             streaming_app = asyncio.run(mcp_server.streamable_http_app())
+    #             web.mount("/mcp/streaming-http", streaming_app)
+    #         else:
+    #             # Sync method can be called directly
+    #             web.mount("/mcp/streaming-http", mcp_server.streamable_http_app())
+    #     """)
         
     def test_create_app_wrapper(self, mock_clickup_client):
         """
