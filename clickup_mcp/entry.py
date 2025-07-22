@@ -105,18 +105,6 @@ def run_server(config: ServerConfig) -> None:
     uvicorn.run(app=app, host=config.host, port=config.port, log_level=config.log_level.lower(), reload=config.reload)
 
 
-def create_app_factory() -> FastAPI:
-    """
-    Create the FastAPI app for Uvicorn's use with reload.
-
-    Returns:
-        The FastAPI application
-    """
-    # Note: When using reload, this function is called by Uvicorn, so we can't access CLI args
-    # For environment file, the default .env will be used
-    return create_app()
-
-
 def main() -> None:
     """
     Main entry point for the CLI.

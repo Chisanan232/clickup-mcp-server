@@ -19,7 +19,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from clickup_mcp.entry import create_app_factory, run_server
+from clickup_mcp.entry import run_server
 from clickup_mcp.models.cli import LogLevel, ServerConfig
 
 
@@ -33,21 +33,6 @@ def find_free_port() -> int:
 
 class TestEntryIntegration:
     """Integration test suite for the entry module."""
-
-    def test_create_app_factory(self) -> None:
-        """Test that the app factory creates a valid FastAPI application."""
-        app: FastAPI = create_app_factory()
-        client: TestClient = TestClient(app)
-
-        # Test that the root endpoint works
-        response = client.get("/")
-        assert response.status_code == 200
-        assert "status" in response.json()
-
-        # Test that the docs endpoint works
-        response = client.get("/docs")
-        assert response.status_code == 200
-        assert "swagger" in response.text.lower()
 
     @pytest.mark.slow
     @patch("subprocess.Popen")
