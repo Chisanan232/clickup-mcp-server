@@ -39,6 +39,7 @@ def parse_args() -> ServerConfig:
         "--server-type", 
         type=str, 
         default="sse", 
+        dest="mcp_server_type",
         choices=[server_type.value for server_type in MCPServerType],
         help="Type of MCP server to run (sse or http-streaming)"
     )
