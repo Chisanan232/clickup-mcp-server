@@ -1,8 +1,4 @@
 from abc import ABCMeta, abstractmethod
-from typing import TypeVar
-
-# Define a type variable for the server instance type
-T = TypeVar("T")
 
 
 class BaseServerFactory[T](metaclass=ABCMeta):
