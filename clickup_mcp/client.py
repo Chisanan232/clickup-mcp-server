@@ -17,6 +17,7 @@ import httpx
 from pydantic import BaseModel, Field
 
 from clickup_mcp.models.dto.base import BaseResponseDTO
+from ._base import BaseServerFactory
 
 from .api.space import SpaceAPI
 from .exceptions import (
@@ -392,6 +393,50 @@ def get_api_token() -> str:
         )
 
     return token
+
+
+_CLICKUP_API_CLIENT: Optional[ClickUpAPIClient] = None
+
+
+class ClickUpAPIClientFactory(BaseServerFactory[ClickUpAPIClient]):
+    @staticmethod
+    def create(
+            api_token: str,
+            base_url: str = "https://api.clickup.com/api/v2",
+            timeout: float = 30.0,
+            max_retries: int = 3,
+            retry_delay: float = 1.0,
+            rate_limit_requests_per_minute: int = 100,
+    ) -> ClickUpAPIClient:
+        """
+        Create and configure the MCP server with the specified environment file.
+
+        Returns:
+            Configured FastMCP server instance
+        """
+        # Create a new FastMCP instance
+        global _CLICKUP_API_CLIENT
+        assert _CLICKUP_API_CLIENT is None, "It is not allowed to create more than one instance of FastMCP."
+        _CLICKUP_API_CLIENT = ClickUpAPIClient(
+            api_token=api_token,
+            base_url=base_url,
+            timeout=timeout,
+            max_retries=max_retries,
+            retry_delay=retry_delay,
+            rate_limit_requests_per_minute=rate_limit_requests_per_minute
+        )
+        return _CLICKUP_API_CLIENT
+
+    @staticmethod
+    def get() -> ClickUpAPIClient:
+        """
+        Get the MCP server instance
+
+        Returns:
+            Configured FastMCP server instance
+        """
+        assert _CLICKUP_API_CLIENT is not None, "It must be created FastMCP first."
+        return _CLICKUP_API_CLIENT
 
 
 # Convenience function to create a configured client
