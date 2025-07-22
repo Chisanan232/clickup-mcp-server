@@ -148,9 +148,10 @@ class TestMCPServerMounting:
                         if hasattr(r, "path"):
                             logger.debug(f"  {r.path} -> {r.app}")
 
-                    # Verify MCP routes were added
-                    assert any(r.path == "/mcp/see" for r in mount_routes), "SSE app not mounted"
-                    assert any(r.path == "/mcp/streaming-http" for r in mount_routes), "Streaming HTTP app not mounted"
+                    # Verify MCP routes were added - only SSE should be mounted with the default server type
+                    assert any(r.path == "/mcp/sse" for r in mount_routes), "SSE app not mounted"
+                    # HTTP streaming should not be mounted since we're using the default SSE server type
+                    assert not any(r.path == "/mcp/streaming-http" for r in mount_routes), "Streaming HTTP app should not be mounted with SSE type"
 
     def test_fix_mount_service(self):
         """
@@ -211,10 +212,10 @@ class TestMCPServerMounting:
                 logger.debug("sse_app is async - need to run in event loop")
                 # Need to handle async method
                 # For testing purposes, we'll just use the mock return value
-                web.mount("/mcp/see", sse_test_app)
+                web.mount("/mcp/sse", sse_test_app)
             else:
                 logger.debug("sse_app is sync - can call directly")
-                web.mount("/mcp/see", mcp_server.sse_app())
+                web.mount("/mcp/sse", mcp_server.sse_app())
 
             if is_stream_app_coro:
                 logger.debug("streamable_http_app is async - need to run in event loop")
@@ -243,7 +244,7 @@ class TestMCPServerMounting:
                 logger.debug(f"  {r.path} -> {r.app}")
 
         # Verify both were mounted
-        assert any(r.path == "/mcp/see" for r in mount_routes), "SSE app not mounted with fixed function"
+        assert any(r.path == "/mcp/sse" for r in mount_routes), "SSE app not mounted with fixed function"
         assert any(
             r.path == "/mcp/streaming-http" for r in mount_routes
         ), "Streaming HTTP app not mounted with fixed function"
@@ -278,10 +279,10 @@ class TestMCPServerMounting:
     #             # Async method needs to be awaited
     #             import asyncio
     #             sse_app = asyncio.run(mcp_server.sse_app())
-    #             web.mount("/mcp/see", sse_app)
+    #             web.mount("/mcp/sse", sse_app)
     #         else:
     #             # Sync method can be called directly
-    #             web.mount("/mcp/see", mcp_server.sse_app())
+    #             web.mount("/mcp/sse", mcp_server.sse_app())
     #
     #         # Handle streaming HTTP app mounting
     #         if is_stream_async:
@@ -314,11 +315,11 @@ class TestMCPServerMounting:
                 return {"app": "Streaming Test"}
 
             # Create a fixed mount_service function
-            def fixed_mount_service(mcp_server):
+            def fixed_mount_service(mcp_server, server_type=None):
                 """Fixed version of mount_service that handles both async and sync methods."""
                 app = WebServerFactory.get()
                 # In test context, just directly mount our test apps
-                app.mount("/mcp/see", sse_test_app)
+                app.mount("/mcp/sse", sse_test_app)
                 app.mount("/mcp/streaming-http", streaming_test_app)
 
             # Patch the mount_service function
@@ -345,7 +346,7 @@ class TestMCPServerMounting:
                             logger.debug(f"  Route: {route.path}")
 
                 # Verify mounted paths
-                assert "/mcp/see" in mount_paths, "SSE app not mounted by create_app with fixed mount_service"
+                assert "/mcp/sse" in mount_paths, "SSE app not mounted by create_app with fixed mount_service"
                 assert (
                     "/mcp/streaming-http" in mount_paths
                 ), "Streaming HTTP app not mounted by create_app with fixed mount_service"

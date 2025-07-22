@@ -48,8 +48,8 @@ class TestCliEnvOption:
                 # Run the server with our config
                 run_server(config)
 
-                # Check that create_app was called (without env_file parameter)
-                mock_create_app.assert_called_once_with()
+                # Check that create_app was called with our config
+                mock_create_app.assert_called_once_with(config)
 
                 # Verify the environment variable was loaded from the file
                 assert os.environ.get("CLICKUP_API_TOKEN") == "test_token_from_cli_env"

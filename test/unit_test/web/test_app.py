@@ -122,7 +122,7 @@ class TestWebServer:
                 create_app()
 
             # Verify mount_service was called with the mock MCP server
-            mock_mount_service.assert_called_once_with(mock_mcp)
+            mock_mount_service.assert_called_once_with(mock_mcp, "sse")
 
     def test_mounted_apps_are_accessible(self) -> None:
         """
@@ -145,14 +145,14 @@ class TestWebServer:
             # Import mount_service within the patch context
             from clickup_mcp.web_server.app import mount_service
 
-            # Call mount_service directly
-            mount_service(mock_mcp)
+            # Call mount_service directly with the default server type
+            from clickup_mcp.models.cli import MCPServerType
+            mount_service(mock_mcp, MCPServerType.SSE)
 
             # Verify the MCP server apps were created
             mock_mcp.sse_app.assert_called_once()
-            mock_mcp.streamable_http_app.assert_called_once()
+            mock_mcp.streamable_http_app.assert_not_called()  # Should not be called for SSE type
 
             # Verify the web instance mounted the apps correctly
-            assert mock_web.mount.call_count == 2
-            mock_web.mount.assert_any_call("/mcp/see", mock_sse)
-            mock_web.mount.assert_any_call("/mcp/streaming-http", mock_streaming)
+            assert mock_web.mount.call_count == 1  # Only SSE app should be mounted
+            mock_web.mount.assert_any_call("/mcp/sse", mock_sse)

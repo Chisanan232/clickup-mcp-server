@@ -141,15 +141,15 @@ class TestWebServerFactory:
             # Patch the global web variable to use our mock_web_instance
             with patch("clickup_mcp.web_server.app.web", mock_web_instance):
                 # Call mount_service
-                from clickup_mcp.web_server.app import mount_service
+                from clickup_mcp.web_server.app import mount_service, MCPServerType
 
+                # Test with the default SSE server type
                 mount_service(mock_mcp_server)
 
                 # Verify the MCP server apps were mounted correctly
                 mock_mcp_server.sse_app.assert_called_once()
-                mock_mcp_server.streamable_http_app.assert_called_once()
+                mock_mcp_server.streamable_http_app.assert_not_called()  # Should not be called with SSE type
 
                 # Check that the mount method was called with the correct paths and apps
-                assert mock_web_instance.mount.call_count == 2
-                mock_web_instance.mount.assert_any_call("/mcp/see", mock_sse_app)
-                mock_web_instance.mount.assert_any_call("/mcp/streaming-http", mock_streaming_app)
+                assert mock_web_instance.mount.call_count == 1  # Only SSE app should be mounted
+                mock_web_instance.mount.assert_called_once_with("/mcp/sse", mock_sse_app)
