@@ -71,10 +71,13 @@ def mount_service(mcp_server: FastMCP, server_type: str = MCPServerType.SSE) -> 
         mcp_server: The FastAPI service to mount.
         server_type: The type of server to mount (sse or http-streaming).
     """
-    if server_type == MCPServerType.SSE:
-        web.mount("/mcp/sse", mcp_server.sse_app())
-    elif server_type == MCPServerType.HTTP_STREAMING:
-        web.mount("/mcp/streaming-http", mcp_server.streamable_http_app())
+    match server_type:
+        case MCPServerType.SSE:
+            web.mount("/mcp/sse", mcp_server.sse_app())
+        case MCPServerType.HTTP_STREAMING:
+            web.mount("/mcp/streaming-http", mcp_server.streamable_http_app())
+        case _:
+            raise ValueError(f"Unknown server type: {server_type}")
 
 
 def create_app(server_config: Optional[ServerConfig] = None) -> FastAPI:
