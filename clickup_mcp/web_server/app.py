@@ -16,6 +16,7 @@ from clickup_mcp._base import BaseServerFactory
 from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
 from clickup_mcp.mcp_server.app import MCPServerFactory
 from clickup_mcp.models.cli import ServerConfig, MCPServerType
+from clickup_mcp.utils import load_environment_from_file
 
 _WEB_SERVER_INSTANCE: Optional[FastAPI] = None
 
@@ -104,13 +105,9 @@ def create_app(server_config: Optional[ServerConfig] = None) -> FastAPI:
     # Use default server type if no configuration is provided
     server_type = server_config.mcp_server_type if server_config else MCPServerType.SSE
     
-    # Get env_file from configuration if provided
+    # Get env_file from configuration if provided and load environment variables
     env_file = server_config.env_file if server_config else None
-    
-    # Load environment variables from .env file if provided
-    if env_file:
-        from dotenv import load_dotenv
-        load_dotenv(env_file)
+    load_environment_from_file(env_file)
 
     # Root endpoint for health checks
     @app.get("/", response_class=JSONResponse)

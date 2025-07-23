@@ -15,6 +15,7 @@ from fastapi import FastAPI
 from pydantic import ValidationError
 
 from clickup_mcp.models.cli import LogLevel, ServerConfig, MCPServerType
+from clickup_mcp.utils import load_environment_from_file
 from clickup_mcp.web_server.app import create_app
 
 
@@ -80,17 +81,7 @@ def run_server(config: ServerConfig) -> None:
     configure_logging(config.log_level)
 
     # Load environment variables from .env file
-    if config.env_file:
-        from pathlib import Path
-
-        from dotenv import load_dotenv
-
-        env_path = Path(config.env_file)
-        if env_path.exists():
-            logging.info(f"Loading environment variables from {config.env_file}")
-            load_dotenv(env_path)
-        else:
-            logging.warning(f"Environment file {config.env_file} not found")
+    load_environment_from_file(config.env_file)
 
     # Create the FastAPI app with server configuration
     app = create_app(config)
@@ -99,7 +90,7 @@ def run_server(config: ServerConfig) -> None:
     logging.info(f"Starting server on {config.host}:{config.port}")
     logging.info(f"Log level: {config.log_level}")
     logging.info(f"Auto-reload: {'enabled' if config.reload else 'disabled'}")
-    logging.info(f"Environment file: {config.env_file}")
+    logging.info(f"Environment file: {config.env_file or '.env'}")
     logging.info(f"MCP server type: {config.mcp_server_type}")
 
     # Run the server
