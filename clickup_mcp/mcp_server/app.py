@@ -9,9 +9,12 @@ _MCP_SERVER_INSTANCE: Optional[FastMCP] = None
 
 class MCPServerFactory(BaseServerFactory[FastMCP]):
     @staticmethod
-    def create() -> FastMCP:
+    def create(**kwargs) -> FastMCP:
         """
-        Create and configure the MCP server with the specified environment file.
+        Create and configure the MCP server.
+
+        Args:
+            **kwargs: Additional arguments (unused, but included for base class compatibility)
 
         Returns:
             Configured FastMCP server instance
@@ -32,6 +35,14 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
         """
         assert _MCP_SERVER_INSTANCE is not None, "It must be created FastMCP first."
         return _MCP_SERVER_INSTANCE
+
+    @staticmethod
+    def reset() -> None:
+        """
+        Reset the singleton instance (for testing purposes).
+        """
+        global _MCP_SERVER_INSTANCE
+        _MCP_SERVER_INSTANCE = None
 
 
 # Create a default MCP server instance for backward compatibility

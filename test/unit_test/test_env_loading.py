@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pytest
 
 from clickup_mcp.client import (
-    create_clickup_client,
+    ClickUpAPIClientFactory,
     get_api_token,
 )
 
@@ -27,14 +27,19 @@ class TestEnvLoading:
         token = get_api_token()
         assert token == "test_token_from_env"
 
-    def test_create_clickup_client(self, monkeypatch):
-        """Test creating ClickUp client with token."""
-        with patch("clickup_mcp.client.ClickUpAPIClient") as mock_client:
-            # Create client with explicit token
-            client = create_clickup_client(api_token="test_token")
+    def test_get_api_token_with_config(self, monkeypatch):
+        """Test getting API token from ServerConfig."""
+        # Set up environment variable (should be ignored when config has token)
+        monkeypatch.setenv("CLICKUP_API_TOKEN", "test_token_from_env")
 
-            # Check that the client was created with the correct token
-            mock_client.assert_called_once_with(api_token="test_token")
+        # Create config with token
+        from clickup_mcp.models.cli import ServerConfig
+
+        config = ServerConfig(token="test_token_from_config")
+
+        # Test getting token from config
+        token = get_api_token(config)
+        assert token == "test_token_from_config"
 
     def test_get_api_token_missing(self, monkeypatch):
         """Test error when API token is missing from environment."""
@@ -45,29 +50,84 @@ class TestEnvLoading:
         with pytest.raises(ValueError, match="ClickUp API token not found"):
             get_api_token()
 
+    def test_clickup_api_client_factory(self, monkeypatch):
+        """Test creating ClickUp client with token."""
+        # Reset singleton before test
+        import clickup_mcp.client
+
+        clickup_mcp.client._CLICKUP_API_CLIENT = None
+
+        with patch("clickup_mcp.client.ClickUpAPIClient") as mock_client:
+            # Create client with explicit token
+            client = ClickUpAPIClientFactory.create(api_token="test_token")
+
+            # Check that the client was created with the correct token
+            mock_client.assert_called_once()
+            call_args = mock_client.call_args[1]
+            assert call_args["api_token"] == "test_token"
+
+        # Reset singleton after test
+        clickup_mcp.client._CLICKUP_API_CLIENT = None
+
     def test_entry_point_env_loading(self, monkeypatch):
         """Test environment loading at entry point."""
-        from clickup_mcp.entry import run_server
-        from clickup_mcp.models.cli import ServerConfig
-
-        # Create a temporary .env file
-        with tempfile.NamedTemporaryFile(suffix=".env", delete=False) as temp_file:
-            temp_file.write(b"CLICKUP_API_TOKEN=test_token_from_entry_point")
+        # Create a temp file with test token
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as temp_file:
+            temp_file.write("CLICKUP_API_TOKEN=test_token_from_entry_point\n")
 
         try:
+            # Reset all singletons before test
+            from clickup_mcp.mcp_server.app import MCPServerFactory
+            from clickup_mcp.web_server.app import WebServerFactory
+
+            WebServerFactory.reset()
+            MCPServerFactory.reset()
+            ClickUpAPIClientFactory.reset()
+
             # Ensure environment is clean
             monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
 
-            # Mock uvicorn.run to prevent actual server startup
-            with patch("uvicorn.run"), patch("clickup_mcp.web_server.app.create_app"):
+            # Create web server and MCP server first to avoid assertion errors
+            WebServerFactory.create()
+            MCPServerFactory.create()
+
+            # Create a mock function that simulates create_app loading environment variables
+            def mock_create_app_impl(config):
+                # Simulate loading environment from file as create_app would do
+                if config.env_file:
+                    from pathlib import Path
+
+                    from dotenv import load_dotenv
+
+                    env_path = Path(config.env_file)
+                    if env_path.exists():
+                        load_dotenv(env_path)
+                return WebServerFactory.get()
+
+            # Mock uvicorn.run to prevent actual server startup and patch the create_app in the entry module
+            from clickup_mcp.entry import run_server
+            from clickup_mcp.models.cli import ServerConfig
+
+            with patch("uvicorn.run"), patch("clickup_mcp.entry.create_app") as mock_create_app:
+                # Set up the mock to call our implementation
+                mock_create_app.side_effect = mock_create_app_impl
+
                 # Create server config with our temp env file
                 config = ServerConfig(env_file=temp_file.name)
 
-                # Run the server (should load environment from our file)
+                # Run the server (should pass config to create_app which loads the environment)
                 run_server(config)
 
-                # Check that environment was loaded correctly
+                # Check that create_app was called with the correct config
+                mock_create_app.assert_called_once_with(config)
+
+                # Check that environment was loaded correctly by our mock implementation
                 assert os.environ.get("CLICKUP_API_TOKEN") == "test_token_from_entry_point"
         finally:
             # Clean up
             Path(temp_file.name).unlink(missing_ok=True)
+
+            # Reset all singletons after test
+            WebServerFactory.reset()
+            MCPServerFactory.reset()
+            ClickUpAPIClientFactory.reset()

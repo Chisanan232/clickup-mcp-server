@@ -19,6 +19,13 @@ class LogLevel(str, Enum):
     CRITICAL = "critical"
 
 
+class MCPServerType(str, Enum):
+    """Server type enumeration for type safety."""
+
+    SSE = "sse"
+    HTTP_STREAMING = "http-streaming"
+
+
 class ServerConfig(BaseModel):
     """
     Server configuration data model.
@@ -32,6 +39,12 @@ class ServerConfig(BaseModel):
     log_level: LogLevel = Field(default=LogLevel.INFO, description="Logging level")
     reload: bool = Field(default=False, description="Enable auto-reload for development")
     env_file: str = Field(default=".env", description="Path to the .env file for environment variables")
+    token: str | None = Field(
+        default=None, description="ClickUp API token. If provided, takes precedence over token from env file"
+    )
+    mcp_server_type: MCPServerType = Field(
+        default=MCPServerType.SSE, description="Type of server to run (sse or http-streaming)"
+    )
 
     @validator("port")
     def validate_port_range(cls, v: int) -> int:

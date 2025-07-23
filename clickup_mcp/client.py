@@ -16,8 +16,10 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 import httpx
 from pydantic import BaseModel, Field
 
+from clickup_mcp.models.cli import ServerConfig
 from clickup_mcp.models.dto.base import BaseResponseDTO
 
+from ._base import BaseServerFactory
 from .api.space import SpaceAPI
 from .exceptions import (
     AuthenticationError,
@@ -369,11 +371,12 @@ class ClickUpAPIClient:
         return await self._make_request("PATCH", endpoint, params=params, data=data, headers=headers)
 
 
-def get_api_token() -> str:
+def get_api_token(config: ServerConfig | None = None) -> str:
     """
-    Get the ClickUp API token from environment variables.
+    Get the ClickUp API token from CLI options or environment variables.
 
-    The .env file should be loaded at the entry point of the application.
+    Args:
+        config: Optional ServerConfig instance containing CLI options
 
     Returns:
         The API token if found
@@ -381,29 +384,84 @@ def get_api_token() -> str:
     Raises:
         ValueError: If API token cannot be found
     """
-    # Get token directly from environment (env file should be loaded at entry point)
+    # First check if token is provided directly via CLI option
+    if config and config.token:
+        return config.token
+
+    # Otherwise get token from environment (env file should be loaded at entry point)
     token = os.environ.get("CLICKUP_API_TOKEN")
 
     # Raise error if we don't have a token
     if not token:
         raise ValueError(
             "ClickUp API token not found. Please set the CLICKUP_API_TOKEN environment variable "
-            "in your .env file and ensure it is loaded."
+            "in your .env file, or provide it using the --token command line option."
         )
 
     return token
 
 
-# Convenience function to create a configured client
-def create_clickup_client(api_token: str, **kwargs) -> ClickUpAPIClient:
-    """
-    Create a ClickUp API client with the provided token and configuration.
+_CLICKUP_API_CLIENT: Optional[ClickUpAPIClient] = None
 
-    Args:
-        api_token: ClickUp API token (required)
-        **kwargs: Additional configuration options for the client
 
-    Returns:
-        Configured ClickUpAPIClient instance
-    """
-    return ClickUpAPIClient(api_token=api_token, **kwargs)
+class ClickUpAPIClientFactory(BaseServerFactory[ClickUpAPIClient]):
+    @staticmethod
+    def create(
+        api_token: str = "",
+        base_url: str = "https://api.clickup.com/api/v2",
+        timeout: float = 30.0,
+        max_retries: int = 3,
+        retry_delay: float = 1.0,
+        rate_limit_requests_per_minute: int = 100,
+        **kwargs,  # Add **kwargs to satisfy base class contract
+    ) -> ClickUpAPIClient:
+        """
+        Create and configure a ClickUp API client.
+
+        Args:
+            api_token: ClickUp API token
+            base_url: Base URL for the ClickUp API
+            timeout: Request timeout in seconds
+            max_retries: Maximum number of retries for failed requests
+            retry_delay: Delay between retries in seconds
+            rate_limit_requests_per_minute: Maximum requests per minute
+            **kwargs: Additional arguments (for base class compatibility)
+
+        Returns:
+            Configured ClickUpAPIClient instance
+        """
+        # Extract token from kwargs if not provided explicitly
+        if not api_token and "token" in kwargs:
+            api_token = kwargs["token"]
+
+        # Create a new ClickUp API client
+        global _CLICKUP_API_CLIENT
+        assert _CLICKUP_API_CLIENT is None, "It is not allowed to create more than one instance of ClickUp API client."
+        _CLICKUP_API_CLIENT = ClickUpAPIClient(
+            api_token=api_token,
+            base_url=base_url,
+            timeout=timeout,
+            max_retries=max_retries,
+            retry_delay=retry_delay,
+            rate_limit_requests_per_minute=rate_limit_requests_per_minute,
+        )
+        return _CLICKUP_API_CLIENT
+
+    @staticmethod
+    def get() -> ClickUpAPIClient:
+        """
+        Get the MCP server instance
+
+        Returns:
+            Configured FastMCP server instance
+        """
+        assert _CLICKUP_API_CLIENT is not None, "It must be created ClickUp API client first."
+        return _CLICKUP_API_CLIENT
+
+    @staticmethod
+    def reset() -> None:
+        """
+        Reset the singleton instance (for testing purposes).
+        """
+        global _CLICKUP_API_CLIENT
+        _CLICKUP_API_CLIENT = None

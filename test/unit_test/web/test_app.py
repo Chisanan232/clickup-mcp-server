@@ -10,6 +10,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from clickup_mcp.client import ClickUpAPIClientFactory
 from clickup_mcp.web_server.app import WebServerFactory, create_app
 
 
@@ -17,22 +18,29 @@ class TestWebServer:
     """Test suite for the FastAPI web server integration."""
 
     @pytest.fixture(autouse=True)
-    def reset_web_server(self):
-        """Reset the global web server instance before and after each test."""
+    def reset_factories(self, monkeypatch):
+        """Reset the global web server and client factory instances before and after each test."""
         # Import here to avoid circular imports
+        import clickup_mcp.mcp_server.app
         import clickup_mcp.web_server.app
 
-        # Store original instance
+        # Store original instances
         self.original_web_instance = clickup_mcp.web_server.app._WEB_SERVER_INSTANCE
+        self.original_mcp_instance = clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE
 
-        # Reset before test
-        clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = None
+        # Set up environment for tests
+        monkeypatch.setenv("CLICKUP_API_TOKEN", "test_token_for_web_server")
 
-        # Run the test
+        # Reset factories before test
+        WebServerFactory.reset()
+        ClickUpAPIClientFactory.reset()
+        clickup_mcp.mcp_server.app.MCPServerFactory.reset()
+
         yield
 
-        # Restore original after test to avoid affecting other tests
+        # Restore original instances after test
         clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = self.original_web_instance
+        clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE = self.original_mcp_instance
 
     @pytest.fixture
     def mock_mcp(self) -> MagicMock:
@@ -122,7 +130,7 @@ class TestWebServer:
                 create_app()
 
             # Verify mount_service was called with the mock MCP server
-            mock_mount_service.assert_called_once_with(mock_mcp)
+            mock_mount_service.assert_called_once_with(mock_mcp, "sse")
 
     def test_mounted_apps_are_accessible(self) -> None:
         """
@@ -138,21 +146,21 @@ class TestWebServer:
         mock_mcp.streamable_http_app.return_value = mock_streaming
 
         # Create a mock web instance
-        mock_web = MagicMock(spec=FastAPI)
+        mock_web_instance = MagicMock(spec=FastAPI)
 
         # Patch both the web global and the WebServerFactory.get() method
-        with patch("clickup_mcp.web_server.app.web", mock_web):
+        with patch("clickup_mcp.web_server.app.web", mock_web_instance):
             # Import mount_service within the patch context
+            # Call mount_service directly with the default server type
+            from clickup_mcp.models.cli import MCPServerType
             from clickup_mcp.web_server.app import mount_service
 
-            # Call mount_service directly
-            mount_service(mock_mcp)
+            mount_service(mock_mcp, MCPServerType.SSE)
 
             # Verify the MCP server apps were created
             mock_mcp.sse_app.assert_called_once()
-            mock_mcp.streamable_http_app.assert_called_once()
+            mock_mcp.streamable_http_app.assert_not_called()  # Should not be called for SSE type
 
             # Verify the web instance mounted the apps correctly
-            assert mock_web.mount.call_count == 2
-            mock_web.mount.assert_any_call("/mcp/see", mock_sse)
-            mock_web.mount.assert_any_call("/mcp/streaming-http", mock_streaming)
+            assert mock_web_instance.mount.call_count == 1  # Only SSE app should be mounted
+            mock_web_instance.mount.assert_any_call("/mcp", mock_sse)

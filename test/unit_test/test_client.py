@@ -794,16 +794,28 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert headers["Content-Type"] == "application/json"
 
     @pytest.mark.asyncio
-    async def test_create_clickup_client_function(self):
-        """Test the create_clickup_client convenience function."""
-        from clickup_mcp.client import create_clickup_client
+    async def test_clickup_api_client_factory(self):
+        """Test the ClickUpAPIClientFactory create and get methods."""
+        # Reset the singleton before the test
+        import clickup_mcp.client
+        from clickup_mcp.client import ClickUpAPIClientFactory
 
-        client = create_clickup_client(api_token="test_token", timeout=15.0, max_retries=5)
+        clickup_mcp.client._CLICKUP_API_CLIENT = None
+
+        # Create a client instance with the factory
+        client = ClickUpAPIClientFactory.create(api_token="test_token", timeout=15.0, max_retries=5)
 
         assert isinstance(client, ClickUpAPIClient)
         assert client.api_token == "test_token"
         assert client.timeout == 15.0
         assert client.max_retries == 5
+
+        # Test the get method returns the same instance
+        retrieved_client = ClickUpAPIClientFactory.get()
+        assert retrieved_client is client
+
+        # Reset the singleton after the test
+        clickup_mcp.client._CLICKUP_API_CLIENT = None
 
 
 class TestAPIResponse:

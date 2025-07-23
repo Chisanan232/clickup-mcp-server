@@ -7,7 +7,7 @@ These functions follow the FastMCP pattern for easy integration into MCP servers
 
 from typing import Optional
 
-from clickup_mcp.client import create_clickup_client, get_api_token
+from clickup_mcp.client import ClickUpAPIClientFactory
 
 from .app import mcp
 
@@ -33,11 +33,7 @@ async def get_space(space_id: str = "") -> Optional[dict]:
     if not space_id:
         raise ValueError("Space ID is required")
 
-    # Get API token from environment (which was loaded at application startup)
-    token = get_api_token()
-
-    # Create client with the token
-    client = create_clickup_client(api_token=token)
+    client = ClickUpAPIClientFactory.get()
 
     try:
         # Get the space using the client

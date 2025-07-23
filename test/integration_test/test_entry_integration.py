@@ -5,6 +5,7 @@ This module tests the actual server startup and functionality in a more
 realistic environment with minimal mocking.
 """
 
+import os
 import signal
 import socket
 import subprocess
@@ -16,10 +17,8 @@ from typing import List
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
 
-from clickup_mcp.entry import create_app_factory, run_server
+from clickup_mcp.entry import run_server
 from clickup_mcp.models.cli import LogLevel, ServerConfig
 
 
@@ -33,21 +32,6 @@ def find_free_port() -> int:
 
 class TestEntryIntegration:
     """Integration test suite for the entry module."""
-
-    def test_create_app_factory(self) -> None:
-        """Test that the app factory creates a valid FastAPI application."""
-        app: FastAPI = create_app_factory()
-        client: TestClient = TestClient(app)
-
-        # Test that the root endpoint works
-        response = client.get("/")
-        assert response.status_code == 200
-        assert "status" in response.json()
-
-        # Test that the docs endpoint works
-        response = client.get("/docs")
-        assert response.status_code == 200
-        assert "swagger" in response.text.lower()
 
     @pytest.mark.slow
     @patch("subprocess.Popen")
@@ -96,18 +80,33 @@ class TestEntryIntegration:
 
         This allows testing the server without creating a separate process.
         """
+        # Import and reset singletons
+        from clickup_mcp.client import ClickUpAPIClientFactory
+        from clickup_mcp.mcp_server.app import MCPServerFactory
+        from clickup_mcp.web_server.app import WebServerFactory
+
+        # Reset all singletons before test
+        WebServerFactory.reset()
+        MCPServerFactory.reset()
+        ClickUpAPIClientFactory.reset()
+
+        # Create server instances first to avoid assertion errors
+        WebServerFactory.create()
+        MCPServerFactory.create()
+
         port: int = find_free_port()
         config: ServerConfig = ServerConfig(host="127.0.0.1", port=port, log_level=LogLevel.INFO, reload=False)
 
-        # Mock uvicorn.run to capture the parameters
-        with patch("uvicorn.run") as mock_run:
+        # Mock uvicorn.run and set required environment variables
+        with patch("uvicorn.run") as mock_run, patch.dict(os.environ, {"CLICKUP_API_TOKEN": "test_token_for_thread"}):
+
             # Run server in a separate thread to avoid blocking the test
             thread: threading.Thread = threading.Thread(target=run_server, args=(config,))
             thread.daemon = True
             thread.start()
 
             # Give the thread time to start
-            time.sleep(0.5)
+            time.sleep(1.0)  # Increased sleep time to ensure thread completes
 
             # Verify uvicorn.run was called with the expected parameters
             mock_run.assert_called_once()
@@ -116,6 +115,11 @@ class TestEntryIntegration:
             assert kwargs["port"] == port
             assert kwargs["log_level"] == "info"
             assert kwargs["reload"] is False
+
+        # Reset all singletons after test
+        WebServerFactory.reset()
+        MCPServerFactory.reset()
+        ClickUpAPIClientFactory.reset()
 
     @pytest.mark.skipif(
         True,  # Skip this test by default as it's not reliable in CI

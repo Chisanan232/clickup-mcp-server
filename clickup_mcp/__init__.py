@@ -9,7 +9,7 @@ from .api.space import SpaceAPI
 from .client import (
     APIResponse,
     ClickUpAPIClient,
-    create_clickup_client,
+    ClickUpAPIClientFactory,
 )
 from .exceptions import (
     AuthenticationError,
@@ -36,7 +36,7 @@ __all__ = [
     "ClickUpAPIClient",
     "APIResponse",
     # Factory functions
-    "create_clickup_client",
+    "ClickUpAPIClientFactory",
     # Exceptions
     "ClickUpError",
     "ClickUpAPIError",

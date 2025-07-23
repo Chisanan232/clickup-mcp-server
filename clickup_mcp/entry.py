@@ -11,10 +11,9 @@ import sys
 from typing import Dict, Optional, Union
 
 import uvicorn
-from fastapi import FastAPI
 from pydantic import ValidationError
 
-from clickup_mcp.models.cli import LogLevel, ServerConfig
+from clickup_mcp.models.cli import LogLevel, MCPServerType, ServerConfig
 from clickup_mcp.web_server.app import create_app
 
 
@@ -34,6 +33,15 @@ def parse_args() -> ServerConfig:
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload for development")
     parser.add_argument(
         "--env", type=str, dest="env_file", default=".env", help="Path to the .env file for environment variables"
+    )
+    parser.add_argument("--token", type=str, help="ClickUp API token (overrides token from .env file if provided)")
+    parser.add_argument(
+        "--server-type",
+        type=str,
+        default="sse",
+        dest="mcp_server_type",
+        choices=[server_type.value for server_type in MCPServerType],
+        help="Type of MCP server to run (sse or http-streaming)",
     )
 
     # Parse args into a dictionary
@@ -71,42 +79,18 @@ def run_server(config: ServerConfig) -> None:
     """
     configure_logging(config.log_level)
 
-    # Load environment variables from .env file
-    if config.env_file:
-        from pathlib import Path
-
-        from dotenv import load_dotenv
-
-        env_path = Path(config.env_file)
-        if env_path.exists():
-            logging.info(f"Loading environment variables from {config.env_file}")
-            load_dotenv(env_path)
-        else:
-            logging.warning(f"Environment file {config.env_file} not found")
-
-    # Create the FastAPI app
-    app = create_app()
+    # Create the FastAPI app with server configuration
+    app = create_app(config)
 
     # Log server startup information
     logging.info(f"Starting server on {config.host}:{config.port}")
     logging.info(f"Log level: {config.log_level}")
     logging.info(f"Auto-reload: {'enabled' if config.reload else 'disabled'}")
-    logging.info(f"Environment file: {config.env_file}")
+    logging.info(f"Environment file: {config.env_file or '.env'}")
+    logging.info(f"MCP server type: {config.mcp_server_type}")
 
     # Run the server
     uvicorn.run(app=app, host=config.host, port=config.port, log_level=config.log_level.lower(), reload=config.reload)
-
-
-def create_app_factory() -> FastAPI:
-    """
-    Create the FastAPI app for Uvicorn's use with reload.
-
-    Returns:
-        The FastAPI application
-    """
-    # Note: When using reload, this function is called by Uvicorn, so we can't access CLI args
-    # For environment file, the default .env will be used
-    return create_app()
 
 
 def main() -> None:
