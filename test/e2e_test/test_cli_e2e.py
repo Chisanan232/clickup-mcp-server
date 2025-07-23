@@ -9,11 +9,10 @@ import json
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
-import os
-import tempfile
 from contextlib import closing
 from pathlib import Path
 
@@ -62,13 +61,13 @@ class TestClickUpMCPCliE2E:
     def temp_env_file(self):
         """Create a temporary .env file with test API token."""
         # Create a temporary .env file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.env', delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as temp_file:
             temp_file.write("CLICKUP_API_TOKEN=test_token_e2e_tests\n")
             temp_file_path = temp_file.name
-        
+
         # Return the path to the temporary file
         yield temp_file_path
-        
+
         # Clean up the temporary file
         Path(temp_file_path).unlink(missing_ok=True)
 
@@ -217,7 +216,16 @@ class TestClickUpMCPCliE2E:
         port = find_free_port()
 
         # Start the server in a separate process with a longer timeout and the temporary .env file
-        cmd = execution_method + ["--port", str(port), "--host", "127.0.0.1", "--log-level", "debug", "--env", temp_env_file]
+        cmd = execution_method + [
+            "--port",
+            str(port),
+            "--host",
+            "127.0.0.1",
+            "--log-level",
+            "debug",
+            "--env",
+            temp_env_file,
+        ]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         try:
@@ -285,7 +293,16 @@ class TestClickUpMCPCliE2E:
         port = find_free_port()
 
         # Start the server with custom settings and the temporary .env file
-        cmd = execution_method + ["--host", "127.0.0.1", "--port", str(port), "--log-level", "debug", "--env", temp_env_file]
+        cmd = execution_method + [
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(port),
+            "--log-level",
+            "debug",
+            "--env",
+            temp_env_file,
+        ]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         try:

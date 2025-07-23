@@ -2,8 +2,9 @@
 Tests for the server type CLI option.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from clickup_mcp.entry import parse_args
 from clickup_mcp.models.cli import MCPServerType, ServerConfig
@@ -48,11 +49,11 @@ class TestCliServerTypeOption:
         # Setup
         mock_mcp_server = MagicMock()
         mock_web = MagicMock()
-        
+
         # Test direct mount_service function
         with patch("clickup_mcp.web_server.app.web", mock_web):
             mount_service(mock_mcp_server, MCPServerType.SSE.value)
-                
+
         # Verify that only SSE endpoint was mounted
         mock_mcp_server.sse_app.assert_called_once()
         mock_mcp_server.streamable_http_app.assert_not_called()
@@ -64,11 +65,11 @@ class TestCliServerTypeOption:
         # Setup
         mock_mcp_server = MagicMock()
         mock_web = MagicMock()
-        
+
         # Test direct mount_service function
         with patch("clickup_mcp.web_server.app.web", mock_web):
             mount_service(mock_mcp_server, MCPServerType.HTTP_STREAMING.value)
-                
+
         # Verify that only HTTP_STREAMING endpoint was mounted
         mock_mcp_server.sse_app.assert_not_called()
         mock_mcp_server.streamable_http_app.assert_called_once()
@@ -82,18 +83,19 @@ class TestCliServerTypeOption:
         mock_mcp_server = MagicMock()
         mock_mcp_factory.return_value = mock_mcp_server
         mock_web = MagicMock()
-        
+
         # Set up API token in environment
         monkeypatch.setenv("CLICKUP_API_TOKEN", "test_token_for_server_type")
-        
+
         # Create a ServerConfig with SSE server type
         config = ServerConfig(mcp_server_type=MCPServerType.SSE.value)
-        
+
         with patch("clickup_mcp.web_server.app.WebServerFactory.get", return_value=mock_web):
             with patch("clickup_mcp.web_server.app.mount_service") as mock_mount:
                 # Reset client factory to ensure it will create a new instance with our token
                 from clickup_mcp.client import ClickUpAPIClientFactory
+
                 ClickUpAPIClientFactory.reset()
-                
+
                 create_app(config)
                 mock_mount.assert_called_once_with(mock_mcp_server, MCPServerType.SSE.value)

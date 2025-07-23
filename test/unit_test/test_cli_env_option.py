@@ -2,7 +2,6 @@
 Tests for the CLI --env option functionality.
 """
 
-import os
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -49,11 +48,11 @@ class TestCliEnvOption:
 
                 # Check that create_app was called with our config containing the env_file path
                 mock_create_app.assert_called_once_with(config)
-                
+
                 # Verify the config passed to create_app has the correct env_file
                 call_args = mock_create_app.call_args[0][0]
                 assert call_args.env_file == env_path
-                
+
                 # Verify uvicorn.run was called
                 assert mock_run.called
 

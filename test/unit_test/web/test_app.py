@@ -4,7 +4,6 @@ Unit tests for FastAPI web server integration with MCP server.
 This module tests the functionality of mounting an MCP server on FastAPI.
 """
 
-import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -22,23 +21,23 @@ class TestWebServer:
     def reset_factories(self, monkeypatch):
         """Reset the global web server and client factory instances before and after each test."""
         # Import here to avoid circular imports
-        import clickup_mcp.web_server.app
         import clickup_mcp.mcp_server.app
-        
+        import clickup_mcp.web_server.app
+
         # Store original instances
         self.original_web_instance = clickup_mcp.web_server.app._WEB_SERVER_INSTANCE
         self.original_mcp_instance = clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE
-        
+
         # Set up environment for tests
         monkeypatch.setenv("CLICKUP_API_TOKEN", "test_token_for_web_server")
-        
+
         # Reset factories before test
         WebServerFactory.reset()
         ClickUpAPIClientFactory.reset()
         clickup_mcp.mcp_server.app.MCPServerFactory.reset()
-        
+
         yield
-        
+
         # Restore original instances after test
         clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = self.original_web_instance
         clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE = self.original_mcp_instance
@@ -152,10 +151,10 @@ class TestWebServer:
         # Patch both the web global and the WebServerFactory.get() method
         with patch("clickup_mcp.web_server.app.web", mock_web_instance):
             # Import mount_service within the patch context
-            from clickup_mcp.web_server.app import mount_service
-
             # Call mount_service directly with the default server type
             from clickup_mcp.models.cli import MCPServerType
+            from clickup_mcp.web_server.app import mount_service
+
             mount_service(mock_mcp, MCPServerType.SSE)
 
             # Verify the MCP server apps were created

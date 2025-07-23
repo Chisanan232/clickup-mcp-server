@@ -11,11 +11,9 @@ import sys
 from typing import Dict, Optional, Union
 
 import uvicorn
-from fastapi import FastAPI
 from pydantic import ValidationError
 
-from clickup_mcp.models.cli import LogLevel, ServerConfig, MCPServerType
-from clickup_mcp.utils import load_environment_from_file
+from clickup_mcp.models.cli import LogLevel, MCPServerType, ServerConfig
 from clickup_mcp.web_server.app import create_app
 
 
@@ -36,16 +34,14 @@ def parse_args() -> ServerConfig:
     parser.add_argument(
         "--env", type=str, dest="env_file", default=".env", help="Path to the .env file for environment variables"
     )
+    parser.add_argument("--token", type=str, help="ClickUp API token (overrides token from .env file if provided)")
     parser.add_argument(
-        "--token", type=str, help="ClickUp API token (overrides token from .env file if provided)"
-    )
-    parser.add_argument(
-        "--server-type", 
-        type=str, 
-        default="sse", 
+        "--server-type",
+        type=str,
+        default="sse",
         dest="mcp_server_type",
         choices=[server_type.value for server_type in MCPServerType],
-        help="Type of MCP server to run (sse or http-streaming)"
+        help="Type of MCP server to run (sse or http-streaming)",
     )
 
     # Parse args into a dictionary

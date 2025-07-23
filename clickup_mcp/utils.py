@@ -1,6 +1,7 @@
 """
 Utility functions for the ClickUp MCP server.
 """
+
 import logging
 from pathlib import Path
 from typing import Optional
@@ -18,7 +19,7 @@ def load_environment_from_file(env_file: Optional[str] = None) -> bool:
     """
     if not env_file:
         return False
-    
+
     from dotenv import load_dotenv
 
     env_path = Path(env_file)

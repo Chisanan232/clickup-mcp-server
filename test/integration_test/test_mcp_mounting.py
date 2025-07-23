@@ -8,15 +8,15 @@ are correctly accessible when the web server is instantiated with real MCP compo
 import inspect
 import logging
 import os
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
 
 from clickup_mcp.client import ClickUpAPIClientFactory
 from clickup_mcp.mcp_server.app import MCPServerFactory
-from clickup_mcp.models.cli import ServerConfig, MCPServerType
-from clickup_mcp.web_server.app import WebServerFactory, create_app, mount_service, web
+from clickup_mcp.models.cli import MCPServerType, ServerConfig
+from clickup_mcp.web_server.app import WebServerFactory, create_app, mount_service
 
 # Set up logging for test debugging
 logger = logging.getLogger(__name__)
@@ -32,8 +32,8 @@ class TestMCPServerMounting:
     def reset_singletons(self):
         """Reset the singleton instances before each test."""
         # Import here to avoid circular imports
-        import clickup_mcp.web_server.app
         import clickup_mcp.mcp_server.app
+        import clickup_mcp.web_server.app
         from clickup_mcp.client import ClickUpAPIClientFactory
 
         # Store original values
@@ -112,24 +112,25 @@ class TestMCPServerMounting:
         """
         # Use a MagicMock for the web object instead of a real FastAPI instance
         mock_web = MagicMock()
-        
+
         # Patch the web object and the client factory
         with patch("clickup_mcp.web_server.app.web", mock_web):
             with patch("clickup_mcp.client.ClickUpAPIClientFactory.create", return_value=mock_clickup_client):
                 # Create MCP server with the mocked dependencies
                 mcp_server = MCPServerFactory.create()
-                
+
                 # Create test FastAPI app for the SSE endpoint
                 sse_test_app = FastAPI()
+
                 @sse_test_app.get("/")
                 def sse_root():
                     return {"app": "SSE Test"}
-                
+
                 # Patch the MCP server method to return our test app
                 with patch.object(mcp_server, "sse_app", return_value=sse_test_app):
                     # Call mount_service with explicit SSE server type
                     mount_service(mcp_server, MCPServerType.SSE)
-                    
+
                     # Verify the correct mount call was made
                     mock_web.mount.assert_called_once_with("/mcp", sse_test_app)
 
@@ -199,7 +200,7 @@ class TestMCPServerMounting:
             WebServerFactory.reset()
             MCPServerFactory.reset()
             ClickUpAPIClientFactory.reset()
-            
+
             # Define a fixed mount_service that mounts only one server type
             def fixed_mount_service(mcp_server, server_type=MCPServerType.SSE):
                 """Fixed version of mount_service that handles both async and sync methods."""

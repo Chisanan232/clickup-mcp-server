@@ -18,8 +18,8 @@ from pydantic import BaseModel, Field
 
 from clickup_mcp.models.cli import ServerConfig
 from clickup_mcp.models.dto.base import BaseResponseDTO
-from ._base import BaseServerFactory
 
+from ._base import BaseServerFactory
 from .api.space import SpaceAPI
 from .exceptions import (
     AuthenticationError,
@@ -374,20 +374,20 @@ class ClickUpAPIClient:
 def get_api_token(config: ServerConfig | None = None) -> str:
     """
     Get the ClickUp API token from CLI options or environment variables.
-    
+
     Args:
         config: Optional ServerConfig instance containing CLI options
-        
+
     Returns:
         The API token if found
-        
+
     Raises:
         ValueError: If API token cannot be found
     """
     # First check if token is provided directly via CLI option
     if config and config.token:
         return config.token
-        
+
     # Otherwise get token from environment (env file should be loaded at entry point)
     token = os.environ.get("CLICKUP_API_TOKEN")
 
@@ -407,12 +407,12 @@ _CLICKUP_API_CLIENT: Optional[ClickUpAPIClient] = None
 class ClickUpAPIClientFactory(BaseServerFactory[ClickUpAPIClient]):
     @staticmethod
     def create(
-            api_token: str,
-            base_url: str = "https://api.clickup.com/api/v2",
-            timeout: float = 30.0,
-            max_retries: int = 3,
-            retry_delay: float = 1.0,
-            rate_limit_requests_per_minute: int = 100,
+        api_token: str,
+        base_url: str = "https://api.clickup.com/api/v2",
+        timeout: float = 30.0,
+        max_retries: int = 3,
+        retry_delay: float = 1.0,
+        rate_limit_requests_per_minute: int = 100,
     ) -> ClickUpAPIClient:
         """
         Create and configure the MCP server with the specified environment file.
@@ -429,7 +429,7 @@ class ClickUpAPIClientFactory(BaseServerFactory[ClickUpAPIClient]):
             timeout=timeout,
             max_retries=max_retries,
             retry_delay=retry_delay,
-            rate_limit_requests_per_minute=rate_limit_requests_per_minute
+            rate_limit_requests_per_minute=rate_limit_requests_per_minute,
         )
         return _CLICKUP_API_CLIENT
 

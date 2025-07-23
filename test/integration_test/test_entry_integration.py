@@ -5,6 +5,7 @@ This module tests the actual server startup and functionality in a more
 realistic environment with minimal mocking.
 """
 
+import os
 import signal
 import socket
 import subprocess
@@ -14,11 +15,8 @@ import time
 from contextlib import closing
 from typing import List
 from unittest.mock import MagicMock, patch
-import os
 
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
 
 from clickup_mcp.entry import run_server
 from clickup_mcp.models.cli import LogLevel, ServerConfig
@@ -83,26 +81,25 @@ class TestEntryIntegration:
         This allows testing the server without creating a separate process.
         """
         # Import and reset singletons
-        from clickup_mcp.web_server.app import WebServerFactory
-        from clickup_mcp.mcp_server.app import MCPServerFactory
         from clickup_mcp.client import ClickUpAPIClientFactory
-        
+        from clickup_mcp.mcp_server.app import MCPServerFactory
+        from clickup_mcp.web_server.app import WebServerFactory
+
         # Reset all singletons before test
         WebServerFactory.reset()
         MCPServerFactory.reset()
         ClickUpAPIClientFactory.reset()
-        
+
         # Create server instances first to avoid assertion errors
         WebServerFactory.create()
         MCPServerFactory.create()
-        
+
         port: int = find_free_port()
         config: ServerConfig = ServerConfig(host="127.0.0.1", port=port, log_level=LogLevel.INFO, reload=False)
 
         # Mock uvicorn.run and set required environment variables
-        with patch("uvicorn.run") as mock_run, \
-             patch.dict(os.environ, {"CLICKUP_API_TOKEN": "test_token_for_thread"}):
-            
+        with patch("uvicorn.run") as mock_run, patch.dict(os.environ, {"CLICKUP_API_TOKEN": "test_token_for_thread"}):
+
             # Run server in a separate thread to avoid blocking the test
             thread: threading.Thread = threading.Thread(target=run_server, args=(config,))
             thread.daemon = True
@@ -118,7 +115,7 @@ class TestEntryIntegration:
             assert kwargs["port"] == port
             assert kwargs["log_level"] == "info"
             assert kwargs["reload"] is False
-            
+
         # Reset all singletons after test
         WebServerFactory.reset()
         MCPServerFactory.reset()

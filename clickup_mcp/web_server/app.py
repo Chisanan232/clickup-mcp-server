@@ -15,7 +15,7 @@ from mcp.server import FastMCP
 from clickup_mcp._base import BaseServerFactory
 from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
 from clickup_mcp.mcp_server.app import MCPServerFactory
-from clickup_mcp.models.cli import ServerConfig, MCPServerType
+from clickup_mcp.models.cli import MCPServerType, ServerConfig
 from clickup_mcp.utils import load_environment_from_file
 
 _WEB_SERVER_INSTANCE: Optional[FastAPI] = None
@@ -60,7 +60,7 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
         """
         assert _WEB_SERVER_INSTANCE is not None, "It must be created web server first."
         return _WEB_SERVER_INSTANCE
-        
+
     @staticmethod
     def reset() -> None:
         """
@@ -96,7 +96,7 @@ def create_app(server_config: Optional[ServerConfig] = None) -> FastAPI:
 
     Args:
         server_config: Optional server configuration.
-        
+
     Returns:
         Configured FastAPI application
     """
@@ -105,10 +105,10 @@ def create_app(server_config: Optional[ServerConfig] = None) -> FastAPI:
     load_environment_from_file(env_file)
 
     app = WebServerFactory.get()
-    
+
     # Use default server type if no configuration is provided
     server_type = server_config.mcp_server_type if server_config else MCPServerType.SSE
-    
+
     # Root endpoint for health checks
     @app.get("/", response_class=JSONResponse)
     async def root() -> Dict[str, str]:

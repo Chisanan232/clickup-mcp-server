@@ -32,7 +32,7 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
         """
         assert _MCP_SERVER_INSTANCE is not None, "It must be created FastMCP first."
         return _MCP_SERVER_INSTANCE
-        
+
     @staticmethod
     def reset() -> None:
         """
