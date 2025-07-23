@@ -25,8 +25,8 @@ class TestCliEnvOption:
             assert isinstance(config, ServerConfig)
             assert config.env_file == temp_env_path
 
-    def test_env_file_loaded_in_run_server(self, monkeypatch):
-        """Test that the env file is loaded directly in run_server."""
+    def test_env_file_passed_to_create_app(self, monkeypatch):
+        """Test that the env file path is correctly passed to create_app."""
         # Create a temp .env file with a test token
         with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as temp_file:
             temp_file.write("CLICKUP_API_TOKEN=test_token_from_cli_env\n")
@@ -44,16 +44,16 @@ class TestCliEnvOption:
                 patch("clickup_mcp.entry.create_app") as mock_create_app,
                 patch("clickup_mcp.entry.uvicorn.run") as mock_run,
             ):
-
                 # Run the server with our config
                 run_server(config)
 
-                # Check that create_app was called with our config
+                # Check that create_app was called with our config containing the env_file path
                 mock_create_app.assert_called_once_with(config)
-
-                # Verify the environment variable was loaded from the file
-                assert os.environ.get("CLICKUP_API_TOKEN") == "test_token_from_cli_env"
-
+                
+                # Verify the config passed to create_app has the correct env_file
+                call_args = mock_create_app.call_args[0][0]
+                assert call_args.env_file == env_path
+                
                 # Verify uvicorn.run was called
                 assert mock_run.called
 

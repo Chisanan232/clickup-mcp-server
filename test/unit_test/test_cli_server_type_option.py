@@ -76,17 +76,24 @@ class TestCliServerTypeOption:
         mock_web.mount.assert_called_with("/mcp", mock_mcp_server.streamable_http_app.return_value)
 
     @patch("clickup_mcp.mcp_server.app.MCPServerFactory.get")
-    def test_create_app_with_sse_server_type(self, mock_mcp_factory):
+    def test_create_app_with_sse_server_type(self, mock_mcp_factory, monkeypatch):
         """Test create_app with SSE server type config."""
         # Setup
         mock_mcp_server = MagicMock()
         mock_mcp_factory.return_value = mock_mcp_server
         mock_web = MagicMock()
         
+        # Set up API token in environment
+        monkeypatch.setenv("CLICKUP_API_TOKEN", "test_token_for_server_type")
+        
         # Create a ServerConfig with SSE server type
         config = ServerConfig(mcp_server_type=MCPServerType.SSE.value)
         
         with patch("clickup_mcp.web_server.app.WebServerFactory.get", return_value=mock_web):
             with patch("clickup_mcp.web_server.app.mount_service") as mock_mount:
+                # Reset client factory to ensure it will create a new instance with our token
+                from clickup_mcp.client import ClickUpAPIClientFactory
+                ClickUpAPIClientFactory.reset()
+                
                 create_app(config)
                 mock_mount.assert_called_once_with(mock_mcp_server, MCPServerType.SSE.value)

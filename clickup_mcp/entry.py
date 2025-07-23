@@ -80,9 +80,6 @@ def run_server(config: ServerConfig) -> None:
     """
     configure_logging(config.log_level)
 
-    # Load environment variables from .env file
-    load_environment_from_file(config.env_file)
-
     # Create the FastAPI app with server configuration
     app = create_app(config)
 

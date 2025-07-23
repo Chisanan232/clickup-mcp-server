@@ -100,15 +100,15 @@ def create_app(server_config: Optional[ServerConfig] = None) -> FastAPI:
     Returns:
         Configured FastAPI application
     """
+    # Get env_file from configuration if provided and load environment variables
+    env_file = server_config.env_file if server_config else None
+    load_environment_from_file(env_file)
+
     app = WebServerFactory.get()
     
     # Use default server type if no configuration is provided
     server_type = server_config.mcp_server_type if server_config else MCPServerType.SSE
     
-    # Get env_file from configuration if provided and load environment variables
-    env_file = server_config.env_file if server_config else None
-    load_environment_from_file(env_file)
-
     # Root endpoint for health checks
     @app.get("/", response_class=JSONResponse)
     async def root() -> Dict[str, str]:
