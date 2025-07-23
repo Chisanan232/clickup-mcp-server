@@ -407,20 +407,34 @@ _CLICKUP_API_CLIENT: Optional[ClickUpAPIClient] = None
 class ClickUpAPIClientFactory(BaseServerFactory[ClickUpAPIClient]):
     @staticmethod
     def create(
-        api_token: str,
+        api_token: str = "",
         base_url: str = "https://api.clickup.com/api/v2",
         timeout: float = 30.0,
         max_retries: int = 3,
         retry_delay: float = 1.0,
         rate_limit_requests_per_minute: int = 100,
+        **kwargs,  # Add **kwargs to satisfy base class contract
     ) -> ClickUpAPIClient:
         """
-        Create and configure the MCP server with the specified environment file.
+        Create and configure a ClickUp API client.
+
+        Args:
+            api_token: ClickUp API token
+            base_url: Base URL for the ClickUp API
+            timeout: Request timeout in seconds
+            max_retries: Maximum number of retries for failed requests
+            retry_delay: Delay between retries in seconds
+            rate_limit_requests_per_minute: Maximum requests per minute
+            **kwargs: Additional arguments (for base class compatibility)
 
         Returns:
-            Configured FastMCP server instance
+            Configured ClickUpAPIClient instance
         """
-        # Create a new FastMCP instance
+        # Extract token from kwargs if not provided explicitly
+        if not api_token and "token" in kwargs:
+            api_token = kwargs["token"]
+
+        # Create a new ClickUp API client
         global _CLICKUP_API_CLIENT
         assert _CLICKUP_API_CLIENT is None, "It is not allowed to create more than one instance of ClickUp API client."
         _CLICKUP_API_CLIENT = ClickUpAPIClient(

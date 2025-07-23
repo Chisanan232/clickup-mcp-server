@@ -9,9 +9,12 @@ _MCP_SERVER_INSTANCE: Optional[FastMCP] = None
 
 class MCPServerFactory(BaseServerFactory[FastMCP]):
     @staticmethod
-    def create() -> FastMCP:
+    def create(**kwargs) -> FastMCP:
         """
-        Create and configure the MCP server with the specified environment file.
+        Create and configure the MCP server.
+
+        Args:
+            **kwargs: Additional arguments (unused, but included for base class compatibility)
 
         Returns:
             Configured FastMCP server instance

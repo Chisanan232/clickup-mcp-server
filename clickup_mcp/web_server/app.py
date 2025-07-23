@@ -23,9 +23,12 @@ _WEB_SERVER_INSTANCE: Optional[FastAPI] = None
 
 class WebServerFactory(BaseServerFactory[FastAPI]):
     @staticmethod
-    def create() -> FastAPI:
+    def create(**kwargs) -> FastAPI:
         """
-        Create and configure the web API server with the specified environment file.
+        Create and configure the web API server.
+
+        Args:
+            **kwargs: Additional arguments (unused, but included for base class compatibility)
 
         Returns:
             Configured FastAPI server instance
