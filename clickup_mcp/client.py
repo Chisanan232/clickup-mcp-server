@@ -416,7 +416,7 @@ class ClickUpAPIClientFactory(BaseServerFactory[ClickUpAPIClient]):
         """
         # Create a new FastMCP instance
         global _CLICKUP_API_CLIENT
-        assert _CLICKUP_API_CLIENT is None, "It is not allowed to create more than one instance of FastMCP."
+        assert _CLICKUP_API_CLIENT is None, "It is not allowed to create more than one instance of ClickUp API client."
         _CLICKUP_API_CLIENT = ClickUpAPIClient(
             api_token=api_token,
             base_url=base_url,
@@ -435,5 +435,13 @@ class ClickUpAPIClientFactory(BaseServerFactory[ClickUpAPIClient]):
         Returns:
             Configured FastMCP server instance
         """
-        assert _CLICKUP_API_CLIENT is not None, "It must be created FastMCP first."
+        assert _CLICKUP_API_CLIENT is not None, "It must be created ClickUp API client first."
         return _CLICKUP_API_CLIENT
+
+    @staticmethod
+    def reset() -> None:
+        """
+        Reset the singleton instance (for testing purposes).
+        """
+        global _CLICKUP_API_CLIENT
+        _CLICKUP_API_CLIENT = None

@@ -21,3 +21,10 @@ class BaseServerFactory[T](metaclass=ABCMeta):
         Returns:
             Configured server instance
         """
+
+    @staticmethod
+    @abstractmethod
+    def reset() -> None:
+        """
+        Reset the singleton instance (for testing purposes).
+        """

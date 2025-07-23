@@ -52,13 +52,21 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
     @staticmethod
     def get() -> FastAPI:
         """
-        Get the web server instance
+        Get the web API server instance
 
         Returns:
             Configured FastAPI server instance
         """
         assert _WEB_SERVER_INSTANCE is not None, "It must be created web server first."
         return _WEB_SERVER_INSTANCE
+        
+    @staticmethod
+    def reset() -> None:
+        """
+        Reset the singleton instance (for testing purposes).
+        """
+        global _WEB_SERVER_INSTANCE
+        _WEB_SERVER_INSTANCE = None
 
 
 web = WebServerFactory.create()
@@ -95,6 +103,14 @@ def create_app(server_config: Optional[ServerConfig] = None) -> FastAPI:
     
     # Use default server type if no configuration is provided
     server_type = server_config.mcp_server_type if server_config else MCPServerType.SSE
+    
+    # Get env_file from configuration if provided
+    env_file = server_config.env_file if server_config else None
+    
+    # Load environment variables from .env file if provided
+    if env_file:
+        from dotenv import load_dotenv
+        load_dotenv(env_file)
 
     # Root endpoint for health checks
     @app.get("/", response_class=JSONResponse)
@@ -107,8 +123,7 @@ def create_app(server_config: Optional[ServerConfig] = None) -> FastAPI:
         """
         return {"status": "ok", "server": "ClickUp MCP Server"}
 
-    # Get API token from environment (which was loaded at application startup)
-    # Create client with the token
+    # Create client with the token from environment
     ClickUpAPIClientFactory.create(api_token=get_api_token())
     mcp_server = MCPServerFactory.get()
     # Mount MCP routes

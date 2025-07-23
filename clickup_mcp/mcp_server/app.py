@@ -32,6 +32,14 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
         """
         assert _MCP_SERVER_INSTANCE is not None, "It must be created FastMCP first."
         return _MCP_SERVER_INSTANCE
+        
+    @staticmethod
+    def reset() -> None:
+        """
+        Reset the singleton instance (for testing purposes).
+        """
+        global _MCP_SERVER_INSTANCE
+        _MCP_SERVER_INSTANCE = None
 
 
 # Create a default MCP server instance for backward compatibility
