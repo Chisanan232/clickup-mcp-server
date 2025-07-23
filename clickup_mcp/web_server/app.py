@@ -120,8 +120,8 @@ def create_app(server_config: Optional[ServerConfig] = None) -> FastAPI:
         """
         return {"status": "ok", "server": "ClickUp MCP Server"}
 
-    # Create client with the token from environment
-    ClickUpAPIClientFactory.create(api_token=get_api_token())
+    # Create client with the token from configuration or environment
+    ClickUpAPIClientFactory.create(api_token=get_api_token(server_config))
     mcp_server = MCPServerFactory.get()
     # Mount MCP routes
     mount_service(mcp_server, server_type)

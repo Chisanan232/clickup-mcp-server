@@ -27,6 +27,28 @@ class TestEnvLoading:
         token = get_api_token()
         assert token == "test_token_from_env"
 
+    def test_get_api_token_with_config(self, monkeypatch):
+        """Test getting API token from ServerConfig."""
+        # Set up environment variable (should be ignored when config has token)
+        monkeypatch.setenv("CLICKUP_API_TOKEN", "test_token_from_env")
+        
+        # Create config with token
+        from clickup_mcp.models.cli import ServerConfig
+        config = ServerConfig(token="test_token_from_config")
+        
+        # Test getting token from config
+        token = get_api_token(config)
+        assert token == "test_token_from_config"
+
+    def test_get_api_token_missing(self, monkeypatch):
+        """Test error when API token is missing from environment."""
+        # Ensure environment is clean
+        monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
+
+        # Test that ValueError is raised when token is missing
+        with pytest.raises(ValueError, match="ClickUp API token not found"):
+            get_api_token()
+
     def test_clickup_api_client_factory(self, monkeypatch):
         """Test creating ClickUp client with token."""
         # Reset singleton before test
@@ -44,15 +66,6 @@ class TestEnvLoading:
         
         # Reset singleton after test
         clickup_mcp.client._CLICKUP_API_CLIENT = None
-
-    def test_get_api_token_missing(self, monkeypatch):
-        """Test error when API token is missing from environment."""
-        # Ensure environment is clean
-        monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
-
-        # Test that ValueError is raised when token is missing
-        with pytest.raises(ValueError, match="ClickUp API token not found"):
-            get_api_token()
 
     def test_entry_point_env_loading(self, monkeypatch):
         """Test environment loading at entry point."""

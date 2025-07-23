@@ -37,6 +37,9 @@ def parse_args() -> ServerConfig:
         "--env", type=str, dest="env_file", default=".env", help="Path to the .env file for environment variables"
     )
     parser.add_argument(
+        "--token", type=str, help="ClickUp API token (overrides token from .env file if provided)"
+    )
+    parser.add_argument(
         "--server-type", 
         type=str, 
         default="sse", 

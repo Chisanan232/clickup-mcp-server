@@ -5,6 +5,7 @@ This module provides data models for the web server configuration.
 """
 
 from enum import Enum
+from typing import Optional
 
 from pydantic import BaseModel, Field, validator
 
@@ -39,6 +40,7 @@ class ServerConfig(BaseModel):
     log_level: LogLevel = Field(default=LogLevel.INFO, description="Logging level")
     reload: bool = Field(default=False, description="Enable auto-reload for development")
     env_file: str = Field(default=".env", description="Path to the .env file for environment variables")
+    token: Optional[str] = Field(default=None, description="ClickUp API token. If provided, takes precedence over token from env file")
     mcp_server_type: MCPServerType = Field(default=MCPServerType.SSE, description="Type of server to run (sse or http-streaming)")
 
     @validator("port")

@@ -370,26 +370,31 @@ class ClickUpAPIClient:
         return await self._make_request("PATCH", endpoint, params=params, data=data, headers=headers)
 
 
-def get_api_token() -> str:
+def get_api_token(config=None) -> str:
     """
-    Get the ClickUp API token from environment variables.
-
-    The .env file should be loaded at the entry point of the application.
-
+    Get the ClickUp API token from CLI options or environment variables.
+    
+    Args:
+        config: Optional ServerConfig instance containing CLI options
+        
     Returns:
         The API token if found
-
+        
     Raises:
         ValueError: If API token cannot be found
     """
-    # Get token directly from environment (env file should be loaded at entry point)
+    # First check if token is provided directly via CLI option
+    if config and config.token:
+        return config.token
+        
+    # Otherwise get token from environment (env file should be loaded at entry point)
     token = os.environ.get("CLICKUP_API_TOKEN")
 
     # Raise error if we don't have a token
     if not token:
         raise ValueError(
             "ClickUp API token not found. Please set the CLICKUP_API_TOKEN environment variable "
-            "in your .env file and ensure it is loaded."
+            "in your .env file, or provide it using the --token command line option."
         )
 
     return token
