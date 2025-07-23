@@ -4,6 +4,8 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
+      - id: check-added-large-files
+      - id: check-toml
       - id: check-yaml
         args: ['--unsafe']
       - id: debug-statements
@@ -46,7 +48,7 @@ repos:
             dist"""
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.16.1
+    rev: v1.17.0
     hooks:
       - id: mypy
         package: clickup_mcp,test
@@ -58,6 +60,6 @@ repos:
 
   - repo: https://github.com/astral-sh/uv-pre-commit
     # uv version.
-    rev: 0.7.20
+    rev: 0.8.0
     hooks:
       - id: uv-lock
