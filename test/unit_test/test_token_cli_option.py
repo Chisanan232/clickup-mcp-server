@@ -5,7 +5,6 @@ Test the ClickUp API token CLI option functionality.
 import sys
 from unittest import mock
 
-
 from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
 from clickup_mcp.entry import parse_args
 from clickup_mcp.models.cli import ServerConfig
