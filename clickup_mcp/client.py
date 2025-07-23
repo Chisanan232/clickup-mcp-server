@@ -16,6 +16,7 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 import httpx
 from pydantic import BaseModel, Field
 
+from clickup_mcp.models.cli import ServerConfig
 from clickup_mcp.models.dto.base import BaseResponseDTO
 from ._base import BaseServerFactory
 
@@ -370,7 +371,7 @@ class ClickUpAPIClient:
         return await self._make_request("PATCH", endpoint, params=params, data=data, headers=headers)
 
 
-def get_api_token(config=None) -> str:
+def get_api_token(config: ServerConfig | None = None) -> str:
     """
     Get the ClickUp API token from CLI options or environment variables.
     
