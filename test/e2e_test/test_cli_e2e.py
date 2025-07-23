@@ -12,6 +12,8 @@ import sys
 import time
 import urllib.error
 import urllib.request
+import os
+import tempfile
 from contextlib import closing
 from pathlib import Path
 
@@ -55,6 +57,20 @@ def run_command(cmd: list, cwd: str | Path = PROJECT_ROOT, timeout: int = 5) -> 
 
 class TestClickUpMCPCliE2E:
     """End-to-end tests for the ClickUp MCP CLI."""
+
+    @pytest.fixture
+    def temp_env_file(self):
+        """Create a temporary .env file with test API token."""
+        # Create a temporary .env file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.env', delete=False) as temp_file:
+            temp_file.write("CLICKUP_API_TOKEN=test_token_e2e_tests\n")
+            temp_file_path = temp_file.name
+        
+        # Return the path to the temporary file
+        yield temp_file_path
+        
+        # Clean up the temporary file
+        Path(temp_file_path).unlink(missing_ok=True)
 
     @pytest.mark.parametrize(
         "execution_method",
@@ -143,13 +159,13 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_server_startup_and_root_endpoints(self, execution_method):
+    def test_server_startup_and_root_endpoints(self, execution_method, temp_env_file):
         """Test server starts up and basic endpoints are accessible."""
         # Find a free port to avoid conflicts
         port = find_free_port()
 
-        # Start the server in a separate process
-        cmd = execution_method + ["--port", str(port), "--host", "127.0.0.1"]
+        # Start the server in a separate process with the temporary .env file
+        cmd = execution_method + ["--port", str(port), "--host", "127.0.0.1", "--env", temp_env_file]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         try:
@@ -195,13 +211,13 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_server_mcp_endpoints(self, execution_method):
+    def test_server_mcp_endpoints(self, execution_method, temp_env_file):
         """Test MCP-specific endpoints."""
         # Find a free port to avoid conflicts
         port = find_free_port()
 
-        # Start the server in a separate process with a longer timeout
-        cmd = execution_method + ["--port", str(port), "--host", "127.0.0.1", "--log-level", "debug"]
+        # Start the server in a separate process with a longer timeout and the temporary .env file
+        cmd = execution_method + ["--port", str(port), "--host", "127.0.0.1", "--log-level", "debug", "--env", temp_env_file]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         try:
@@ -264,12 +280,12 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_custom_host_and_port(self, execution_method):
+    def test_custom_host_and_port(self, execution_method, temp_env_file):
         """Test specifying custom host and port."""
         port = find_free_port()
 
-        # Start the server with custom settings
-        cmd = execution_method + ["--host", "127.0.0.1", "--port", str(port), "--log-level", "debug"]
+        # Start the server with custom settings and the temporary .env file
+        cmd = execution_method + ["--host", "127.0.0.1", "--port", str(port), "--log-level", "debug", "--env", temp_env_file]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         try:
@@ -300,12 +316,12 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_server_response_to_sigterm(self, execution_method):
+    def test_server_response_to_sigterm(self, execution_method, temp_env_file):
         """Test server properly shuts down on SIGTERM."""
         port = find_free_port()
 
-        # Start the server
-        cmd = execution_method + ["--port", str(port), "--host", "127.0.0.1"]
+        # Start the server with the temporary .env file
+        cmd = execution_method + ["--port", str(port), "--host", "127.0.0.1", "--env", temp_env_file]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         try:
@@ -348,12 +364,12 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_server_response_to_sigint(self, execution_method):
+    def test_server_response_to_sigint(self, execution_method, temp_env_file):
         """Test server properly shuts down on SIGINT (Ctrl+C)."""
         port = find_free_port()
 
-        # Start the server
-        cmd = execution_method + ["--port", str(port), "--host", "127.0.0.1"]
+        # Start the server with the temporary .env file
+        cmd = execution_method + ["--port", str(port), "--host", "127.0.0.1", "--env", temp_env_file]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         try:

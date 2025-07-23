@@ -10,6 +10,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from clickup_mcp.client import ClickUpAPIClientFactory
 from clickup_mcp.web_server.app import WebServerFactory, create_app
 
 
@@ -17,22 +18,28 @@ class TestWebServer:
     """Test suite for the FastAPI web server integration."""
 
     @pytest.fixture(autouse=True)
-    def reset_web_server(self):
-        """Reset the global web server instance before and after each test."""
+    def reset_factories(self):
+        """Reset the global web server and client factory instances before and after each test."""
         # Import here to avoid circular imports
         import clickup_mcp.web_server.app
-
-        # Store original instance
+        import clickup_mcp.mcp_server.app
+        
+        # Store original instances
         self.original_web_instance = clickup_mcp.web_server.app._WEB_SERVER_INSTANCE
-
+        self.original_mcp_instance = clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE
+        
         # Reset before test
         clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = None
-
+        clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE = None
+        ClickUpAPIClientFactory.reset()
+        
         # Run the test
         yield
-
+        
         # Restore original after test to avoid affecting other tests
         clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = self.original_web_instance
+        clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE = self.original_mcp_instance
+        ClickUpAPIClientFactory.reset()
 
     @pytest.fixture
     def mock_mcp(self) -> MagicMock:

@@ -7,11 +7,13 @@ are correctly accessible when the web server is instantiated with real MCP compo
 
 import inspect
 import logging
+import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
 
+from clickup_mcp.client import ClickUpAPIClientFactory
 from clickup_mcp.mcp_server.app import MCPServerFactory
 from clickup_mcp.models.cli import ServerConfig, MCPServerType
 from clickup_mcp.web_server.app import WebServerFactory, create_app, mount_service, web
@@ -29,24 +31,31 @@ class TestMCPServerMounting:
     @pytest.fixture(autouse=True)
     def reset_singletons(self):
         """Reset the singleton instances before each test."""
-        # Import the module variables directly
-        import clickup_mcp.mcp_server.app
+        # Import here to avoid circular imports
         import clickup_mcp.web_server.app
+        import clickup_mcp.mcp_server.app
+        from clickup_mcp.client import ClickUpAPIClientFactory
 
-        # Save original instances
-        original_web = clickup_mcp.web_server.app._WEB_SERVER_INSTANCE
-        original_mcp = clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE
+        # Store original values
+        self.original_web_server = clickup_mcp.web_server.app._WEB_SERVER_INSTANCE
+        self.original_mcp_server = clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE
 
-        # Reset to None before each test
+        # Reset before test
         clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = None
         clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE = None
+        WebServerFactory.reset()
+        MCPServerFactory.reset()
+        ClickUpAPIClientFactory.reset()
 
-        # Run the test
+        # Run test
         yield
 
-        # Restore original instances after the test
-        clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = original_web
-        clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE = original_mcp
+        # Reset after test to not affect other tests
+        clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = self.original_web_server
+        clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE = self.original_mcp_server
+        WebServerFactory.reset()
+        MCPServerFactory.reset()
+        ClickUpAPIClientFactory.reset()
 
     @pytest.fixture
     def mock_clickup_client(self):
@@ -106,7 +115,7 @@ class TestMCPServerMounting:
         
         # Patch the web object and the client factory
         with patch("clickup_mcp.web_server.app.web", mock_web):
-            with patch("clickup_mcp.client.create_clickup_client", return_value=mock_clickup_client):
+            with patch("clickup_mcp.client.ClickUpAPIClientFactory.create", return_value=mock_clickup_client):
                 # Create MCP server with the mocked dependencies
                 mcp_server = MCPServerFactory.create()
                 
@@ -181,15 +190,15 @@ class TestMCPServerMounting:
         assert any(r.path == "/mcp" for r in mount_routes), "MCP app not mounted with fixed function"
         assert sum(1 for r in mount_routes if r.path == "/mcp") == 1, "Multiple MCP mounts found"
 
-    def test_create_app_wrapper(self, mock_clickup_client):
+    def test_create_app_wrapper(self):
         """
-        Test a wrapper around create_app that fixes the mounting issue.
+        Test that the create_app function correctly sets up the app with all routes and MCP server.
         """
-        # Use session-scoped factory to avoid recreating for every test
-        with patch("clickup_mcp.client.create_clickup_client", return_value=mock_clickup_client):
-            # Reset factories first to ensure a clean test environment
-            WebServerFactory._instance = None
-            MCPServerFactory._instance = None
+        try:
+            # Reset singleton instances for this test
+            WebServerFactory.reset()
+            MCPServerFactory.reset()
+            ClickUpAPIClientFactory.reset()
             
             # Define a fixed mount_service that mounts only one server type
             def fixed_mount_service(mcp_server, server_type=MCPServerType.SSE):
@@ -198,28 +207,38 @@ class TestMCPServerMounting:
                 # In test context, just directly mount our test app
                 app.mount("/mcp", FastAPI())  # Use a simple FastAPI app for the test
 
-            # Patch the mount_service function
-            with patch("clickup_mcp.web_server.app.mount_service", side_effect=fixed_mount_service):
-                # Create web server and MCP server in correct order
-                WebServerFactory.create()
-                MCPServerFactory.create()
+            # Use patch.dict to set the environment variable directly
+            with patch.dict(os.environ, {"CLICKUP_API_TOKEN": "test_token_for_mount"}):
+                # Patch the mount_service function
+                with patch("clickup_mcp.web_server.app.mount_service", side_effect=fixed_mount_service):
+                    # Create web server and MCP server in correct order
+                    WebServerFactory.create()
+                    MCPServerFactory.create()
 
-                # Now call create_app with the server config that specifies SSE type
-                app = create_app(ServerConfig(mcp_server_type=MCPServerType.SSE))
+                    # Now call create_app with the server config that specifies SSE type
+                    app = create_app(ServerConfig(mcp_server_type=MCPServerType.SSE))
 
-                # Verify routes
-                routes = app.routes
-                mount_routes = [r for r in routes if hasattr(r, "app")]
-                mount_paths = [r.path for r in mount_routes if hasattr(r, "path")]
+                    # Verify routes
+                    routes = app.routes
+                    mount_routes = [r for r in routes if hasattr(r, "app")]
+                    mount_paths = [r.path for r in mount_routes if hasattr(r, "path")]
 
-                logger.debug("All routes after create_app with fixed mount_service:")
-                for route in routes:
-                    if hasattr(route, "path"):
-                        if hasattr(route, "app"):
-                            logger.debug(f"  Mount: {route.path} -> {type(route.app).__name__}")
-                        else:
-                            logger.debug(f"  Route: {route.path}")
+                    logger.debug("All routes after create_app with fixed mount_service:")
+                    for route in routes:
+                        if hasattr(route, "path"):
+                            if hasattr(route, "app"):
+                                logger.debug(f"  Mount: {route.path} -> {type(route.app).__name__}")
+                            else:
+                                logger.debug(f"  Route: {route.path}")
 
-                # Verify mounted paths
-                assert "/mcp" in mount_paths, "MCP app not mounted by create_app with fixed mount_service"
-                assert sum(1 for r in mount_routes if r.path == "/mcp") == 1, "Multiple MCP mounts found"
+                    # Verify mounted paths
+                    assert "/mcp" in mount_paths, "MCP app not mounted by create_app with fixed mount_service"
+                    assert sum(1 for r in mount_routes if r.path == "/mcp") == 1, "Multiple MCP mounts found"
+        except Exception as e:
+            logger.exception(f"Test failed with error: {str(e)}")
+            raise
+        finally:
+            # Always reset singletons after test
+            WebServerFactory.reset()
+            MCPServerFactory.reset()
+            ClickUpAPIClientFactory.reset()
