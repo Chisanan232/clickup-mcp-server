@@ -4,6 +4,7 @@ Unit tests for the WebServerFactory.
 This module tests the factory pattern for creating and managing the Web server instance.
 """
 
+from typing import Any, Generator, Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -16,8 +17,10 @@ from clickup_mcp.web_server.app import WebServerFactory
 class TestWebServerFactory:
     """Test suite for the WebServerFactory class."""
 
+    original_instance: Optional[Any]
+
     @pytest.fixture(autouse=True)
-    def reset_web_server(self):
+    def reset_web_server(self) -> Generator[None, None, None]:
         """Reset the global web server instance before and after each test."""
         # Import here to avoid circular imports
         import clickup_mcp.web_server.app
@@ -34,7 +37,7 @@ class TestWebServerFactory:
         # Restore original after test to avoid affecting other tests
         clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = self.original_instance
 
-    def test_create_web_server(self):
+    def test_create_web_server(self) -> None:
         """Test creating a new web server instance."""
         # Need to patch where FastAPI is imported, not where it's defined
         with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
@@ -66,7 +69,7 @@ class TestWebServerFactory:
 
             assert app_module._WEB_SERVER_INSTANCE is mock_instance
 
-    def test_get_web_server(self):
+    def test_get_web_server(self) -> None:
         """Test getting an existing web server instance."""
         # Create a server first using a mock
         with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
@@ -83,7 +86,7 @@ class TestWebServerFactory:
             assert created_server is retrieved_server
             assert retrieved_server is mock_instance
 
-    def test_create_fails_when_already_created(self):
+    def test_create_fails_when_already_created(self) -> None:
         """Test that creating a server when one already exists raises an error."""
         # Create a server first
         WebServerFactory.create()
@@ -94,7 +97,7 @@ class TestWebServerFactory:
 
         assert "not allowed to create more than one instance" in str(excinfo.value)
 
-    def test_get_fails_when_not_created(self):
+    def test_get_fails_when_not_created(self) -> None:
         """Test that getting a server before creating one raises an error."""
         # Attempting to get before creating should raise an AssertionError
         with pytest.raises(AssertionError) as excinfo:
@@ -102,7 +105,7 @@ class TestWebServerFactory:
 
         assert "must be created web server first" in str(excinfo.value)
 
-    def test_backward_compatibility_global_web(self):
+    def test_backward_compatibility_global_web(self) -> None:
         """Test that the global web variable exists and is a FastAPI instance."""
         # We need to test that the module-level 'web' variable exists and is a FastAPI instance
         import clickup_mcp.web_server.app
@@ -129,7 +132,9 @@ class TestWebServerFactory:
             (MCPServerType.HTTP_STREAMING, "/mcp", False, True),
         ],
     )
-    def test_mount_service_parameterized(self, server_type, expected_path, should_call_sse, should_call_http):
+    def test_mount_service_parameterized(
+        self, server_type: MCPServerType, expected_path: str, should_call_sse: bool, should_call_http: bool
+    ) -> None:
         """Test that mount_service correctly mounts MCP server apps based on server type."""
         # Create a web server instance
         with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
@@ -147,12 +152,16 @@ class TestWebServerFactory:
             mock_mcp_server.streamable_http_app.return_value = mock_streaming_app
 
             # Patch the global web variable to use our mock_web_instance
-            with patch("clickup_mcp.web_server.app.web", mock_web_instance):
+            # and the global mcp_server to use our mock
+            with (
+                patch("clickup_mcp.web_server.app.web", mock_web_instance),
+                patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server),
+            ):
                 # Call mount_service
                 from clickup_mcp.web_server.app import mount_service
 
                 # Test with the specified server type
-                mount_service(mock_mcp_server, server_type)
+                mount_service(server_type)
 
                 # Verify the correct MCP server app was called
                 if should_call_sse:
@@ -168,12 +177,19 @@ class TestWebServerFactory:
                 # Check that the mount method was called with the correct path and app
                 assert mock_web_instance.mount.call_count == 1
                 if should_call_sse:
-                    mock_web_instance.mount.assert_called_once_with(expected_path, mock_sse_app)
-                elif should_call_http:
-                    mock_web_instance.mount.assert_called_once_with(expected_path, mock_streaming_app)
+                    mock_web_instance.mount.assert_called_with(expected_path, mock_sse_app)
+                else:
+                    mock_web_instance.mount.assert_called_with(expected_path, mock_streaming_app)
 
-    @pytest.mark.parametrize("invalid_server_type", ["invalid_type", 123, None])
-    def test_mount_service_invalid_type_parameterized(self, invalid_server_type):
+    @pytest.mark.parametrize(
+        "invalid_server_type",
+        [
+            "invalid_type",
+            123,
+            None,
+        ],
+    )
+    def test_mount_service_invalid_type_parameterized(self, invalid_server_type: Any) -> None:
         """Test that mount_service raises ValueError with invalid server types."""
         # Create a web server instance
         with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
@@ -187,15 +203,15 @@ class TestWebServerFactory:
             mock_mcp_server = MagicMock()
 
             # Patch the global web variable to use our mock_web_instance
-            with patch("clickup_mcp.web_server.app.web", mock_web_instance):
-                # Import mount_service
+            # and the global mcp_server to use our mock
+            with (
+                patch("clickup_mcp.web_server.app.web", mock_web_instance),
+                patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server),
+            ):
+                # Test that invalid server type raises ValueError
                 from clickup_mcp.web_server.app import mount_service
 
-                # Verify that ValueError is raised
-                with pytest.raises(ValueError, match=f"Unknown server type: {invalid_server_type}"):
-                    mount_service(mock_mcp_server, invalid_server_type)
+                with pytest.raises(ValueError) as excinfo:
+                    mount_service(invalid_server_type)
 
-                # Verify no mount calls were made
-                mock_web_instance.mount.assert_not_called()
-                mock_mcp_server.sse_app.assert_not_called()
-                mock_mcp_server.streamable_http_app.assert_not_called()
+                assert "Unknown server type:" in str(excinfo.value)

@@ -23,7 +23,7 @@ from ._base import BaseAPIClientTestSuite
 class TestClickUpAPIClient(BaseAPIClientTestSuite):
     """Test cases for ClickUpAPIClient."""
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test API client initialization."""
         client = ClickUpAPIClient(
             api_token="test_token", timeout=10.0, max_retries=5, retry_delay=2.0, rate_limit_requests_per_minute=120
@@ -38,7 +38,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
         assert client._headers["Authorization"] == "test_token"
 
     @pytest.mark.asyncio
-    async def test_context_manager(self, api_client):
+    async def test_context_manager(self, api_client: ClickUpAPIClient) -> None:
         """Test async context manager functionality."""
         async with api_client as client:
             assert client is api_client
@@ -47,7 +47,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
         # (We can't easily test this without mocking the httpx client)
 
     @pytest.mark.asyncio
-    async def test_rate_limiting(self, api_client):
+    async def test_rate_limiting(self, api_client: ClickUpAPIClient) -> None:
         """Test rate limiting functionality."""
         # Set a very low rate limit for testing
         api_client.rate_limit = 2
@@ -127,7 +127,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
                 mock_sleep.assert_called_once_with(expected_sleep_time)
 
     @pytest.mark.asyncio
-    async def test_successful_request(self, api_client):
+    async def test_successful_request(self, api_client: ClickUpAPIClient) -> None:
         """Test successful API request."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -147,7 +147,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             mock_request.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_authentication_error(self, api_client):
+    async def test_authentication_error(self, api_client: ClickUpAPIClient) -> None:
         """Test authentication error handling."""
         mock_response = Mock()
         mock_response.status_code = 401
@@ -162,7 +162,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert "Invalid API token" in str(exc_info.value)
 
     @pytest.mark.asyncio
-    async def test_rate_limit_error(self, api_client):
+    async def test_rate_limit_error(self, api_client: ClickUpAPIClient) -> None:
         """Test rate limit error handling."""
         mock_response = Mock()
         mock_response.status_code = 429
@@ -176,7 +176,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert exc_info.value.status_code == 429
 
     @pytest.mark.asyncio
-    async def test_client_error_response(self, api_client):
+    async def test_client_error_response(self, api_client: ClickUpAPIClient) -> None:
         """Test client error response (4xx) handling."""
         mock_response = Mock()
         mock_response.status_code = 400
@@ -193,7 +193,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert response.data == {"err": "Bad request"}
 
     @pytest.mark.asyncio
-    async def test_retry_logic(self, api_client):
+    async def test_retry_logic(self, api_client: ClickUpAPIClient) -> None:
         """Test retry logic for failed requests."""
         # Set up a mock that fails twice then succeeds
         mock_responses = [
@@ -219,7 +219,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert call_count == 3  # Two failures + one success
 
     @pytest.mark.asyncio
-    async def test_retry_exhausted(self, api_client):
+    async def test_retry_exhausted(self, api_client: ClickUpAPIClient) -> None:
         """Test behavior when all retries are exhausted."""
         with patch.object(api_client._client, "request", side_effect=httpx.HTTPError("Connection failed")):
             with pytest.raises(ClickUpAPIError) as exc_info:
@@ -228,7 +228,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert "Request failed after" in str(exc_info.value)
 
     @pytest.mark.asyncio
-    async def test_get_request(self, api_client):
+    async def test_get_request(self, api_client: ClickUpAPIClient) -> None:
         """Test GET request convenience method."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -248,7 +248,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert call_args[1]["params"] == {"key": "value"}
 
     @pytest.mark.asyncio
-    async def test_post_request(self, api_client):
+    async def test_post_request(self, api_client: ClickUpAPIClient) -> None:
         """Test POST request convenience method."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -268,7 +268,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert call_args[1]["content"] == json.dumps({"name": "test"})
 
     @pytest.mark.asyncio
-    async def test_put_request(self, api_client):
+    async def test_put_request(self, api_client: ClickUpAPIClient) -> None:
         """Test PUT request convenience method."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -289,7 +289,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert call_args[1]["content"] == json.dumps({"name": "updated"})
 
     @pytest.mark.asyncio
-    async def test_delete_request(self, api_client):
+    async def test_delete_request(self, api_client: ClickUpAPIClient) -> None:
         """Test DELETE request convenience method."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -310,7 +310,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert call_args[1]["params"] == {"force": "true"}
 
     @pytest.mark.asyncio
-    async def test_patch_request(self, api_client):
+    async def test_patch_request(self, api_client: ClickUpAPIClient) -> None:
         """Test PATCH request convenience method."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -331,7 +331,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert call_args[1]["content"] == json.dumps({"field": "value"})
 
     @pytest.mark.asyncio
-    async def test_request_with_custom_headers(self, api_client):
+    async def test_request_with_custom_headers(self, api_client: ClickUpAPIClient) -> None:
         """Test request with custom headers."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -355,7 +355,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert headers["Authorization"] == "test_token"  # Default header should still be present
 
     @pytest.mark.asyncio
-    async def test_request_with_params_and_data(self, api_client):
+    async def test_request_with_params_and_data(self, api_client: ClickUpAPIClient) -> None:
         """Test request with both query parameters and request body."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -377,7 +377,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert call_args[1]["content"] == json.dumps({"name": "test", "value": 123})
 
     @pytest.mark.asyncio
-    async def test_request_with_no_content_response(self, api_client):
+    async def test_request_with_no_content_response(self, api_client: ClickUpAPIClient) -> None:
         """Test request handling when response has no content."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -392,7 +392,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert response.success is True
 
     @pytest.mark.asyncio
-    async def test_server_error_response(self, api_client):
+    async def test_server_error_response(self, api_client: ClickUpAPIClient) -> None:
         """Test server error response (5xx) handling."""
         mock_response = Mock()
         mock_response.status_code = 500
@@ -409,7 +409,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert response.data == {"err": "Internal server error"}
 
     @pytest.mark.asyncio
-    async def test_response_without_error_field(self, api_client):
+    async def test_response_without_error_field(self, api_client: ClickUpAPIClient) -> None:
         """Test error response without explicit error field."""
         mock_response = Mock()
         mock_response.status_code = 404
@@ -426,7 +426,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert response.data == {"message": "Not found"}
 
     @pytest.mark.asyncio
-    async def test_response_with_empty_json(self, api_client):
+    async def test_response_with_empty_json(self, api_client: ClickUpAPIClient) -> None:
         """Test response with empty JSON content."""
         mock_response = Mock()
         mock_response.status_code = 400
@@ -443,7 +443,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert response.data == {}
 
     @pytest.mark.asyncio
-    async def test_non_200_success_response(self, api_client):
+    async def test_non_200_success_response(self, api_client: ClickUpAPIClient) -> None:
         """Test non-200 success response (like 201, 202)."""
         mock_response = Mock()
         mock_response.status_code = 201
@@ -459,7 +459,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert response.data == {"created": True}
 
     @pytest.mark.asyncio
-    async def test_request_timeout_handling(self, api_client):
+    async def test_request_timeout_handling(self, api_client: ClickUpAPIClient) -> None:
         """Test request timeout handling."""
         with patch.object(api_client._client, "request", side_effect=httpx.TimeoutException("Request timeout")):
             with pytest.raises(ClickUpAPIError) as exc_info:
@@ -469,7 +469,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert "timeout" in str(exc_info.value).lower()
 
     @pytest.mark.asyncio
-    async def test_request_connection_error(self, api_client):
+    async def test_request_connection_error(self, api_client: ClickUpAPIClient) -> None:
         """Test request connection error handling."""
         with patch.object(api_client._client, "request", side_effect=httpx.ConnectError("Connection refused")):
             with pytest.raises(ClickUpAPIError) as exc_info:
@@ -478,7 +478,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert "Request failed after" in str(exc_info.value)
 
     @pytest.mark.asyncio
-    async def test_exponential_backoff(self, api_client):
+    async def test_exponential_backoff(self, api_client: ClickUpAPIClient) -> None:
         """Test exponential backoff in retry logic."""
         # Set a faster retry delay for testing
         api_client.retry_delay = 0.01
@@ -512,7 +512,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert end_time - start_time >= 0.02
 
     @pytest.mark.asyncio
-    async def test_close_method(self, api_client):
+    async def test_close_method(self, api_client: ClickUpAPIClient) -> None:
         """Test the close method."""
         mock_client = Mock()
         mock_client.aclose = AsyncMock()
@@ -523,7 +523,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
         mock_client.aclose.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_context_manager_closes_client(self, api_client):
+    async def test_context_manager_closes_client(self, api_client: ClickUpAPIClient) -> None:
         """Test that context manager properly closes the client."""
         mock_client = Mock()
         mock_client.aclose = AsyncMock()
@@ -535,7 +535,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
         mock_client.aclose.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_rate_limit_with_empty_request_times(self, api_client):
+    async def test_rate_limit_with_empty_request_times(self, api_client: ClickUpAPIClient) -> None:
         """Test rate limiting when request times list is empty."""
         api_client._request_times = []
 
@@ -545,7 +545,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
         assert len(api_client._request_times) == 1
 
     @pytest.mark.asyncio
-    async def test_rate_limit_cleanup_old_requests(self, api_client):
+    async def test_rate_limit_cleanup_old_requests(self, api_client: ClickUpAPIClient) -> None:
         """Test that old request times are cleaned up."""
         # Add some old request times (more than 60 seconds ago)
         current_time = asyncio.get_event_loop().time()
@@ -562,7 +562,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
         assert all(current_time - req_time < 60 for req_time in api_client._request_times)
 
     @pytest.mark.asyncio
-    async def test_absolute_url_handling(self, api_client):
+    async def test_absolute_url_handling(self, api_client: ClickUpAPIClient) -> None:
         """Test handling of absolute URLs in endpoints."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -583,7 +583,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert call_args[1]["url"] == absolute_url
 
     @pytest.mark.asyncio
-    async def test_request_with_none_data(self, api_client):
+    async def test_request_with_none_data(self, api_client: ClickUpAPIClient) -> None:
         """Test request with None data doesn't serialize to JSON."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -602,7 +602,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert call_args[1]["content"] is None
 
     @pytest.mark.asyncio
-    async def test_rate_limit_with_sleep_required(self, api_client):
+    async def test_rate_limit_with_sleep_required(self, api_client: ClickUpAPIClient) -> None:
         """Test rate limiting when sleep is required."""
         # Set a low rate limit for testing
         api_client.rate_limit = 2
@@ -625,7 +625,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
         assert len(api_client._request_times) == 3
 
     @pytest.mark.asyncio
-    async def test_json_decode_error_handling(self, api_client):
+    async def test_json_decode_error_handling(self, api_client: ClickUpAPIClient) -> None:
         """Test handling of JSON decode errors in responses."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -641,7 +641,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert response.success is True
 
     @pytest.mark.asyncio
-    async def test_request_with_list_data(self, api_client):
+    async def test_request_with_list_data(self, api_client: ClickUpAPIClient) -> None:
         """Test request with list data in the body."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -652,7 +652,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
         list_data = [{"id": 1, "name": "item1"}, {"id": 2, "name": "item2"}]
 
         with patch.object(api_client._client, "request", return_value=mock_response) as mock_request:
-            response = await api_client.post("/test", data=list_data)
+            response = await api_client.post("/test", data=list_data)  # type: ignore[arg-type]
 
             assert response.status_code == 200
             mock_request.assert_called_once()
@@ -662,7 +662,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert call_args[1]["content"] == json.dumps(list_data)
 
     @pytest.mark.asyncio
-    async def test_request_with_non_json_error_response(self, api_client):
+    async def test_request_with_non_json_error_response(self, api_client: ClickUpAPIClient) -> None:
         """Test error response that can't be parsed as JSON."""
         mock_response = Mock()
         mock_response.status_code = 500
@@ -679,7 +679,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert response.data == {}  # Should be empty dict when JSON decode fails
 
     @pytest.mark.asyncio
-    async def test_response_status_codes_edge_cases(self, api_client):
+    async def test_response_status_codes_edge_cases(self, api_client: ClickUpAPIClient) -> None:
         """Test various edge case status codes."""
         # Test 204 No Content
         mock_response = Mock()
@@ -722,7 +722,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert response.data is None
 
     @pytest.mark.asyncio
-    async def test_request_url_construction(self, api_client):
+    async def test_request_url_construction(self, api_client: ClickUpAPIClient) -> None:
         """Test URL construction for different endpoint formats."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -745,7 +745,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert call_args[1]["url"] == "teams/456"
 
     @pytest.mark.asyncio
-    async def test_client_initialization_with_default_values(self):
+    async def test_client_initialization_with_default_values(self) -> None:
         """Test client initialization with all default values."""
         client = ClickUpAPIClient(api_token="test_token")
 
@@ -760,7 +760,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
         assert str(client._client.base_url) == "https://api.clickup.com/api/v2/"
 
     @pytest.mark.asyncio
-    async def test_make_request_with_all_parameters(self, api_client):
+    async def test_make_request_with_all_parameters(self, api_client: ClickUpAPIClient) -> None:
         """Test _make_request with all parameters provided."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -794,7 +794,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert headers["Content-Type"] == "application/json"
 
     @pytest.mark.asyncio
-    async def test_clickup_api_client_factory(self):
+    async def test_clickup_api_client_factory(self) -> None:
         """Test the ClickUpAPIClientFactory create and get methods."""
         # Reset the singleton before the test
         import clickup_mcp.client
@@ -821,9 +821,11 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
 class TestAPIResponse:
     """Test cases for APIResponse model."""
 
-    def test_api_response_creation(self):
+    def test_api_response_creation(self) -> None:
         """Test creating an APIResponse."""
-        response = APIResponse(status_code=200, data={"test": "data"}, headers={"Content-Type": "application/json"})
+        response: APIResponse = APIResponse(
+            status_code=200, data={"test": "data"}, headers={"Content-Type": "application/json"}
+        )
 
         assert response.status_code == 200
         assert response.data == {"test": "data"}
@@ -831,9 +833,11 @@ class TestAPIResponse:
         assert response.success is True
         assert response.error is None
 
-    def test_api_response_error(self):
+    def test_api_response_error(self) -> None:
         """Test creating an error APIResponse."""
-        response = APIResponse(status_code=400, data={"err": "Bad request"}, success=False, error="Bad request")
+        response: APIResponse = APIResponse(
+            status_code=400, data={"err": "Bad request"}, success=False, error="Bad request"
+        )
 
         assert response.status_code == 400
         assert response.success is False

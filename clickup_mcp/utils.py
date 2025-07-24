@@ -4,10 +4,9 @@ Utility functions for the ClickUp MCP server.
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 
-def load_environment_from_file(env_file: Optional[str] = None) -> bool:
+def load_environment_from_file(env_file: str | None = None) -> bool:
     """
     Load environment variables from a .env file if provided.
 

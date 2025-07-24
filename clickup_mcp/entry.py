@@ -8,9 +8,9 @@ that hosts the ClickUp MCP functionality.
 import argparse
 import logging
 import sys
-from typing import Dict, Optional, Union
 
 import uvicorn
+from fastapi import FastAPI
 from pydantic import ValidationError
 
 from clickup_mcp.models.cli import LogLevel, MCPServerType, ServerConfig
@@ -46,7 +46,7 @@ def parse_args() -> ServerConfig:
 
     # Parse args into a dictionary
     args_namespace = parser.parse_args()
-    args_dict: Dict[str, Union[str, int, bool]] = vars(args_namespace)
+    args_dict: dict[str, str | int | bool] = vars(args_namespace)
 
     try:
         # Convert to ServerConfig model
@@ -63,10 +63,11 @@ def configure_logging(log_level: str) -> None:
     Args:
         log_level: The logging level to use
     """
-    numeric_level: Optional[int] = getattr(logging, log_level.upper(), None)
+    numeric_level: int | None = getattr(logging, log_level.upper(), None)
     if not isinstance(numeric_level, int):
         raise ValueError(f"Invalid log level: {log_level}")
 
+    # Configure logging
     logging.basicConfig(level=numeric_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 
@@ -77,10 +78,11 @@ def run_server(config: ServerConfig) -> None:
     Args:
         config: Server configuration
     """
+    # Configure logging
     configure_logging(config.log_level)
 
-    # Create the FastAPI app with server configuration
-    app = create_app(config)
+    # Create and configure the FastAPI application
+    app: FastAPI = create_app(server_config=config)
 
     # Log server startup information
     logging.info(f"Starting server on {config.host}:{config.port}")
