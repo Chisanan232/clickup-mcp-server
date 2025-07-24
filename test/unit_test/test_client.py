@@ -652,7 +652,7 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
         list_data = [{"id": 1, "name": "item1"}, {"id": 2, "name": "item2"}]
 
         with patch.object(api_client._client, "request", return_value=mock_response) as mock_request:
-            response = await api_client.post("/test", data=list_data)
+            response = await api_client.post("/test", data=list_data)  # type: ignore[arg-type]
 
             assert response.status_code == 200
             mock_request.assert_called_once()
@@ -823,7 +823,9 @@ class TestAPIResponse:
 
     def test_api_response_creation(self) -> None:
         """Test creating an APIResponse."""
-        response = APIResponse(status_code=200, data={"test": "data"}, headers={"Content-Type": "application/json"})
+        response: APIResponse = APIResponse(
+            status_code=200, data={"test": "data"}, headers={"Content-Type": "application/json"}
+        )
 
         assert response.status_code == 200
         assert response.data == {"test": "data"}
@@ -833,7 +835,9 @@ class TestAPIResponse:
 
     def test_api_response_error(self) -> None:
         """Test creating an error APIResponse."""
-        response = APIResponse(status_code=400, data={"err": "Bad request"}, success=False, error="Bad request")
+        response: APIResponse = APIResponse(
+            status_code=400, data={"err": "Bad request"}, success=False, error="Bad request"
+        )
 
         assert response.status_code == 400
         assert response.success is False

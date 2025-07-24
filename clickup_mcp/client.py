@@ -404,7 +404,7 @@ _CLICKUP_API_CLIENT: ClickUpAPIClient | None = None
 
 class ClickUpAPIClientFactory(BaseServerFactory):
     @staticmethod
-    def create(
+    def create(  # type: ignore[override]
         api_token: str,
         base_url: str = "https://api.clickup.com/api/v2",
         timeout: float = 30.0,

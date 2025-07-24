@@ -106,7 +106,7 @@ def create_app(
         Configured FastAPI application
     """
     # Load environment variables from file if provided
-    load_environment_from_file(server_config.env_file)
+    load_environment_from_file(server_config.env_file if server_config else None)
 
     app = WebServerFactory.get()
 

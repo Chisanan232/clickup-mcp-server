@@ -15,7 +15,7 @@ import urllib.error
 import urllib.request
 from contextlib import closing
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any, Generator, Sequence
 
 import pytest
 
@@ -167,7 +167,7 @@ class TestClickUpMCPCliE2E:
         port = find_free_port()
 
         # Start the server in a separate process with the temporary .env file
-        cmd = execution_method + ["--port", str(port), "--host", "127.0.0.1", "--env", temp_env_file]
+        cmd = execution_method + ["--port", str(port), "--host", "127.0.0.1", "--env", str(temp_env_file)]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         try:
@@ -219,7 +219,7 @@ class TestClickUpMCPCliE2E:
         port = find_free_port()
 
         # Start the server in a separate process with a longer timeout and the temporary .env file
-        cmd = execution_method + [
+        cmd: Sequence[str] = execution_method + [
             "--port",
             str(port),
             "--host",
@@ -227,7 +227,7 @@ class TestClickUpMCPCliE2E:
             "--log-level",
             "debug",
             "--env",
-            temp_env_file,
+            str(temp_env_file),
         ]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -296,7 +296,7 @@ class TestClickUpMCPCliE2E:
         port = find_free_port()
 
         # Start the server with custom settings and the temporary .env file
-        cmd = execution_method + [
+        cmd: Sequence[str] = execution_method + [
             "--host",
             "127.0.0.1",
             "--port",
@@ -304,7 +304,7 @@ class TestClickUpMCPCliE2E:
             "--log-level",
             "debug",
             "--env",
-            temp_env_file,
+            str(temp_env_file),
         ]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -343,7 +343,14 @@ class TestClickUpMCPCliE2E:
         port = find_free_port()
 
         # Start the server with the temporary .env file
-        cmd = execution_method + ["--port", str(port), "--host", "127.0.0.1", "--env", temp_env_file]
+        cmd: Sequence[str] = execution_method + [
+            "--port",
+            str(port),
+            "--host",
+            "127.0.0.1",
+            "--env",
+            str(temp_env_file),
+        ]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         try:
@@ -393,7 +400,14 @@ class TestClickUpMCPCliE2E:
         port = find_free_port()
 
         # Start the server with the temporary .env file
-        cmd = execution_method + ["--port", str(port), "--host", "127.0.0.1", "--env", temp_env_file]
+        cmd: Sequence[str] = execution_method + [
+            "--port",
+            str(port),
+            "--host",
+            "127.0.0.1",
+            "--env",
+            str(temp_env_file),
+        ]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         try:
