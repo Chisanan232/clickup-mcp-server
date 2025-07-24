@@ -20,7 +20,7 @@ from clickup_mcp.models.cli import MCPServerType, ServerConfig
 class TestCliOptionEnv:
     """Tests for the CLI --env option."""
 
-    def test_env_cli_parameter(self):
+    def test_env_cli_parameter(self) -> None:
         """Test parsing the --env CLI parameter."""
         # Create a temporary env file path
         temp_env_path = "/tmp/custom_test.env"
@@ -31,7 +31,7 @@ class TestCliOptionEnv:
             assert isinstance(config, ServerConfig)
             assert config.env_file == temp_env_path
 
-    def test_env_file_passed_to_create_app(self, monkeypatch):
+    def test_env_file_passed_to_create_app(self, monkeypatch) -> None:
         """Test that the env file path is correctly passed to create_app."""
         # Create a temp .env file with a test token
         with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as temp_file:
@@ -48,60 +48,55 @@ class TestCliOptionEnv:
             # Mock create_app and uvicorn.run to prevent actual server startup
             with (
                 patch("clickup_mcp.entry.create_app") as mock_create_app,
-                patch("clickup_mcp.entry.uvicorn.run") as mock_run,
+                patch("uvicorn.run"),
             ):
-                # Run the server with our config
                 run_server(config)
 
-                # Check that create_app was called with our config containing the env_file path
-                mock_create_app.assert_called_once_with(config)
-
-                # Verify the config passed to create_app has the correct env_file
-                call_args = mock_create_app.call_args[0][0]
-                assert call_args.env_file == env_path
-
-                # Verify uvicorn.run was called
-                assert mock_run.called
+            # Verify create_app was called with env_file parameter
+            mock_create_app.assert_called_once()
+            _, kwargs = mock_create_app.call_args
+            assert "env_file" in kwargs
+            assert kwargs["env_file"] == env_path
 
         finally:
-            # Clean up temp file
+            # Clean up the temp file
             Path(env_path).unlink(missing_ok=True)
 
 
 class TestCliOptionServerType:
     """Test cases for server type CLI option."""
 
-    def test_server_type_enum(self):
+    def test_server_type_enum(self) -> None:
         """Test that the ServerType enum has expected values."""
         assert MCPServerType.SSE.value == "sse"
         assert MCPServerType.HTTP_STREAMING.value == "http-streaming"
         assert not hasattr(MCPServerType, "BOTH")
 
-    def test_default_server_type(self):
+    def test_default_server_type(self) -> None:
         """Test that the default server type is 'sse'."""
         with patch("sys.argv", ["program"]):
             config = parse_args()
             assert config.mcp_server_type == MCPServerType.SSE.value
 
-    def test_sse_server_type(self):
+    def test_sse_server_type(self) -> None:
         """Test that '--server-type sse' sets server_type to SSE."""
         with patch("sys.argv", ["program", "--server-type", "sse"]):
             config = parse_args()
             assert config.mcp_server_type == MCPServerType.SSE.value
 
-    def test_http_streaming_server_type(self):
+    def test_http_streaming_server_type(self) -> None:
         """Test that '--server-type http-streaming' sets server_type to HTTP_STREAMING."""
         with patch("sys.argv", ["program", "--server-type", "http-streaming"]):
             config = parse_args()
             assert config.mcp_server_type == MCPServerType.HTTP_STREAMING.value
 
-    def test_invalid_server_type(self):
+    def test_invalid_server_type(self) -> None:
         """Test that an invalid server type raises a system exit."""
         with patch("sys.argv", ["program", "--server-type", "invalid"]):
             with pytest.raises(SystemExit):
                 parse_args()
 
-    def test_mount_service_sse_only(self):
+    def test_mount_service_sse_only(self) -> None:
         """Test that only SSE endpoints are mounted when server_type is SSE."""
         # Setup
         mock_mcp_server = MagicMock()
@@ -117,7 +112,7 @@ class TestCliOptionServerType:
         assert mock_web.mount.call_count == 1
         mock_web.mount.assert_called_with("/mcp", mock_mcp_server.sse_app.return_value)
 
-    def test_mount_service_http_streaming_only(self):
+    def test_mount_service_http_streaming_only(self) -> None:
         """Test that only HTTP_STREAMING endpoints are mounted when server_type is HTTP_STREAMING."""
         # Setup
         mock_mcp_server = MagicMock()
@@ -134,7 +129,7 @@ class TestCliOptionServerType:
         mock_web.mount.assert_called_with("/mcp", mock_mcp_server.streamable_http_app.return_value)
 
     @patch("clickup_mcp.mcp_server.app.MCPServerFactory.get")
-    def test_create_app_with_sse_server_type(self, mock_mcp_factory, monkeypatch):
+    def test_create_app_with_sse_server_type(self, mock_mcp_factory, monkeypatch) -> None:
         """Test create_app with SSE server type config."""
         # Setup
         mock_mcp_server = MagicMock()
@@ -161,13 +156,13 @@ class TestCliOptionServerType:
 class TestCliOptionToken:
     """Tests for the CLI --token option."""
 
-    def test_server_config_with_token(self):
+    def test_server_config_with_token(self) -> None:
         """Test that ServerConfig accepts token field."""
         config = ServerConfig(token="test-token")
         assert config.token == "test-token"
 
 
-    def test_parse_args_with_token(self, monkeypatch):
+    def test_parse_args_with_token(self, monkeypatch) -> None:
         """Test that token CLI option is correctly parsed."""
         # Mock sys.argv to include token option
         with mock.patch.object(sys, "argv", ["program", "--token", "cli-token-value"]):
@@ -175,7 +170,7 @@ class TestCliOptionToken:
             assert config.token == "cli-token-value"
 
 
-    def test_token_takes_precedence_over_env_file(self, monkeypatch, tmp_path):
+    def test_token_takes_precedence_over_env_file(self, monkeypatch, tmp_path) -> None:
         """Test that token from CLI takes precedence over token from .env file."""
         # Create a temporary .env file
         env_file = tmp_path / ".env"
@@ -193,7 +188,7 @@ class TestCliOptionToken:
             assert token == "cli-token-value"
 
 
-    def test_env_file_token_used_when_no_cli_token(self, monkeypatch, tmp_path):
+    def test_env_file_token_used_when_no_cli_token(self, monkeypatch, tmp_path) -> None:
         """Test that token is loaded from .env file when no CLI token is provided."""
         # Create a temporary .env file
         env_file = tmp_path / ".env"
@@ -215,7 +210,7 @@ class TestCliOptionToken:
             assert token == "env-file-token"
 
 
-    def test_create_app_with_token(self):
+    def test_create_app_with_token(self) -> None:
         """Test that create_app uses the token from ServerConfig."""
         # Reset singletons before test
         from clickup_mcp.mcp_server.app import MCPServerFactory

@@ -5,15 +5,13 @@ This module provides MCP functions for interacting with ClickUp Spaces.
 These functions follow the FastMCP pattern for easy integration into MCP servers.
 """
 
-from typing import Optional
-
 from clickup_mcp.client import ClickUpAPIClientFactory
 
 from .app import mcp
 
 
 @mcp.tool(name="get_space", title="Get ClickUp Space", description="Get a ClickUp space by its ID.")
-async def get_space(space_id: str = "") -> Optional[dict]:
+async def get_space(space_id: str = "") -> dict[str, object] | None:
     """
     Get a ClickUp space by its ID.
 
