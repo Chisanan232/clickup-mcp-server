@@ -413,10 +413,18 @@ class ClickUpAPIClientFactory(BaseServerFactory):
         rate_limit_requests_per_minute: int = 100,
     ) -> ClickUpAPIClient:
         """
-        Create and configure the MCP server with the specified environment file.
+        Create and configure a ClickUp API client.
+
+        Args:
+            api_token: ClickUp API token
+            base_url: Base URL for the ClickUp API
+            timeout: Request timeout in seconds
+            max_retries: Maximum number of retries for failed requests
+            retry_delay: Delay between retries in seconds
+            rate_limit_requests_per_minute: Maximum requests per minute
 
         Returns:
-            Configured FastMCP server instance
+            Configured ClickUpAPIClient instance
         """
         global _CLICKUP_API_CLIENT
         assert _CLICKUP_API_CLIENT is None, "It is not allowed to create more than one instance of ClickUp API client."
