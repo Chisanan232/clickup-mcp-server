@@ -6,7 +6,7 @@ This module provides data models for the web server configuration.
 
 from enum import Enum
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class LogLevel(str, Enum):
@@ -46,14 +46,12 @@ class ServerConfig(BaseModel):
         default=MCPServerType.SSE, description="Type of server to run (sse or http-streaming)"
     )
 
-    @validator("port")
+    @classmethod
+    @field_validator("port")
     def validate_port_range(cls, v: int) -> int:
         """Validate that the port is in the valid range."""
         if not (1 <= v <= 65535):
             raise ValueError(f"Port must be between 1 and 65535, got {v}")
         return v
 
-    class Config:
-        """Pydantic model configuration."""
-
-        use_enum_values = True  # Use string values from enums
+    model_config = ConfigDict(use_enum_values=True)  # Use string values from enums
