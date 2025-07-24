@@ -16,7 +16,7 @@ from _pytest.fixtures import FixtureRequest
 from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
 from clickup_mcp.utils import load_environment_from_file
 from clickup_mcp.web_server.app import create_app, mount_service
-from clickup_mcp.entry import parse_args, run_server
+from clickup_mcp.entry import parse_args, main
 from clickup_mcp.models.cli import MCPServerType, ServerConfig
 
 
@@ -34,36 +34,30 @@ class TestCliOptionEnv:
             assert isinstance(config, ServerConfig)
             assert config.env_file == temp_env_path
 
-    def test_env_file_passed_to_create_app(self, monkeypatch: MonkeyPatch) -> None:
-        """Test that the env file path is correctly passed to create_app."""
-        # Create a temp .env file with a test token
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as temp_file:
-            temp_file.write("CLICKUP_API_TOKEN=test_token_from_cli_env\n")
-            env_path = temp_file.name
+    def test_env_file_passed_to_create_app(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+        """Test that env_file from CLI args is passed to create_app."""
+        # Create a temp file to use as env_file
+        temp_file = tmp_path / "test.env"
+        temp_file.write_text("# Test env file")
 
-        try:
-            # Create a config with our temp env file
-            config = ServerConfig(env_file=env_path)
+        # Mock the create_app function to capture its arguments
+        mock_app = MagicMock()
+        mock_create_app = MagicMock(return_value=mock_app)
 
-            # Ensure environment is clean
-            monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
+        with patch("clickup_mcp.entry.create_app", mock_create_app):
+            # Suppress server startup
+            with patch("uvicorn.run"):
+                # Run the server with CLI args including env_file
+                sys.argv = ["clickup-mcp-server", "--env", str(temp_file)]
+                main()
 
-            # Mock create_app and uvicorn.run to prevent actual server startup
-            with (
-                patch("clickup_mcp.entry.create_app") as mock_create_app,
-                patch("uvicorn.run"),
-            ):
-                run_server(config)
-
-            # Verify create_app was called with env_file parameter
-            mock_create_app.assert_called_once()
-            _, kwargs = mock_create_app.call_args
-            assert "env_file" in kwargs
-            assert kwargs["env_file"] == env_path
-
-        finally:
-            # Clean up the temp file
-            Path(env_path).unlink(missing_ok=True)
+        # Verify create_app was called with correct arguments
+        mock_create_app.assert_called_once()
+        kwargs = mock_create_app.call_args.kwargs
+        
+        # Check server_config is passed and contains the correct env_file
+        assert "server_config" in kwargs
+        assert kwargs["server_config"].env_file == str(temp_file)
 
 
 class TestCliOptionServerType:
@@ -106,8 +100,9 @@ class TestCliOptionServerType:
         mock_web = MagicMock()
 
         # Test direct mount_service function
-        with patch("clickup_mcp.web_server.app.web", mock_web):
-            mount_service(mock_mcp_server, MCPServerType.SSE.value)
+        with patch("clickup_mcp.web_server.app.web", mock_web), \
+             patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server):
+            mount_service(MCPServerType.SSE.value)
 
         # Verify that only SSE endpoint was mounted
         mock_mcp_server.sse_app.assert_called_once()
@@ -122,12 +117,13 @@ class TestCliOptionServerType:
         mock_web = MagicMock()
 
         # Test direct mount_service function
-        with patch("clickup_mcp.web_server.app.web", mock_web):
-            mount_service(mock_mcp_server, MCPServerType.HTTP_STREAMING.value)
+        with patch("clickup_mcp.web_server.app.web", mock_web), \
+             patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server):
+            mount_service(MCPServerType.HTTP_STREAMING.value)
 
         # Verify that only HTTP_STREAMING endpoint was mounted
-        mock_mcp_server.sse_app.assert_not_called()
         mock_mcp_server.streamable_http_app.assert_called_once()
+        mock_mcp_server.sse_app.assert_not_called()
         assert mock_web.mount.call_count == 1
         mock_web.mount.assert_called_with("/mcp", mock_mcp_server.streamable_http_app.return_value)
 
@@ -156,14 +152,16 @@ class TestCliOptionServerType:
                 
                 # Extract the arguments from the call
                 args, kwargs = mock_mount.call_args
-                # First argument should be the MCP server instance
-                assert args[0] == mock_mcp_server
-                # Check keyword arguments
-                assert "app_or_server_type" in kwargs
-                assert kwargs["app_or_server_type"] == mock_web
-                # Server type should match the config
-                assert "server_type" in kwargs
-                assert kwargs["server_type"] == config.mcp_server_type
+                # With the new implementation, the only positional arg should be server_type
+                if args:
+                    # Check if args is passed positionally
+                    assert args[0] == config.mcp_server_type
+                elif 'server_type' in kwargs:
+                    # Check if server_type is passed as a keyword arg
+                    assert kwargs['server_type'] == config.mcp_server_type
+                else:
+                    # Fail if neither pattern matches
+                    assert False, "mount_service not called with expected server_type parameter"
 
 
 class TestCliOptionToken:

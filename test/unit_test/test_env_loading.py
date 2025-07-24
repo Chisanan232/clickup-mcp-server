@@ -96,17 +96,13 @@ class TestEnvLoading:
             from fastapi import FastAPI
             from clickup_mcp.models.cli import ServerConfig
 
-            def mock_create_app_impl(server_config: ServerConfig | None = None, env_file: str | None = None) -> FastAPI:
+            def mock_create_app_impl(server_config: ServerConfig | None = None) -> FastAPI:
                 # Simulate loading environment from file as create_app would do
-                file_to_use = env_file
-                if file_to_use is None and server_config is not None:
-                    file_to_use = server_config.env_file
-                    
-                if file_to_use:
+                if server_config is not None and server_config.env_file:
                     from pathlib import Path
                     from dotenv import load_dotenv
 
-                    env_path = Path(file_to_use)
+                    env_path = Path(server_config.env_file)
                     if env_path.exists():
                         load_dotenv(env_path)
                 return WebServerFactory.get()
@@ -125,7 +121,7 @@ class TestEnvLoading:
                 run_server(config)
 
                 # Check that create_app was called with the correct parameters
-                mock_create_app.assert_called_once_with(server_config=config, env_file=config.env_file)
+                mock_create_app.assert_called_once_with(server_config=config)
 
                 # Check that environment was loaded correctly by our mock implementation
                 assert os.environ.get("CLICKUP_API_TOKEN") == "test_token_from_entry_point"
