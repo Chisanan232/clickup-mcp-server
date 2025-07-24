@@ -11,12 +11,11 @@ import asyncio
 import json
 import logging
 import os
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+from typing import Any, Generic, Type, TypeVar
 
 import httpx
 from pydantic import BaseModel, Field
 
-from clickup_mcp.models.cli import ServerConfig
 from clickup_mcp.models.dto.base import BaseResponseDTO
 
 from ._base import BaseServerFactory
@@ -38,10 +37,10 @@ class APIResponse(BaseModel, Generic[T]):
     """Standard API response model with support for typed data."""
 
     status_code: int
-    data: Optional[Dict[str, Any]] = None
+    data: dict[str, Any] | None = None
     headers: dict[str, str] = Field(default_factory=dict)
     success: bool = Field(default=True)
-    error: Optional[str] = None
+    error: str | None = None
 
     def to_domain_model(self, model_class: Type[T]) -> T:
         """
@@ -176,7 +175,7 @@ class ClickUpAPIClient:
         self._seconds_per_request = 60.0 / rate_limit_requests_per_minute
 
         # Track request times for rate limiting
-        self._request_times: List[float] = []
+        self._request_times: list[float] = []
 
         # Prepare headers
         self._headers = {
@@ -199,14 +198,13 @@ class ClickUpAPIClient:
         """Async context manager entry."""
         return self
 
-    async def __aexit__(self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[Any]) -> None:
+    async def __aexit__(self, exc_type: type | None, exc_val: Exception | None, exc_tb: Any | None) -> None:
         """Async context manager exit."""
         await self.close()
 
     async def close(self) -> None:
         """Close the HTTP client."""
-        if self._client:
-            await self._client.aclose()
+        await self._client.aclose()
 
     async def _enforce_rate_limit(self) -> None:
         """Enforce rate limiting based on requests per minute."""
@@ -229,9 +227,9 @@ class ClickUpAPIClient:
         self,
         method: str,
         endpoint: str,
-        params: Optional[dict[str, Any]] = None,
-        data: Optional[dict[str, Any]] = None,
-        headers: Optional[dict[str, str]] = None,
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> APIResponse:
         """
         Make an HTTP request with retry logic and error handling.
@@ -272,7 +270,7 @@ class ClickUpAPIClient:
                 )
 
                 # Helper function to safely parse JSON
-                def safe_json_parse(response_obj: httpx.Response) -> Optional[Dict[str, Any]]:
+                def safe_json_parse(response_obj: httpx.Response) -> dict[str, Any] | None:
                     try:
                         return response_obj.json() if response_obj.content else None
                     except json.JSONDecodeError:
@@ -329,7 +327,7 @@ class ClickUpAPIClient:
         raise ClickUpAPIError(f"Request failed after {self.max_retries + 1} attempts: {last_exception}")
 
     async def get(
-        self, endpoint: str, params: Optional[dict[str, Any]] = None, headers: Optional[dict[str, str]] = None
+        self, endpoint: str, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None
     ) -> APIResponse:
         """Make a GET request."""
         return await self._make_request("GET", endpoint, params=params, headers=headers)
@@ -337,9 +335,9 @@ class ClickUpAPIClient:
     async def post(
         self,
         endpoint: str,
-        data: Optional[dict[str, Any]] = None,
-        params: Optional[dict[str, Any]] = None,
-        headers: Optional[dict[str, str]] = None,
+        data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> APIResponse:
         """Make a POST request."""
         return await self._make_request("POST", endpoint, params=params, data=data, headers=headers)
@@ -347,15 +345,15 @@ class ClickUpAPIClient:
     async def put(
         self,
         endpoint: str,
-        data: Optional[dict[str, Any]] = None,
-        params: Optional[dict[str, Any]] = None,
-        headers: Optional[dict[str, str]] = None,
+        data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> APIResponse:
         """Make a PUT request."""
         return await self._make_request("PUT", endpoint, params=params, data=data, headers=headers)
 
     async def delete(
-        self, endpoint: str, params: Optional[dict[str, Any]] = None, headers: Optional[dict[str, str]] = None
+        self, endpoint: str, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None
     ) -> APIResponse:
         """Make a DELETE request."""
         return await self._make_request("DELETE", endpoint, params=params, headers=headers)
@@ -363,15 +361,15 @@ class ClickUpAPIClient:
     async def patch(
         self,
         endpoint: str,
-        data: Optional[dict[str, Any]] = None,
-        params: Optional[dict[str, Any]] = None,
-        headers: Optional[dict[str, str]] = None,
+        data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> APIResponse:
         """Make a PATCH request."""
         return await self._make_request("PATCH", endpoint, params=params, data=data, headers=headers)
 
 
-def get_api_token(config: ServerConfig | None = None) -> str:
+def get_api_token(config=None) -> str:
     """
     Get the ClickUp API token from CLI options or environment variables.
 
@@ -401,19 +399,18 @@ def get_api_token(config: ServerConfig | None = None) -> str:
     return token
 
 
-_CLICKUP_API_CLIENT: Optional[ClickUpAPIClient] = None
+_CLICKUP_API_CLIENT: ClickUpAPIClient | None = None
 
 
-class ClickUpAPIClientFactory(BaseServerFactory[ClickUpAPIClient]):
+class ClickUpAPIClientFactory(BaseServerFactory):
     @staticmethod
-    def create(
-        api_token: str = "",
+    def create(  # type: ignore[override]
+        api_token: str,
         base_url: str = "https://api.clickup.com/api/v2",
         timeout: float = 30.0,
         max_retries: int = 3,
         retry_delay: float = 1.0,
         rate_limit_requests_per_minute: int = 100,
-        **kwargs,  # Add **kwargs to satisfy base class contract
     ) -> ClickUpAPIClient:
         """
         Create and configure a ClickUp API client.
@@ -425,16 +422,10 @@ class ClickUpAPIClientFactory(BaseServerFactory[ClickUpAPIClient]):
             max_retries: Maximum number of retries for failed requests
             retry_delay: Delay between retries in seconds
             rate_limit_requests_per_minute: Maximum requests per minute
-            **kwargs: Additional arguments (for base class compatibility)
 
         Returns:
             Configured ClickUpAPIClient instance
         """
-        # Extract token from kwargs if not provided explicitly
-        if not api_token and "token" in kwargs:
-            api_token = kwargs["token"]
-
-        # Create a new ClickUp API client
         global _CLICKUP_API_CLIENT
         assert _CLICKUP_API_CLIENT is None, "It is not allowed to create more than one instance of ClickUp API client."
         _CLICKUP_API_CLIENT = ClickUpAPIClient(
