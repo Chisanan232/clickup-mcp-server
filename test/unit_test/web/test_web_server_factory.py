@@ -4,6 +4,7 @@ Unit tests for the WebServerFactory.
 This module tests the factory pattern for creating and managing the Web server instance.
 """
 
+from typing import Any, Generator, List, Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -16,8 +17,10 @@ from clickup_mcp.web_server.app import WebServerFactory
 class TestWebServerFactory:
     """Test suite for the WebServerFactory class."""
 
+    original_instance: Optional[Any]
+
     @pytest.fixture(autouse=True)
-    def reset_web_server(self):
+    def reset_web_server(self) -> Generator[None, None, None]:
         """Reset the global web server instance before and after each test."""
         # Import here to avoid circular imports
         import clickup_mcp.web_server.app
@@ -34,7 +37,7 @@ class TestWebServerFactory:
         # Restore original after test to avoid affecting other tests
         clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = self.original_instance
 
-    def test_create_web_server(self):
+    def test_create_web_server(self) -> None:
         """Test creating a new web server instance."""
         # Need to patch where FastAPI is imported, not where it's defined
         with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
@@ -66,7 +69,7 @@ class TestWebServerFactory:
 
             assert app_module._WEB_SERVER_INSTANCE is mock_instance
 
-    def test_get_web_server(self):
+    def test_get_web_server(self) -> None:
         """Test getting an existing web server instance."""
         # Create a server first using a mock
         with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
@@ -83,7 +86,7 @@ class TestWebServerFactory:
             assert created_server is retrieved_server
             assert retrieved_server is mock_instance
 
-    def test_create_fails_when_already_created(self):
+    def test_create_fails_when_already_created(self) -> None:
         """Test that creating a server when one already exists raises an error."""
         # Create a server first
         WebServerFactory.create()
@@ -94,7 +97,7 @@ class TestWebServerFactory:
 
         assert "not allowed to create more than one instance" in str(excinfo.value)
 
-    def test_get_fails_when_not_created(self):
+    def test_get_fails_when_not_created(self) -> None:
         """Test that getting a server before creating one raises an error."""
         # Attempting to get before creating should raise an AssertionError
         with pytest.raises(AssertionError) as excinfo:
@@ -102,7 +105,7 @@ class TestWebServerFactory:
 
         assert "must be created web server first" in str(excinfo.value)
 
-    def test_backward_compatibility_global_web(self):
+    def test_backward_compatibility_global_web(self) -> None:
         """Test that the global web variable exists and is a FastAPI instance."""
         # We need to test that the module-level 'web' variable exists and is a FastAPI instance
         import clickup_mcp.web_server.app
@@ -129,7 +132,7 @@ class TestWebServerFactory:
             (MCPServerType.HTTP_STREAMING, "/mcp", False, True),
         ],
     )
-    def test_mount_service_parameterized(self, server_type, expected_path, should_call_sse, should_call_http):
+    def test_mount_service_parameterized(self, server_type: MCPServerType, expected_path: str, should_call_sse: bool, should_call_http: bool) -> None:
         """Test that mount_service correctly mounts MCP server apps based on server type."""
         # Create a web server instance
         with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
@@ -182,7 +185,7 @@ class TestWebServerFactory:
             None,
         ],
     )
-    def test_mount_service_invalid_type_parameterized(self, invalid_server_type):
+    def test_mount_service_invalid_type_parameterized(self, invalid_server_type: Any) -> None:
         """Test that mount_service raises ValueError with invalid server types."""
         # Create a web server instance
         with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:

@@ -15,6 +15,7 @@ import urllib.error
 import urllib.request
 from contextlib import closing
 from pathlib import Path
+from typing import Any, Generator
 
 import pytest
 
@@ -58,7 +59,7 @@ class TestClickUpMCPCliE2E:
     """End-to-end tests for the ClickUp MCP CLI."""
 
     @pytest.fixture
-    def temp_env_file(self):
+    def temp_env_file(self) -> Generator[str, Any, None]:
         """Create a temporary .env file with test API token."""
         # Create a temporary .env file
         with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as temp_file:
@@ -80,7 +81,7 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_help_command(self, execution_method):
+    def test_help_command(self, execution_method: list[str]) -> None:
         """Test the --help command to verify it shows usage information."""
         cmd = execution_method + ["--help"]
         result = run_command(cmd)
@@ -105,7 +106,7 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_invalid_arguments(self, execution_method):
+    def test_invalid_arguments(self, execution_method: list[str]) -> None:
         """Test behavior with invalid command-line arguments."""
         # Test with an invalid flag
         cmd = execution_method + ["--invalid-flag"]
@@ -136,7 +137,7 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_invalid_log_level(self, execution_method):
+    def test_invalid_log_level(self, execution_method: list[str]) -> None:
         """Test behavior with an invalid log level."""
         cmd = execution_method + ["--log-level", "invalid"]
         result = run_command(cmd, timeout=2)
@@ -158,7 +159,7 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_server_startup_and_root_endpoints(self, execution_method, temp_env_file):
+    def test_server_startup_and_root_endpoints(self, execution_method: list[str], temp_env_file: Generator[str, Any, None]) -> None:
         """Test server starts up and basic endpoints are accessible."""
         # Find a free port to avoid conflicts
         port = find_free_port()
@@ -210,7 +211,7 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_server_mcp_endpoints(self, execution_method, temp_env_file):
+    def test_server_mcp_endpoints(self, execution_method: list[str], temp_env_file: Generator[str, Any, None]) -> None:
         """Test MCP-specific endpoints."""
         # Find a free port to avoid conflicts
         port = find_free_port()
@@ -288,7 +289,7 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_custom_host_and_port(self, execution_method, temp_env_file):
+    def test_custom_host_and_port(self, execution_method: list[str], temp_env_file: Generator[str, Any, None]) -> None:
         """Test specifying custom host and port."""
         port = find_free_port()
 
@@ -333,7 +334,7 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_server_response_to_sigterm(self, execution_method, temp_env_file):
+    def test_server_response_to_sigterm(self, execution_method: list[str], temp_env_file: Generator[str, Any, None]) -> None:
         """Test server properly shuts down on SIGTERM."""
         port = find_free_port()
 
@@ -381,7 +382,7 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_server_response_to_sigint(self, execution_method, temp_env_file):
+    def test_server_response_to_sigint(self, execution_method: list[str], temp_env_file: Generator[str, Any, None]) -> None:
         """Test server properly shuts down on SIGINT (Ctrl+C)."""
         port = find_free_port()
 
