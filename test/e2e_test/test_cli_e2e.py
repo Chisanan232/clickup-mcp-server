@@ -159,7 +159,9 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_server_startup_and_root_endpoints(self, execution_method: list[str], temp_env_file: Generator[str, Any, None]) -> None:
+    def test_server_startup_and_root_endpoints(
+        self, execution_method: list[str], temp_env_file: Generator[str, Any, None]
+    ) -> None:
         """Test server starts up and basic endpoints are accessible."""
         # Find a free port to avoid conflicts
         port = find_free_port()
@@ -334,7 +336,9 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_server_response_to_sigterm(self, execution_method: list[str], temp_env_file: Generator[str, Any, None]) -> None:
+    def test_server_response_to_sigterm(
+        self, execution_method: list[str], temp_env_file: Generator[str, Any, None]
+    ) -> None:
         """Test server properly shuts down on SIGTERM."""
         port = find_free_port()
 
@@ -382,7 +386,9 @@ class TestClickUpMCPCliE2E:
             [ENTRY_POINT],
         ],
     )
-    def test_server_response_to_sigint(self, execution_method: list[str], temp_env_file: Generator[str, Any, None]) -> None:
+    def test_server_response_to_sigint(
+        self, execution_method: list[str], temp_env_file: Generator[str, Any, None]
+    ) -> None:
         """Test server properly shuts down on SIGINT (Ctrl+C)."""
         port = find_free_port()
 

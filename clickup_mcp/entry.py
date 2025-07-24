@@ -8,7 +8,6 @@ that hosts the ClickUp MCP functionality.
 import argparse
 import logging
 import sys
-from typing import Any
 
 import uvicorn
 from fastapi import FastAPI
@@ -69,9 +68,7 @@ def configure_logging(log_level: str) -> None:
         raise ValueError(f"Invalid log level: {log_level}")
 
     # Configure logging
-    logging.basicConfig(
-        level=numeric_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
+    logging.basicConfig(level=numeric_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 
 def run_server(config: ServerConfig) -> None:

@@ -8,12 +8,11 @@ are correctly accessible when the web server is instantiated with real MCP compo
 import inspect
 import logging
 import os
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Dict, Generator, Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
-from starlette.routing import Route
 
 from clickup_mcp.client import ClickUpAPIClientFactory
 from clickup_mcp.mcp_server.app import FastMCP, MCPServerFactory
@@ -29,7 +28,7 @@ class TestMCPServerMounting:
     """
     Tests focused on verifying that MCP server components are properly mounted in the web server.
     """
-    
+
     original_web_server: Any
     original_mcp_server: Optional[FastMCP]
 

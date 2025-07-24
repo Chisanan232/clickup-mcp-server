@@ -4,7 +4,7 @@ Unit tests for the WebServerFactory.
 This module tests the factory pattern for creating and managing the Web server instance.
 """
 
-from typing import Any, Generator, List, Optional
+from typing import Any, Generator, Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -132,7 +132,9 @@ class TestWebServerFactory:
             (MCPServerType.HTTP_STREAMING, "/mcp", False, True),
         ],
     )
-    def test_mount_service_parameterized(self, server_type: MCPServerType, expected_path: str, should_call_sse: bool, should_call_http: bool) -> None:
+    def test_mount_service_parameterized(
+        self, server_type: MCPServerType, expected_path: str, should_call_sse: bool, should_call_http: bool
+    ) -> None:
         """Test that mount_service correctly mounts MCP server apps based on server type."""
         # Create a web server instance
         with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
@@ -151,8 +153,10 @@ class TestWebServerFactory:
 
             # Patch the global web variable to use our mock_web_instance
             # and the global mcp_server to use our mock
-            with patch("clickup_mcp.web_server.app.web", mock_web_instance), \
-                 patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server):
+            with (
+                patch("clickup_mcp.web_server.app.web", mock_web_instance),
+                patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server),
+            ):
                 # Call mount_service
                 from clickup_mcp.web_server.app import mount_service
 
@@ -200,8 +204,10 @@ class TestWebServerFactory:
 
             # Patch the global web variable to use our mock_web_instance
             # and the global mcp_server to use our mock
-            with patch("clickup_mcp.web_server.app.web", mock_web_instance), \
-                 patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server):
+            with (
+                patch("clickup_mcp.web_server.app.web", mock_web_instance),
+                patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server),
+            ):
                 # Test that invalid server type raises ValueError
                 from clickup_mcp.web_server.app import mount_service
 

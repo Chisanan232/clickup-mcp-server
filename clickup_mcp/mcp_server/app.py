@@ -1,5 +1,3 @@
-from typing import Optional
-
 from mcp.server import FastMCP
 
 from clickup_mcp._base import BaseServerFactory

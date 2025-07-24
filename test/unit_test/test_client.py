@@ -4,7 +4,7 @@ Unit tests for ClickUp API client.
 
 import asyncio
 import json
-from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import httpx

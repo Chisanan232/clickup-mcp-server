@@ -5,8 +5,9 @@ This module contains comprehensive tests for all custom exception classes
 and utility functions in the exceptions module.
 """
 
+from typing import Any, Type
+
 import pytest
-from typing import Any, Dict, Type
 
 from clickup_mcp.exceptions import (  # Base exceptions; Specific API exceptions; Utility functions
     AuthenticationError,
@@ -214,7 +215,9 @@ class TestCreateNetworkError:
             (Exception("Generic error"), "unknown operation", "Network error occurred: unknown operation"),
         ],
     )
-    def test_create_network_error_parametrized(self, original_error: Exception, context: str, expected_message: str) -> None:
+    def test_create_network_error_parametrized(
+        self, original_error: Exception, context: str, expected_message: str
+    ) -> None:
         """Test network error creation with various original errors and contexts."""
         error = create_network_error(original_error, context)
         assert error.original_error == original_error

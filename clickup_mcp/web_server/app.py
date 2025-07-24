@@ -10,7 +10,6 @@ from typing import Any, Dict, Optional
 from fastapi import Body, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from mcp.server import FastMCP
 
 from clickup_mcp._base import BaseServerFactory
 from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
@@ -77,9 +76,7 @@ web = WebServerFactory.create()
 mcp_server = MCPServerFactory.get()
 
 
-def mount_service(
-    server_type: str = MCPServerType.SSE
-) -> None:
+def mount_service(server_type: str = MCPServerType.SSE) -> None:
     """
     Mount a FastAPI service into the web server.
 
@@ -97,7 +94,7 @@ def mount_service(
 
 
 def create_app(
-    server_config: ServerConfig | None = None, 
+    server_config: ServerConfig | None = None,
 ) -> FastAPI:
     """
     Create and configure the FastAPI application with MCP server mounted.
@@ -118,7 +115,7 @@ def create_app(
 
     # Use default server type if no configuration is provided
     server_type = server_config.mcp_server_type if server_config else MCPServerType.SSE
-    
+
     # Mount MCP routes
     mount_service(server_type=server_type)
 

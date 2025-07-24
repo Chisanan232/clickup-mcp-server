@@ -17,8 +17,8 @@ import httpx
 from pydantic import BaseModel, Field
 
 from clickup_mcp.models.dto.base import BaseResponseDTO
-from ._base import BaseServerFactory
 
+from ._base import BaseServerFactory
 from .api.space import SpaceAPI
 from .exceptions import (
     AuthenticationError,
@@ -372,20 +372,20 @@ class ClickUpAPIClient:
 def get_api_token(config=None) -> str:
     """
     Get the ClickUp API token from CLI options or environment variables.
-    
+
     Args:
         config: Optional ServerConfig instance containing CLI options
-        
+
     Returns:
         The API token if found
-        
+
     Raises:
         ValueError: If API token cannot be found
     """
     # First check if token is provided directly via CLI option
     if config and config.token:
         return config.token
-        
+
     # Otherwise get token from environment (env file should be loaded at entry point)
     token = os.environ.get("CLICKUP_API_TOKEN")
 
@@ -426,7 +426,7 @@ class ClickUpAPIClientFactory(BaseServerFactory):
             timeout=timeout,
             max_retries=max_retries,
             retry_delay=retry_delay,
-            rate_limit_requests_per_minute=rate_limit_requests_per_minute
+            rate_limit_requests_per_minute=rate_limit_requests_per_minute,
         )
         return _CLICKUP_API_CLIENT
 

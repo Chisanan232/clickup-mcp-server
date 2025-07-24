@@ -2,22 +2,19 @@
 Tests for the CLI --env option functionality.
 """
 
-import tempfile
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 from unittest import mock
-from typing import Any, Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pytest import MonkeyPatch
-from _pytest.fixtures import FixtureRequest
 
 from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
+from clickup_mcp.entry import main, parse_args
+from clickup_mcp.models.cli import MCPServerType, ServerConfig
 from clickup_mcp.utils import load_environment_from_file
 from clickup_mcp.web_server.app import create_app, mount_service
-from clickup_mcp.entry import parse_args, main
-from clickup_mcp.models.cli import MCPServerType, ServerConfig
 
 
 class TestCliOptionEnv:
@@ -54,7 +51,7 @@ class TestCliOptionEnv:
         # Verify create_app was called with correct arguments
         mock_create_app.assert_called_once()
         kwargs = mock_create_app.call_args.kwargs
-        
+
         # Check server_config is passed and contains the correct env_file
         assert "server_config" in kwargs
         assert kwargs["server_config"].env_file == str(temp_file)
@@ -100,8 +97,10 @@ class TestCliOptionServerType:
         mock_web = MagicMock()
 
         # Test direct mount_service function
-        with patch("clickup_mcp.web_server.app.web", mock_web), \
-             patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server):
+        with (
+            patch("clickup_mcp.web_server.app.web", mock_web),
+            patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server),
+        ):
             mount_service(MCPServerType.SSE.value)
 
         # Verify that only SSE endpoint was mounted
@@ -117,8 +116,10 @@ class TestCliOptionServerType:
         mock_web = MagicMock()
 
         # Test direct mount_service function
-        with patch("clickup_mcp.web_server.app.web", mock_web), \
-             patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server):
+        with (
+            patch("clickup_mcp.web_server.app.web", mock_web),
+            patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server),
+        ):
             mount_service(MCPServerType.HTTP_STREAMING.value)
 
         # Verify that only HTTP_STREAMING endpoint was mounted
@@ -145,20 +146,21 @@ class TestCliOptionServerType:
             with patch("clickup_mcp.web_server.app.mount_service") as mock_mount:
                 # Reset client factory to ensure it will create a new instance with our token
                 from clickup_mcp.client import ClickUpAPIClientFactory
+
                 ClickUpAPIClientFactory.reset()
 
                 create_app(config)
                 mock_mount.assert_called_once()
-                
+
                 # Extract the arguments from the call
                 args, kwargs = mock_mount.call_args
                 # With the new implementation, the only positional arg should be server_type
                 if args:
                     # Check if args is passed positionally
                     assert args[0] == config.mcp_server_type
-                elif 'server_type' in kwargs:
+                elif "server_type" in kwargs:
                     # Check if server_type is passed as a keyword arg
-                    assert kwargs['server_type'] == config.mcp_server_type
+                    assert kwargs["server_type"] == config.mcp_server_type
                 else:
                     # Fail if neither pattern matches
                     assert False, "mount_service not called with expected server_type parameter"

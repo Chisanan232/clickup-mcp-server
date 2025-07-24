@@ -4,15 +4,15 @@ Unit tests for FastAPI web server integration with MCP server.
 This module tests the functionality of mounting an MCP server on FastAPI.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from clickup_mcp.client import ClickUpAPIClientFactory
-from clickup_mcp.web_server.app import WebServerFactory, create_app, mount_service
 from clickup_mcp.models.cli import MCPServerType, ServerConfig
+from clickup_mcp.web_server.app import WebServerFactory, create_app
 
 
 class TestWebServer:
@@ -50,18 +50,18 @@ class TestWebServer:
         # Set up synchronous method returns
         mock.list_resources.return_value = ["resource1", "resource2"]
         mock.list_tools.return_value = ["tool1", "tool2"]
-        
+
         # Set up proper mock for the execute method
         # We need to use AsyncMock properly for the execute method
         mock.execute = AsyncMock()
         mock.execute.return_value = "result data"
-        
+
         # Set up SSE and streaming HTTP apps
         mock_sse_app = MagicMock()
         mock_streamable_app = MagicMock()
         mock.sse_app.return_value = mock_sse_app
         mock.streamable_http_app.return_value = mock_streamable_app
-        
+
         return mock
 
     @pytest.fixture
@@ -74,20 +74,20 @@ class TestWebServer:
             env_file=".env",
             mcp_server_type=MCPServerType.SSE,
         )
-        
+
         # Create patchers for our test
         mcp_server_patcher = patch("clickup_mcp.web_server.app.mcp_server", mock_mcp)
-        
+
         # Start the patchers
         mcp_server_patcher.start()
-        
+
         try:
             # Create the web server instance first
             WebServerFactory.create()
-            
+
             # Create the app with our server config
             app = create_app(server_config=server_config)
-            
+
             # Create and return the test client
             client = TestClient(app)
             yield client
@@ -116,12 +116,12 @@ class TestWebServer:
         # Test endpoint
         response = test_client.get("/mcp/resources")
         assert response.status_code == 200
-        
+
         # Verify the response
         data = response.json()
         assert "resources" in data
         assert data["resources"] == ["test_resource_1", "test_resource_2"]
-        
+
         # Verify the method was called
         mock_mcp.list_resources.assert_called_once()
 
@@ -133,12 +133,12 @@ class TestWebServer:
         # Test endpoint
         response = test_client.get("/mcp/tools")
         assert response.status_code == 200
-        
+
         # Verify the response
         data = response.json()
         assert "tools" in data
         assert data["tools"] == ["test_tool_1", "test_tool_2"]
-        
+
         # Verify the method was called
         mock_mcp.list_tools.assert_called_once()
 
@@ -147,18 +147,18 @@ class TestWebServer:
         # Define test params
         tool_name = "test_tool"
         params = {"param1": "value1", "param2": "value2"}
-        
+
         # We must use a dictionary structure that matches the endpoint return
         mock_mcp.execute.return_value = "result data"
 
         # Test endpoint
         response = test_client.post(f"/mcp/execute/{tool_name}", json=params)
         assert response.status_code == 200
-        
+
         # Verify the response matches what our endpoint returns
         data = response.json()
         assert data == {"result": "result data"}
-        
+
         # Verify the method was called with correct parameters
         mock_mcp.execute.assert_awaited_once_with(tool_name, **params)
 
@@ -166,9 +166,10 @@ class TestWebServer:
         """Test that mount_service is called during app initialization and mounts services correctly."""
         # First create a web server instance
         WebServerFactory.create()
-        
+
         # Create a minimal ServerConfig object for testing
         from clickup_mcp.models.cli import ServerConfig
+
         test_config = ServerConfig()
 
         # Patch the mount_service function to verify it's called
@@ -197,8 +198,10 @@ class TestWebServer:
         mock_web_instance = MagicMock(spec=FastAPI)
 
         # Patch both the web global and the mcp_server global
-        with patch("clickup_mcp.web_server.app.web", mock_web_instance), \
-             patch("clickup_mcp.web_server.app.mcp_server", mock_mcp):
+        with (
+            patch("clickup_mcp.web_server.app.web", mock_web_instance),
+            patch("clickup_mcp.web_server.app.mcp_server", mock_mcp),
+        ):
             # Import mount_service within the patch context
             # Call mount_service directly with the default server type
             from clickup_mcp.models.cli import MCPServerType

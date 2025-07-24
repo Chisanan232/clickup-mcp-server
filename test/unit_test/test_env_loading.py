@@ -94,12 +94,14 @@ class TestEnvLoading:
 
             # Create a mock function that simulates create_app loading environment variables
             from fastapi import FastAPI
+
             from clickup_mcp.models.cli import ServerConfig
 
             def mock_create_app_impl(server_config: ServerConfig | None = None) -> FastAPI:
                 # Simulate loading environment from file as create_app would do
                 if server_config is not None and server_config.env_file:
                     from pathlib import Path
+
                     from dotenv import load_dotenv
 
                     env_path = Path(server_config.env_file)
