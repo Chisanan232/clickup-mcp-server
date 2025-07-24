@@ -1,3 +1,10 @@
+"""
+Base server factory classes.
+
+This module provides abstract base classes for server factories
+that follow the singleton pattern.
+"""
+
 from abc import ABCMeta, abstractmethod
 
 
@@ -6,7 +13,10 @@ class BaseServerFactory[T](metaclass=ABCMeta):
     @abstractmethod
     def create(**kwargs) -> T:
         """
-        Create and configure the MCP server with the specified environment file.
+        Create and configure a server instance.
+
+        Args:
+            **kwargs: Additional keyword arguments for server configuration
 
         Returns:
             Configured server instance
@@ -16,7 +26,7 @@ class BaseServerFactory[T](metaclass=ABCMeta):
     @abstractmethod
     def get() -> T:
         """
-        Get the server instance
+        Get the existing server instance or create a new one if none exists.
 
         Returns:
             Configured server instance
@@ -26,5 +36,5 @@ class BaseServerFactory[T](metaclass=ABCMeta):
     @abstractmethod
     def reset() -> None:
         """
-        Reset the singleton instance (for testing purposes).
+        Reset the singleton instance (primarily for testing).
         """

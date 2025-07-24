@@ -74,15 +74,18 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
 
 
 web = WebServerFactory.create()
+mcp_server = MCPServerFactory.get()
 
 
-def mount_service(mcp_server: FastMCP, server_type: str = MCPServerType.SSE) -> None:
+def mount_service(
+    server_type: str = MCPServerType.SSE
+) -> None:
     """
     Mount a FastAPI service into the web server.
 
     Args:
-        mcp_server: The FastAPI service to mount.
         server_type: The type of server to mount (sse or http-streaming).
+                     Only used when app_or_server_type is a FastAPI app.
     """
     match server_type:
         case MCPServerType.SSE:
@@ -93,7 +96,9 @@ def mount_service(mcp_server: FastMCP, server_type: str = MCPServerType.SSE) -> 
             raise ValueError(f"Unknown server type: {server_type}")
 
 
-def create_app(server_config: Optional[ServerConfig] = None) -> FastAPI:
+def create_app(
+    server_config: ServerConfig | None = None, 
+) -> FastAPI:
     """
     Create and configure the FastAPI application with MCP server mounted.
 
@@ -103,14 +108,19 @@ def create_app(server_config: Optional[ServerConfig] = None) -> FastAPI:
     Returns:
         Configured FastAPI application
     """
-    # Get env_file from configuration if provided and load environment variables
-    env_file = server_config.env_file if server_config else None
-    load_environment_from_file(env_file)
+    # Load environment variables from file if provided
+    load_environment_from_file(server_config.env_file)
 
     app = WebServerFactory.get()
 
+    # Create client with the token from configuration or environment
+    ClickUpAPIClientFactory.create(api_token=get_api_token(server_config))
+
     # Use default server type if no configuration is provided
     server_type = server_config.mcp_server_type if server_config else MCPServerType.SSE
+    
+    # Mount MCP routes
+    mount_service(server_type=server_type)
 
     # Root endpoint for health checks
     @app.get("/", response_class=JSONResponse)
@@ -122,12 +132,6 @@ def create_app(server_config: Optional[ServerConfig] = None) -> FastAPI:
             JSON response with server status
         """
         return {"status": "ok", "server": "ClickUp MCP Server"}
-
-    # Create client with the token from configuration or environment
-    ClickUpAPIClientFactory.create(api_token=get_api_token(server_config))
-    mcp_server = MCPServerFactory.get()
-    # Mount MCP routes
-    mount_service(mcp_server, server_type)
 
     # Add MCP endpoints
     @app.get("/mcp/resources", response_class=JSONResponse)

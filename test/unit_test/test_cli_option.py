@@ -7,8 +7,11 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 from unittest import mock
+from typing import Any, Generator
 
 import pytest
+from pytest import MonkeyPatch
+from _pytest.fixtures import FixtureRequest
 
 from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
 from clickup_mcp.utils import load_environment_from_file
@@ -31,7 +34,7 @@ class TestCliOptionEnv:
             assert isinstance(config, ServerConfig)
             assert config.env_file == temp_env_path
 
-    def test_env_file_passed_to_create_app(self, monkeypatch) -> None:
+    def test_env_file_passed_to_create_app(self, monkeypatch: MonkeyPatch) -> None:
         """Test that the env file path is correctly passed to create_app."""
         # Create a temp .env file with a test token
         with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as temp_file:
@@ -129,7 +132,7 @@ class TestCliOptionServerType:
         mock_web.mount.assert_called_with("/mcp", mock_mcp_server.streamable_http_app.return_value)
 
     @patch("clickup_mcp.mcp_server.app.MCPServerFactory.get")
-    def test_create_app_with_sse_server_type(self, mock_mcp_factory, monkeypatch) -> None:
+    def test_create_app_with_sse_server_type(self, mock_mcp_factory: MagicMock, monkeypatch: MonkeyPatch) -> None:
         """Test create_app with SSE server type config."""
         # Setup
         mock_mcp_server = MagicMock()
@@ -140,17 +143,27 @@ class TestCliOptionServerType:
         monkeypatch.setenv("CLICKUP_API_TOKEN", "test_token_for_server_type")
 
         # Create a ServerConfig with SSE server type
-        config = ServerConfig(mcp_server_type=MCPServerType.SSE.value)
+        config = ServerConfig(mcp_server_type=MCPServerType.SSE)
 
         with patch("clickup_mcp.web_server.app.WebServerFactory.get", return_value=mock_web):
             with patch("clickup_mcp.web_server.app.mount_service") as mock_mount:
                 # Reset client factory to ensure it will create a new instance with our token
                 from clickup_mcp.client import ClickUpAPIClientFactory
-
                 ClickUpAPIClientFactory.reset()
 
                 create_app(config)
-                mock_mount.assert_called_once_with(mock_mcp_server, MCPServerType.SSE.value)
+                mock_mount.assert_called_once()
+                
+                # Extract the arguments from the call
+                args, kwargs = mock_mount.call_args
+                # First argument should be the MCP server instance
+                assert args[0] == mock_mcp_server
+                # Check keyword arguments
+                assert "app_or_server_type" in kwargs
+                assert kwargs["app_or_server_type"] == mock_web
+                # Server type should match the config
+                assert "server_type" in kwargs
+                assert kwargs["server_type"] == config.mcp_server_type
 
 
 class TestCliOptionToken:
@@ -161,16 +174,14 @@ class TestCliOptionToken:
         config = ServerConfig(token="test-token")
         assert config.token == "test-token"
 
-
-    def test_parse_args_with_token(self, monkeypatch) -> None:
+    def test_parse_args_with_token(self, monkeypatch: MonkeyPatch) -> None:
         """Test that token CLI option is correctly parsed."""
         # Mock sys.argv to include token option
         with mock.patch.object(sys, "argv", ["program", "--token", "cli-token-value"]):
             config = parse_args()
             assert config.token == "cli-token-value"
 
-
-    def test_token_takes_precedence_over_env_file(self, monkeypatch, tmp_path) -> None:
+    def test_token_takes_precedence_over_env_file(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         """Test that token from CLI takes precedence over token from .env file."""
         # Create a temporary .env file
         env_file = tmp_path / ".env"
@@ -187,8 +198,7 @@ class TestCliOptionToken:
             token = get_api_token(config)
             assert token == "cli-token-value"
 
-
-    def test_env_file_token_used_when_no_cli_token(self, monkeypatch, tmp_path) -> None:
+    def test_env_file_token_used_when_no_cli_token(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         """Test that token is loaded from .env file when no CLI token is provided."""
         # Create a temporary .env file
         env_file = tmp_path / ".env"
@@ -208,7 +218,6 @@ class TestCliOptionToken:
             monkeypatch.setenv("CLICKUP_API_TOKEN", "env-file-token")
             token = get_api_token(config)
             assert token == "env-file-token"
-
 
     def test_create_app_with_token(self) -> None:
         """Test that create_app uses the token from ServerConfig."""
