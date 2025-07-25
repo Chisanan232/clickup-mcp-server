@@ -26,7 +26,11 @@
 
 * Types:
     * [ ] ✨ Adding new something
+        * [ ] 🟢 No breaking change
+        * [ ] 🟠 Has breaking change
     * [ ] ✏️ Modifying existing something
+        * [ ] 🟢 No breaking change
+        * [ ] 🟠 Has breaking change
     * [ ] 🚮 Removing something
     * [ ] 🔧 Fixing bug
     * [ ] ♻️ Refactoring something
