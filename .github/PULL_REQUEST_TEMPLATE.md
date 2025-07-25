@@ -60,7 +60,8 @@
         * [ ] 🤖 CI/CD
         * [ ] 🔗 Dependencies
         * [ ] 📦 Project configurations
-
+* Additional description:
+    N/A.
 
 
 [//]: # (The brief of major changes what your modify. Please list it.)
