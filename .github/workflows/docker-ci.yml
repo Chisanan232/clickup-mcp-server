@@ -88,4 +88,4 @@ jobs:
 
       - name: Test
         run: |
-          docker run --rm ${{ env.TEST_TAG }}
+          docker run -e API_TOKEN=${{ secrets.CLICKUP_API_TOKEN }} --rm ${{ env.TEST_TAG }}
