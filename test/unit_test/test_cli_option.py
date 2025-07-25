@@ -12,7 +12,7 @@ from pytest import MonkeyPatch
 
 from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
 from clickup_mcp.entry import main, parse_args
-from clickup_mcp.models.cli import MCPServerType, ServerConfig
+from clickup_mcp.models.cli import MCPTransportType, ServerConfig
 from clickup_mcp.utils import load_environment_from_file
 from clickup_mcp.web_server.app import create_app, mount_service
 
@@ -57,41 +57,41 @@ class TestCliOptionEnv:
         assert kwargs["server_config"].env_file == str(temp_file)
 
 
-class TestCliOptionServerType:
-    """Test cases for server type CLI option."""
+class TestCliOptionTransport:
+    """Test cases for transport protocol CLI option."""
 
-    def test_server_type_enum(self) -> None:
-        """Test that the ServerType enum has expected values."""
-        assert MCPServerType.SSE.value == "sse"
-        assert MCPServerType.HTTP_STREAMING.value == "http-streaming"
-        assert not hasattr(MCPServerType, "BOTH")
+    def test_transport_enum(self) -> None:
+        """Test that the TransportType enum has expected values."""
+        assert MCPTransportType.SSE.value == "sse"
+        assert MCPTransportType.HTTP_STREAMING.value == "http-streaming"
+        assert not hasattr(MCPTransportType, "BOTH")
 
-    def test_default_server_type(self) -> None:
-        """Test that the default server type is 'sse'."""
+    def test_default_transport(self) -> None:
+        """Test that the default transport protocol is 'sse'."""
         with patch("sys.argv", ["program"]):
             config = parse_args()
-            assert config.mcp_server_type == MCPServerType.SSE.value
+            assert config.transport == MCPTransportType.SSE.value
 
-    def test_sse_server_type(self) -> None:
-        """Test that '--server-type sse' sets server_type to SSE."""
-        with patch("sys.argv", ["program", "--server-type", "sse"]):
+    def test_sse_transport(self) -> None:
+        """Test that '--transport sse' sets mcp_transport_type to SSE."""
+        with patch("sys.argv", ["program", "--transport", "sse"]):
             config = parse_args()
-            assert config.mcp_server_type == MCPServerType.SSE.value
+            assert config.transport == MCPTransportType.SSE.value
 
-    def test_http_streaming_server_type(self) -> None:
-        """Test that '--server-type http-streaming' sets server_type to HTTP_STREAMING."""
-        with patch("sys.argv", ["program", "--server-type", "http-streaming"]):
+    def test_http_streaming_transport(self) -> None:
+        """Test that '--transport http-streaming' sets mcp_transport_type to HTTP_STREAMING."""
+        with patch("sys.argv", ["program", "--transport", "http-streaming"]):
             config = parse_args()
-            assert config.mcp_server_type == MCPServerType.HTTP_STREAMING.value
+            assert config.transport == MCPTransportType.HTTP_STREAMING.value
 
-    def test_invalid_server_type(self) -> None:
-        """Test that an invalid server type raises a system exit."""
-        with patch("sys.argv", ["program", "--server-type", "invalid"]):
+    def test_invalid_transport(self) -> None:
+        """Test that an invalid transport protocol raises a system exit."""
+        with patch("sys.argv", ["program", "--transport", "invalid"]):
             with pytest.raises(SystemExit):
                 parse_args()
 
     def test_mount_service_sse_only(self) -> None:
-        """Test that only SSE endpoints are mounted when server_type is SSE."""
+        """Test that only SSE endpoints are mounted when transport protocol is SSE."""
         # Setup
         mock_mcp_server = MagicMock()
         mock_web = MagicMock()
@@ -101,7 +101,7 @@ class TestCliOptionServerType:
             patch("clickup_mcp.web_server.app.web", mock_web),
             patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server),
         ):
-            mount_service(MCPServerType.SSE.value)
+            mount_service(MCPTransportType.SSE.value)
 
         # Verify that only SSE endpoint was mounted
         mock_mcp_server.sse_app.assert_called_once()
@@ -110,7 +110,7 @@ class TestCliOptionServerType:
         mock_web.mount.assert_called_with("/mcp", mock_mcp_server.sse_app.return_value)
 
     def test_mount_service_http_streaming_only(self) -> None:
-        """Test that only HTTP_STREAMING endpoints are mounted when server_type is HTTP_STREAMING."""
+        """Test that only HTTP_STREAMING endpoints are mounted when transport protocol is HTTP_STREAMING."""
         # Setup
         mock_mcp_server = MagicMock()
         mock_web = MagicMock()
@@ -120,7 +120,7 @@ class TestCliOptionServerType:
             patch("clickup_mcp.web_server.app.web", mock_web),
             patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server),
         ):
-            mount_service(MCPServerType.HTTP_STREAMING.value)
+            mount_service(MCPTransportType.HTTP_STREAMING.value)
 
         # Verify that only HTTP_STREAMING endpoint was mounted
         mock_mcp_server.streamable_http_app.assert_called_once()
@@ -129,18 +129,18 @@ class TestCliOptionServerType:
         mock_web.mount.assert_called_with("/mcp", mock_mcp_server.streamable_http_app.return_value)
 
     @patch("clickup_mcp.mcp_server.app.MCPServerFactory.get")
-    def test_create_app_with_sse_server_type(self, mock_mcp_factory: MagicMock, monkeypatch: MonkeyPatch) -> None:
-        """Test create_app with SSE server type config."""
+    def test_create_app_with_sse_transport(self, mock_mcp_factory: MagicMock, monkeypatch: MonkeyPatch) -> None:
+        """Test create_app with SSE transport protocol config."""
         # Setup
         mock_mcp_server = MagicMock()
         mock_mcp_factory.return_value = mock_mcp_server
         mock_web = MagicMock()
 
         # Set up API token in environment
-        monkeypatch.setenv("CLICKUP_API_TOKEN", "test_token_for_server_type")
+        monkeypatch.setenv("CLICKUP_API_TOKEN", "test_token_for_transport_type")
 
-        # Create a ServerConfig with SSE server type
-        config = ServerConfig(mcp_server_type=MCPServerType.SSE)
+        # Create a ServerConfig with SSE transport protocol
+        config = ServerConfig(transport=MCPTransportType.SSE)
 
         with patch("clickup_mcp.web_server.app.WebServerFactory.get", return_value=mock_web):
             with patch("clickup_mcp.web_server.app.mount_service") as mock_mount:
@@ -154,16 +154,16 @@ class TestCliOptionServerType:
 
                 # Extract the arguments from the call
                 args, kwargs = mock_mount.call_args
-                # With the new implementation, the only positional arg should be server_type
+                # With the new implementation, the only positional arg should be transport
                 if args:
                     # Check if args is passed positionally
-                    assert args[0] == config.mcp_server_type
-                elif "server_type" in kwargs:
-                    # Check if server_type is passed as a keyword arg
-                    assert kwargs["server_type"] == config.mcp_server_type
+                    assert args[0] == config.transport
+                elif "transport" in kwargs:
+                    # Check if transport is passed as a keyword arg
+                    assert kwargs["transport"] == config.transport
                 else:
                     # Fail if neither pattern matches
-                    assert False, "mount_service not called with expected server_type parameter"
+                    assert False, "mount_service not called with expected transport parameter"
 
 
 class TestCliOptionToken:
