@@ -10,7 +10,10 @@
 * ### Task tickets:
 
     * Task ID: N/A.
-    * Relative task IDs: N/A.
+    * Relative task IDs:
+        * [ ] N/A.
+    * Relative PRs:
+        * N/A.
 
 [//]: # (The key changes like demonstration, as-is & to-be, etc. for reviewers could be faster understand what it changes)
 * ### Key point change (optional):
