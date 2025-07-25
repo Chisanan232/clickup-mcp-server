@@ -16,7 +16,7 @@ from fastapi import FastAPI
 
 from clickup_mcp.client import ClickUpAPIClientFactory
 from clickup_mcp.mcp_server.app import FastMCP, MCPServerFactory
-from clickup_mcp.models.cli import MCPServerType, ServerConfig
+from clickup_mcp.models.cli import MCPTransportType, ServerConfig
 from clickup_mcp.web_server.app import WebServerFactory, create_app, mount_service
 
 # Set up logging for test debugging
@@ -133,7 +133,7 @@ class TestMCPServerMounting:
                 # Patch the MCP server method to return our test app
                 with patch.object(mcp_server, "sse_app", return_value=sse_test_app):
                     # Call mount_service with explicit SSE server type
-                    mount_service(MCPServerType.SSE)
+                    mount_service(MCPTransportType.SSE)
 
                     # Verify that a mount call was made with the correct path
                     # The second parameter will be a Starlette application
@@ -210,7 +210,7 @@ class TestMCPServerMounting:
             ClickUpAPIClientFactory.reset()
 
             # Define a fixed mount_service that mounts only one server type
-            def fixed_mount_service(transport: str = MCPServerType.SSE) -> None:
+            def fixed_mount_service(transport: str = MCPTransportType.SSE) -> None:
                 """Fixed version of mount_service that handles both async and sync methods."""
                 app = WebServerFactory.get()
                 # In test context, just directly mount our test app
@@ -225,7 +225,7 @@ class TestMCPServerMounting:
                     MCPServerFactory.create()
 
                     # Now call create_app with the server config that specifies SSE type
-                    app = create_app(ServerConfig(transport=MCPServerType.SSE))
+                    app = create_app(ServerConfig(transport=MCPTransportType.SSE))
 
                     # Verify routes
                     routes = app.routes

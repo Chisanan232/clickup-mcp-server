@@ -19,7 +19,7 @@ class LogLevel(str, Enum):
     CRITICAL = "critical"
 
 
-class MCPServerType(str, Enum):
+class MCPTransportType(str, Enum):
     """Server type enumeration for type safety."""
 
     SSE = "sse"
@@ -42,8 +42,8 @@ class ServerConfig(BaseModel):
     token: str | None = Field(
         default=None, description="ClickUp API token. If provided, takes precedence over token from env file"
     )
-    transport: MCPServerType = Field(
-        default=MCPServerType.SSE, description="Type of server to run (sse or http-streaming)"
+    transport: MCPTransportType = Field(
+        default=MCPTransportType.SSE, description="Type of server to run (sse or http-streaming)"
     )
 
     @classmethod

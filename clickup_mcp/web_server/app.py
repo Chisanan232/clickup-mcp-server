@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 from clickup_mcp._base import BaseServerFactory
 from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
 from clickup_mcp.mcp_server.app import MCPServerFactory
-from clickup_mcp.models.cli import MCPServerType, ServerConfig
+from clickup_mcp.models.cli import MCPTransportType, ServerConfig
 from clickup_mcp.utils import load_environment_from_file
 
 _WEB_SERVER_INSTANCE: Optional[FastAPI] = None
@@ -76,7 +76,7 @@ web = WebServerFactory.create()
 mcp_server = MCPServerFactory.get()
 
 
-def mount_service(transport: str = MCPServerType.SSE) -> None:
+def mount_service(transport: str = MCPTransportType.SSE) -> None:
     """
     Mount a FastAPI service into the web server.
 
@@ -84,9 +84,9 @@ def mount_service(transport: str = MCPServerType.SSE) -> None:
         transport: The transport protocol to use for MCP (sse or http-streaming).
     """
     match transport:
-        case MCPServerType.SSE:
+        case MCPTransportType.SSE:
             web.mount("/mcp", mcp_server.sse_app())
-        case MCPServerType.HTTP_STREAMING:
+        case MCPTransportType.HTTP_STREAMING:
             web.mount("/mcp", mcp_server.streamable_http_app())
         case _:
             raise ValueError(f"Unknown transport protocol: {transport}")
@@ -113,7 +113,7 @@ def create_app(
     ClickUpAPIClientFactory.create(api_token=get_api_token(server_config))
 
     # Use default server type if no configuration is provided
-    transport = server_config.transport if server_config else MCPServerType.SSE
+    transport = server_config.transport if server_config else MCPTransportType.SSE
 
     # Mount MCP routes
     mount_service(transport=transport)

@@ -13,7 +13,7 @@ import uvicorn
 from fastapi import FastAPI
 from pydantic import ValidationError
 
-from clickup_mcp.models.cli import LogLevel, MCPServerType, ServerConfig
+from clickup_mcp.models.cli import LogLevel, MCPTransportType, ServerConfig
 from clickup_mcp.web_server.app import create_app
 
 
@@ -40,7 +40,7 @@ def parse_args() -> ServerConfig:
         type=str,
         default="sse",
         dest="transport",
-        choices=[server_type.value for server_type in MCPServerType],
+        choices=[transport_type.value for transport_type in MCPTransportType],
         help="Transport protocol to use for MCP (sse or http-streaming)",
     )
 

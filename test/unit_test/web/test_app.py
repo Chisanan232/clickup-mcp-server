@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from clickup_mcp.client import ClickUpAPIClientFactory
-from clickup_mcp.models.cli import MCPServerType, ServerConfig
+from clickup_mcp.models.cli import MCPTransportType, ServerConfig
 from clickup_mcp.web_server.app import WebServerFactory, create_app
 
 
@@ -72,7 +72,7 @@ class TestWebServer:
             host="localhost",
             port=8000,
             env_file=".env",
-            transport=MCPServerType.SSE,
+            transport=MCPTransportType.SSE,
         )
 
         # Create patchers for our test
@@ -204,10 +204,10 @@ class TestWebServer:
         ):
             # Import mount_service within the patch context
             # Call mount_service directly with the default server type
-            from clickup_mcp.models.cli import MCPServerType
+            from clickup_mcp.models.cli import MCPTransportType
             from clickup_mcp.web_server.app import mount_service
 
-            mount_service(MCPServerType.SSE)
+            mount_service(MCPTransportType.SSE)
 
             # Verify SSE app was mounted
             mock_mcp.sse_app.assert_called_once()
