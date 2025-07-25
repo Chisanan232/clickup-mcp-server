@@ -24,14 +24,39 @@
 [//]: # (What's the scope in project it would affect with your modify? For example, would it affect CI workflow? Or any feature usage? Please list all the items which may be affected.)
 ## _Effecting Scope_
 
-* ✨ Adding new something:
-    * [ ] N/A.
-* ✏️ Modifying existing something:
-    * [ ] N/A.
-* ♻️ Refactoring:
-    * [ ] N/A.
-* 🚮 Removing something:
-    * [ ] N/A.
+* Types:
+    * [ ] ✨ Adding new something
+    * [ ] ✏️ Modifying existing something
+    * [ ] 🚮 Removing something
+    * [ ] 🔧 Fixing bug
+    * [ ] ♻️ Refactoring something
+    * [ ] 🚀 Improving something (maybe performance, code quality, security, etc.)
+    * [ ] 🧪 Test
+    * [ ] 📚 Document
+    * [ ] 🎨 UI/UX (maybe command line interface, etc.)
+    * [ ] ⚙️ Chore
+        * [ ] 🤖 CI/CD
+        * [ ] 🔗 Dependencies
+        * [ ] 📦 Project configurations
+* Scopes:
+    * [ ] ✍️ Command line interface
+    * [ ] 💼 Core feature
+        * [ ] 🕸️ Web server
+        * [ ] 🤖 MCP server
+        * [ ] 🪡 API client
+        * [ ] 🫀 Data model
+    * [ ] ⛑️ Error handling
+    * [ ] 🧪 Testing
+        * [ ] 🧪 Unit testing
+        * [ ] 🧪 Integration testing
+        * [ ] 🧪 End-to-end testing
+        * [ ] 🧪 Contract testing
+    * [ ] 📚 Documentation
+    * [ ] 🚀 Building
+        * [ ] 🤖 CI/CD
+        * [ ] 🔗 Dependencies
+        * [ ] 📦 Project configurations
+
 
 
 [//]: # (The brief of major changes what your modify. Please list it.)
