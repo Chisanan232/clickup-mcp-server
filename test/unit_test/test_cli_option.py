@@ -70,19 +70,19 @@ class TestCliOptionTransport:
         """Test that the default transport protocol is 'sse'."""
         with patch("sys.argv", ["program"]):
             config = parse_args()
-            assert config.mcp_server_type == MCPServerType.SSE.value
+            assert config.transport == MCPServerType.SSE.value
 
     def test_sse_transport(self) -> None:
         """Test that '--transport sse' sets mcp_server_type to SSE."""
         with patch("sys.argv", ["program", "--transport", "sse"]):
             config = parse_args()
-            assert config.mcp_server_type == MCPServerType.SSE.value
+            assert config.transport == MCPServerType.SSE.value
 
     def test_http_streaming_transport(self) -> None:
         """Test that '--transport http-streaming' sets mcp_server_type to HTTP_STREAMING."""
         with patch("sys.argv", ["program", "--transport", "http-streaming"]):
             config = parse_args()
-            assert config.mcp_server_type == MCPServerType.HTTP_STREAMING.value
+            assert config.transport == MCPServerType.HTTP_STREAMING.value
 
     def test_invalid_transport(self) -> None:
         """Test that an invalid transport protocol raises a system exit."""
@@ -140,7 +140,7 @@ class TestCliOptionTransport:
         monkeypatch.setenv("CLICKUP_API_TOKEN", "test_token_for_server_type")
 
         # Create a ServerConfig with SSE transport protocol
-        config = ServerConfig(mcp_server_type=MCPServerType.SSE)
+        config = ServerConfig(transport=MCPServerType.SSE)
 
         with patch("clickup_mcp.web_server.app.WebServerFactory.get", return_value=mock_web):
             with patch("clickup_mcp.web_server.app.mount_service") as mock_mount:
@@ -157,10 +157,10 @@ class TestCliOptionTransport:
                 # With the new implementation, the only positional arg should be transport
                 if args:
                     # Check if args is passed positionally
-                    assert args[0] == config.mcp_server_type
+                    assert args[0] == config.transport
                 elif "transport" in kwargs:
                     # Check if transport is passed as a keyword arg
-                    assert kwargs["transport"] == config.mcp_server_type
+                    assert kwargs["transport"] == config.transport
                 else:
                     # Fail if neither pattern matches
                     assert False, "mount_service not called with expected transport parameter"

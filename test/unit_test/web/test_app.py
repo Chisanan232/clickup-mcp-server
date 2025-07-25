@@ -72,7 +72,7 @@ class TestWebServer:
             host="localhost",
             port=8000,
             env_file=".env",
-            mcp_server_type=MCPServerType.SSE,
+            transport=MCPServerType.SSE,
         )
 
         # Create patchers for our test

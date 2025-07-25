@@ -225,7 +225,7 @@ class TestMCPServerMounting:
                     MCPServerFactory.create()
 
                     # Now call create_app with the server config that specifies SSE type
-                    app = create_app(ServerConfig(mcp_server_type=MCPServerType.SSE))
+                    app = create_app(ServerConfig(transport=MCPServerType.SSE))
 
                     # Verify routes
                     routes = app.routes

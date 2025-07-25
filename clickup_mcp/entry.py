@@ -39,7 +39,7 @@ def parse_args() -> ServerConfig:
         "--transport",
         type=str,
         default="sse",
-        dest="mcp_server_type",
+        dest="transport",
         choices=[server_type.value for server_type in MCPServerType],
         help="Transport protocol to use for MCP (sse or http-streaming)",
     )
@@ -89,7 +89,7 @@ def run_server(config: ServerConfig) -> None:
     logging.info(f"Log level: {config.log_level}")
     logging.info(f"Auto-reload: {'enabled' if config.reload else 'disabled'}")
     logging.info(f"Environment file: {config.env_file or '.env'}")
-    logging.info(f"Transport protocol: {config.mcp_server_type}")
+    logging.info(f"Transport protocol: {config.transport}")
 
     # Run the server
     uvicorn.run(app=app, host=config.host, port=config.port, log_level=config.log_level.lower(), reload=config.reload)

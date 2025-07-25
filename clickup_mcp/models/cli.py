@@ -42,7 +42,7 @@ class ServerConfig(BaseModel):
     token: str | None = Field(
         default=None, description="ClickUp API token. If provided, takes precedence over token from env file"
     )
-    mcp_server_type: MCPServerType = Field(
+    transport: MCPServerType = Field(
         default=MCPServerType.SSE, description="Type of server to run (sse or http-streaming)"
     )
 

@@ -113,7 +113,7 @@ def create_app(
     ClickUpAPIClientFactory.create(api_token=get_api_token(server_config))
 
     # Use default server type if no configuration is provided
-    transport = server_config.mcp_server_type if server_config else MCPServerType.SSE
+    transport = server_config.transport if server_config else MCPServerType.SSE
 
     # Mount MCP routes
     mount_service(transport=transport)
