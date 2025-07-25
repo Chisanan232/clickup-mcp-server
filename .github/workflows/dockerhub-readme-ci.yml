@@ -1,0 +1,60 @@
+name: dockerhub-readme-ci
+
+on:
+  push:
+    branches:
+      - "master"
+    paths:
+#     For GitHub Action
+      - ".github/workflows/docker-update-readme.yml"
+#     For the README file for the Docker Hub
+      - "README_DOCKERHUB.md"
+
+  # For debug and test only
+#  pull_request:
+#    branches:
+#      - "master"
+#    paths:
+##     For GitHub Action
+#      - ".github/workflows/docker-update-readme.yml"
+##     For the README file for the Docker Hub
+#      - "README_DOCKERHUB.md"
+
+env:
+  TEST_TAG: user/clickup-mcp-server:test
+  DOCKER_HUB_SHORT_DESCRIPTION: 🦾 A strong MCP server for ClickUp.
+
+jobs:
+  image-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          buildkitd-flags: --debug
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ${{ env.TEST_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Update repo description
+        uses: peter-evans/dockerhub-description@e98e4d1628a5f3be2be7c231e50981aee98723ae # v4.0.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ env.GITHUB_REPOSITORY }}
+          short-description: ${{ env.DOCKER_HUB_SHORT_DESCRIPTION }}
+          readme-filepath: ./README_DOCKERHUB.md
