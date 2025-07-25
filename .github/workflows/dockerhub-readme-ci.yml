@@ -25,7 +25,7 @@ env:
   DOCKER_HUB_SHORT_DESCRIPTION: 🦾 A strong MCP server for ClickUp.
 
 jobs:
-  image-check:
+  update-readme:
     runs-on: ubuntu-latest
     steps:
       - name: Login to Docker Hub
