@@ -90,4 +90,6 @@ jobs:
       - name: Test
         run: |
           docker run -e API_TOKEN=${{ secrets.CLICKUP_API_TOKEN }} -d --rm --name ${{ env.TEST_CONTAINER_NAME }} ${{ env.TEST_TAG }}
+          echo "Waiting for the server to start..."
+          sleep 5
           docker logs ${{ env.TEST_CONTAINER_NAME }}
