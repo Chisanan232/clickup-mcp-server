@@ -24,7 +24,14 @@
 [//]: # (What's the scope in project it would affect with your modify? For example, would it affect CI workflow? Or any feature usage? Please list all the items which may be affected.)
 ## _Effecting Scope_
 
-* N/A.
+* ✨ Adding new something:
+    * [ ] N/A.
+* ✏️ Modifying existing something:
+    * [ ] N/A.
+* ♻️ Refactoring:
+    * [ ] N/A.
+* 🚮 Removing something:
+    * [ ] N/A.
 
 
 [//]: # (The brief of major changes what your modify. Please list it.)
