@@ -1,0 +1,95 @@
+name: docker-ci
+
+on:
+  push:
+    branches:
+      - "master"
+    paths:
+#     For GitHub Action
+      - ".github/workflows/docker-ci.yml"
+#     For source code and test
+      - "clickup_mcp/**/*.py"
+      - "!**/__pkg_info__.py"
+#     For docker configuration and shell script for running by Docker
+      - "Dockerfile"
+      - "scripts/docker/run-server.sh"
+#     For Python project configuration
+      - "pyproject.toml"
+      - "uv.lock"
+
+  # For the push event, in addition to build and test would be run, it would trigger other service to keep the reports
+  # or other checking, i.e., record the test report by CodeCov and check the code quality by SonarQube.
+  pull_request:
+    branches:
+      - "master"
+    paths:
+#     For GitHub Action
+      - ".github/workflows/docker-ci.yml"
+#     For source code and test
+      - "clickup_mcp/**/*.py"
+      - "!**/__pkg_info__.py"
+#     For docker configuration and shell script for running by Docker
+      - "Dockerfile"
+      - "scripts/docker/run-server.sh"
+#     For Python project configuration
+      - "pyproject.toml"
+      - "uv.lock"
+
+env:
+  TEST_TAG: user/clickup-mcp-server:test
+  TEST_CONTAINER_NAME: clickup-mcp-server
+
+jobs:
+  image-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          buildkitd-flags: --debug
+
+      - name: Validate build configuration
+        uses: docker/build-push-action@v6
+        with:
+          call: check
+          tags: user/app:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  image-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          buildkitd-flags: --debug
+
+      - name: Build and export to Docker
+        uses: docker/build-push-action@v6
+        with:
+          load: true
+          tags: ${{ env.TEST_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test
+        run: |
+          docker run -e API_TOKEN=${{ secrets.CLICKUP_API_TOKEN }} -d --rm --name ${{ env.TEST_CONTAINER_NAME }} ${{ env.TEST_TAG }}
+          echo "Waiting for the server to start..."
+          sleep 5
+          docker logs ${{ env.TEST_CONTAINER_NAME }}
