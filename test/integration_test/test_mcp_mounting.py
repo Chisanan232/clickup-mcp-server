@@ -210,7 +210,7 @@ class TestMCPServerMounting:
             ClickUpAPIClientFactory.reset()
 
             # Define a fixed mount_service that mounts only one server type
-            def fixed_mount_service(server_type: str = MCPServerType.SSE) -> None:
+            def fixed_mount_service(transport: str = MCPServerType.SSE) -> None:
                 """Fixed version of mount_service that handles both async and sync methods."""
                 app = WebServerFactory.get()
                 # In test context, just directly mount our test app

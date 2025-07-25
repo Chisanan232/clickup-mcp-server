@@ -214,4 +214,4 @@ class TestWebServerFactory:
                 with pytest.raises(ValueError) as excinfo:
                     mount_service(invalid_server_type)
 
-                assert "Unknown server type:" in str(excinfo.value)
+                assert "Unknown transport protocol:" in str(excinfo.value)
