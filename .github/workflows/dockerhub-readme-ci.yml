@@ -25,7 +25,7 @@ env:
   DOCKER_HUB_SHORT_DESCRIPTION: 🦾 A strong MCP server for ClickUp.
 
 jobs:
-  image-check:
+  update-readme:
     runs-on: ubuntu-latest
     steps:
       - name: Login to Docker Hub
@@ -50,7 +50,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Update repo description
+      - name: Update repo description in Docker Hub
         uses: peter-evans/dockerhub-description@e98e4d1628a5f3be2be7c231e50981aee98723ae # v4.0.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
