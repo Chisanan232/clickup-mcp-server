@@ -151,7 +151,7 @@ class TestWebServer:
         mock_mcp.list_resources.return_value = [resource1, resource2]
 
         # Test endpoint
-        response = test_client.get("/mcp/resources")
+        response = test_client.get("/mcp-utils/resources")
         assert response.status_code == 200
 
         # Verify the response
@@ -178,7 +178,7 @@ class TestWebServer:
         mock_mcp.list_tools.return_value = [tool1, tool2]
 
         # Test endpoint
-        response = test_client.get("/mcp/tools")
+        response = test_client.get("/mcp-utils/tools")
         assert response.status_code == 200
 
         # Verify the response
@@ -205,7 +205,7 @@ class TestWebServer:
         mock_mcp.list_prompts.return_value = [prompt1, prompt2]
 
         # Test endpoint
-        response = test_client.get("/mcp/prompts")
+        response = test_client.get("/mcp-utils/prompts")
         assert response.status_code == 200
 
         # Verify the response
@@ -240,7 +240,7 @@ class TestWebServer:
         mock_mcp.list_resource_templates.return_value = [template1, template2]
 
         # Test endpoint
-        response = test_client.get("/mcp/resource_templates")
+        response = test_client.get("/mcp-utils/resource_templates")
         assert response.status_code == 200
 
         # Verify the response
@@ -264,7 +264,7 @@ class TestWebServer:
         mock_mcp.execute.return_value = "result data"
 
         # Test endpoint
-        response = test_client.post(f"/mcp/execute/{tool_name}", json=params)
+        response = test_client.post(f"/mcp-utils/execute/{tool_name}", json=params)
         assert response.status_code == 200
 
         # Verify the response matches what our endpoint returns

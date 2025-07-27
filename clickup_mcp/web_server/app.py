@@ -129,8 +129,8 @@ def create_app(
         """
         return {"status": "ok", "server": "ClickUp MCP Server"}
 
-    # Add MCP endpoints
-    @app.get("/mcp/resources", response_class=JSONResponse)
+    # Add API endpoints
+    @app.get("/mcp-utils/resources", response_class=JSONResponse)
     async def list_resources() -> Dict[str, Any]:
         """
         List available MCP resources.
@@ -141,7 +141,7 @@ def create_app(
         resources = await mcp_server.list_resources()
         return {"resources": [r.model_dump() for r in resources]}
 
-    @app.get("/mcp/tools", response_class=JSONResponse)
+    @app.get("/mcp-utils/tools", response_class=JSONResponse)
     async def get_tools() -> Dict[str, Any]:
         """
         Get available MCP tools.
@@ -152,7 +152,7 @@ def create_app(
         tools = await mcp_server.list_tools()
         return {"tools": [t.model_dump() for t in tools]}
 
-    @app.get("/mcp/prompts", response_class=JSONResponse)
+    @app.get("/mcp-utils/prompts", response_class=JSONResponse)
     async def get_prompts() -> Dict[str, Any]:
         """
         Get available MCP prompts.
@@ -163,7 +163,7 @@ def create_app(
         prompts = await mcp_server.list_prompts()
         return {"prompts": [t.model_dump() for t in prompts]}
 
-    @app.get("/mcp/resource_templates", response_class=JSONResponse)
+    @app.get("/mcp-utils/resource_templates", response_class=JSONResponse)
     async def get_resource_templates() -> Dict[str, Any]:
         """
         Get available MCP resource templates.
@@ -174,7 +174,7 @@ def create_app(
         resource_templates = await mcp_server.list_resource_templates()
         return {"resource_templates": [t.model_dump() for t in resource_templates]}
 
-    @app.post("/mcp/execute/{tool_name}", response_class=JSONResponse)
+    @app.post("/mcp-utils/execute/{tool_name}", response_class=JSONResponse)
     async def execute_tool(tool_name: str, params: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
         """
         Execute an MCP tool with the provided parameters.
