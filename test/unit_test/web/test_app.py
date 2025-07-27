@@ -59,12 +59,20 @@ class TestWebServer:
         tool2 = MagicMock()
         tool2.model_dump.return_value = {"name": "tool2", "description": "Tool 2"}
         
+        prompt1 = MagicMock()
+        prompt1.model_dump.return_value = {"name": "prompt1", "content": "Prompt 1 content"}
+        prompt2 = MagicMock()
+        prompt2.model_dump.return_value = {"name": "prompt2", "content": "Prompt 2 content"}
+        
         # Set up asynchronous method returns
         mock.list_resources = AsyncMock()
         mock.list_resources.return_value = [resource1, resource2]
         
         mock.list_tools = AsyncMock()
         mock.list_tools.return_value = [tool1, tool2]
+        
+        mock.list_prompts = AsyncMock()
+        mock.list_prompts.return_value = [prompt1, prompt2]
 
         # Set up proper mock for the execute method
         mock.execute = AsyncMock()
@@ -175,6 +183,33 @@ class TestWebServer:
 
         # Verify the method was called
         mock_mcp.list_tools.assert_called_once()
+        
+    def test_mcp_prompts_endpoint(self, test_client: TestClient, mock_mcp: MagicMock) -> None:
+        """Test the MCP prompts listing endpoint."""
+        # Create mock prompt objects with model_dump method
+        prompt1 = MagicMock()
+        prompt1.model_dump.return_value = {"name": "test_prompt_1", "content": "Test Prompt 1 content"}
+        prompt2 = MagicMock()
+        prompt2.model_dump.return_value = {"name": "test_prompt_2", "content": "Test Prompt 2 content"}
+        
+        # Set up mock prompts
+        mock_mcp.list_prompts = AsyncMock()
+        mock_mcp.list_prompts.return_value = [prompt1, prompt2]
+
+        # Test endpoint
+        response = test_client.get("/mcp/prompts")
+        assert response.status_code == 200
+
+        # Verify the response
+        data = response.json()
+        assert "prompts" in data
+        assert data["prompts"] == [
+            {"name": "test_prompt_1", "content": "Test Prompt 1 content"},
+            {"name": "test_prompt_2", "content": "Test Prompt 2 content"}
+        ]
+
+        # Verify the method was called
+        mock_mcp.list_prompts.assert_called_once()
 
     def test_execute_tool(self, test_client: TestClient, mock_mcp: MagicMock) -> None:
         """Test the tool execution endpoint."""
