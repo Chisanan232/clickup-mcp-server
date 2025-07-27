@@ -131,12 +131,9 @@ def create_app(
 
     # Add MCP endpoints
     @app.get("/mcp/resources", response_class=JSONResponse)
-    async def list_resources(request: Request) -> Dict[str, Any]:
+    async def list_resources() -> Dict[str, Any]:
         """
         List available MCP resources.
-
-        Args:
-            request: FastAPI request object
 
         Returns:
             JSON response containing available MCP resources
@@ -145,12 +142,9 @@ def create_app(
         return {"resources": [r.model_dump() for r in resources]}
 
     @app.get("/mcp/tools", response_class=JSONResponse)
-    async def get_tools(request: Request) -> Dict[str, Any]:
+    async def get_tools() -> Dict[str, Any]:
         """
         Get available MCP tools.
-
-        Args:
-            request: FastAPI request object
 
         Returns:
             JSON response containing available MCP tools
@@ -159,12 +153,9 @@ def create_app(
         return {"tools": [t.model_dump() for t in tools]}
 
     @app.get("/mcp/prompts", response_class=JSONResponse)
-    async def get_prompts(request: Request) -> Dict[str, Any]:
+    async def get_prompts() -> Dict[str, Any]:
         """
         Get available MCP prompts.
-
-        Args:
-            request: FastAPI request object
 
         Returns:
             JSON response containing available MCP prompts
@@ -173,12 +164,9 @@ def create_app(
         return {"prompts": [t.model_dump() for t in prompts]}
 
     @app.get("/mcp/resource_templates", response_class=JSONResponse)
-    async def get_resource_templates(request: Request) -> Dict[str, Any]:
+    async def get_resource_templates() -> Dict[str, Any]:
         """
         Get available MCP resource templates.
-
-        Args:
-            request: FastAPI request object
 
         Returns:
             JSON response containing available MCP resource templates
