@@ -158,6 +158,20 @@ def create_app(
         tools = await mcp_server.list_tools()
         return {"tools": [t.model_dump() for t in tools]}
 
+    @app.get("/mcp/prompts", response_class=JSONResponse)
+    async def get_prompts(request: Request) -> Dict[str, Any]:
+        """
+        Get available MCP prompts.
+
+        Args:
+            request: FastAPI request object
+
+        Returns:
+            JSON response containing available MCP prompts
+        """
+        prompts = await mcp_server.list_prompts()
+        return {"prompts": [t.model_dump() for t in prompts]}
+
     @app.post("/mcp/execute/{tool_name}", response_class=JSONResponse)
     async def execute_tool(tool_name: str, params: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
         """
