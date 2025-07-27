@@ -47,12 +47,26 @@ class TestWebServer:
     def mock_mcp(self) -> MagicMock:
         """Fixture to create a mock MCP server."""
         mock = MagicMock()
-        # Set up synchronous method returns
-        mock.list_resources.return_value = ["resource1", "resource2"]
-        mock.list_tools.return_value = ["tool1", "tool2"]
+        
+        # Create mock Pydantic model objects with model_dump method
+        resource1 = MagicMock()
+        resource1.model_dump.return_value = {"id": "resource1", "name": "Resource 1"}
+        resource2 = MagicMock()
+        resource2.model_dump.return_value = {"id": "resource2", "name": "Resource 2"}
+        
+        tool1 = MagicMock()
+        tool1.model_dump.return_value = {"name": "tool1", "description": "Tool 1"}
+        tool2 = MagicMock()
+        tool2.model_dump.return_value = {"name": "tool2", "description": "Tool 2"}
+        
+        # Set up asynchronous method returns
+        mock.list_resources = AsyncMock()
+        mock.list_resources.return_value = [resource1, resource2]
+        
+        mock.list_tools = AsyncMock()
+        mock.list_tools.return_value = [tool1, tool2]
 
         # Set up proper mock for the execute method
-        # We need to use AsyncMock properly for the execute method
         mock.execute = AsyncMock()
         mock.execute.return_value = "result data"
 
@@ -110,8 +124,15 @@ class TestWebServer:
 
     def test_mcp_resource_endpoint(self, test_client: TestClient, mock_mcp: MagicMock) -> None:
         """Test the MCP resource listing endpoint."""
+        # Create mock resource objects with model_dump method
+        resource1 = MagicMock()
+        resource1.model_dump.return_value = {"id": "test_resource_1", "name": "Test Resource 1"}
+        resource2 = MagicMock()
+        resource2.model_dump.return_value = {"id": "test_resource_2", "name": "Test Resource 2"}
+        
         # Set up mock resources
-        mock_mcp.list_resources.return_value = ["test_resource_1", "test_resource_2"]
+        mock_mcp.list_resources = AsyncMock()
+        mock_mcp.list_resources.return_value = [resource1, resource2]
 
         # Test endpoint
         response = test_client.get("/mcp/resources")
@@ -120,15 +141,25 @@ class TestWebServer:
         # Verify the response
         data = response.json()
         assert "resources" in data
-        assert data["resources"] == ["test_resource_1", "test_resource_2"]
+        assert data["resources"] == [
+            {"id": "test_resource_1", "name": "Test Resource 1"},
+            {"id": "test_resource_2", "name": "Test Resource 2"}
+        ]
 
         # Verify the method was called
         mock_mcp.list_resources.assert_called_once()
 
     def test_mcp_tools_endpoint(self, test_client: TestClient, mock_mcp: MagicMock) -> None:
         """Test the MCP tools listing endpoint."""
+        # Create mock tool objects with model_dump method
+        tool1 = MagicMock()
+        tool1.model_dump.return_value = {"name": "test_tool_1", "description": "Test Tool 1"}
+        tool2 = MagicMock()
+        tool2.model_dump.return_value = {"name": "test_tool_2", "description": "Test Tool 2"}
+        
         # Set up mock tools
-        mock_mcp.list_tools.return_value = ["test_tool_1", "test_tool_2"]
+        mock_mcp.list_tools = AsyncMock()
+        mock_mcp.list_tools.return_value = [tool1, tool2]
 
         # Test endpoint
         response = test_client.get("/mcp/tools")
@@ -137,7 +168,10 @@ class TestWebServer:
         # Verify the response
         data = response.json()
         assert "tools" in data
-        assert data["tools"] == ["test_tool_1", "test_tool_2"]
+        assert data["tools"] == [
+            {"name": "test_tool_1", "description": "Test Tool 1"},
+            {"name": "test_tool_2", "description": "Test Tool 2"}
+        ]
 
         # Verify the method was called
         mock_mcp.list_tools.assert_called_once()
