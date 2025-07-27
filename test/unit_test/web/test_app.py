@@ -64,6 +64,11 @@ class TestWebServer:
         prompt2 = MagicMock()
         prompt2.model_dump.return_value = {"name": "prompt2", "content": "Prompt 2 content"}
         
+        template1 = MagicMock()
+        template1.model_dump.return_value = {"id": "template1", "name": "Template 1", "schema": {"type": "object"}}
+        template2 = MagicMock()
+        template2.model_dump.return_value = {"id": "template2", "name": "Template 2", "schema": {"type": "object"}}
+        
         # Set up asynchronous method returns
         mock.list_resources = AsyncMock()
         mock.list_resources.return_value = [resource1, resource2]
@@ -73,6 +78,9 @@ class TestWebServer:
         
         mock.list_prompts = AsyncMock()
         mock.list_prompts.return_value = [prompt1, prompt2]
+        
+        mock.list_resource_templates = AsyncMock()
+        mock.list_resource_templates.return_value = [template1, template2]
 
         # Set up proper mock for the execute method
         mock.execute = AsyncMock()
@@ -210,6 +218,33 @@ class TestWebServer:
 
         # Verify the method was called
         mock_mcp.list_prompts.assert_called_once()
+
+    def test_mcp_resource_templates_endpoint(self, test_client: TestClient, mock_mcp: MagicMock) -> None:
+        """Test the MCP resource templates listing endpoint."""
+        # Create mock template objects with model_dump method
+        template1 = MagicMock()
+        template1.model_dump.return_value = {"id": "test_template_1", "name": "Test Template 1", "schema": {"type": "object"}}
+        template2 = MagicMock()
+        template2.model_dump.return_value = {"id": "test_template_2", "name": "Test Template 2", "schema": {"type": "object"}}
+        
+        # Set up mock templates
+        mock_mcp.list_resource_templates = AsyncMock()
+        mock_mcp.list_resource_templates.return_value = [template1, template2]
+
+        # Test endpoint
+        response = test_client.get("/mcp/resource_templates")
+        assert response.status_code == 200
+
+        # Verify the response
+        data = response.json()
+        assert "resource_templates" in data
+        assert data["resource_templates"] == [
+            {"id": "test_template_1", "name": "Test Template 1", "schema": {"type": "object"}},
+            {"id": "test_template_2", "name": "Test Template 2", "schema": {"type": "object"}}
+        ]
+
+        # Verify the method was called
+        mock_mcp.list_resource_templates.assert_called_once()
 
     def test_execute_tool(self, test_client: TestClient, mock_mcp: MagicMock) -> None:
         """Test the tool execution endpoint."""
