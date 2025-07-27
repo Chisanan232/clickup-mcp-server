@@ -141,8 +141,8 @@ def create_app(
         Returns:
             JSON response containing available MCP resources
         """
-        resources = mcp_server.list_resources()
-        return {"resources": resources}
+        resources = await mcp_server.list_resources()
+        return {"resources": [r.model_dump() for r in resources]}
 
     @app.get("/mcp/tools", response_class=JSONResponse)
     async def get_tools(request: Request) -> Dict[str, Any]:
@@ -155,8 +155,8 @@ def create_app(
         Returns:
             JSON response containing available MCP tools
         """
-        tools = mcp_server.list_tools()
-        return {"tools": tools}
+        tools = await mcp_server.list_tools()
+        return {"tools": [t.model_dump() for t in tools]}
 
     @app.post("/mcp/execute/{tool_name}", response_class=JSONResponse)
     async def execute_tool(tool_name: str, params: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
