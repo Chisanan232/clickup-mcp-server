@@ -129,7 +129,7 @@ def create_app(
         """
         return {"status": "ok", "server": "ClickUp MCP Server"}
 
-    # Add API endpoints
+    # Add endpoints for utility functions of the MCP server which be mounted at */mcp*
     @app.get("/mcp-utils/resources", response_class=JSONResponse)
     async def list_resources() -> Dict[str, Any]:
         """
