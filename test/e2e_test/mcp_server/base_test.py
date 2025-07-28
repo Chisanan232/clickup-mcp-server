@@ -52,20 +52,6 @@ def wait_for_port(port: int, timeout: int = 15) -> bool:
     return False
 
 
-# Sample domain model classes for testing
-class ClickUpSpace(BaseModel):
-    """Sample domain model for ClickUp space."""
-    id: str  # This is the actual field name used in the API
-    name: str
-    private: bool = False
-    statuses: List[Dict[str, Any]] = []
-    
-    @property
-    def space_id(self) -> str:
-        """Return the id as space_id for backward compatibility."""
-        return self.id
-
-
 class BaseMCPServerTest(metaclass=ABCMeta):
     """Base class for MCP server end-to-end tests."""
 
