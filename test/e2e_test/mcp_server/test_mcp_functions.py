@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from abc import ABC
 from contextlib import closing
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Sequence, AsyncGenerator, Optional
@@ -39,12 +40,8 @@ class ClickUpSpace(BaseModel):
         return self.id
 
 
-class TestMCPFunctions(BaseMCPServerTest):
+class BaseSpaceMCPFunctionsTestSuite(BaseMCPServerTest, ABC):
     """End-to-end tests for MCP functions using the HTTP streaming transport."""
-
-    def get_transport_option(self) -> str:
-        """Return the HTTP streaming transport option."""
-        return "http-streaming"
 
     def mcp_functions_in_tools(self) -> list[str]:
         """Return the list of MCP functions tested in this suite."""
@@ -122,3 +119,11 @@ class TestMCPFunctions(BaseMCPServerTest):
         
         # Should include the error message from the mock
         assert "Error retrieving space" in str(exc_info.value)
+
+
+class TestHTTPStreamingTransport(BaseSpaceMCPFunctionsTestSuite):
+    """End-to-end tests for MCP functions using the HTTP streaming transport."""
+
+    def get_transport_option(self) -> str:
+        """Return the HTTP streaming transport option."""
+        return "http-streaming"
