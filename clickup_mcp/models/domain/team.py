@@ -29,18 +29,6 @@ class ClickUpUser(BaseDomainModel):
         extra="allow",
     )
 
-    @property
-    def id_value(self) -> int | None:
-        """Return user_id for backward compatibility."""
-        return self.user_id
-
-    def model_dump(self, **kwargs) -> Dict[str, Any]:
-        """Include 'id' in serialization for backward compatibility."""
-        result = super().model_dump(**kwargs)
-        if self.user_id is not None and "id" not in result:
-            result["id"] = self.user_id
-        return result
-
 
 class ClickUpTeamMember(BaseDomainModel):
     """Team member with associated user information."""
@@ -68,18 +56,6 @@ class ClickUpTeam(BaseDomainModel):
         populate_by_name=True,
         extra="allow",
     )
-
-    @property
-    def id_value(self) -> str | None:
-        """Return team_id for backward compatibility."""
-        return self.team_id
-
-    def model_dump(self, **kwargs) -> Dict[str, Any]:
-        """Include 'id' in serialization for backward compatibility."""
-        result = super().model_dump(**kwargs)
-        if self.team_id is not None and "id" not in result:
-            result["id"] = self.team_id
-        return result
 
 
 # Backward compatibility alias
