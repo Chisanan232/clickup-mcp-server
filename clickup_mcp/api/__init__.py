@@ -6,7 +6,9 @@ interface for interacting with the ClickUp API.
 """
 
 from .space import SpaceAPI
+from .team import TeamAPI
 
 __all__ = [
     "SpaceAPI",
+    "TeamAPI",
 ]
