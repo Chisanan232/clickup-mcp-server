@@ -13,7 +13,7 @@ import tempfile
 import time
 from contextlib import closing
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Sequence, AsyncGenerator
+from typing import Any, Dict, Generator, List, Sequence, AsyncGenerator, Callable, Optional, Union, TypeVar
 from unittest import mock
 from abc import ABCMeta, abstractmethod
 
@@ -23,6 +23,9 @@ from pydantic import BaseModel
 
 # Path to the project root
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+
+# Type alias for call_tool side_effect
+CallToolSideEffect = Callable[[str, Optional[Dict[str, Any]], Any], Any]
 
 
 def find_free_port() -> int:
@@ -78,16 +81,6 @@ class BaseMCPServerTest(metaclass=ABCMeta):
         # Clean up
         Path(temp_file_path).unlink(missing_ok=True)
 
-    @abstractmethod
-    def get_transport_option(self) -> str:
-        """
-        Get the transport option to use for this test.
-        
-        This method should be overridden by subclasses to specify which
-        transport to use (e.g. 'http-streaming' or 'sse').
-        """
-        raise NotImplementedError("Subclasses must implement get_transport_option")
-
     @pytest.fixture
     def server_fixture(self, temp_env_file: str) -> Generator[Dict[str, Any], None, None]:
         """Start an MCP server in a separate process and shut it down after the test."""
@@ -140,61 +133,77 @@ class BaseMCPServerTest(metaclass=ABCMeta):
                     process.kill()
                     process.wait(timeout=5)
 
+    @abstractmethod
+    def get_transport_option(self) -> str:
+        """
+        Get the transport option to use for this test.
+
+        This method should be overridden by subclasses to specify which
+        transport to use (e.g. 'http-streaming' or 'sse').
+        """
+        raise NotImplementedError("Subclasses must implement get_transport_option")
+
     @pytest.fixture
     async def mcp_client(self, server_fixture: Dict[str, Any]) -> AsyncGenerator[ClientSession, None]:
         """Create an MCP client connected to the test server."""
         # MCP server is mounted at /mcp by default
         base_url = f"http://{server_fixture['host']}:{server_fixture['port']}/mcp"
-        
+
         print(f"Connecting to MCP server at: {base_url}")
+
+        # Create a direct ClientSession without HTTP connection
+        client = mock.MagicMock(spec=ClientSession)
+
+        # Mock the methods we'll use in tests
+        client.list_tools = mock.AsyncMock(return_value=self.create_mock_tool_list())
+
+        # Create a proper async side_effect function that will behave correctly
+        client.call_tool = mock.AsyncMock(side_effect=self.mock_call_tool_side_effect)
+
+        try:
+            yield client
+        finally:
+            # Clean up resources if needed
+            pass
+
+    @abstractmethod
+    def create_mock_tool_list(self) -> Dict[str, Dict[str, str]]:
+        """
+        Create a dictionary of mock tools to be returned by list_tools.
         
-        # Use direct mocking of the client for testing
-        with mock.patch('clickup_mcp.client.SpaceAPI.get') as mock_get:
-            # Setup mock to return a test space
-            mock_get.return_value = ClickUpSpace(id="123456", name="Test Space")
+        Each tool should have the following structure:
+        {
+            "tool_name": {
+                "name": "tool_name",
+                "title": "Tool Title",
+                "description": "Tool description"
+            }
+        }
+        
+        Returns:
+            A dictionary of mock tools.
+        """
+        raise NotImplementedError("Subclasses must implement create_mock_tool_list")
+    
+    @abstractmethod
+    async def mock_call_tool_side_effect(self, name: str, arguments: Optional[Dict[str, Any]] = None, **kwargs) -> Any:
+        """
+        Create a side effect function for the call_tool mock.
+        
+        This function will be called when the test calls mcp_client.call_tool().
+        It should implement the logic for handling the specific tools being tested.
+        
+        Args:
+            name: The name of the tool being called.
+            arguments: A dictionary of arguments passed to the tool.
+            **kwargs: Additional keyword arguments passed to the tool.
             
-            # Create a direct ClientSession without HTTP connection
-            client = mock.MagicMock(spec=ClientSession)
-            
-            # Mock the methods we'll use in tests
-            client.list_tools = mock.AsyncMock(return_value={
-                "get_space": {
-                    "name": "get_space",
-                    "title": "Get ClickUp Space",
-                    "description": "Get a ClickUp space by its ID."
-                }
-            })
-            
-            # Create a proper async side_effect function that will behave correctly
-            async def call_tool_side_effect(name, arguments=None, **kwargs):
-                if name != "get_space":
-                    return None
-                    
-                # Handle get_space tool calls
-                if arguments is None or "space_id" not in arguments:
-                    raise ValueError("Space ID is required")
-                    
-                space_id = arguments.get("space_id")
-                if not space_id:
-                    raise ValueError("Space ID is required")
-                elif space_id == "123456":
-                    return mock_get.return_value.model_dump()
-                elif space_id == "error_case":
-                    raise ValueError("Error retrieving space: Error for test")
-                else:
-                    # Any other space_id returns None (not found)
-                    return None
-                    
-            client.call_tool = mock.AsyncMock(side_effect=call_tool_side_effect)
-            
-            try:
-                yield client
-            finally:
-                # Clean up resources if needed
-                pass
+        Returns:
+            The result of the tool call, or raises an exception if appropriate.
+        """
+        raise NotImplementedError("Subclasses must implement mock_call_tool_side_effect")
 
-    # Common test methods - these can be inherited by subclasses
-
+    # Common test methods
     @pytest.mark.asyncio
     async def test_mcp_client_can_list_tools(self, mcp_client: ClientSession) -> None:
         """Test that the MCP client can list available tools."""
@@ -203,7 +212,7 @@ class BaseMCPServerTest(metaclass=ABCMeta):
         
         # Check that tools are returned
         assert isinstance(result, dict), "Expected dictionary result"
-        for func in self.mcp_functions():
+        for func in self.mcp_functions_in_tools():
             assert func in result, f"Expected '{func}' in result"
 
             # Check that get_space is in the list of tools
@@ -211,5 +220,11 @@ class BaseMCPServerTest(metaclass=ABCMeta):
             assert func in tool_names, f"Expected '{func}' in tool list"
 
     @abstractmethod
-    def mcp_functions(self) -> list[str]:
-        raise NotImplementedError("Subclasses must implement get_transport_option")
+    def mcp_functions_in_tools(self) -> list[str]:
+        """
+        Return a list of MCP function names that this test suite tests.
+        
+        Returns:
+            A list of strings representing the function names.
+        """
+        raise NotImplementedError("Subclasses must implement mcp_functions")

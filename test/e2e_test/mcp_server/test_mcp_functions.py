@@ -13,7 +13,7 @@ import tempfile
 import time
 from contextlib import closing
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Sequence, AsyncGenerator, cast
+from typing import Any, Dict, Generator, List, Sequence, AsyncGenerator, Optional
 from unittest import mock
 
 import httpx
@@ -46,8 +46,42 @@ class TestMCPFunctions(BaseMCPServerTest):
         """Return the HTTP streaming transport option."""
         return "http-streaming"
 
-    def mcp_functions(self) -> list[str]:
+    def mcp_functions_in_tools(self) -> list[str]:
+        """Return the list of MCP functions tested in this suite."""
         return ["get_space"]
+        
+    def create_mock_tool_list(self) -> Dict[str, Dict[str, str]]:
+        """Create a dictionary of mock tools for testing."""
+        return {
+            "get_space": {
+                "name": "get_space",
+                "title": "Get ClickUp Space",
+                "description": "Get a ClickUp space by its ID."
+            }
+        }
+    
+    async def mock_call_tool_side_effect(self, name: str, arguments: Optional[Dict[str, Any]] = None, **kwargs) -> Any:
+        """Mock the behavior of call_tool for testing."""
+        # Create a mock space to return
+        mock_space = ClickUpSpace(id="123456", name="Test Space")
+        
+        if name != "get_space":
+            return None
+                
+        # Handle get_space tool calls
+        if arguments is None or "space_id" not in arguments:
+            raise ValueError("Space ID is required")
+                
+        space_id = arguments.get("space_id")
+        if not space_id:
+            raise ValueError("Space ID is required")
+        elif space_id == "123456":
+            return mock_space.model_dump()
+        elif space_id == "error_case":
+            raise ValueError("Error retrieving space: Error for test")
+        else:
+            # Any other space_id returns None (not found)
+            return None
 
     @pytest.mark.asyncio
     async def test_get_space_with_invalid_id(self, mcp_client: ClientSession) -> None:
