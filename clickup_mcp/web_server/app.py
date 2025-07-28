@@ -174,29 +174,4 @@ def create_app(
         resource_templates = await mcp_server.list_resource_templates()
         return {"resource_templates": [t.model_dump() for t in resource_templates]}
 
-    @app.post("/mcp-utils/execute/{tool_name}", response_class=JSONResponse)
-    async def execute_tool(tool_name: str, params: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
-        """
-        Execute an MCP tool with the provided parameters.
-
-        Args:
-            tool_name: Name of the MCP tool to execute
-            params: Parameters to pass to the tool
-
-        Returns:
-            JSON response with the result of the tool execution
-        """
-        # Handle both async and sync execute methods
-        execute_method = mcp_server.execute
-
-        # Check if the execute method is a coroutine function
-        import inspect
-
-        if inspect.iscoroutinefunction(execute_method):
-            result = await execute_method(tool_name, **params)
-        else:
-            result = execute_method(tool_name, **params)
-
-        return {"result": result}
-
     return app
