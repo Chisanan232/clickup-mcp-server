@@ -20,6 +20,7 @@ from clickup_mcp.models.dto.base import BaseResponseDTO
 
 from ._base import BaseServerFactory
 from .api.space import SpaceAPI
+from .api.team import TeamAPI
 from .exceptions import (
     AuthenticationError,
     ClickUpAPIError,
@@ -193,6 +194,7 @@ class ClickUpAPIClient:
 
         # Initialize API resource managers
         self.space = SpaceAPI(self)
+        self.team = TeamAPI(self)
 
     async def __aenter__(self) -> "ClickUpAPIClient":
         """Async context manager entry."""
