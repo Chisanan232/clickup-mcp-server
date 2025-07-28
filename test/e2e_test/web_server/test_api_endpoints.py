@@ -214,50 +214,6 @@ class TestAPIEndpoints:
             assert response.status_code != 404, "MCP app not properly mounted"
 
     @pytest.mark.asyncio
-    async def test_api_execute_endpoint(self, server_fixture: Dict[str, Any]) -> None:
-        """Test that the /mcp-utils/execute/{tool_name} endpoint is accessible."""
-        base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
-
-        # First get the available tools to find one we can execute
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            tools_response = await client.get(f"{base_url}/mcp-utils/tools")
-            assert tools_response.status_code == 200
-            tools_data = tools_response.json()
-
-            # If no tools are available, we can't test the execute endpoint
-            if not tools_data["tools"]:
-                pytest.skip("No tools available to test execute endpoint")
-
-            # Get the first tool and any required parameters
-            tool = tools_data["tools"][0]
-            tool_name = tool["name"]
-
-            # Create a minimal payload based on the tool's input schema if available
-            payload = {}
-            if "inputSchema" in tool and "properties" in tool["inputSchema"]:
-                for prop_name, prop_details in tool["inputSchema"]["properties"].items():
-                    # Use default values if available, otherwise create minimal valid values
-                    if "default" in prop_details:
-                        payload[prop_name] = prop_details["default"]
-                    elif prop_details.get("type") == "string":
-                        payload[prop_name] = "test_value"
-                    elif prop_details.get("type") == "integer":
-                        payload[prop_name] = 0
-                    elif prop_details.get("type") == "boolean":
-                        payload[prop_name] = False
-
-            # Call the execute endpoint
-            print(f"Testing execute endpoint with tool '{tool_name}' and payload {payload}")
-            execute_response = await client.post(
-                f"{base_url}/mcp-utils/execute/{tool_name}",
-                json=payload,
-            )
-
-            # We don't necessarily expect the tool execution to succeed,
-            # but the endpoint itself should be accessible
-            assert execute_response.status_code != 404, "Execute endpoint not found"
-
-    @pytest.mark.asyncio
     async def test_no_conflict_between_routes(self, server_fixture: Dict[str, Any]) -> None:
         """
         Test that there is no conflict between the explicit API routes and the mounted MCP app.

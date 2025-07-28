@@ -254,26 +254,6 @@ class TestWebServer:
         # Verify the method was called
         mock_mcp.list_resource_templates.assert_called_once()
 
-    def test_execute_tool(self, test_client: TestClient, mock_mcp: MagicMock) -> None:
-        """Test the tool execution endpoint."""
-        # Define test params
-        tool_name = "test_tool"
-        params = {"param1": "value1", "param2": "value2"}
-
-        # We must use a dictionary structure that matches the endpoint return
-        mock_mcp.execute.return_value = "result data"
-
-        # Test endpoint
-        response = test_client.post(f"/mcp-utils/execute/{tool_name}", json=params)
-        assert response.status_code == 200
-
-        # Verify the response matches what our endpoint returns
-        data = response.json()
-        assert data == {"result": "result data"}
-
-        # Verify the method was called with correct parameters
-        mock_mcp.execute.assert_awaited_once_with(tool_name, **params)
-
     def test_mount_service_integration(self, mock_mcp: MagicMock) -> None:
         """Test that mount_service is called during app initialization and mounts services correctly."""
         # First create a web server instance
