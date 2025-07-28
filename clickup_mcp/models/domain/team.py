@@ -4,7 +4,7 @@ Team domain models.
 This module provides domain models for ClickUp Teams/Workspaces.
 """
 
-from typing import Any, Dict, List
+from typing import List
 
 from pydantic import ConfigDict, Field
 
