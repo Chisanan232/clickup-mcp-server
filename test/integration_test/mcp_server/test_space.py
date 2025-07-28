@@ -42,7 +42,7 @@ class ClickUpSpace(BaseModel):
 
 
 class BaseSpaceMCPFunctionsTestSuite(BaseMCPServerTest, ABC):
-    """Base test suite for end-to-end tests for MCP functions about spaces features."""
+    """Base test suite for integration tests for MCP functions about spaces features."""
 
     def mcp_functions_in_tools(self) -> list[str]:
         """Return the list of MCP functions tested in this suite."""
@@ -123,7 +123,7 @@ class BaseSpaceMCPFunctionsTestSuite(BaseMCPServerTest, ABC):
 
 
 class TestSpaceByHTTPStreamingTransport(BaseSpaceMCPFunctionsTestSuite):
-    """End-to-end tests for MCP functions using the HTTP streaming transport."""
+    """Integration tests for MCP functions using the HTTP streaming transport."""
 
     def get_transport_option(self) -> str:
         """Return the HTTP streaming transport option."""
@@ -131,7 +131,7 @@ class TestSpaceByHTTPStreamingTransport(BaseSpaceMCPFunctionsTestSuite):
 
 
 class TestSpaceBySSETransport(BaseSpaceMCPFunctionsTestSuite):
-    """End-to-end tests for MCP functions using the SSE transport."""
+    """Integration tests for MCP functions using the SSE transport."""
 
     def get_transport_option(self) -> str:
         """Return the SSE transport option."""

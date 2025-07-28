@@ -53,7 +53,7 @@ def wait_for_port(port: int, timeout: int = 15) -> bool:
 
 
 class BaseMCPServerTest(metaclass=ABCMeta):
-    """Base class for MCP server end-to-end tests."""
+    """Base class for MCP server integration tests."""
 
     @pytest.fixture
     def temp_env_file(self) -> Generator[str, Any, None]:
