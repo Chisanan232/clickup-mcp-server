@@ -64,6 +64,7 @@ class TestTeamAPIE2E:
         if not api_token:
             pytest.skip("CLICKUP_API_TOKEN environment variable is required for this test")
 
+        assert api_token
         async with ClickUpAPIClient(api_token=api_token) as client:
             yield client
 
