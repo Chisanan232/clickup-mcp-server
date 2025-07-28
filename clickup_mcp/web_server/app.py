@@ -7,7 +7,7 @@ for exposing ClickUp functionality through a RESTful API.
 
 from typing import Any, Dict, Optional
 
-from fastapi import Body, FastAPI, Request
+from fastapi import Body, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -129,36 +129,52 @@ def create_app(
         """
         return {"status": "ok", "server": "ClickUp MCP Server"}
 
-    # Add MCP endpoints
-    @app.get("/mcp/resources", response_class=JSONResponse)
-    async def list_resources(request: Request) -> Dict[str, Any]:
+    # Add endpoints for utility functions of the MCP server which be mounted at */mcp*
+    @app.get("/mcp-utils/resources", response_class=JSONResponse)
+    async def list_resources() -> Dict[str, Any]:
         """
         List available MCP resources.
-
-        Args:
-            request: FastAPI request object
 
         Returns:
             JSON response containing available MCP resources
         """
-        resources = mcp_server.list_resources()
-        return {"resources": resources}
+        resources = await mcp_server.list_resources()
+        return {"resources": [r.model_dump() for r in resources]}
 
-    @app.get("/mcp/tools", response_class=JSONResponse)
-    async def get_tools(request: Request) -> Dict[str, Any]:
+    @app.get("/mcp-utils/tools", response_class=JSONResponse)
+    async def get_tools() -> Dict[str, Any]:
         """
         Get available MCP tools.
-
-        Args:
-            request: FastAPI request object
 
         Returns:
             JSON response containing available MCP tools
         """
-        tools = mcp_server.list_tools()
-        return {"tools": tools}
+        tools = await mcp_server.list_tools()
+        return {"tools": [t.model_dump() for t in tools]}
 
-    @app.post("/mcp/execute/{tool_name}", response_class=JSONResponse)
+    @app.get("/mcp-utils/prompts", response_class=JSONResponse)
+    async def get_prompts() -> Dict[str, Any]:
+        """
+        Get available MCP prompts.
+
+        Returns:
+            JSON response containing available MCP prompts
+        """
+        prompts = await mcp_server.list_prompts()
+        return {"prompts": [t.model_dump() for t in prompts]}
+
+    @app.get("/mcp-utils/resource_templates", response_class=JSONResponse)
+    async def get_resource_templates() -> Dict[str, Any]:
+        """
+        Get available MCP resource templates.
+
+        Returns:
+            JSON response containing available MCP resource templates
+        """
+        resource_templates = await mcp_server.list_resource_templates()
+        return {"resource_templates": [t.model_dump() for t in resource_templates]}
+
+    @app.post("/mcp-utils/execute/{tool_name}", response_class=JSONResponse)
     async def execute_tool(tool_name: str, params: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
         """
         Execute an MCP tool with the provided parameters.
