@@ -22,7 +22,8 @@ import pytest
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 from pydantic import BaseModel
-from test.e2e_test.mcp_server.base_test import BaseMCPServerTest
+
+from .base_test import BaseMCPServerTest
 
 
 # Sample domain model classes for testing
