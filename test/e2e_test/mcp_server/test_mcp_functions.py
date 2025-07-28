@@ -127,3 +127,11 @@ class TestHTTPStreamingTransport(BaseSpaceMCPFunctionsTestSuite):
     def get_transport_option(self) -> str:
         """Return the HTTP streaming transport option."""
         return "http-streaming"
+
+
+class TestSSETransport(BaseSpaceMCPFunctionsTestSuite):
+    """End-to-end tests for MCP functions using the SSE transport."""
+
+    def get_transport_option(self) -> str:
+        """Return the SSE transport option."""
+        return "sse"
