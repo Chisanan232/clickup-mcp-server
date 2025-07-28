@@ -12,7 +12,6 @@ __all__ = [
     # Space models
     "ClickUpSpace",
     "Space",  # Backwards compatibility alias
-    
     # Team models
     "ClickUpTeam",
     "ClickUpTeamMember",

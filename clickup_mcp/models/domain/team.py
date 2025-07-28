@@ -3,26 +3,27 @@ Team domain models.
 
 This module provides domain models for ClickUp Teams/Workspaces.
 """
+
 from typing import Any, Dict, List
 
-from pydantic import Field, field_validator, model_validator, ConfigDict
+from pydantic import ConfigDict, Field
 
 from clickup_mcp.models.domain.base import BaseDomainModel
 
 
 class ClickUpUser(BaseDomainModel):
     """User within a team."""
-    
+
     user_id: int | None = Field(None, alias="id")
     username: str | None = None
     email: str | None = None
     color: str | None = None
     profile_picture: str | None = Field(None, alias="profilePicture")
     initials: str | None = None
-    
+
     # Fields with aliases for backward compatibility
     id: int | None = None
-    
+
     model_config = ConfigDict(
         populate_by_name=True,
         extra="allow",
@@ -32,34 +33,34 @@ class ClickUpUser(BaseDomainModel):
     def id_value(self) -> int | None:
         """Return user_id for backward compatibility."""
         return self.user_id
-    
+
     def model_dump(self, **kwargs) -> Dict[str, Any]:
         """Include 'id' in serialization for backward compatibility."""
         result = super().model_dump(**kwargs)
-        if self.user_id is not None and 'id' not in result:
-            result['id'] = self.user_id
+        if self.user_id is not None and "id" not in result:
+            result["id"] = self.user_id
         return result
 
 
 class ClickUpTeamMember(BaseDomainModel):
     """Team member with associated user information."""
-    
+
     user: ClickUpUser | None = None
 
 
 class ClickUpTeam(BaseDomainModel):
     """
     ClickUp Team/Workspace domain model.
-    
+
     This model represents a team/workspace in ClickUp.
     """
-    
+
     team_id: str | None = Field(None, alias="id")
     name: str | None = None
     color: str | None = None
     avatar: str | None = None
     members: List[ClickUpTeamMember] | None = None
-    
+
     # Fields with aliases for backward compatibility
     id: str | None = None
 
@@ -72,12 +73,12 @@ class ClickUpTeam(BaseDomainModel):
     def id_value(self) -> str | None:
         """Return team_id for backward compatibility."""
         return self.team_id
-    
+
     def model_dump(self, **kwargs) -> Dict[str, Any]:
         """Include 'id' in serialization for backward compatibility."""
         result = super().model_dump(**kwargs)
-        if self.team_id is not None and 'id' not in result:
-            result['id'] = self.team_id
+        if self.team_id is not None and "id" not in result:
+            result["id"] = self.team_id
         return result
 
 

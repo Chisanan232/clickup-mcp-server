@@ -3,11 +3,8 @@ Tests for the Team API resource manager.
 
 This module contains tests for the TeamAPI class that handles ClickUp Team/Workspace operations.
 """
-import json
-from typing import Any, Dict, List
 
 import pytest
-from httpx import AsyncClient
 
 from clickup_mcp.api.team import TeamAPI
 from clickup_mcp.client import APIResponse, ClickUpAPIClient
@@ -36,10 +33,10 @@ class TestTeamAPI:
                                 "email": "john@example.com",
                                 "color": "#FF0000",
                                 "profilePicture": "https://example.com/profile.jpg",
-                                "initials": "JD"
+                                "initials": "JD",
                             }
                         }
-                    ]
+                    ],
                 }
             ]
         }
@@ -50,16 +47,16 @@ class TestTeamAPI:
         # Setup mock client
         mock_client = mocker.AsyncMock(spec=ClickUpAPIClient)
         mock_client.get.return_value = mock_response
-        
+
         # Create team API instance
         team_api = TeamAPI(mock_client)
-        
+
         # Call the method being tested
         teams = await team_api.get_authorized_teams()
-        
+
         # Verify API call was made correctly
         mock_client.get.assert_called_once_with("/team")
-        
+
         # Assert response is properly processed
         assert teams is not None
         assert isinstance(teams, list)
@@ -79,20 +76,20 @@ class TestTeamAPI:
         """Test handling empty response when getting authorized teams."""
         # Create empty response
         mock_response = APIResponse(status_code=200, data={"teams": []})
-        
+
         # Setup mock client
         mock_client = mocker.AsyncMock(spec=ClickUpAPIClient)
         mock_client.get.return_value = mock_response
-        
+
         # Create team API instance
         team_api = TeamAPI(mock_client)
-        
+
         # Call the method being tested
         teams = await team_api.get_authorized_teams()
-        
+
         # Verify API call was made correctly
         mock_client.get.assert_called_once_with("/team")
-        
+
         # Assert response is properly processed
         assert teams is not None
         assert isinstance(teams, list)
@@ -102,20 +99,20 @@ class TestTeamAPI:
         """Test handling error response when getting authorized teams."""
         # Create error response
         mock_response = APIResponse(status_code=401, data=None, success=False, error="Unauthorized")
-        
+
         # Setup mock client
         mock_client = mocker.AsyncMock(spec=ClickUpAPIClient)
         mock_client.get.return_value = mock_response
-        
+
         # Create team API instance
         team_api = TeamAPI(mock_client)
-        
+
         # Call the method being tested
         teams = await team_api.get_authorized_teams()
-        
+
         # Verify API call was made correctly
         mock_client.get.assert_called_once_with("/team")
-        
+
         # Assert response is properly processed - should return empty list on error
         assert teams is not None
         assert isinstance(teams, list)
