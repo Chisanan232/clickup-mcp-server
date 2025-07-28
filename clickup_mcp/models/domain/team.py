@@ -3,7 +3,7 @@ Team domain models.
 
 This module provides domain models for ClickUp Teams/Workspaces.
 """
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from pydantic import Field, field_validator, model_validator, ConfigDict
 
@@ -13,15 +13,15 @@ from clickup_mcp.models.domain.base import BaseDomainModel
 class ClickUpUser(BaseDomainModel):
     """User within a team."""
     
-    user_id: Optional[int] = Field(None, alias="id")
-    username: Optional[str] = None
-    email: Optional[str] = None
-    color: Optional[str] = None
-    profile_picture: Optional[str] = Field(None, alias="profilePicture")
-    initials: Optional[str] = None
+    user_id: int | None = Field(None, alias="id")
+    username: str | None = None
+    email: str | None = None
+    color: str | None = None
+    profile_picture: str | None = Field(None, alias="profilePicture")
+    initials: str | None = None
     
     # Fields with aliases for backward compatibility
-    id: Optional[int] = None
+    id: int | None = None
     
     model_config = ConfigDict(
         populate_by_name=True,
@@ -29,7 +29,7 @@ class ClickUpUser(BaseDomainModel):
     )
 
     @property
-    def id_value(self) -> Optional[int]:
+    def id_value(self) -> int | None:
         """Return user_id for backward compatibility."""
         return self.user_id
     
@@ -44,7 +44,7 @@ class ClickUpUser(BaseDomainModel):
 class ClickUpTeamMember(BaseDomainModel):
     """Team member with associated user information."""
     
-    user: Optional[ClickUpUser] = None
+    user: ClickUpUser | None = None
 
 
 class ClickUpTeam(BaseDomainModel):
@@ -54,14 +54,14 @@ class ClickUpTeam(BaseDomainModel):
     This model represents a team/workspace in ClickUp.
     """
     
-    team_id: Optional[str] = Field(None, alias="id")
-    name: Optional[str] = None
-    color: Optional[str] = None
-    avatar: Optional[str] = None
-    members: Optional[List[ClickUpTeamMember]] = None
+    team_id: str | None = Field(None, alias="id")
+    name: str | None = None
+    color: str | None = None
+    avatar: str | None = None
+    members: List[ClickUpTeamMember] | None = None
     
     # Fields with aliases for backward compatibility
-    id: Optional[str] = None
+    id: str | None = None
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -69,7 +69,7 @@ class ClickUpTeam(BaseDomainModel):
     )
 
     @property
-    def id_value(self) -> Optional[str]:
+    def id_value(self) -> str | None:
         """Return team_id for backward compatibility."""
         return self.team_id
     

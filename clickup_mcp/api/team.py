@@ -5,7 +5,7 @@ This module provides a resource manager for interacting with ClickUp Teams/Works
 It follows the Resource Manager pattern described in the project documentation.
 """
 
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 from clickup_mcp.models.domain.team import ClickUpTeam
 
