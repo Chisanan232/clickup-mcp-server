@@ -121,7 +121,7 @@ class BaseSpaceMCPFunctionsTestSuite(BaseMCPServerTest, ABC):
         assert "Error retrieving space" in str(exc_info.value)
 
 
-class TestHTTPStreamingTransport(BaseSpaceMCPFunctionsTestSuite):
+class TestSpaceByHTTPStreamingTransport(BaseSpaceMCPFunctionsTestSuite):
     """End-to-end tests for MCP functions using the HTTP streaming transport."""
 
     def get_transport_option(self) -> str:
@@ -129,7 +129,7 @@ class TestHTTPStreamingTransport(BaseSpaceMCPFunctionsTestSuite):
         return "http-streaming"
 
 
-class TestSSETransport(BaseSpaceMCPFunctionsTestSuite):
+class TestSpaceBySSETransport(BaseSpaceMCPFunctionsTestSuite):
     """End-to-end tests for MCP functions using the SSE transport."""
 
     def get_transport_option(self) -> str:
