@@ -7,7 +7,7 @@ for exposing ClickUp functionality through a RESTful API.
 
 from typing import Any, Dict, Optional
 
-from fastapi import Body, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
