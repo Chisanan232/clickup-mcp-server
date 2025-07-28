@@ -5,21 +5,27 @@ This module contains common functionality used by both the HTTP streaming
 and SSE transport test modules.
 """
 
-import json
 import socket
 import subprocess
 import sys
 import tempfile
 import time
+from abc import ABCMeta, abstractmethod
 from contextlib import closing
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Sequence, AsyncGenerator, Callable, Optional, Union, TypeVar
+from typing import (
+    Any,
+    AsyncGenerator,
+    Callable,
+    Dict,
+    Generator,
+    Optional,
+    Sequence,
+)
 from unittest import mock
-from abc import ABCMeta, abstractmethod
 
 import pytest
 from mcp import ClientSession
-from pydantic import BaseModel
 
 # Path to the project root
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
@@ -105,7 +111,7 @@ class BaseMCPServerTest(metaclass=ABCMeta):
 
             # Wait additional time for routes to be registered
             time.sleep(5)  # Increased from 3 to 5 seconds
-            
+
             # Provide the server details to the test
             yield {"port": port, "host": host, "process": process, "env_file": temp_env_file}
 
@@ -156,7 +162,7 @@ class BaseMCPServerTest(metaclass=ABCMeta):
     def create_mock_tool_list(self) -> Dict[str, Dict[str, str]]:
         """
         Create a dictionary of mock tools to be returned by list_tools.
-        
+
         Each tool should have the following structure:
         {
             "tool_name": {
@@ -165,25 +171,25 @@ class BaseMCPServerTest(metaclass=ABCMeta):
                 "description": "Tool description"
             }
         }
-        
+
         Returns:
             A dictionary of mock tools.
         """
         raise NotImplementedError("Subclasses must implement create_mock_tool_list")
-    
+
     @abstractmethod
     async def mock_call_tool_side_effect(self, name: str, arguments: Optional[Dict[str, Any]] = None, **kwargs) -> Any:
         """
         Create a side effect function for the call_tool mock.
-        
+
         This function will be called when the test calls mcp_client.call_tool().
         It should implement the logic for handling the specific tools being tested.
-        
+
         Args:
             name: The name of the tool being called.
             arguments: A dictionary of arguments passed to the tool.
             **kwargs: Additional keyword arguments passed to the tool.
-            
+
         Returns:
             The result of the tool call, or raises an exception if appropriate.
         """
@@ -195,7 +201,7 @@ class BaseMCPServerTest(metaclass=ABCMeta):
         """Test that the MCP client can list available tools."""
         # Call the list_tools endpoint
         result = await mcp_client.list_tools()
-        
+
         # Check that tools are returned
         assert isinstance(result, dict), "Expected dictionary result"
         for func in self.mcp_functions_in_tools():
@@ -209,7 +215,7 @@ class BaseMCPServerTest(metaclass=ABCMeta):
     def mcp_functions_in_tools(self) -> list[str]:
         """
         Return a list of MCP function names that this test suite tests.
-        
+
         Returns:
             A list of strings representing the function names.
         """
