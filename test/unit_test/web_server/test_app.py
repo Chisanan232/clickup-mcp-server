@@ -288,11 +288,16 @@ class TestWebServer:
 
         # Create a mock web instance
         mock_web_instance = MagicMock(spec=FastAPI)
+        
+        # Mock router
+        mock_router = MagicMock()
+        mock_router.add_api_route = MagicMock()
 
         # Patch both the web global and the mcp_server global
         with (
             patch("clickup_mcp.web_server.app.web", mock_web_instance),
             patch("clickup_mcp.web_server.app.mcp_server", mock_mcp),
+            patch("clickup_mcp.web_server.app.APIRouter", return_value=mock_router),
         ):
             # Import mount_service within the patch context
             # Call mount_service directly with the default server type
@@ -301,6 +306,16 @@ class TestWebServer:
 
             mount_service(MCPTransportType.SSE)
 
-            # Verify SSE app was mounted
+            # Verify SSE app was called
             mock_mcp.sse_app.assert_called_once()
-            mock_web_instance.mount.assert_called_once_with("/mcp", mock_sse)
+            mock_mcp.streamable_http_app.assert_not_called()
+            
+            # Verify that add_api_route was called with correct path and app
+            mock_router.add_api_route.assert_called_once()
+            args, kwargs = mock_router.add_api_route.call_args
+            assert args[0] == "/mcp"  # Both transports now use the same endpoint
+            assert args[1] == mock_sse  # App is second positional arg, not a kwarg
+            assert kwargs["methods"] == ["GET", "POST"]
+            
+            # Verify that the router was included in the web app
+            mock_web_instance.include_router.assert_called_once_with(mock_router)

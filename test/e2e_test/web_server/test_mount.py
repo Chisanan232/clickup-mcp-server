@@ -198,22 +198,20 @@ def test_http_streaming_tools_endpoint(server_fixture: Dict[str, Any]) -> None:
 def test_sse_mcp_endpoint(server_fixture: Dict[str, Any]) -> None:
     """Test if the MCP server endpoint is correctly mounted for SSE transport."""
     base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
-    sse_url = f"{base_url}/sse"  # SSE is mounted at /sse, not /mcp
+    mcp_url = f"{base_url}/mcp"  # Both SSE and HTTP Streaming now use /mcp
     
-    # Simply check if the endpoint exists - we'll get a non-(307,404) if it's mounted but parameters are missing
+    # Simply check if the endpoint exists - we'll get a 422 if it's mounted but parameters are missing
     with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
-        response = client.post(sse_url)
+        response = client.post(mcp_url)
     
-    # If the endpoint is mounted, we should get a non-(307,404) status
+    # If the endpoint is mounted, we should get a 422 Unprocessable Entity (missing required parameters)
     # If the endpoint is not mounted, we would get a 404 Not Found
-    # TODO: Need to adjust the test criteria here
-    assert response.status_code not in (307, 404), f"Expected status non--(307,404) for /sse, got {response.status_code}"
+    assert response.status_code == 422, f"Expected status 422 for /mcp, got {response.status_code}"
     
     # Verify response contains parameter validation errors, indicating the endpoint exists
-    if response.status_code == 200:
-        json_response = response.json()
-        assert "detail" in json_response, "Missing detail field in response"
-        assert isinstance(json_response["detail"], list), "Detail field should be a list of validation errors"
+    json_response = response.json()
+    assert "detail" in json_response, "Missing detail field in response"
+    assert isinstance(json_response["detail"], list), "Detail field should be a list of validation errors"
 
 
 @pytest.mark.parametrize("server_fixture", [MCPTransportType.SSE], indirect=True)

@@ -114,33 +114,44 @@ class TestMCPServerMounting:
         Instead of checking exact mount calls, we verify that the routes are actually
         added to the web server after calling mount_service.
         """
-        # Use a MagicMock for the web object instead of a real FastAPI instance
-        mock_web = MagicMock()
+        # Create a mock FastAPI app to simulate the web server
+        mock_web = MagicMock(spec=FastAPI)
+        mock_router = MagicMock()
+        mock_web.include_router = MagicMock(return_value=None)
+        
+        # Set up the router mock
+        router_mock = MagicMock()
+        router_mock.add_api_route = MagicMock()
+        
+        # Patch APIRouter to return our mock
+        with patch("clickup_mcp.web_server.app.APIRouter", return_value=router_mock):
+            # Patch the web object and the client factory
+            with patch("clickup_mcp.web_server.app.web", mock_web):
+                with patch("clickup_mcp.client.ClickUpAPIClientFactory.create", return_value=mock_clickup_client):
+                    # Create MCP server with the mocked dependencies
+                    mcp_server = MCPServerFactory.create()
 
-        # Patch the web object and the client factory
-        with patch("clickup_mcp.web_server.app.web", mock_web):
-            with patch("clickup_mcp.client.ClickUpAPIClientFactory.create", return_value=mock_clickup_client):
-                # Create MCP server with the mocked dependencies
-                mcp_server = MCPServerFactory.create()
+                    # Create test FastAPI app for the SSE endpoint
+                    sse_test_app = FastAPI()
 
-                # Create test FastAPI app for the SSE endpoint
-                sse_test_app = FastAPI()
+                    @sse_test_app.get("/")
+                    def sse_root() -> Dict[str, str]:
+                        return {"app": "SSE Test"}
 
-                @sse_test_app.get("/")
-                def sse_root() -> Dict[str, str]:
-                    return {"app": "SSE Test"}
+                    # Patch the MCP server method to return our test app
+                    with patch.object(mcp_server, "sse_app", return_value=sse_test_app):
+                        # Call mount_service with explicit SSE server type
+                        mount_service(MCPTransportType.SSE)
 
-                # Patch the MCP server method to return our test app
-                with patch.object(mcp_server, "sse_app", return_value=sse_test_app):
-                    # Call mount_service with explicit SSE server type
-                    mount_service(MCPTransportType.SSE)
-
-                    # Verify that a mount call was made with the correct path
-                    # The second parameter will be a Starlette application
-                    # (which is what FastAPI becomes when mounted)
-                    mock_web.mount.assert_called_once()
-                    args, _ = mock_web.mount.call_args
-                    assert args[0] == "/mcp"  # Check the mount path is correct
+                        # Verify that router.add_api_route was called with correct path
+                        router_mock.add_api_route.assert_called_once()
+                        args, kwargs = router_mock.add_api_route.call_args
+                        assert args[0] == "/mcp"  # Check the path is correct
+                        assert "methods" in kwargs
+                        assert set(kwargs["methods"]) == {"GET", "POST"}  # Check that both methods are allowed
+                        
+                        # Verify that the router was included in the web app
+                        mock_web.include_router.assert_called_once_with(router_mock)
 
     def test_fix_mount_service(self) -> None:
         """

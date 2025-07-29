@@ -95,38 +95,64 @@ class TestCliOptionTransport:
         # Setup
         mock_mcp_server = MagicMock()
         mock_web = MagicMock()
+        
+        # Mock router
+        mock_router = MagicMock()
+        mock_router.add_api_route = MagicMock()
 
         # Test direct mount_service function
         with (
             patch("clickup_mcp.web_server.app.web", mock_web),
             patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server),
+            patch("clickup_mcp.web_server.app.APIRouter", return_value=mock_router),
         ):
             mount_service(MCPTransportType.SSE.value)
 
-        # Verify that only SSE endpoint was mounted
+        # Verify that only SSE endpoint was mounted via router.add_api_route
         mock_mcp_server.sse_app.assert_called_once()
         mock_mcp_server.streamable_http_app.assert_not_called()
-        assert mock_web.mount.call_count == 1
-        mock_web.mount.assert_called_with("/mcp", mock_mcp_server.sse_app.return_value)
+        
+        # Verify that the correct endpoint was added to the router
+        mock_router.add_api_route.assert_called_once()
+        args, kwargs = mock_router.add_api_route.call_args
+        assert args[0] == "/mcp"
+        assert args[1] == mock_mcp_server.sse_app.return_value
+        assert kwargs["methods"] == ["GET", "POST"]
+        
+        # Verify that the router was included in the web app
+        mock_web.include_router.assert_called_once_with(mock_router)
 
     def test_mount_service_http_streaming_only(self) -> None:
         """Test that only HTTP_STREAMING endpoints are mounted when transport protocol is HTTP_STREAMING."""
         # Setup
         mock_mcp_server = MagicMock()
         mock_web = MagicMock()
+        
+        # Mock router
+        mock_router = MagicMock()
+        mock_router.add_api_route = MagicMock()
 
         # Test direct mount_service function
         with (
             patch("clickup_mcp.web_server.app.web", mock_web),
             patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server),
+            patch("clickup_mcp.web_server.app.APIRouter", return_value=mock_router),
         ):
             mount_service(MCPTransportType.HTTP_STREAMING.value)
 
         # Verify that only HTTP_STREAMING endpoint was mounted
         mock_mcp_server.streamable_http_app.assert_called_once()
         mock_mcp_server.sse_app.assert_not_called()
-        assert mock_web.mount.call_count == 1
-        mock_web.mount.assert_called_with("/mcp", mock_mcp_server.streamable_http_app.return_value)
+        
+        # Verify that the correct endpoint was added to the router
+        mock_router.add_api_route.assert_called_once()
+        args, kwargs = mock_router.add_api_route.call_args
+        assert args[0] == "/mcp"
+        assert args[1] == mock_mcp_server.streamable_http_app.return_value
+        assert kwargs["methods"] == ["GET", "POST"]
+        
+        # Verify that the router was included in the web app
+        mock_web.include_router.assert_called_once_with(mock_router)
 
     @patch("clickup_mcp.mcp_server.app.MCPServerFactory.get")
     def test_create_app_with_sse_transport(self, mock_mcp_factory: MagicMock, monkeypatch: MonkeyPatch) -> None:

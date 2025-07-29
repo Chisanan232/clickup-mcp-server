@@ -11,7 +11,7 @@ import pytest
 from fastapi import FastAPI
 
 from clickup_mcp.models.cli import MCPTransportType
-from clickup_mcp.web_server.app import WebServerFactory
+from clickup_mcp.web_server.app import WebServerFactory, mount_service
 
 
 class TestWebServerFactory:
@@ -150,36 +150,43 @@ class TestWebServerFactory:
             mock_streaming_app = MagicMock()
             mock_mcp_server.sse_app.return_value = mock_sse_app
             mock_mcp_server.streamable_http_app.return_value = mock_streaming_app
+            
+            # Mock APIRouter
+            mock_router = MagicMock()
+            mock_router.add_api_route = MagicMock()
 
             # Patch the global web variable to use our mock_web_instance
             # and the global mcp_server to use our mock
             with (
                 patch("clickup_mcp.web_server.app.web", mock_web_instance),
                 patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server),
+                patch("clickup_mcp.web_server.app.APIRouter", return_value=mock_router),
             ):
                 # Call mount_service
-                from clickup_mcp.web_server.app import mount_service
-
-                # Test with the specified server type
                 mount_service(transport_type)
 
-                # Verify the correct MCP server app was called
+                # Check that the appropriate MCP server method was called
                 if should_call_sse:
                     mock_mcp_server.sse_app.assert_called_once()
-                else:
+                    mock_mcp_server.streamable_http_app.assert_not_called()
+                elif should_call_http:
+                    mock_mcp_server.streamable_http_app.assert_called_once()
                     mock_mcp_server.sse_app.assert_not_called()
 
-                if should_call_http:
-                    mock_mcp_server.streamable_http_app.assert_called_once()
-                else:
-                    mock_mcp_server.streamable_http_app.assert_not_called()
-
-                # Check that the mount method was called with the correct path and app
-                assert mock_web_instance.mount.call_count == 1
-                if should_call_sse:
-                    mock_web_instance.mount.assert_called_with(expected_path, mock_sse_app)
-                else:
-                    mock_web_instance.mount.assert_called_with(expected_path, mock_streaming_app)
+                # Check that the router was created with correct parameters
+                # Should create an APIRouter with empty prefix and redirect_slashes=False
+                from clickup_mcp.web_server.app import APIRouter
+                APIRouter.assert_called_once_with(prefix="", redirect_slashes=False)
+                
+                # Check that add_api_route was called with correct path and methods
+                mock_router.add_api_route.assert_called_once()
+                args, kwargs = mock_router.add_api_route.call_args
+                assert args[0] == expected_path
+                assert "methods" in kwargs
+                assert set(kwargs["methods"]) == {"GET", "POST"}
+                
+                # Verify that the router was included in the web app
+                mock_web_instance.include_router.assert_called_once_with(mock_router)
 
     @pytest.mark.parametrize(
         "invalid_transport_type",
