@@ -86,7 +86,7 @@ def mount_service(transport: str = MCPTransportType.SSE) -> None:
     router = APIRouter(prefix="", redirect_slashes=False)
     match transport:
         case MCPTransportType.SSE:
-            router.add_api_route("/mcp", mcp_server.sse_app(), methods=["GET", "POST"])
+            router.add_api_route("/sse", mcp_server.sse_app(), methods=["GET", "POST"])
         case MCPTransportType.HTTP_STREAMING:
             router.add_api_route("/mcp", mcp_server.streamable_http_app(), methods=["GET", "POST"])
         case _:
