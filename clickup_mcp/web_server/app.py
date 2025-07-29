@@ -7,7 +7,7 @@ for exposing ClickUp functionality through a RESTful API.
 
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -83,13 +83,15 @@ def mount_service(transport: str = MCPTransportType.SSE) -> None:
     Args:
         transport: The transport protocol to use for MCP (sse or http-streaming).
     """
+    router = APIRouter(prefix="", redirect_slashes=False)
     match transport:
         case MCPTransportType.SSE:
-            web.mount("/mcp", mcp_server.sse_app())
+            router.add_api_route("/mcp", mcp_server.sse_app(), methods=["GET", "POST"])
         case MCPTransportType.HTTP_STREAMING:
-            web.mount("/mcp", mcp_server.streamable_http_app())
+            router.add_api_route("/mcp", mcp_server.streamable_http_app(), methods=["GET", "POST"])
         case _:
             raise ValueError(f"Unknown transport protocol: {transport}")
+    web.include_router(router)
 
 
 def create_app(
