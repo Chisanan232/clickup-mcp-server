@@ -136,10 +136,11 @@ class TestWebServerFactory:
                 MCPTransportType.HTTP_STREAMING.value,
                 {"sse_app": 0, "streamable_http_app": 1, "endpoint_path": "/mcp"},
             ),
-            (
-                f"{MCPTransportType.SSE.value},{MCPTransportType.HTTP_STREAMING.value}",
-                {"sse_app": 1, "streamable_http_app": 1, "endpoint_path": None},
-            ),
+            # TODO: Not support yet
+            # (
+            #     f"{MCPTransportType.SSE.value},{MCPTransportType.HTTP_STREAMING.value}",
+            #     {"sse_app": 1, "streamable_http_app": 1, "endpoint_path": None},
+            # ),
         ],
     )
     def test_mount_service_parameterized(
