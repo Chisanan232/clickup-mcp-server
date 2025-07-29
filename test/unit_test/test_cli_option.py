@@ -115,7 +115,7 @@ class TestCliOptionTransport:
         # Verify that the correct endpoint was added to the router
         mock_router.add_api_route.assert_called_once()
         args, kwargs = mock_router.add_api_route.call_args
-        assert args[0] == "/mcp"
+        assert args[0] == "/sse"  # SSE now uses /sse endpoint
         assert args[1] == mock_mcp_server.sse_app.return_value
         assert kwargs["methods"] == ["GET", "POST"]
         
@@ -147,7 +147,7 @@ class TestCliOptionTransport:
         # Verify that the correct endpoint was added to the router
         mock_router.add_api_route.assert_called_once()
         args, kwargs = mock_router.add_api_route.call_args
-        assert args[0] == "/mcp"
+        assert args[0] == "/mcp"  # HTTP Streaming still uses /mcp endpoint
         assert args[1] == mock_mcp_server.streamable_http_app.return_value
         assert kwargs["methods"] == ["GET", "POST"]
         

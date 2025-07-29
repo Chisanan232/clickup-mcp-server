@@ -4,7 +4,7 @@ Unit tests for the WebServerFactory.
 This module tests the factory pattern for creating and managing the Web server instance.
 """
 
-from typing import Any, Generator, Optional
+from typing import Any, Dict, Generator, Optional, Union
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -126,67 +126,71 @@ class TestWebServerFactory:
         assert WebServerFactory.get() is web_instance
 
     @pytest.mark.parametrize(
-        "transport_type,expected_path,should_call_sse,should_call_http",
+        "transport_type, expected_app_calls",
         [
-            (MCPTransportType.SSE, "/mcp", True, False),
-            (MCPTransportType.HTTP_STREAMING, "/mcp", False, True),
+            (
+                MCPTransportType.SSE.value,
+                {"sse_app": 1, "streamable_http_app": 0, "endpoint_path": "/sse"},
+            ),
+            (
+                MCPTransportType.HTTP_STREAMING.value,
+                {"sse_app": 0, "streamable_http_app": 1, "endpoint_path": "/mcp"},
+            ),
+            (
+                f"{MCPTransportType.SSE.value},{MCPTransportType.HTTP_STREAMING.value}",
+                {"sse_app": 1, "streamable_http_app": 1, "endpoint_path": None},
+            ),
         ],
     )
     def test_mount_service_parameterized(
-        self, transport_type: MCPTransportType, expected_path: str, should_call_sse: bool, should_call_http: bool
+        self,
+        transport_type: str,
+        expected_app_calls: Dict[str, Union[int, str]],
     ) -> None:
-        """Test that mount_service correctly mounts MCP server apps based on server type."""
-        # Create a web server instance
-        with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
-            mock_web_instance = MagicMock(spec=FastAPI)
-            mock_fastapi.return_value = mock_web_instance
+        """Test that mount_service correctly mounts the specified server types."""
+        # Create mock web server and MCP server
+        mock_web = MagicMock(spec=FastAPI)
+        mock_mcp_server = MagicMock()
+        
+        # Create mock router
+        mock_router = MagicMock()
+        mock_router.add_api_route = MagicMock()
 
-            # Create the web server instance
-            WebServerFactory.create()
+        # Define the expected calls based on the transport type
+        with (
+            patch("clickup_mcp.web_server.app.web", mock_web),
+            patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server),
+            patch("clickup_mcp.web_server.app.APIRouter", return_value=mock_router),
+        ):
+            # Import and call mount_service within patch context
+            from clickup_mcp.web_server.app import mount_service
+            mount_service(transport_type)
 
-            # Create a mock MCP server
-            mock_mcp_server = MagicMock()
-            mock_sse_app = MagicMock()
-            mock_streaming_app = MagicMock()
-            mock_mcp_server.sse_app.return_value = mock_sse_app
-            mock_mcp_server.streamable_http_app.return_value = mock_streaming_app
+        # Verify SSE app was called the expected number of times
+        assert mock_mcp_server.sse_app.call_count == expected_app_calls["sse_app"]
+        
+        # Verify HTTP streaming app was called the expected number of times
+        assert mock_mcp_server.streamable_http_app.call_count == expected_app_calls["streamable_http_app"]
+        
+        # For specific transport types (not combined), verify path is correct
+        if expected_app_calls["endpoint_path"] is not None:
+            mock_router.add_api_route.assert_called_once()
+            args, kwargs = mock_router.add_api_route.call_args
+            assert args[0] == expected_app_calls["endpoint_path"]
+            assert kwargs["methods"] == ["GET", "POST"]
+        
+        # If both transport types are enabled, verify both endpoints were added
+        if transport_type == f"{MCPTransportType.SSE.value},{MCPTransportType.HTTP_STREAMING.value}":
+            assert mock_router.add_api_route.call_count == 2
+            call_args_list = mock_router.add_api_route.call_args_list
             
-            # Mock APIRouter
-            mock_router = MagicMock()
-            mock_router.add_api_route = MagicMock()
-
-            # Patch the global web variable to use our mock_web_instance
-            # and the global mcp_server to use our mock
-            with (
-                patch("clickup_mcp.web_server.app.web", mock_web_instance),
-                patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server),
-                patch("clickup_mcp.web_server.app.APIRouter", return_value=mock_router),
-            ):
-                # Call mount_service
-                mount_service(transport_type)
-
-                # Check that the appropriate MCP server method was called
-                if should_call_sse:
-                    mock_mcp_server.sse_app.assert_called_once()
-                    mock_mcp_server.streamable_http_app.assert_not_called()
-                elif should_call_http:
-                    mock_mcp_server.streamable_http_app.assert_called_once()
-                    mock_mcp_server.sse_app.assert_not_called()
-
-                # Check that the router was created with correct parameters
-                # Should create an APIRouter with empty prefix and redirect_slashes=False
-                from clickup_mcp.web_server.app import APIRouter
-                APIRouter.assert_called_once_with(prefix="", redirect_slashes=False)
-                
-                # Check that add_api_route was called with correct path and methods
-                mock_router.add_api_route.assert_called_once()
-                args, kwargs = mock_router.add_api_route.call_args
-                assert args[0] == expected_path
-                assert "methods" in kwargs
-                assert set(kwargs["methods"]) == {"GET", "POST"}
-                
-                # Verify that the router was included in the web app
-                mock_web_instance.include_router.assert_called_once_with(mock_router)
+            # Check both paths were added
+            paths = [args[0] for args, _ in call_args_list]
+            assert "/sse" in paths
+            assert "/mcp" in paths
+        
+        # Verify router was included in the web app
+        mock_web.include_router.assert_called_once_with(mock_router)
 
     @pytest.mark.parametrize(
         "invalid_transport_type",

@@ -107,51 +107,47 @@ class TestMCPServerMounting:
         except Exception as e:
             logger.debug(f"Exception calling app methods: {e}")
 
-    def test_mount_service_patched(self, mock_clickup_client: MagicMock) -> None:
-        """
-        Test the mount_service function with patched MCP server apps.
-
-        Instead of checking exact mount calls, we verify that the routes are actually
-        added to the web server after calling mount_service.
-        """
-        # Create a mock FastAPI app to simulate the web server
-        mock_web = MagicMock(spec=FastAPI)
+    @patch("clickup_mcp.web_server.app.web")
+    @patch("clickup_mcp.web_server.app.mcp_server")
+    @patch("clickup_mcp.web_server.app.APIRouter")
+    def test_mount_service_patched(
+        self, mock_api_router_class: MagicMock, mock_mcp_server: MagicMock, mock_web: MagicMock
+    ) -> None:
+        """Test that mount_service correctly handles both transport types."""
+        # Setup mock router
         mock_router = MagicMock()
-        mock_web.include_router = MagicMock(return_value=None)
+        mock_api_router_class.return_value = mock_router
+
+        # Case 1: Test with SSE transport
+        mount_service(MCPTransportType.SSE.value)
         
-        # Set up the router mock
-        router_mock = MagicMock()
-        router_mock.add_api_route = MagicMock()
+        mock_mcp_server.sse_app.assert_called_once()
+        mock_web.include_router.assert_called_once_with(mock_router)
         
-        # Patch APIRouter to return our mock
-        with patch("clickup_mcp.web_server.app.APIRouter", return_value=router_mock):
-            # Patch the web object and the client factory
-            with patch("clickup_mcp.web_server.app.web", mock_web):
-                with patch("clickup_mcp.client.ClickUpAPIClientFactory.create", return_value=mock_clickup_client):
-                    # Create MCP server with the mocked dependencies
-                    mcp_server = MCPServerFactory.create()
-
-                    # Create test FastAPI app for the SSE endpoint
-                    sse_test_app = FastAPI()
-
-                    @sse_test_app.get("/")
-                    def sse_root() -> Dict[str, str]:
-                        return {"app": "SSE Test"}
-
-                    # Patch the MCP server method to return our test app
-                    with patch.object(mcp_server, "sse_app", return_value=sse_test_app):
-                        # Call mount_service with explicit SSE server type
-                        mount_service(MCPTransportType.SSE)
-
-                        # Verify that router.add_api_route was called with correct path
-                        router_mock.add_api_route.assert_called_once()
-                        args, kwargs = router_mock.add_api_route.call_args
-                        assert args[0] == "/mcp"  # Check the path is correct
-                        assert "methods" in kwargs
-                        assert set(kwargs["methods"]) == {"GET", "POST"}  # Check that both methods are allowed
-                        
-                        # Verify that the router was included in the web app
-                        mock_web.include_router.assert_called_once_with(router_mock)
+        # Check that SSE endpoint was mounted at /sse
+        mock_router.add_api_route.assert_called_once()
+        args, kwargs = mock_router.add_api_route.call_args
+        assert args[0] == "/sse"
+        assert kwargs["methods"] == ["GET", "POST"]
+        
+        # Reset all mocks
+        mock_mcp_server.reset_mock()
+        mock_web.reset_mock()
+        mock_router.reset_mock()
+        mock_api_router_class.reset_mock()
+        mock_api_router_class.return_value = mock_router
+        
+        # Case 2: Test with HTTP streaming transport
+        mount_service(MCPTransportType.HTTP_STREAMING.value)
+        
+        mock_mcp_server.streamable_http_app.assert_called_once()
+        mock_web.include_router.assert_called_once_with(mock_router)
+        
+        # Check that HTTP streaming endpoint was mounted at /mcp
+        mock_router.add_api_route.assert_called_once()
+        args, kwargs = mock_router.add_api_route.call_args
+        assert args[0] == "/mcp"
+        assert kwargs["methods"] == ["GET", "POST"]
 
     def test_fix_mount_service(self) -> None:
         """
@@ -185,10 +181,10 @@ class TestMCPServerMounting:
                 logger.debug("sse_app is async - need to run in event loop")
                 # Need to handle async method
                 # For testing purposes, we'll just use the mock return value
-                web.mount("/mcp", sse_test_app)
+                web.mount("/sse", sse_test_app)
             else:
                 logger.debug("sse_app is sync - can call directly")
-                web.mount("/mcp", mcp_server.sse_app())
+                web.mount("/sse", mcp_server.sse_app())
 
             # We don't mount HTTP streaming in this test to match the default behavior
 
@@ -207,8 +203,8 @@ class TestMCPServerMounting:
                 logger.debug(f"  {r.path} -> {r.app}")
 
         # Verify only SSE was mounted
-        assert any(r.path == "/mcp" for r in mount_routes), "MCP app not mounted with fixed function"
-        assert sum(1 for r in mount_routes if r.path == "/mcp") == 1, "Multiple MCP mounts found"
+        assert any(r.path == "/sse" for r in mount_routes), "MCP app not mounted with fixed function"
+        assert sum(1 for r in mount_routes if r.path == "/sse") == 1, "Multiple MCP mounts found"
 
     def test_create_app_wrapper(self) -> None:
         """
@@ -225,7 +221,7 @@ class TestMCPServerMounting:
                 """Fixed version of mount_service that handles both async and sync methods."""
                 app = WebServerFactory.get()
                 # In test context, just directly mount our test app
-                app.mount("/mcp", FastAPI())  # Use a simple FastAPI app for the test
+                app.mount("/sse", FastAPI())  # Use a simple FastAPI app for the test
 
             # Use patch.dict to set the environment variable directly
             with patch.dict(os.environ, {"CLICKUP_API_TOKEN": "test_token_for_mount"}):
@@ -252,8 +248,8 @@ class TestMCPServerMounting:
                                 logger.debug(f"  Route: {route.path}")
 
                     # Verify mounted paths
-                    assert "/mcp" in mount_paths, "MCP app not mounted by create_app with fixed mount_service"
-                    assert sum(1 for r in mount_routes if r.path == "/mcp") == 1, "Multiple MCP mounts found"
+                    assert "/sse" in mount_paths, "MCP app not mounted by create_app with fixed mount_service"
+                    assert sum(1 for r in mount_routes if r.path == "/sse") == 1, "Multiple MCP mounts found"
         except Exception as e:
             logger.exception(f"Test failed with error: {str(e)}")
             raise

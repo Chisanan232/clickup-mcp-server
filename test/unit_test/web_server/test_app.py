@@ -313,7 +313,7 @@ class TestWebServer:
             # Verify that add_api_route was called with correct path and app
             mock_router.add_api_route.assert_called_once()
             args, kwargs = mock_router.add_api_route.call_args
-            assert args[0] == "/mcp"  # Both transports now use the same endpoint
+            assert args[0] == "/sse"  # SSE now uses /sse endpoint
             assert args[1] == mock_sse  # App is second positional arg, not a kwarg
             assert kwargs["methods"] == ["GET", "POST"]
             
