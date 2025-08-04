@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 
 from clickup_mcp._base import BaseServerFactory
 from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
-from clickup_mcp.mcp_server.app import MCPServerFactory
+from clickup_mcp.mcp_server.app import MCPServerFactory, mcp_factory
 from clickup_mcp.models.cli import MCPTransportType, ServerConfig
 from clickup_mcp.utils import load_environment_from_file
 
@@ -40,6 +40,7 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
             title="ClickUp MCP Server",
             description="A FastAPI web server that hosts a ClickUp MCP server for interacting with ClickUp API",
             version="0.1.0",
+            lifespan=mcp_factory.lifespan(),
         )
 
         # Configure CORS
