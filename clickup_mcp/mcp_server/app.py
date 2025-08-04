@@ -1,4 +1,8 @@
+import contextlib
+from collections.abc import Callable
+
 from mcp.server import FastMCP
+from fastapi import FastAPI
 
 from clickup_mcp._base import BaseServerFactory
 
@@ -43,5 +47,17 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
         _MCP_SERVER_INSTANCE = None
 
 
+    @staticmethod
+    def lifespan() -> Callable[..., contextlib._AsyncGeneratorContextManager]:
+
+        @contextlib.asynccontextmanager
+        async def lifespan(_: FastAPI):
+            async with mcp.session_manager.run():
+                yield  # FastAPI would start to handle requests after yield
+
+        return lifespan
+
+
 # Create a default MCP server instance for backward compatibility
 mcp = MCPServerFactory.create()
+mcp_factory = MCPServerFactory
