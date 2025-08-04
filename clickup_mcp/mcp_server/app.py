@@ -49,10 +49,14 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
 
     @staticmethod
     def lifespan() -> Callable[..., contextlib._AsyncGeneratorContextManager]:
+        try:
+            _mcp_server = MCPServerFactory.get()
+        except AssertionError:
+            raise AssertionError("Please create a FastMCP instance first by calling *MCPServerFactory.create()*.")
 
         @contextlib.asynccontextmanager
         async def lifespan(_: FastAPI):
-            async with mcp.session_manager.run():
+            async with _mcp_server.session_manager.run():
                 yield  # FastAPI would start to handle requests after yield
 
         return lifespan
