@@ -4,7 +4,8 @@ Unit tests for the MCPServerFactory.
 This module tests the factory pattern for creating and managing the MCP server instance.
 """
 
-from unittest.mock import MagicMock, patch
+from fastapi import FastAPI
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -108,3 +109,148 @@ class TestMCPServerFactory:
         # First reset our instance to make sure we're testing the module's instance
         clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE = mcp_instance
         assert MCPServerFactory.get() is mcp_instance
+
+
+class TestMCPServerLifespan:
+    """Test suite for the MCPServerFactory.lifespan method."""
+
+    @pytest.fixture(autouse=True)
+    def reset_mcp_server(self):
+        """Reset the global MCP server instance before and after each test."""
+        # Import here to avoid circular imports
+        import clickup_mcp.mcp_server.app
+
+        # Store original instance
+        self.original_instance = clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE
+
+        # Reset before test
+        clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE = None
+
+        # Run the test
+        yield
+
+        # Restore original after test to avoid affecting other tests
+        clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE = self.original_instance
+
+    async def test_lifespan_successful_creation(self):
+        """Test that lifespan returns a valid context manager when server exists."""
+        # Create a mock MCP server with a session manager
+        mock_mcp = MagicMock()
+        mock_session_manager = MagicMock()
+        mock_run_context = AsyncMock()
+        mock_session_manager.run.return_value = mock_run_context
+        mock_mcp.session_manager = mock_session_manager
+
+        # Setup the MCPServerFactory to return our mock
+        with patch("clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE", mock_mcp):
+            # Get the lifespan function that FastAPI will call
+            lifespan_func = MCPServerFactory.lifespan()
+
+            # Verify it's a callable function
+            assert callable(lifespan_func)
+
+            # Call the function to get the actual context manager
+            mock_app = MagicMock(spec=FastAPI)
+            lifespan_cm = lifespan_func(mock_app)
+
+            # Verify the result is an async context manager
+            assert hasattr(lifespan_cm, '__aenter__')
+            assert hasattr(lifespan_cm, '__aexit__')
+
+            # Use the context manager
+            async with lifespan_cm:
+                # Verify session manager run was called
+                mock_session_manager.run.assert_called_once()
+                mock_run_context.__aenter__.assert_called_once()
+
+    async def test_lifespan_without_server_creation(self):
+        """Test that lifespan raises an appropriate error when no server exists."""
+        # Don't create a server instance first
+        with pytest.raises(AssertionError) as excinfo:
+            # Call lifespan - this should raise an AssertionError
+            MCPServerFactory.lifespan()
+
+        # Verify the error message is developer-friendly
+        assert "Please create a FastMCP instance first by calling *MCPServerFactory.create()*." in str(excinfo.value)
+
+    async def test_lifespan_context_manager_behavior(self):
+        """Test that the lifespan context manager yields appropriately."""
+        # Create a mock MCP server
+        mock_mcp = MagicMock()
+
+        # Create a special mock for the session manager that tracks context entry/exit
+        context_entered = False
+        context_exited = False
+
+        class MockAsyncContextManager:
+            async def __aenter__(self):
+                nonlocal context_entered
+                context_entered = True
+                return None
+
+            async def __aexit__(self, exc_type, exc_val, exc_tb):
+                nonlocal context_exited
+                context_exited = True
+                return None
+
+        mock_session_manager = MagicMock()
+        mock_session_manager.run.return_value = MockAsyncContextManager()
+        mock_mcp.session_manager = mock_session_manager
+
+        # Setup the MCPServerFactory to return our mock
+        with patch("clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE", mock_mcp):
+            # Get the lifespan function
+            lifespan_func = MCPServerFactory.lifespan()
+
+            # Call the function with a mock app to get the context manager
+            mock_app = MagicMock(spec=FastAPI)
+            lifespan_cm = lifespan_func(mock_app)
+
+            # Track if yield was reached
+            yield_reached = False
+
+            # Use the context manager
+            async with lifespan_cm:
+                # If we get here, the context manager has yielded
+                yield_reached = True
+                # Verify the session manager context was entered
+                assert context_entered, "Session manager context should be entered before yield"
+
+            # Verify the yield was reached
+            assert yield_reached, "Context manager should yield control"
+            # Verify context was exited
+            assert context_exited, "Session manager context should be exited after yield"
+
+    def test_lifespan_handles_get_exceptions(self):
+        """Test that lifespan properly wraps and enhances any exceptions from get()."""
+        # Create a patch that forces MCPServerFactory.get() to raise an AssertionError
+        with patch("clickup_mcp.mcp_server.app.MCPServerFactory.get",
+                   side_effect=AssertionError("It must be created FastMCP first.")):
+            with pytest.raises(AssertionError) as excinfo:
+                MCPServerFactory.lifespan()
+
+            # Verify the error message is enhanced with helpful instruction
+            error_message = str(excinfo.value)
+            assert "Please create a FastMCP instance first" in error_message
+            assert "*MCPServerFactory.create()*" in error_message
+
+    def test_lifespan_function_signature(self):
+        """Test that the lifespan function has the correct signature for FastAPI."""
+        # Create a mock MCP server
+        mock_mcp = MagicMock()
+
+        # Setup the MCPServerFactory to return our mock
+        with patch("clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE", mock_mcp):
+            # Get the lifespan function
+            lifespan_func = MCPServerFactory.lifespan()
+
+            # Lifespan functions in FastAPI should accept a single app parameter
+            import inspect
+            signature = inspect.signature(lifespan_func)
+
+            # Should have one parameter
+            assert len(signature.parameters) == 1
+
+            # The parameter should be for the app
+            app_param = list(signature.parameters.values())[0]
+            assert app_param.name == "_", "The parameter should be named '_' as in the implementation"
