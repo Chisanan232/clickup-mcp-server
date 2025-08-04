@@ -83,15 +83,13 @@ def mount_service(transport: str = MCPTransportType.SSE) -> None:
     Args:
         transport: The transport protocol to use for MCP (sse or http-streaming).
     """
-    router = APIRouter(prefix="", redirect_slashes=False)
     match transport:
         case MCPTransportType.SSE:
-            router.add_api_route("/sse", mcp_factory.get().sse_app(), methods=["GET", "POST"])
+            web.mount("/sse", mcp_factory.get().sse_app())
         case MCPTransportType.HTTP_STREAMING:
-            router.add_api_route("/mcp", mcp_factory.get().streamable_http_app(), methods=["GET", "POST"])
+            web.mount("/mcp", mcp_factory.get().streamable_http_app())
         case _:
             raise ValueError(f"Unknown transport protocol: {transport}")
-    web.include_router(router)
 
 
 def create_app(
