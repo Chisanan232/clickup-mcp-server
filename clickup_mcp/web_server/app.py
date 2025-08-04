@@ -74,7 +74,6 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
 
 
 web = WebServerFactory.create()
-mcp_server = MCPServerFactory.get()
 
 
 def mount_service(transport: str = MCPTransportType.SSE) -> None:
@@ -87,9 +86,9 @@ def mount_service(transport: str = MCPTransportType.SSE) -> None:
     router = APIRouter(prefix="", redirect_slashes=False)
     match transport:
         case MCPTransportType.SSE:
-            router.add_api_route("/sse", mcp_server.sse_app(), methods=["GET", "POST"])
+            router.add_api_route("/sse", mcp_factory.get().sse_app(), methods=["GET", "POST"])
         case MCPTransportType.HTTP_STREAMING:
-            router.add_api_route("/mcp", mcp_server.streamable_http_app(), methods=["GET", "POST"])
+            router.add_api_route("/mcp", mcp_factory.get().streamable_http_app(), methods=["GET", "POST"])
         case _:
             raise ValueError(f"Unknown transport protocol: {transport}")
     web.include_router(router)
@@ -139,7 +138,7 @@ def create_app(
         Returns:
             JSON response containing available MCP resources
         """
-        resources = await mcp_server.list_resources()
+        resources = await mcp_factory.get().list_resources()
         return {"resources": [r.model_dump() for r in resources]}
 
     @web.get("/mcp-utils/tools", response_class=JSONResponse)
@@ -150,7 +149,7 @@ def create_app(
         Returns:
             JSON response containing available MCP tools
         """
-        tools = await mcp_server.list_tools()
+        tools = await mcp_factory.get().list_tools()
         return {"tools": [t.model_dump() for t in tools]}
 
     @web.get("/mcp-utils/prompts", response_class=JSONResponse)
@@ -161,7 +160,7 @@ def create_app(
         Returns:
             JSON response containing available MCP prompts
         """
-        prompts = await mcp_server.list_prompts()
+        prompts = await mcp_factory.get().list_prompts()
         return {"prompts": [t.model_dump() for t in prompts]}
 
     @web.get("/mcp-utils/resource_templates", response_class=JSONResponse)
@@ -172,7 +171,7 @@ def create_app(
         Returns:
             JSON response containing available MCP resource templates
         """
-        resource_templates = await mcp_server.list_resource_templates()
+        resource_templates = await mcp_factory.get().list_resource_templates()
         return {"resource_templates": [t.model_dump() for t in resource_templates]}
 
     return web
