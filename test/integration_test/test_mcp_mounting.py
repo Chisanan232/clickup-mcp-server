@@ -108,46 +108,43 @@ class TestMCPServerMounting:
             logger.debug(f"Exception calling app methods: {e}")
 
     @patch("clickup_mcp.web_server.app.web")
-    @patch("clickup_mcp.web_server.app.mcp_server")
-    @patch("clickup_mcp.web_server.app.APIRouter")
+    @patch("clickup_mcp.web_server.app.mcp_factory")
     def test_mount_service_patched(
-        self, mock_api_router_class: MagicMock, mock_mcp_server: MagicMock, mock_web: MagicMock
+        self, mock_mcp_factory: MagicMock, mock_web: MagicMock
     ) -> None:
         """Test that mount_service correctly handles both transport types."""
-        # Setup mock router
-        mock_router = MagicMock()
-        mock_api_router_class.return_value = mock_router
+        # Setup mock MCP server
+        mock_mcp_server = MagicMock()
+        mock_sse_app = MagicMock()
+        mock_streaming_app = MagicMock()
+        
+        mock_mcp_server.sse_app.return_value = mock_sse_app
+        mock_mcp_server.streamable_http_app.return_value = mock_streaming_app
+        mock_mcp_factory.get.return_value = mock_mcp_server
 
         # Case 1: Test with SSE transport
         mount_service(MCPTransportType.SSE.value)
         
+        mock_mcp_factory.get.assert_called()
         mock_mcp_server.sse_app.assert_called_once()
-        mock_web.include_router.assert_called_once_with(mock_router)
-        
-        # Check that SSE endpoint was mounted at /sse
-        mock_router.add_api_route.assert_called_once()
-        args, kwargs = mock_router.add_api_route.call_args
-        assert args[0] == "/sse"
-        assert kwargs["methods"] == ["GET", "POST"]
+        mock_web.mount.assert_called_once_with("/sse", mock_sse_app)
+        mock_mcp_server.streamable_http_app.assert_not_called()
         
         # Reset all mocks
-        mock_mcp_server.reset_mock()
+        mock_mcp_factory.reset_mock()
         mock_web.reset_mock()
-        mock_router.reset_mock()
-        mock_api_router_class.reset_mock()
-        mock_api_router_class.return_value = mock_router
+        mock_mcp_server.reset_mock()
+        mock_mcp_server.sse_app.return_value = mock_sse_app
+        mock_mcp_server.streamable_http_app.return_value = mock_streaming_app
+        mock_mcp_factory.get.return_value = mock_mcp_server
         
         # Case 2: Test with HTTP streaming transport
         mount_service(MCPTransportType.HTTP_STREAMING.value)
         
+        mock_mcp_factory.get.assert_called()
         mock_mcp_server.streamable_http_app.assert_called_once()
-        mock_web.include_router.assert_called_once_with(mock_router)
-        
-        # Check that HTTP streaming endpoint was mounted at /mcp
-        mock_router.add_api_route.assert_called_once()
-        args, kwargs = mock_router.add_api_route.call_args
-        assert args[0] == "/mcp"
-        assert kwargs["methods"] == ["GET", "POST"]
+        mock_web.mount.assert_called_once_with("/mcp", mock_streaming_app)
+        mock_mcp_server.sse_app.assert_not_called()
 
     def test_fix_mount_service(self) -> None:
         """
@@ -155,8 +152,9 @@ class TestMCPServerMounting:
         This test identifies if the issue is with async/sync handling.
         """
         # Create MCP server first
-        WebServerFactory.create()  # Need to create web server first
         mcp_server = MCPServerFactory.create()
+        # Then create web server
+        web_server = WebServerFactory.create()
 
         # Create test app instances to use for verification
         sse_test_app = FastAPI()
@@ -225,13 +223,12 @@ class TestMCPServerMounting:
 
             # Use patch.dict to set the environment variable directly
             with patch.dict(os.environ, {"CLICKUP_API_TOKEN": "test_token_for_mount"}):
+                # Create MCP server first (important for proper initialization order)
+                mcp_server = MCPServerFactory.create()
+                
                 # Patch the mount_service function
                 with patch("clickup_mcp.web_server.app.mount_service", side_effect=fixed_mount_service):
-                    # Create web server and MCP server in correct order
-                    WebServerFactory.create()
-                    MCPServerFactory.create()
-
-                    # Now call create_app with the server config that specifies SSE type
+                    # Create app with the server config that specifies SSE type
                     app = create_app(ServerConfig(transport=MCPTransportType.SSE))
 
                     # Verify routes

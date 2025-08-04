@@ -107,6 +107,27 @@ class BaseMCPServerTest(metaclass=ABCMeta):
         try:
             # Wait for the server to start - use a reasonable timeout
             server_started = wait_for_port(port, timeout=15)
+            
+            # If server didn't start, capture output for debugging
+            if not server_started:
+                # Give process a moment to produce output
+                time.sleep(2)
+                
+                # Try to read stdout and stderr from the process
+                stdout_data, stderr_data = b"", b""
+                if process.stdout:
+                    stdout_data = process.stdout.read(4096) or b""
+                if process.stderr:
+                    stderr_data = process.stderr.read(4096) or b""
+                    
+                print(f"Server stdout: {stdout_data.decode('utf-8', errors='replace')}")
+                print(f"Server stderr: {stderr_data.decode('utf-8', errors='replace')}")
+                
+                # Check if process is still running
+                exit_code = process.poll()
+                print(f"Server process exit code: {exit_code}")
+                
+            # Still assert to fail the test if server didn't start
             assert server_started, "Server failed to start within timeout"
 
             # Wait additional time for routes to be registered

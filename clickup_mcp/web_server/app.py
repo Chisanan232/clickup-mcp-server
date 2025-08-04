@@ -107,8 +107,18 @@ def create_app(
     # Load environment variables from file if provided
     load_environment_from_file(server_config.env_file if server_config else None)
 
+    # Reset factories to ensure we start with clean instances
+    MCPServerFactory.reset()
+    WebServerFactory.reset()
+
     # Create client with the token from configuration or environment
     ClickUpAPIClientFactory.create(api_token=get_api_token(server_config))
+
+    # Create the MCP server instance first - important for proper initialization
+    MCPServerFactory.create()
+    
+    # Create the web server with the MCP server's lifespan
+    WebServerFactory.create()
 
     # Use default server type if no configuration is provided
     transport = server_config.transport if server_config else MCPTransportType.SSE

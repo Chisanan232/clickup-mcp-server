@@ -56,6 +56,12 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
 
         @contextlib.asynccontextmanager
         async def lifespan(_: FastAPI):
+            # Initialize transport apps before accessing session_manager
+            # This ensures the session manager is properly created
+            _mcp_server.sse_app()
+            _mcp_server.streamable_http_app()
+            
+            # Now we can safely access session_manager
             async with _mcp_server.session_manager.run():
                 yield  # FastAPI would start to handle requests after yield
 
