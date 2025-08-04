@@ -110,8 +110,6 @@ def create_app(
     # Load environment variables from file if provided
     load_environment_from_file(server_config.env_file if server_config else None)
 
-    app = WebServerFactory.get()
-
     # Create client with the token from configuration or environment
     ClickUpAPIClientFactory.create(api_token=get_api_token(server_config))
 
@@ -122,7 +120,7 @@ def create_app(
     mount_service(transport=transport)
 
     # Root endpoint for health checks
-    @app.get("/", response_class=JSONResponse)
+    @web.get("/", response_class=JSONResponse)
     async def root() -> Dict[str, str]:
         """
         Root endpoint providing basic health check.
@@ -133,7 +131,7 @@ def create_app(
         return {"status": "ok", "server": "ClickUp MCP Server"}
 
     # Add endpoints for utility functions of the MCP server which be mounted at */mcp*
-    @app.get("/mcp-utils/resources", response_class=JSONResponse)
+    @web.get("/mcp-utils/resources", response_class=JSONResponse)
     async def list_resources() -> Dict[str, Any]:
         """
         List available MCP resources.
@@ -144,7 +142,7 @@ def create_app(
         resources = await mcp_server.list_resources()
         return {"resources": [r.model_dump() for r in resources]}
 
-    @app.get("/mcp-utils/tools", response_class=JSONResponse)
+    @web.get("/mcp-utils/tools", response_class=JSONResponse)
     async def get_tools() -> Dict[str, Any]:
         """
         Get available MCP tools.
@@ -155,7 +153,7 @@ def create_app(
         tools = await mcp_server.list_tools()
         return {"tools": [t.model_dump() for t in tools]}
 
-    @app.get("/mcp-utils/prompts", response_class=JSONResponse)
+    @web.get("/mcp-utils/prompts", response_class=JSONResponse)
     async def get_prompts() -> Dict[str, Any]:
         """
         Get available MCP prompts.
@@ -166,7 +164,7 @@ def create_app(
         prompts = await mcp_server.list_prompts()
         return {"prompts": [t.model_dump() for t in prompts]}
 
-    @app.get("/mcp-utils/resource_templates", response_class=JSONResponse)
+    @web.get("/mcp-utils/resource_templates", response_class=JSONResponse)
     async def get_resource_templates() -> Dict[str, Any]:
         """
         Get available MCP resource templates.
@@ -177,4 +175,4 @@ def create_app(
         resource_templates = await mcp_server.list_resource_templates()
         return {"resource_templates": [t.model_dump() for t in resource_templates]}
 
-    return app
+    return web
