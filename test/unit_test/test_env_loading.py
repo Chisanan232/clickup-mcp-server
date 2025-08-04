@@ -88,9 +88,9 @@ class TestEnvLoading:
             # Ensure environment is clean
             monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
 
-            # Create web server and MCP server first to avoid assertion errors
-            WebServerFactory.create()
+            # Create MCP server first, then web server (important for dependency order)
             MCPServerFactory.create()
+            WebServerFactory.create()
 
             # Create a mock function that simulates create_app loading environment variables
             from fastapi import FastAPI

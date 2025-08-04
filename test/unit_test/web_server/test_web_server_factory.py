@@ -12,65 +12,90 @@ from fastapi import FastAPI
 
 from clickup_mcp.models.cli import MCPTransportType
 from clickup_mcp.web_server.app import WebServerFactory, mount_service
+from clickup_mcp.mcp_server.app import MCPServerFactory
 
 
 class TestWebServerFactory:
     """Test suite for the WebServerFactory class."""
 
     original_instance: Optional[Any]
+    original_mcp_instance: Optional[Any]
 
     @pytest.fixture(autouse=True)
     def reset_web_server(self) -> Generator[None, None, None]:
         """Reset the global web server instance before and after each test."""
         # Import here to avoid circular imports
         import clickup_mcp.web_server.app
+        import clickup_mcp.mcp_server.app
 
-        # Store original instance
+        # Store original instances
         self.original_instance = clickup_mcp.web_server.app._WEB_SERVER_INSTANCE
+        self.original_mcp_instance = clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE
 
         # Reset before test
         clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = None
+        clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE = None
 
         # Run the test
         yield
 
         # Restore original after test to avoid affecting other tests
         clickup_mcp.web_server.app._WEB_SERVER_INSTANCE = self.original_instance
+        clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE = self.original_mcp_instance
 
-    def test_create_web_server(self) -> None:
+    @pytest.fixture
+    def mock_mcp_server(self) -> MagicMock:
+        """Fixture to create a mock MCP server."""
+        mock = MagicMock()
+        mock.session_manager = MagicMock()
+        mock.session_manager.run = MagicMock()
+        return mock
+
+    def test_create_web_server(self, mock_mcp_server: MagicMock) -> None:
         """Test creating a new web server instance."""
-        # Need to patch where FastAPI is imported, not where it's defined
-        with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
-            # Configure mock
-            mock_instance = MagicMock(spec=FastAPI)
-            mock_fastapi.return_value = mock_instance
+        # Create MCP server instance first
+        with patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp_server):
+            MCPServerFactory.create()
 
-            # Call create method
-            server = WebServerFactory.create()
+        # Patch MCPServerFactory.lifespan to return mock lifespan
+        with patch("clickup_mcp.mcp_server.app.MCPServerFactory.lifespan", return_value=mock_mcp_server.session_manager.run):
+            # Need to patch where FastAPI is imported, not where it's defined
+            with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
+                # Configure mock
+                mock_instance = MagicMock(spec=FastAPI)
+                mock_fastapi.return_value = mock_instance
 
-            # Verify FastAPI was instantiated correctly
-            mock_fastapi.assert_called_once()
+                # Call create method
+                server = WebServerFactory.create()
 
-            # Verify the correct title and description were used
-            mock_fastapi.assert_called_once_with(
-                title="ClickUp MCP Server",
-                description="A FastAPI web server that hosts a ClickUp MCP server for interacting with ClickUp API",
-                version="0.1.0",
-            )
+                # Verify FastAPI was instantiated correctly
+                mock_fastapi.assert_called_once()
 
-            # Verify CORS middleware was added
-            mock_instance.add_middleware.assert_called_once()
+                # Verify the correct title and description were used
+                mock_fastapi.assert_called_once_with(
+                    title="ClickUp MCP Server",
+                    description="A FastAPI web server that hosts a ClickUp MCP server for interacting with ClickUp API",
+                    version="0.1.0",
+                    lifespan=mock_mcp_server.session_manager.run,
+                )
 
-            # Verify the returned instance is the mock
-            assert server is mock_instance
+                # Verify CORS middleware was added
+                mock_instance.add_middleware.assert_called_once()
 
-            # Verify the global instance is set
-            import clickup_mcp.web_server.app as app_module
+                # Verify the returned instance is the mock
+                assert server is mock_instance
 
-            assert app_module._WEB_SERVER_INSTANCE is mock_instance
+                # Verify the global instance is set
+                import clickup_mcp.web_server.app as app_module
 
-    def test_get_web_server(self) -> None:
+                assert app_module._WEB_SERVER_INSTANCE is mock_instance
+
+    def test_get_web_server(self, mock_mcp_server: MagicMock) -> None:
         """Test getting an existing web server instance."""
+        # Create MCP server instance first
+        with patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp_server):
+            MCPServerFactory.create()
+
         # Create a server first using a mock
         with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
             mock_instance = MagicMock(spec=FastAPI)
@@ -86,8 +111,12 @@ class TestWebServerFactory:
             assert created_server is retrieved_server
             assert retrieved_server is mock_instance
 
-    def test_create_fails_when_already_created(self) -> None:
+    def test_create_fails_when_already_created(self, mock_mcp_server: MagicMock) -> None:
         """Test that creating a server when one already exists raises an error."""
+        # Create MCP server instance first
+        with patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp_server):
+            MCPServerFactory.create()
+            
         # Create a server first
         WebServerFactory.create()
 
@@ -98,13 +127,12 @@ class TestWebServerFactory:
         assert "not allowed to create more than one instance" in str(excinfo.value)
 
     def test_get_fails_when_not_created(self) -> None:
-        """Test that getting a server before creating one raises an error."""
-        # Attempting to get before creating should raise an AssertionError
+        """Test that getting a server when none exists raises an error."""
         with pytest.raises(AssertionError) as excinfo:
             WebServerFactory.get()
 
-        assert "must be created web server first" in str(excinfo.value)
-
+        assert "It must be created web server first" in str(excinfo.value)
+        
     def test_backward_compatibility_global_web(self) -> None:
         """Test that the global web variable exists and is a FastAPI instance."""
         # We need to test that the module-level 'web' variable exists and is a FastAPI instance
@@ -136,36 +164,27 @@ class TestWebServerFactory:
                 MCPTransportType.HTTP_STREAMING.value,
                 {"sse_app": 0, "streamable_http_app": 1, "endpoint_path": "/mcp"},
             ),
-            # TODO: Not support yet
-            # (
-            #     f"{MCPTransportType.SSE.value},{MCPTransportType.HTTP_STREAMING.value}",
-            #     {"sse_app": 1, "streamable_http_app": 1, "endpoint_path": None},
-            # ),
         ],
     )
     def test_mount_service_parameterized(
         self,
         transport_type: str,
         expected_app_calls: Dict[str, Union[int, str]],
+        mock_mcp_server: MagicMock,
     ) -> None:
         """Test that mount_service correctly mounts the specified server types."""
-        # Create mock web server and MCP server
+        # Create mock web server and get MCP server mock from fixture
         mock_web = MagicMock(spec=FastAPI)
-        mock_mcp_server = MagicMock()
-        
-        # Create mock router
-        mock_router = MagicMock()
-        mock_router.add_api_route = MagicMock()
 
-        # Define the expected calls based on the transport type
-        with (
-            patch("clickup_mcp.web_server.app.web", mock_web),
-            patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server),
-            patch("clickup_mcp.web_server.app.APIRouter", return_value=mock_router),
-        ):
-            # Import and call mount_service within patch context
-            from clickup_mcp.web_server.app import mount_service
-            mount_service(transport_type)
+        # First create the MCP server instance
+        with patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp_server):
+            MCPServerFactory.create()
+
+        # Set up the patching for the test
+        with patch("clickup_mcp.web_server.app.web", mock_web):
+            with patch("clickup_mcp.web_server.app.mcp_factory.get", return_value=mock_mcp_server):
+                # Call the function under test
+                mount_service(transport=transport_type)
 
         # Verify SSE app was called the expected number of times
         assert mock_mcp_server.sse_app.call_count == expected_app_calls["sse_app"]
@@ -173,25 +192,16 @@ class TestWebServerFactory:
         # Verify HTTP streaming app was called the expected number of times
         assert mock_mcp_server.streamable_http_app.call_count == expected_app_calls["streamable_http_app"]
         
-        # For specific transport types (not combined), verify path is correct
-        if expected_app_calls["endpoint_path"] is not None:
-            mock_router.add_api_route.assert_called_once()
-            args, kwargs = mock_router.add_api_route.call_args
-            assert args[0] == expected_app_calls["endpoint_path"]
-            assert kwargs["methods"] == ["GET", "POST"]
+        # Verify mount was called correctly
+        mock_web.mount.assert_called_once()
+        args, kwargs = mock_web.mount.call_args
+        assert args[0] == expected_app_calls["endpoint_path"]
         
-        # If both transport types are enabled, verify both endpoints were added
-        if transport_type == f"{MCPTransportType.SSE.value},{MCPTransportType.HTTP_STREAMING.value}":
-            assert mock_router.add_api_route.call_count == 2
-            call_args_list = mock_router.add_api_route.call_args_list
-            
-            # Check both paths were added
-            paths = [args[0] for args, _ in call_args_list]
-            assert "/sse" in paths
-            assert "/mcp" in paths
-        
-        # Verify router was included in the web app
-        mock_web.include_router.assert_called_once_with(mock_router)
+        # Verify the correct app was passed
+        if transport_type == MCPTransportType.SSE.value:
+            assert args[1] == mock_mcp_server.sse_app.return_value
+        else:
+            assert args[1] == mock_mcp_server.streamable_http_app.return_value
 
     @pytest.mark.parametrize(
         "invalid_transport_type",
@@ -201,29 +211,22 @@ class TestWebServerFactory:
             None,
         ],
     )
-    def test_mount_service_invalid_type_parameterized(self, invalid_transport_type: Any) -> None:
+    def test_mount_service_invalid_type_parameterized(
+        self, invalid_transport_type: Any, mock_mcp_server: MagicMock
+    ) -> None:
         """Test that mount_service raises ValueError with invalid server types."""
-        # Create a web server instance
-        with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
-            mock_web_instance = MagicMock(spec=FastAPI)
-            mock_fastapi.return_value = mock_web_instance
+        # Create MCP server instance first
+        with patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp_server):
+            MCPServerFactory.create()
 
-            # Create the web server instance
-            WebServerFactory.create()
+        # Create a mock web server
+        mock_web = MagicMock(spec=FastAPI)
 
-            # Create a mock MCP server
-            mock_mcp_server = MagicMock()
-
-            # Patch the global web variable to use our mock_web_instance
-            # and the global mcp_server to use our mock
-            with (
-                patch("clickup_mcp.web_server.app.web", mock_web_instance),
-                patch("clickup_mcp.web_server.app.mcp_server", mock_mcp_server),
-            ):
+        # Patch the web app and mcp_factory.get
+        with patch("clickup_mcp.web_server.app.web", mock_web):
+            with patch("clickup_mcp.web_server.app.mcp_factory.get", return_value=mock_mcp_server):
                 # Test that invalid server type raises ValueError
-                from clickup_mcp.web_server.app import mount_service
-
                 with pytest.raises(ValueError) as excinfo:
-                    mount_service(invalid_transport_type)
+                    mount_service(transport=invalid_transport_type)
 
                 assert "Unknown transport protocol:" in str(excinfo.value)
