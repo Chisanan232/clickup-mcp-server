@@ -116,12 +116,12 @@ class BaseMCPServerTest(metaclass=ABCMeta):
 
         try:
             # Wait for the server to start - use a reasonable timeout
-            server_started = wait_for_port(port, timeout=15)
+            server_started = wait_for_port(port, timeout=5)
             
             # If server didn't start, capture output for debugging
             if not server_started:
                 # Give process a moment to produce output
-                time.sleep(2)
+                time.sleep(0.5)
                 
                 # Try to read stdout and stderr from the process
                 stdout_data, stderr_data = b"", b""
@@ -141,7 +141,7 @@ class BaseMCPServerTest(metaclass=ABCMeta):
             assert server_started, "Server failed to start within timeout"
 
             # Wait additional time for routes to be registered
-            time.sleep(5)  # Increased from 3 to 5 seconds
+            time.sleep(0.5)  # Increased from 3 to 5 seconds
 
             # Provide the server details to the test
             yield {"port": port, "host": host, "process": process, "env_file": temp_env_file}
