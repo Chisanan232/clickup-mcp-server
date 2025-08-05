@@ -119,7 +119,7 @@ def create_app(
     mount_service(transport=transport)
 
     # Root endpoint for health checks
-    @web.get("/", response_class=JSONResponse)
+    @web.get("/health", response_class=JSONResponse)
     async def root() -> HealthyCheckResponseDto:
         """
         Root endpoint providing basic health check.
