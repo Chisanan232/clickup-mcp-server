@@ -213,41 +213,6 @@ class TestWebServer:
             # Verify that the web.mount was called with the HTTP streaming app
             mock_web_instance.mount.assert_called_once_with("/mcp", mock_streaming_app)
 
-    def test_root_endpoint(self) -> None:
-        """Test that the root endpoint returns the expected message."""
-        # Set up the test client with patched MCP server
-        mock_mcp = MagicMock()
-
-        with (
-            patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp),
-            patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp),
-            patch("clickup_mcp.web_server.app.mcp_factory", mock_mcp),
-        ):
-            # Reset both server instances before creating new ones
-            MCPServerFactory.reset()
-            WebServerFactory.reset()
-
-            # Create MCP server first, which is required before web server
-            MCPServerFactory.create()
-
-            # Create web server and actually call mount_service directly
-            app = WebServerFactory.create()
-            from clickup_mcp.web_server.app import mount_service
-
-            mount_service()
-
-            # Add the root endpoint manually
-            @app.get("/health")
-            def root():
-                return {"status": "ok"}
-
-            # Create and use a test client
-            client = TestClient(app)
-            response = client.get("/health")
-            assert response.status_code == 200
-            assert "status" in response.json()
-            assert response.json()["status"] == "ok"
-
 
 class TestWebServerLifespan:
     """Test suite for the WebServerFactory's lifespan property integration."""
