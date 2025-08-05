@@ -44,85 +44,23 @@ class TestWebServer:
         clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE = self.original_mcp_instance
 
     @pytest.fixture
-    def mock_mcp(self) -> MagicMock:
-        """Fixture to create a mock MCP server."""
-        mock = MagicMock()
-
-        # Create mock Pydantic model objects with model_dump method
-        resource1 = MagicMock()
-        resource1.model_dump.return_value = {"id": "resource1", "name": "Resource 1"}
-        resource2 = MagicMock()
-        resource2.model_dump.return_value = {"id": "resource2", "name": "Resource 2"}
-
-        tool1 = MagicMock()
-        tool1.model_dump.return_value = {"name": "tool1", "description": "Tool 1"}
-        tool2 = MagicMock()
-        tool2.model_dump.return_value = {"name": "tool2", "description": "Tool 2"}
-
-        prompt1 = MagicMock()
-        prompt1.model_dump.return_value = {"name": "prompt1", "content": "Prompt 1 content"}
-        prompt2 = MagicMock()
-        prompt2.model_dump.return_value = {"name": "prompt2", "content": "Prompt 2 content"}
-
-        template1 = MagicMock()
-        template1.model_dump.return_value = {"id": "template1", "name": "Template 1", "schema": {"type": "object"}}
-        template2 = MagicMock()
-        template2.model_dump.return_value = {"id": "template2", "name": "Template 2", "schema": {"type": "object"}}
-
-        # Set up asynchronous method returns
-        mock.list_resources = AsyncMock()
-        mock.list_resources.return_value = [resource1, resource2]
-
-        mock.list_tools = AsyncMock()
-        mock.list_tools.return_value = [tool1, tool2]
-
-        mock.list_prompts = AsyncMock()
-        mock.list_prompts.return_value = [prompt1, prompt2]
-
-        mock.list_resource_templates = AsyncMock()
-        mock.list_resource_templates.return_value = [template1, template2]
-
-        # Set up proper mock for the execute method
-        mock.execute = AsyncMock()
-        mock.execute.return_value = "result data"
-
-        # Set up SSE and streaming HTTP apps
-        mock_sse_app = MagicMock()
-        mock_streamable_app = MagicMock()
-        mock.sse_app.return_value = mock_sse_app
-        mock.streamable_http_app.return_value = mock_streamable_app
-
-        return mock
-
-    @pytest.fixture
-    def test_client(self, mock_mcp: MagicMock) -> TestClient:
+    def test_client(self) -> TestClient:
         """Fixture to create a FastAPI test client with a mock MCP server."""
-        # Patch the MCPServerFactory.get to return our mock
-        with patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp):
-            # Create an MCP server first (required before creating web server)
-            MCPServerFactory.create()
+        # Create an MCP server first (required before creating web server)
+        MCPServerFactory.create()
 
-            # Create the web app
-            app = WebServerFactory.create()
+        # Create the web app
+        WebServerFactory.create()
 
-            # Apply routing and endpoints using the create_app function
-            from clickup_mcp.models.cli import ServerConfig
-            from clickup_mcp.web_server.app import mount_service
+        # Apply routing and endpoints using the create_app function
+        from clickup_mcp.models.cli import ServerConfig
 
-            # Create minimal server config for testing
-            test_config = ServerConfig(env_file=".env.test")
+        # # Create minimal server config for testing
+        test_config = ServerConfig(env_file=".env.test")
+        app = create_app(test_config)
 
-            # Mount service and configure routes
-            mount_service()
-
-            # Add health endpoint that matches the production endpoint
-            @app.get("/health")
-            async def health():
-                from clickup_mcp.models.dto.health_check import HealthyCheckResponseDto
-                return HealthyCheckResponseDto()
-
-            # Return a test client
-            return TestClient(app)
+        # Return a test client
+        return TestClient(app)
 
     def test_docs_endpoint_with_fixture(self, test_client: TestClient) -> None:
         """Test that Swagger UI docs are available."""
@@ -206,11 +144,10 @@ class TestWebServer:
         with pytest.raises(ValidationError):
             HealthyCheckResponseDto.model_validate({"status": 123, "server": "ClickUp MCP Server"})
 
-    def test_mount_service_integration(self, mock_mcp: MagicMock) -> None:
+    def test_mount_service_integration(self) -> None:
         """Test that mount_service is called during app initialization and mounts services correctly."""
         # First create an MCP server instance
-        with patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp):
-            MCPServerFactory.create()
+        MCPServerFactory.create()
 
         # Now create a web server instance
         WebServerFactory.create()
@@ -223,9 +160,7 @@ class TestWebServer:
         # Patch the mount_service function to verify it's called
         with patch("clickup_mcp.web_server.app.mount_service") as mock_mount_service:
             # Create a web app (which should call mount_service)
-            with patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp):
-                with patch("clickup_mcp.web_server.app.mcp_factory.get", return_value=mock_mcp):
-                    create_app(server_config=test_config)
+            create_app(server_config=test_config)
 
             # Check that mount_service was called
             mock_mount_service.assert_called_once()
