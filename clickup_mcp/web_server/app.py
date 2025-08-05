@@ -73,7 +73,8 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
         _WEB_SERVER_INSTANCE = None
 
 
-web = WebServerFactory.create()
+web_factory = WebServerFactory
+web = web_factory.create()
 
 
 def mount_service(transport: str = MCPTransportType.SSE) -> None:
@@ -85,9 +86,9 @@ def mount_service(transport: str = MCPTransportType.SSE) -> None:
     """
     match transport:
         case MCPTransportType.SSE:
-            web.mount("/sse", mcp_factory.get().sse_app())
+            web_factory.get().mount("/sse", mcp_factory.get().sse_app())
         case MCPTransportType.HTTP_STREAMING:
-            web.mount("/mcp", mcp_factory.get().streamable_http_app())
+            web_factory.get().mount("/mcp", mcp_factory.get().streamable_http_app())
         case _:
             raise ValueError(f"Unknown transport protocol: {transport}")
 
@@ -118,7 +119,7 @@ def create_app(
     MCPServerFactory.create()
     
     # Create the web server with the MCP server's lifespan
-    WebServerFactory.create()
+    web = WebServerFactory.create()
 
     # Use default server type if no configuration is provided
     transport = server_config.transport if server_config else MCPTransportType.SSE

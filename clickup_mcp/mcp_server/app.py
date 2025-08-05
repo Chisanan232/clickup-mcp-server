@@ -69,5 +69,5 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
 
 
 # Create a default MCP server instance for backward compatibility
-mcp = MCPServerFactory.create()
 mcp_factory = MCPServerFactory
+mcp = mcp_factory.create()
