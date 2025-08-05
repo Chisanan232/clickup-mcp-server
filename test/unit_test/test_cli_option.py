@@ -105,10 +105,12 @@ class TestCliOptionTransport:
         mock_mcp_factory.get.return_value = mock_mcp
         
         mock_web = MagicMock()
-        
+        mock_web_factory = MagicMock()
+        mock_web_factory.get.return_value = mock_web
+
         # Create a clean patch environment
         with patch("clickup_mcp.web_server.app.mcp_factory", mock_mcp_factory), \
-             patch("clickup_mcp.web_server.app.web", mock_web):
+             patch("clickup_mcp.web_server.app.web_factory", mock_web_factory):
             
             # Call the function under test
             mount_service(transport=MCPTransportType.SSE)
@@ -132,10 +134,12 @@ class TestCliOptionTransport:
         mock_mcp_factory.get.return_value = mock_mcp
         
         mock_web = MagicMock()
-        
+        mock_web_factory = MagicMock()
+        mock_web_factory.get.return_value = mock_web
+
         # Create a clean patch environment
         with patch("clickup_mcp.web_server.app.mcp_factory", mock_mcp_factory), \
-             patch("clickup_mcp.web_server.app.web", mock_web):
+             patch("clickup_mcp.web_server.app.web_factory", mock_web_factory):
             
             # Call the function under test
             mount_service(transport=MCPTransportType.HTTP_STREAMING)

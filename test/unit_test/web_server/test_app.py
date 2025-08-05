@@ -322,10 +322,12 @@ class TestWebServer:
     
         # Create a mock web instance
         mock_web_instance = MagicMock(spec=FastAPI)
-    
+        mock_web_factory = MagicMock()
+        mock_web_factory.get.return_value = mock_web_instance
+
         # Patch the web global and the mcp_factory global
         with (
-            patch("clickup_mcp.web_server.app.web", mock_web_instance),
+            patch("clickup_mcp.web_server.app.web_factory", mock_web_factory),
             patch("clickup_mcp.web_server.app.mcp_factory", mock_mcp_factory)
         ):
             # Mount the MCP server on the web server - use SSE by default

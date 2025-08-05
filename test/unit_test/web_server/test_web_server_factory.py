@@ -181,7 +181,7 @@ class TestWebServerFactory:
             MCPServerFactory.create()
 
         # Set up the patching for the test
-        with patch("clickup_mcp.web_server.app.web", mock_web):
+        with patch("clickup_mcp.web_server.app.web_factory.get", return_value=mock_web):
             with patch("clickup_mcp.web_server.app.mcp_factory.get", return_value=mock_mcp_server):
                 # Call the function under test
                 mount_service(transport=transport_type)
