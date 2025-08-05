@@ -76,7 +76,7 @@ class TestEntryIntegration:
 
     def test_run_server_in_thread(self) -> None:
         """
-        Test running the server in a separate thread.
+        Test the run_server function in a separate thread.
 
         This allows testing the server without creating a separate process.
         """
@@ -91,8 +91,9 @@ class TestEntryIntegration:
         ClickUpAPIClientFactory.reset()
 
         # Create server instances first to avoid assertion errors
-        WebServerFactory.create()
+        # Important: Create MCP server first, then web server (order matters)
         MCPServerFactory.create()
+        WebServerFactory.create()
 
         port: int = find_free_port()
         config: ServerConfig = ServerConfig(host="127.0.0.1", port=port, log_level=LogLevel.INFO, reload=False)

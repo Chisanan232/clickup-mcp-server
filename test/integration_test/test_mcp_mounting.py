@@ -8,7 +8,7 @@ are correctly accessible when the web server is instantiated with real MCP compo
 import inspect
 import logging
 import os
-from typing import Any, Dict, Generator, Optional
+from typing import Any, Generator, Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -107,40 +107,44 @@ class TestMCPServerMounting:
         except Exception as e:
             logger.debug(f"Exception calling app methods: {e}")
 
-    def test_mount_service_patched(self, mock_clickup_client: MagicMock) -> None:
-        """
-        Test the mount_service function with patched MCP server apps.
+    @patch("clickup_mcp.web_server.app.web_factory")
+    @patch("clickup_mcp.web_server.app.mcp_factory")
+    def test_mount_service_patched(self, mock_mcp_factory: MagicMock, mock_web_factory: MagicMock) -> None:
+        """Test that mount_service correctly handles both transport types."""
+        # Setup mock MCP server
+        mock_mcp_server = MagicMock()
+        mock_web_server = MagicMock()
+        mock_sse_app = MagicMock()
+        mock_streaming_app = MagicMock()
 
-        Instead of checking exact mount calls, we verify that the routes are actually
-        added to the web server after calling mount_service.
-        """
-        # Use a MagicMock for the web object instead of a real FastAPI instance
-        mock_web = MagicMock()
+        mock_mcp_server.sse_app.return_value = mock_sse_app
+        mock_mcp_server.streamable_http_app.return_value = mock_streaming_app
+        mock_mcp_factory.get.return_value = mock_mcp_server
+        mock_web_factory.get.return_value = mock_web_server
 
-        # Patch the web object and the client factory
-        with patch("clickup_mcp.web_server.app.web", mock_web):
-            with patch("clickup_mcp.client.ClickUpAPIClientFactory.create", return_value=mock_clickup_client):
-                # Create MCP server with the mocked dependencies
-                mcp_server = MCPServerFactory.create()
+        # Case 1: Test with SSE transport
+        mount_service(MCPTransportType.SSE.value)
 
-                # Create test FastAPI app for the SSE endpoint
-                sse_test_app = FastAPI()
+        mock_mcp_factory.get.assert_called()
+        mock_mcp_server.sse_app.assert_called_once()
+        mock_web_server.mount.assert_called_once_with("/sse", mock_sse_app)
+        mock_mcp_server.streamable_http_app.assert_not_called()
 
-                @sse_test_app.get("/")
-                def sse_root() -> Dict[str, str]:
-                    return {"app": "SSE Test"}
+        # Reset all mocks
+        mock_mcp_factory.reset_mock()
+        mock_web_factory.reset_mock()
+        mock_mcp_server.reset_mock()
+        mock_mcp_server.sse_app.return_value = mock_sse_app
+        mock_mcp_server.streamable_http_app.return_value = mock_streaming_app
+        mock_mcp_factory.get.return_value = mock_mcp_server
 
-                # Patch the MCP server method to return our test app
-                with patch.object(mcp_server, "sse_app", return_value=sse_test_app):
-                    # Call mount_service with explicit SSE server type
-                    mount_service(MCPTransportType.SSE)
+        # Case 2: Test with HTTP streaming transport
+        mount_service(MCPTransportType.HTTP_STREAMING.value)
 
-                    # Verify that a mount call was made with the correct path
-                    # The second parameter will be a Starlette application
-                    # (which is what FastAPI becomes when mounted)
-                    mock_web.mount.assert_called_once()
-                    args, _ = mock_web.mount.call_args
-                    assert args[0] == "/mcp"  # Check the mount path is correct
+        mock_mcp_factory.get.assert_called()
+        mock_mcp_server.streamable_http_app.assert_called_once()
+        mock_web_server.mount.assert_called_once_with("/mcp", mock_streaming_app)
+        mock_mcp_server.sse_app.assert_not_called()
 
     def test_fix_mount_service(self) -> None:
         """
@@ -148,8 +152,9 @@ class TestMCPServerMounting:
         This test identifies if the issue is with async/sync handling.
         """
         # Create MCP server first
-        WebServerFactory.create()  # Need to create web server first
         mcp_server = MCPServerFactory.create()
+        # Then create web server
+        web_server = WebServerFactory.create()
 
         # Create test app instances to use for verification
         sse_test_app = FastAPI()
@@ -174,10 +179,10 @@ class TestMCPServerMounting:
                 logger.debug("sse_app is async - need to run in event loop")
                 # Need to handle async method
                 # For testing purposes, we'll just use the mock return value
-                web.mount("/mcp", sse_test_app)
+                web.mount("/sse", sse_test_app)
             else:
                 logger.debug("sse_app is sync - can call directly")
-                web.mount("/mcp", mcp_server.sse_app())
+                web.mount("/sse", mcp_server.sse_app())
 
             # We don't mount HTTP streaming in this test to match the default behavior
 
@@ -196,58 +201,55 @@ class TestMCPServerMounting:
                 logger.debug(f"  {r.path} -> {r.app}")
 
         # Verify only SSE was mounted
-        assert any(r.path == "/mcp" for r in mount_routes), "MCP app not mounted with fixed function"
-        assert sum(1 for r in mount_routes if r.path == "/mcp") == 1, "Multiple MCP mounts found"
+        assert any(r.path == "/sse" for r in mount_routes), "MCP app not mounted with fixed function"
+        assert sum(1 for r in mount_routes if r.path == "/sse") == 1, "Multiple MCP mounts found"
 
     def test_create_app_wrapper(self) -> None:
-        """
-        Test that the create_app function correctly sets up the app with all routes and MCP server.
-        """
+        """Test that the create_app function properly mounts the MCP server."""
         try:
-            # Reset singleton instances for this test
+            # Reset singletons for a clean test environment
             WebServerFactory.reset()
             MCPServerFactory.reset()
             ClickUpAPIClientFactory.reset()
 
-            # Define a fixed mount_service that mounts only one server type
-            def fixed_mount_service(transport: str = MCPTransportType.SSE) -> None:
-                """Fixed version of mount_service that handles both async and sync methods."""
-                app = WebServerFactory.get()
-                # In test context, just directly mount our test app
-                app.mount("/mcp", FastAPI())  # Use a simple FastAPI app for the test
-
             # Use patch.dict to set the environment variable directly
             with patch.dict(os.environ, {"CLICKUP_API_TOKEN": "test_token_for_mount"}):
-                # Patch the mount_service function
-                with patch("clickup_mcp.web_server.app.mount_service", side_effect=fixed_mount_service):
-                    # Create web server and MCP server in correct order
-                    WebServerFactory.create()
-                    MCPServerFactory.create()
+                # Create MCP server first (important for proper initialization order)
+                MCPServerFactory.create()
+                WebServerFactory.create()
 
-                    # Now call create_app with the server config that specifies SSE type
-                    app = create_app(ServerConfig(transport=MCPTransportType.SSE))
+                # Create app with the server config that specifies SSE type
+                create_app(ServerConfig(transport=MCPTransportType.SSE))
 
-                    # Verify routes
-                    routes = app.routes
-                    mount_routes = [r for r in routes if hasattr(r, "app")]
-                    mount_paths = [r.path for r in mount_routes if hasattr(r, "path")]
+                # Get the actual app instance from the factory to check routes
+                # This is the key - we need to check the WebServerFactory.get() instance
+                # since that's where mount_service adds the routes
+                actual_app = WebServerFactory.get()
 
-                    logger.debug("All routes after create_app with fixed mount_service:")
-                    for route in routes:
-                        if hasattr(route, "path"):
-                            if hasattr(route, "app"):
-                                logger.debug(f"  Mount: {route.path} -> {type(route.app).__name__}")
-                            else:
-                                logger.debug(f"  Route: {route.path}")
+                # Look for the /sse mount in the actual_app routes
+                routes = actual_app.routes
+                found_sse_mount = False
 
-                    # Verify mounted paths
-                    assert "/mcp" in mount_paths, "MCP app not mounted by create_app with fixed mount_service"
-                    assert sum(1 for r in mount_routes if r.path == "/mcp") == 1, "Multiple MCP mounts found"
+                logger.debug("All routes after mount_service:")
+                for route in routes:
+                    if hasattr(route, "path"):
+                        path = route.path
+                        if path == "/sse":
+                            found_sse_mount = True
+                        if hasattr(route, "app"):
+                            logger.debug(f"  Mount: {path} -> {type(route.app).__name__}")
+                        else:
+                            logger.debug(f"  Route: {path}")
+
+                # Verify the /sse route was mounted
+                assert found_sse_mount, "MCP app not mounted at /sse"
+
         except Exception as e:
             logger.exception(f"Test failed with error: {str(e)}")
             raise
+
         finally:
-            # Always reset singletons after test
+            # Clean up singletons
             WebServerFactory.reset()
             MCPServerFactory.reset()
             ClickUpAPIClientFactory.reset()

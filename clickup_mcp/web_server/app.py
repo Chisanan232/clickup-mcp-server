@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 
 from clickup_mcp._base import BaseServerFactory
 from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
-from clickup_mcp.mcp_server.app import MCPServerFactory
+from clickup_mcp.mcp_server.app import mcp_factory
 from clickup_mcp.models.cli import MCPTransportType, ServerConfig
 from clickup_mcp.utils import load_environment_from_file
 
@@ -40,6 +40,7 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
             title="ClickUp MCP Server",
             description="A FastAPI web server that hosts a ClickUp MCP server for interacting with ClickUp API",
             version="0.1.0",
+            lifespan=mcp_factory.lifespan(),
         )
 
         # Configure CORS
@@ -72,8 +73,8 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
         _WEB_SERVER_INSTANCE = None
 
 
-web = WebServerFactory.create()
-mcp_server = MCPServerFactory.get()
+web_factory = WebServerFactory
+web = web_factory.create()
 
 
 def mount_service(transport: str = MCPTransportType.SSE) -> None:
@@ -85,9 +86,9 @@ def mount_service(transport: str = MCPTransportType.SSE) -> None:
     """
     match transport:
         case MCPTransportType.SSE:
-            web.mount("/mcp", mcp_server.sse_app())
+            web_factory.get().mount("/sse", mcp_factory.get().sse_app())
         case MCPTransportType.HTTP_STREAMING:
-            web.mount("/mcp", mcp_server.streamable_http_app())
+            web_factory.get().mount("/mcp", mcp_factory.get().streamable_http_app())
         case _:
             raise ValueError(f"Unknown transport protocol: {transport}")
 
@@ -107,8 +108,6 @@ def create_app(
     # Load environment variables from file if provided
     load_environment_from_file(server_config.env_file if server_config else None)
 
-    app = WebServerFactory.get()
-
     # Create client with the token from configuration or environment
     ClickUpAPIClientFactory.create(api_token=get_api_token(server_config))
 
@@ -119,7 +118,7 @@ def create_app(
     mount_service(transport=transport)
 
     # Root endpoint for health checks
-    @app.get("/", response_class=JSONResponse)
+    @web.get("/", response_class=JSONResponse)
     async def root() -> Dict[str, str]:
         """
         Root endpoint providing basic health check.
@@ -130,7 +129,7 @@ def create_app(
         return {"status": "ok", "server": "ClickUp MCP Server"}
 
     # Add endpoints for utility functions of the MCP server which be mounted at */mcp*
-    @app.get("/mcp-utils/resources", response_class=JSONResponse)
+    @web.get("/mcp-utils/resources", response_class=JSONResponse)
     async def list_resources() -> Dict[str, Any]:
         """
         List available MCP resources.
@@ -138,10 +137,10 @@ def create_app(
         Returns:
             JSON response containing available MCP resources
         """
-        resources = await mcp_server.list_resources()
+        resources = await mcp_factory.get().list_resources()
         return {"resources": [r.model_dump() for r in resources]}
 
-    @app.get("/mcp-utils/tools", response_class=JSONResponse)
+    @web.get("/mcp-utils/tools", response_class=JSONResponse)
     async def get_tools() -> Dict[str, Any]:
         """
         Get available MCP tools.
@@ -149,10 +148,10 @@ def create_app(
         Returns:
             JSON response containing available MCP tools
         """
-        tools = await mcp_server.list_tools()
+        tools = await mcp_factory.get().list_tools()
         return {"tools": [t.model_dump() for t in tools]}
 
-    @app.get("/mcp-utils/prompts", response_class=JSONResponse)
+    @web.get("/mcp-utils/prompts", response_class=JSONResponse)
     async def get_prompts() -> Dict[str, Any]:
         """
         Get available MCP prompts.
@@ -160,10 +159,10 @@ def create_app(
         Returns:
             JSON response containing available MCP prompts
         """
-        prompts = await mcp_server.list_prompts()
+        prompts = await mcp_factory.get().list_prompts()
         return {"prompts": [t.model_dump() for t in prompts]}
 
-    @app.get("/mcp-utils/resource_templates", response_class=JSONResponse)
+    @web.get("/mcp-utils/resource_templates", response_class=JSONResponse)
     async def get_resource_templates() -> Dict[str, Any]:
         """
         Get available MCP resource templates.
@@ -171,7 +170,7 @@ def create_app(
         Returns:
             JSON response containing available MCP resource templates
         """
-        resource_templates = await mcp_server.list_resource_templates()
+        resource_templates = await mcp_factory.get().list_resource_templates()
         return {"resource_templates": [t.model_dump() for t in resource_templates]}
 
-    return app
+    return web

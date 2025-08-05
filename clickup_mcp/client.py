@@ -458,3 +458,6 @@ class ClickUpAPIClientFactory(BaseServerFactory):
         """
         global _CLICKUP_API_CLIENT
         _CLICKUP_API_CLIENT = None
+
+
+clickup_api_client_factory = ClickUpAPIClientFactory
