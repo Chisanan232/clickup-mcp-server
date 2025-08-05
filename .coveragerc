@@ -5,7 +5,7 @@ relative_files = True
 include=./clickup_mcp/
 omit =
 #    */__init__.py
-    ./clickup_mcp/*/__main__.py
+    */__main__.py
 
 [paths]
 source =
