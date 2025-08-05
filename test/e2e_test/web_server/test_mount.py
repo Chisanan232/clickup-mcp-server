@@ -220,7 +220,7 @@ def test_common_endpoints(server_fixture: Dict[str, Any], endpoint: str) -> None
     assert response.status_code == 200, f"Expected status 200 for {endpoint}, got {response.status_code}"
 
     # Verify root endpoint response
-    if endpoint == "/":
+    if endpoint == "/health":
         json_response = response.json()
         assert "status" in json_response, "Missing status field in response"
         assert json_response.get("status") == "ok", "Invalid status in response"

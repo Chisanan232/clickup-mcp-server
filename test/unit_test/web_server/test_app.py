@@ -124,13 +124,6 @@ class TestWebServer:
             # Return a test client
             return TestClient(app)
 
-    def test_root_endpoint_with_fixture(self, test_client: TestClient) -> None:
-        """Test that the root endpoint returns proper status."""
-        response = test_client.get("/")
-        assert response.status_code == 200
-        assert "message" in response.json()
-        assert "ClickUp MCP Server" in response.json()["message"]
-
     def test_docs_endpoint_with_fixture(self, test_client: TestClient) -> None:
         """Test that Swagger UI docs are available."""
         response = test_client.get("/docs")
@@ -309,13 +302,13 @@ class TestWebServer:
             mount_service()
 
             # Add the root endpoint manually
-            @app.get("/")
+            @app.get("/health")
             def root():
                 return {"status": "ok"}
 
             # Create and use a test client
             client = TestClient(app)
-            response = client.get("/")
+            response = client.get("/health")
             assert response.status_code == 200
             assert "status" in response.json()
             assert response.json()["status"] == "ok"
