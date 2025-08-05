@@ -8,12 +8,11 @@ are correctly accessible when the web server is instantiated with real MCP compo
 import inspect
 import logging
 import os
-from typing import Any, Dict, Generator, Optional
+from typing import Any, Generator, Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi import FastAPI, APIRouter
-from starlette.routing import Mount
+from fastapi import FastAPI
 
 from clickup_mcp.client import ClickUpAPIClientFactory
 from clickup_mcp.mcp_server.app import FastMCP, MCPServerFactory
@@ -110,16 +109,14 @@ class TestMCPServerMounting:
 
     @patch("clickup_mcp.web_server.app.web_factory")
     @patch("clickup_mcp.web_server.app.mcp_factory")
-    def test_mount_service_patched(
-        self, mock_mcp_factory: MagicMock, mock_web_factory: MagicMock
-    ) -> None:
+    def test_mount_service_patched(self, mock_mcp_factory: MagicMock, mock_web_factory: MagicMock) -> None:
         """Test that mount_service correctly handles both transport types."""
         # Setup mock MCP server
         mock_mcp_server = MagicMock()
         mock_web_server = MagicMock()
         mock_sse_app = MagicMock()
         mock_streaming_app = MagicMock()
-        
+
         mock_mcp_server.sse_app.return_value = mock_sse_app
         mock_mcp_server.streamable_http_app.return_value = mock_streaming_app
         mock_mcp_factory.get.return_value = mock_mcp_server
@@ -127,12 +124,12 @@ class TestMCPServerMounting:
 
         # Case 1: Test with SSE transport
         mount_service(MCPTransportType.SSE.value)
-        
+
         mock_mcp_factory.get.assert_called()
         mock_mcp_server.sse_app.assert_called_once()
         mock_web_server.mount.assert_called_once_with("/sse", mock_sse_app)
         mock_mcp_server.streamable_http_app.assert_not_called()
-        
+
         # Reset all mocks
         mock_mcp_factory.reset_mock()
         mock_web_factory.reset_mock()
@@ -140,10 +137,10 @@ class TestMCPServerMounting:
         mock_mcp_server.sse_app.return_value = mock_sse_app
         mock_mcp_server.streamable_http_app.return_value = mock_streaming_app
         mock_mcp_factory.get.return_value = mock_mcp_server
-        
+
         # Case 2: Test with HTTP streaming transport
         mount_service(MCPTransportType.HTTP_STREAMING.value)
-        
+
         mock_mcp_factory.get.assert_called()
         mock_mcp_server.streamable_http_app.assert_called_once()
         mock_web_server.mount.assert_called_once_with("/mcp", mock_streaming_app)
@@ -214,7 +211,7 @@ class TestMCPServerMounting:
             WebServerFactory.reset()
             MCPServerFactory.reset()
             ClickUpAPIClientFactory.reset()
-            
+
             # Use patch.dict to set the environment variable directly
             with patch.dict(os.environ, {"CLICKUP_API_TOKEN": "test_token_for_mount"}):
                 # Create MCP server first (important for proper initialization order)
@@ -223,16 +220,16 @@ class TestMCPServerMounting:
 
                 # Create app with the server config that specifies SSE type
                 create_app(ServerConfig(transport=MCPTransportType.SSE))
-                
+
                 # Get the actual app instance from the factory to check routes
                 # This is the key - we need to check the WebServerFactory.get() instance
                 # since that's where mount_service adds the routes
                 actual_app = WebServerFactory.get()
-                
+
                 # Look for the /sse mount in the actual_app routes
                 routes = actual_app.routes
                 found_sse_mount = False
-                
+
                 logger.debug("All routes after mount_service:")
                 for route in routes:
                     if hasattr(route, "path"):
@@ -243,14 +240,14 @@ class TestMCPServerMounting:
                             logger.debug(f"  Mount: {path} -> {type(route.app).__name__}")
                         else:
                             logger.debug(f"  Route: {path}")
-                
+
                 # Verify the /sse route was mounted
                 assert found_sse_mount, "MCP app not mounted at /sse"
-        
+
         except Exception as e:
             logger.exception(f"Test failed with error: {str(e)}")
             raise
-        
+
         finally:
             # Clean up singletons
             WebServerFactory.reset()

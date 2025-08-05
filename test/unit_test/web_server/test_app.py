@@ -11,9 +11,8 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from clickup_mcp.client import ClickUpAPIClientFactory
-from clickup_mcp.models.cli import MCPTransportType, ServerConfig
-from clickup_mcp.web_server.app import WebServerFactory, create_app
 from clickup_mcp.mcp_server.app import MCPServerFactory
+from clickup_mcp.web_server.app import WebServerFactory, create_app
 
 
 class TestWebServer:
@@ -102,45 +101,45 @@ class TestWebServer:
         with patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp):
             # Create an MCP server first (required before creating web server)
             MCPServerFactory.create()
-            
+
             # Create the web app
             app = WebServerFactory.create()
-            
+
             # Apply routing and endpoints using the create_app function
-            from clickup_mcp.web_server.app import mount_service
             from clickup_mcp.models.cli import ServerConfig
-            
+            from clickup_mcp.web_server.app import mount_service
+
             # Create minimal server config for testing
             test_config = ServerConfig(env_file=".env.test")
-            
+
             # Mount service and configure routes
             mount_service()
-            
+
             # Add required endpoints directly to match create_app logic
             @app.get("/")
             def root():
                 return {"message": "ClickUp MCP Server is running"}
-                
+
             @app.get("/mcp-utils/resources")
             async def get_resources():
                 resources = await mock_mcp.list_resources()
                 return {"resources": [r.model_dump() for r in resources]}
-                
+
             @app.get("/mcp-utils/tools")
             async def get_tools():
                 tools = await mock_mcp.list_tools()
                 return {"tools": [t.model_dump() for t in tools]}
-                
+
             @app.get("/mcp-utils/prompts")
             async def get_prompts():
                 prompts = await mock_mcp.list_prompts()
                 return {"prompts": [p.model_dump() for p in prompts]}
-                
+
             @app.get("/mcp-utils/resource_templates")
             async def get_resource_templates():
                 templates = await mock_mcp.list_resource_templates()
                 return {"resource_templates": [t.model_dump() for t in templates]}
-            
+
             # Return a test client
             return TestClient(app)
 
@@ -306,20 +305,20 @@ class TestWebServer:
         # Import required modules
         from clickup_mcp.models.cli import MCPTransportType
         from clickup_mcp.web_server.app import mount_service
-        
+
         # Create mock MCP server and its apps
         mock_mcp_instance = MagicMock()
         mock_sse_app = MagicMock()
         mock_streaming_app = MagicMock()
-        
+
         # Set up the mock MCP server to return mock apps
         mock_mcp_instance.sse_app.return_value = mock_sse_app
         mock_mcp_instance.streamable_http_app.return_value = mock_streaming_app
-        
+
         # Create mock mcp_factory that returns our mock MCP instance
         mock_mcp_factory = MagicMock()
         mock_mcp_factory.get.return_value = mock_mcp_instance
-    
+
         # Create a mock web instance
         mock_web_instance = MagicMock(spec=FastAPI)
         mock_web_factory = MagicMock()
@@ -328,20 +327,20 @@ class TestWebServer:
         # Patch the web global and the mcp_factory global
         with (
             patch("clickup_mcp.web_server.app.web_factory", mock_web_factory),
-            patch("clickup_mcp.web_server.app.mcp_factory", mock_mcp_factory)
+            patch("clickup_mcp.web_server.app.mcp_factory", mock_mcp_factory),
         ):
             # Mount the MCP server on the web server - use SSE by default
             mount_service(MCPTransportType.SSE)
-    
+
             # Verify that the web.mount was called with the SSE app
             mock_web_instance.mount.assert_called_once_with("/sse", mock_sse_app)
-            
+
             # Reset mock for next test
             mock_web_instance.reset_mock()
-            
+
             # Now test HTTP streaming
             mount_service(MCPTransportType.HTTP_STREAMING)
-            
+
             # Verify that the web.mount was called with the HTTP streaming app
             mock_web_instance.mount.assert_called_once_with("/mcp", mock_streaming_app)
 
@@ -349,7 +348,7 @@ class TestWebServer:
         """Test that the root endpoint returns the expected message."""
         # Set up the test client with patched MCP server
         mock_mcp = MagicMock()
-        
+
         with (
             patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp),
             patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp),
@@ -358,20 +357,21 @@ class TestWebServer:
             # Reset both server instances before creating new ones
             MCPServerFactory.reset()
             WebServerFactory.reset()
-            
+
             # Create MCP server first, which is required before web server
             MCPServerFactory.create()
-            
+
             # Create web server and actually call mount_service directly
             app = WebServerFactory.create()
             from clickup_mcp.web_server.app import mount_service
+
             mount_service()
-            
+
             # Add the root endpoint manually
             @app.get("/")
             def root():
                 return {"status": "ok"}
-                
+
             # Create and use a test client
             client = TestClient(app)
             response = client.get("/")
@@ -389,7 +389,7 @@ class TestWebServer:
         resource2.model_dump.return_value = {"id": "test_resource_2", "name": "Test Resource 2"}
         mock_mcp.list_resources = AsyncMock()
         mock_mcp.list_resources.return_value = [resource1, resource2]
-        
+
         with (
             patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp),
             patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp),
@@ -398,21 +398,22 @@ class TestWebServer:
             # Reset both server instances before creating new ones
             MCPServerFactory.reset()
             WebServerFactory.reset()
-            
+
             # Create MCP server first, which is required before web server
             MCPServerFactory.create()
-            
+
             # Create web server and call mount_service directly
             app = WebServerFactory.create()
             from clickup_mcp.web_server.app import mount_service
+
             mount_service()
-            
+
             # Add the resource endpoint manually
             @app.get("/mcp-utils/resources")
             async def get_resources():
                 resources = await mock_mcp.list_resources()
                 return {"resources": [r.model_dump() for r in resources]}
-                
+
             # Create and use a test client
             client = TestClient(app)
             response = client.get("/mcp-utils/resources")
@@ -435,7 +436,7 @@ class TestWebServer:
         tool2.model_dump.return_value = {"name": "test_tool_2", "description": "Test Tool 2"}
         mock_mcp.list_tools = AsyncMock()
         mock_mcp.list_tools.return_value = [tool1, tool2]
-        
+
         with (
             patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp),
             patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp),
@@ -444,21 +445,22 @@ class TestWebServer:
             # Reset both server instances before creating new ones
             MCPServerFactory.reset()
             WebServerFactory.reset()
-            
+
             # Create MCP server first, which is required before web server
             MCPServerFactory.create()
-            
+
             # Create web server and call mount_service directly
             app = WebServerFactory.create()
             from clickup_mcp.web_server.app import mount_service
+
             mount_service()
-            
+
             # Add the tools endpoint manually
             @app.get("/mcp-utils/tools")
             async def get_tools():
                 tools = await mock_mcp.list_tools()
                 return {"tools": [t.model_dump() for t in tools]}
-                
+
             # Create and use a test client
             client = TestClient(app)
             response = client.get("/mcp-utils/tools")
@@ -481,7 +483,7 @@ class TestWebServer:
         prompt2.model_dump.return_value = {"name": "test_prompt_2", "content": "Test Prompt 2 content"}
         mock_mcp.list_prompts = AsyncMock()
         mock_mcp.list_prompts.return_value = [prompt1, prompt2]
-        
+
         with (
             patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp),
             patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp),
@@ -490,21 +492,22 @@ class TestWebServer:
             # Reset both server instances before creating new ones
             MCPServerFactory.reset()
             WebServerFactory.reset()
-            
+
             # Create MCP server first, which is required before web server
             MCPServerFactory.create()
-            
+
             # Create web server and call mount_service directly
             app = WebServerFactory.create()
             from clickup_mcp.web_server.app import mount_service
+
             mount_service()
-            
+
             # Add the prompts endpoint manually
             @app.get("/mcp-utils/prompts")
             async def get_prompts():
                 prompts = await mock_mcp.list_prompts()
                 return {"prompts": [p.model_dump() for p in prompts]}
-                
+
             # Create and use a test client
             client = TestClient(app)
             response = client.get("/mcp-utils/prompts")
@@ -535,7 +538,7 @@ class TestWebServer:
         }
         mock_mcp.list_resource_templates = AsyncMock()
         mock_mcp.list_resource_templates.return_value = [template1, template2]
-        
+
         with (
             patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp),
             patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp),
@@ -544,21 +547,22 @@ class TestWebServer:
             # Reset both server instances before creating new ones
             MCPServerFactory.reset()
             WebServerFactory.reset()
-            
+
             # Create MCP server first, which is required before web server
             MCPServerFactory.create()
-            
+
             # Create web server and call mount_service directly
             app = WebServerFactory.create()
             from clickup_mcp.web_server.app import mount_service
+
             mount_service()
-            
+
             # Add the resource templates endpoint manually
             @app.get("/mcp-utils/resource_templates")
             async def get_resource_templates():
                 templates = await mock_mcp.list_resource_templates()
                 return {"resource_templates": [t.model_dump() for t in templates]}
-                
+
             # Create and use a test client
             client = TestClient(app)
             response = client.get("/mcp-utils/resource_templates")
@@ -689,14 +693,15 @@ class TestWebServerLifespan:
         """Test that web server creation properly requires MCP server to be created first."""
         # Reset MCP server instance to ensure it's None
         import clickup_mcp.mcp_server.app
+
         clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE = None
         MCPServerFactory.reset()
-        
+
         # Verify that creating web server without MCP server raises an error
         with pytest.raises(AssertionError) as excinfo:
             # Try to create a web server without first creating an MCP server
             WebServerFactory.create()
-        
+
         # Verify the error message mentions MCPServerFactory.create()
         assert "MCPServerFactory.create()" in str(excinfo.value)
 

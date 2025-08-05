@@ -10,9 +10,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi import FastAPI
 
+from clickup_mcp.mcp_server.app import MCPServerFactory
 from clickup_mcp.models.cli import MCPTransportType
 from clickup_mcp.web_server.app import WebServerFactory, mount_service
-from clickup_mcp.mcp_server.app import MCPServerFactory
 
 
 class TestWebServerFactory:
@@ -25,8 +25,8 @@ class TestWebServerFactory:
     def reset_web_server(self) -> Generator[None, None, None]:
         """Reset the global web server instance before and after each test."""
         # Import here to avoid circular imports
-        import clickup_mcp.web_server.app
         import clickup_mcp.mcp_server.app
+        import clickup_mcp.web_server.app
 
         # Store original instances
         self.original_instance = clickup_mcp.web_server.app._WEB_SERVER_INSTANCE
@@ -58,7 +58,9 @@ class TestWebServerFactory:
             MCPServerFactory.create()
 
         # Patch MCPServerFactory.lifespan to return mock lifespan
-        with patch("clickup_mcp.mcp_server.app.MCPServerFactory.lifespan", return_value=mock_mcp_server.session_manager.run):
+        with patch(
+            "clickup_mcp.mcp_server.app.MCPServerFactory.lifespan", return_value=mock_mcp_server.session_manager.run
+        ):
             # Need to patch where FastAPI is imported, not where it's defined
             with patch("clickup_mcp.web_server.app.FastAPI") as mock_fastapi:
                 # Configure mock
@@ -116,7 +118,7 @@ class TestWebServerFactory:
         # Create MCP server instance first
         with patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp_server):
             MCPServerFactory.create()
-            
+
         # Create a server first
         WebServerFactory.create()
 
@@ -132,7 +134,7 @@ class TestWebServerFactory:
             WebServerFactory.get()
 
         assert "It must be created web server first" in str(excinfo.value)
-        
+
     def test_backward_compatibility_global_web(self) -> None:
         """Test that the global web variable exists and is a FastAPI instance."""
         # We need to test that the module-level 'web' variable exists and is a FastAPI instance
@@ -188,15 +190,15 @@ class TestWebServerFactory:
 
         # Verify SSE app was called the expected number of times
         assert mock_mcp_server.sse_app.call_count == expected_app_calls["sse_app"]
-        
+
         # Verify HTTP streaming app was called the expected number of times
         assert mock_mcp_server.streamable_http_app.call_count == expected_app_calls["streamable_http_app"]
-        
+
         # Verify mount was called correctly
         mock_web.mount.assert_called_once()
         args, kwargs = mock_web.mount.call_args
         assert args[0] == expected_app_calls["endpoint_path"]
-        
+
         # Verify the correct app was passed
         if transport_type == MCPTransportType.SSE.value:
             assert args[1] == mock_mcp_server.sse_app.return_value

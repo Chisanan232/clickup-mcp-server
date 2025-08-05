@@ -7,13 +7,13 @@ for exposing ClickUp functionality through a RESTful API.
 
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from clickup_mcp._base import BaseServerFactory
 from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
-from clickup_mcp.mcp_server.app import MCPServerFactory, mcp_factory
+from clickup_mcp.mcp_server.app import mcp_factory
 from clickup_mcp.models.cli import MCPTransportType, ServerConfig
 from clickup_mcp.utils import load_environment_from_file
 

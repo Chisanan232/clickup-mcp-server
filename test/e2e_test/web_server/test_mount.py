@@ -12,7 +12,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-from typing import Dict, Generator, Any
+from typing import Any, Dict, Generator
 
 import httpx
 import pytest
@@ -84,7 +84,7 @@ def server_fixture(temp_env_file: str, request) -> Generator[Dict[str, Any], Non
     """Start an MCP server in a separate process and shut it down after the test."""
     # Get transport type from the test parameter or fixture
     transport_type = request.param if hasattr(request, "param") else "http-streaming"
-    
+
     # Find a free port to avoid conflicts
     port = find_free_port()
     host = "127.0.0.1"
@@ -153,21 +153,22 @@ def server_fixture(temp_env_file: str, request) -> Generator[Dict[str, Any], Non
 
 # Test HTTP Streaming Transport
 
+
 @pytest.mark.parametrize("server_fixture", [MCPTransportType.HTTP_STREAMING], indirect=True)
 def test_http_streaming_mcp_endpoint(server_fixture: Dict[str, Any]) -> None:
     """Test if the MCP server endpoint is correctly mounted for HTTP streaming transport."""
     base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
     mcp_url = f"{base_url}/mcp"
-    
+
     # Simply check if the endpoint exists - we'll get a non-(307,404) if it's mounted but parameters are missing
     with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
         response = client.post(mcp_url)
-    
+
     # If the endpoint is mounted, we should get a non-(307,404) status
     # If the endpoint is not mounted, we would get a 404 Not Found
     # TODO: Need to adjust the test criteria here
     assert response.status_code not in (307, 404), f"Expected status non-(307,404) for /mcp, got {response.status_code}"
-    
+
     # Verify response contains parameter validation errors, indicating the endpoint exists
     if response.status_code == 200:
         json_response = response.json()
@@ -180,12 +181,12 @@ def test_http_streaming_tools_endpoint(server_fixture: Dict[str, Any]) -> None:
     """Test if the MCP utils tools endpoint is correctly mounted."""
     base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
     tools_url = f"{base_url}/mcp-utils/tools"
-    
+
     with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
         response = client.get(tools_url)
-    
+
     assert response.status_code == 200, f"Expected status 200 for /mcp-utils/tools, got {response.status_code}"
-    
+
     # Verify response structure
     json_response = response.json()
     assert "tools" in json_response, "Missing tools field in response"
@@ -194,20 +195,21 @@ def test_http_streaming_tools_endpoint(server_fixture: Dict[str, Any]) -> None:
 
 # Test SSE Transport
 
+
 @pytest.mark.parametrize("server_fixture", [MCPTransportType.SSE], indirect=True)
 def test_sse_mcp_endpoint(server_fixture: Dict[str, Any]) -> None:
     """Test if the MCP server endpoint is correctly mounted for SSE transport."""
     base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
     mcp_url = f"{base_url}/sse"  # SSE endpoint is now mounted at '/sse'
-    
+
     # Simply check if the endpoint exists - we'll get a 422 if it's mounted but parameters are missing
     with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
         response = client.post(mcp_url)
-    
+
     # If the endpoint is mounted, we should get a 422 Unprocessable Entity (missing required parameters)
     # If the endpoint is not mounted, we would get a 404 Not Found
     assert response.status_code == 422, f"Expected status 422 for /sse, got {response.status_code}"
-    
+
     # Verify response contains parameter validation errors, indicating the endpoint exists
     json_response = response.json()
     assert "detail" in json_response, "Missing detail field in response"
@@ -219,12 +221,12 @@ def test_sse_tools_endpoint(server_fixture: Dict[str, Any]) -> None:
     """Test if the MCP utils tools endpoint is correctly mounted with SSE transport."""
     base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
     tools_url = f"{base_url}/mcp-utils/tools"
-    
+
     with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
         response = client.get(tools_url)
-    
+
     assert response.status_code == 200, f"Expected status 200 for /mcp-utils/tools, got {response.status_code}"
-    
+
     # Verify response structure
     json_response = response.json()
     assert "tools" in json_response, "Missing tools field in response"
@@ -232,6 +234,7 @@ def test_sse_tools_endpoint(server_fixture: Dict[str, Any]) -> None:
 
 
 # Test Common Endpoints (regardless of transport)
+
 
 @pytest.mark.parametrize("server_fixture", [MCPTransportType.HTTP_STREAMING], indirect=True)
 @pytest.mark.parametrize(
@@ -247,12 +250,12 @@ def test_common_endpoints(server_fixture: Dict[str, Any], endpoint: str) -> None
     """Test that common endpoints are available regardless of transport type."""
     base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
     url = f"{base_url}{endpoint}"
-    
+
     with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
         response = client.get(url)
-    
+
     assert response.status_code == 200, f"Expected status 200 for {endpoint}, got {response.status_code}"
-    
+
     # Verify root endpoint response
     if endpoint == "/":
         json_response = response.json()

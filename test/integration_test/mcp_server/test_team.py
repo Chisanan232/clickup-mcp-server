@@ -18,30 +18,30 @@ from .base_test import BaseMCPServerTest
 # Sample domain models for testing
 class ClickUpUser(BaseModel):
     """Sample domain model for ClickUp user."""
-    
+
     user_id: int | None = None
     username: str | None = None
     email: str | None = None
-    
+
     # For backward compatibility
     id: int | None = None
 
 
 class ClickUpTeamMember(BaseModel):
     """Sample domain model for ClickUp team member."""
-    
+
     user: ClickUpUser | None = None
 
 
 class ClickUpTeam(BaseModel):
     """Sample domain model for ClickUp team."""
-    
+
     team_id: str
     name: str
     color: str | None = None
     avatar: str | None = None
     members: List[ClickUpTeamMember] | None = None
-    
+
     # For backward compatibility
     id: str | None = None
 
@@ -76,22 +76,12 @@ class BaseTeamMCPFunctionsTestSuite(BaseMCPServerTest, ABC):
                 name="Team One",
                 color="#000000",
                 members=[
-                    ClickUpTeamMember(
-                        user=ClickUpUser(
-                            user_id=1234,
-                            username="test_user",
-                            email="user@example.com"
-                        )
-                    )
-                ]
+                    ClickUpTeamMember(user=ClickUpUser(user_id=1234, username="test_user", email="user@example.com"))
+                ],
             )
-            
-            team2 = ClickUpTeam(
-                team_id="team2",
-                name="Team Two",
-                color="#FFFFFF"
-            )
-            
+
+            team2 = ClickUpTeam(team_id="team2", name="Team Two", color="#FFFFFF")
+
             # Check for special test cases in the arguments
             if arguments and arguments.get("test_case") == "empty":
                 # Return empty list for testing empty results
@@ -99,7 +89,7 @@ class BaseTeamMCPFunctionsTestSuite(BaseMCPServerTest, ABC):
             elif arguments and arguments.get("test_case") == "error":
                 # Raise exception for testing error handling
                 raise ValueError("Error retrieving teams: Test error")
-            
+
             # Default case: return sample teams
             return [team1.model_dump(), team2.model_dump()]
 
@@ -108,23 +98,23 @@ class BaseTeamMCPFunctionsTestSuite(BaseMCPServerTest, ABC):
         """Test successful retrieval of authorized teams."""
         # Call the MCP function
         result = await mcp_client.call_tool("get_authorized_teams")
-        
+
         # Check the response structure
         assert result is not None
         assert isinstance(result, list)
         assert len(result) == 2
-        
+
         # Check first team data
         assert result[0]["team_id"] == "team1"
         assert result[0]["name"] == "Team One"
         assert result[0]["color"] == "#000000"
-        
+
         # Check members data in first team
         assert len(result[0]["members"]) == 1
         assert result[0]["members"][0]["user"]["user_id"] == 1234
         assert result[0]["members"][0]["user"]["username"] == "test_user"
         assert result[0]["members"][0]["user"]["email"] == "user@example.com"
-        
+
         # Check second team
         assert result[1]["team_id"] == "team2"
         assert result[1]["name"] == "Team Two"
@@ -135,7 +125,7 @@ class BaseTeamMCPFunctionsTestSuite(BaseMCPServerTest, ABC):
         """Test getting authorized teams when none are available."""
         # Call the MCP function with the empty test case
         result = await mcp_client.call_tool("get_authorized_teams", {"test_case": "empty"})
-        
+
         # Should return an empty list
         assert result is not None
         assert isinstance(result, list)
@@ -147,14 +137,14 @@ class BaseTeamMCPFunctionsTestSuite(BaseMCPServerTest, ABC):
         # This will hit our error case in the mock's side_effect
         with pytest.raises(ValueError) as exc_info:
             await mcp_client.call_tool("get_authorized_teams", {"test_case": "error"})
-        
+
         # Should include the error message from the mock
         assert "Error retrieving teams" in str(exc_info.value)
 
 
 class TestTeamByHTTPStreamingTransport(BaseTeamMCPFunctionsTestSuite):
     """Integration tests for MCP team functions using the HTTP streaming transport."""
-    
+
     def get_transport_option(self) -> str:
         """Return the HTTP streaming transport option."""
         return "http-streaming"
@@ -162,7 +152,7 @@ class TestTeamByHTTPStreamingTransport(BaseTeamMCPFunctionsTestSuite):
 
 class TestTeamBySSETransport(BaseTeamMCPFunctionsTestSuite):
     """Integration tests for MCP team functions using the SSE transport."""
-    
+
     def get_transport_option(self) -> str:
         """Return the SSE transport option."""
         return "sse"

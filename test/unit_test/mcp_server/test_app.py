@@ -4,10 +4,10 @@ Unit tests for the MCPServerFactory.
 This module tests the factory pattern for creating and managing the MCP server instance.
 """
 
-from fastapi import FastAPI
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi import FastAPI
 
 from clickup_mcp.mcp_server.app import MCPServerFactory
 
@@ -154,8 +154,8 @@ class TestMCPServerLifespan:
             lifespan_cm = lifespan_func(mock_app)
 
             # Verify the result is an async context manager
-            assert hasattr(lifespan_cm, '__aenter__')
-            assert hasattr(lifespan_cm, '__aexit__')
+            assert hasattr(lifespan_cm, "__aenter__")
+            assert hasattr(lifespan_cm, "__aexit__")
 
             # Use the context manager
             async with lifespan_cm:
@@ -224,8 +224,10 @@ class TestMCPServerLifespan:
     def test_lifespan_handles_get_exceptions(self):
         """Test that lifespan properly wraps and enhances any exceptions from get()."""
         # Create a patch that forces MCPServerFactory.get() to raise an AssertionError
-        with patch("clickup_mcp.mcp_server.app.MCPServerFactory.get",
-                   side_effect=AssertionError("It must be created FastMCP first.")):
+        with patch(
+            "clickup_mcp.mcp_server.app.MCPServerFactory.get",
+            side_effect=AssertionError("It must be created FastMCP first."),
+        ):
             with pytest.raises(AssertionError) as excinfo:
                 MCPServerFactory.lifespan()
 
@@ -246,6 +248,7 @@ class TestMCPServerLifespan:
 
             # Lifespan functions in FastAPI should accept a single app parameter
             import inspect
+
             signature = inspect.signature(lifespan_func)
 
             # Should have one parameter

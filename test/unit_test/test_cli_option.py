@@ -4,20 +4,16 @@ Tests for the CLI --env option functionality.
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch, ANY
+from unittest.mock import MagicMock, patch
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
 
 from clickup_mcp.client import get_api_token
 from clickup_mcp.entry import main, parse_args
-from clickup_mcp.mcp_server.app import MCPServerFactory
 from clickup_mcp.models.cli import MCPTransportType, ServerConfig
-from clickup_mcp.utils import load_environment_from_file
 from clickup_mcp.web_server.app import create_app, mount_service
-from fastapi import FastAPI
 
 
 class TestCliOptionEnv:
@@ -99,19 +95,21 @@ class TestCliOptionTransport:
         mock_mcp = MagicMock()
         mock_sse_app = MagicMock()
         mock_mcp.sse_app.return_value = mock_sse_app
-        
+
         # Create mcp_factory mock that returns our mock_mcp
         mock_mcp_factory = MagicMock()
         mock_mcp_factory.get.return_value = mock_mcp
-        
+
         mock_web = MagicMock()
         mock_web_factory = MagicMock()
         mock_web_factory.get.return_value = mock_web
 
         # Create a clean patch environment
-        with patch("clickup_mcp.web_server.app.mcp_factory", mock_mcp_factory), \
-             patch("clickup_mcp.web_server.app.web_factory", mock_web_factory):
-            
+        with (
+            patch("clickup_mcp.web_server.app.mcp_factory", mock_mcp_factory),
+            patch("clickup_mcp.web_server.app.web_factory", mock_web_factory),
+        ):
+
             # Call the function under test
             mount_service(transport=MCPTransportType.SSE)
 
@@ -128,19 +126,21 @@ class TestCliOptionTransport:
         mock_streaming_app = MagicMock()
         mock_mcp.streamable_http_app.return_value = mock_streaming_app
         mock_mcp.sse_app = MagicMock()
-        
+
         # Create mcp_factory mock that returns our mock_mcp
         mock_mcp_factory = MagicMock()
         mock_mcp_factory.get.return_value = mock_mcp
-        
+
         mock_web = MagicMock()
         mock_web_factory = MagicMock()
         mock_web_factory.get.return_value = mock_web
 
         # Create a clean patch environment
-        with patch("clickup_mcp.web_server.app.mcp_factory", mock_mcp_factory), \
-             patch("clickup_mcp.web_server.app.web_factory", mock_web_factory):
-            
+        with (
+            patch("clickup_mcp.web_server.app.mcp_factory", mock_mcp_factory),
+            patch("clickup_mcp.web_server.app.web_factory", mock_web_factory),
+        ):
+
             # Call the function under test
             mount_service(transport=MCPTransportType.HTTP_STREAMING)
 
@@ -225,7 +225,7 @@ class TestCliOptionToken:
 
         # Parse arguments
         config = parse_args()
-        
+
         # Ensure CLI token is used, not env file token
         assert config.token == "cli-token"
         assert config.env_file == str(env_file)
@@ -246,7 +246,7 @@ class TestCliOptionToken:
 
         # Parse arguments
         config = parse_args()
-        
+
         # No token in config itself
         assert config.token is None
         assert config.env_file == str(env_file)
@@ -275,24 +275,25 @@ class TestCliOptionToken:
         mock_mcp_create = mcp_create_patcher.start()
         mock_mcp_get = mcp_get_patcher.start()
         mock_mount = mount_service_patcher.start()
-        
+
         try:
             # Reset both factories to ensure clean test environment
             import clickup_mcp.mcp_server.app as mcp_app
             import clickup_mcp.web_server.app as web_app
+
             mcp_app._MCP_SERVER_INSTANCE = None
             web_app._WEB_SERVER_INSTANCE = None
-            
+
             # Call the function being tested
             result = create_app(server_config=config)
-            
+
             # Check that token was used correctly
             mock_get_token.assert_called_once_with(config)
             mock_client_factory.assert_called_once_with(api_token="test-token-123")
-            
+
             # Verify FastAPI app was created and returned
             assert isinstance(result, FastAPI)
-            
+
             # Verify mount_service was called with correct transport
             mock_mount.assert_called_once_with(transport=config.transport)
         finally:

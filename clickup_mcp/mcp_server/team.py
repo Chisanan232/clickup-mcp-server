@@ -5,7 +5,7 @@ This module provides MCP functions for interacting with ClickUp Teams/Workspaces
 These functions follow the FastMCP pattern for easy integration into MCP servers.
 """
 
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from clickup_mcp.client import ClickUpAPIClientFactory
 
@@ -15,7 +15,7 @@ from .app import mcp
 @mcp.tool(
     name="get_authorized_teams",
     title="Get ClickUp Teams",
-    description="Retrieve all teams/workspaces that the authenticated user has access to."
+    description="Retrieve all teams/workspaces that the authenticated user has access to.",
 )
 async def get_authorized_teams() -> List[Dict[str, Any]]:
     """

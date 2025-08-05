@@ -54,24 +54,24 @@ async def test_get_authorized_teams_success(mock_get_client: MagicMock) -> None:
     # Assertions
     mock_get_client.assert_called_once()
     mock_client.team.get_authorized_teams.assert_called_once()
-    
+
     # Verify the result format and content
     assert result is not None
     assert isinstance(result, list)
     assert len(result) == 2
-    
+
     # Check first team data
     assert result[0]["team_id"] == "team1"
     assert result[0]["name"] == "Team One"
     assert result[0]["color"] == "#000000"
     assert result[0]["avatar"] == "https://example.com/avatar.jpg"
-    
+
     # Check members data
     assert len(result[0]["members"]) == 1
     assert result[0]["members"][0]["user"]["user_id"] == 1234
     assert result[0]["members"][0]["user"]["username"] == "test_user"
     assert result[0]["members"][0]["user"]["email"] == "user@example.com"
-    
+
     # Check second team
     assert result[1]["team_id"] == "team2"
     assert result[1]["name"] == "Team Two"
@@ -95,7 +95,7 @@ async def test_get_authorized_teams_empty_result(mock_get_client: MagicMock) -> 
     # Assertions
     mock_get_client.assert_called_once()
     mock_client.team.get_authorized_teams.assert_called_once()
-    
+
     assert result is not None
     assert isinstance(result, list)
     assert len(result) == 0

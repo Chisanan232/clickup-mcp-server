@@ -1,8 +1,8 @@
 import contextlib
 from collections.abc import Callable
 
-from mcp.server import FastMCP
 from fastapi import FastAPI
+from mcp.server import FastMCP
 
 from clickup_mcp._base import BaseServerFactory
 
@@ -46,7 +46,6 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
         global _MCP_SERVER_INSTANCE
         _MCP_SERVER_INSTANCE = None
 
-
     @staticmethod
     def lifespan() -> Callable[..., contextlib._AsyncGeneratorContextManager]:
         try:
@@ -60,7 +59,7 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
             # This ensures the session manager is properly created
             _mcp_server.sse_app()
             _mcp_server.streamable_http_app()
-            
+
             # Now we can safely access session_manager
             async with _mcp_server.session_manager.run():
                 yield  # FastAPI would start to handle requests after yield
