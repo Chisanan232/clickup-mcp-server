@@ -15,6 +15,7 @@ from clickup_mcp._base import BaseServerFactory
 from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
 from clickup_mcp.mcp_server.app import mcp_factory
 from clickup_mcp.models.cli import MCPTransportType, ServerConfig
+from clickup_mcp.models.dto.health_check import HealthyCheckResponseDto
 from clickup_mcp.utils import load_environment_from_file
 
 _WEB_SERVER_INSTANCE: Optional[FastAPI] = None
@@ -119,13 +120,13 @@ def create_app(
 
     # Root endpoint for health checks
     @web.get("/", response_class=JSONResponse)
-    async def root() -> Dict[str, str]:
+    async def root() -> HealthyCheckResponseDto:
         """
         Root endpoint providing basic health check.
 
         Returns:
             JSON response with server status
         """
-        return {"status": "ok", "server": "ClickUp MCP Server"}
+        return HealthyCheckResponseDto()
 
     return web
