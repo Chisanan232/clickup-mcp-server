@@ -119,6 +119,12 @@ class TestWebServer:
             @app.get("/")
             def root():
                 return {"message": "ClickUp MCP Server is running"}
+            
+            # Add health endpoint that matches the production endpoint
+            @app.get("/health")
+            async def health():
+                from clickup_mcp.models.dto.health_check import HealthyCheckResponseDto
+                return HealthyCheckResponseDto()
 
             @app.get("/mcp-utils/resources")
             async def get_resources():
@@ -241,17 +247,9 @@ class TestWebServer:
         """Test the MCP resource templates listing endpoint."""
         # Create mock template objects with model_dump method
         template1 = MagicMock()
-        template1.model_dump.return_value = {
-            "id": "test_template_1",
-            "name": "Test Template 1",
-            "schema": {"type": "object"},
-        }
+        template1.model_dump.return_value = {"id": "test_template_1", "name": "Test Template 1"}
         template2 = MagicMock()
-        template2.model_dump.return_value = {
-            "id": "test_template_2",
-            "name": "Test Template 2",
-            "schema": {"type": "object"},
-        }
+        template2.model_dump.return_value = {"id": "test_template_2", "name": "Test Template 2"}
 
         # Set up mock templates
         mock_mcp.list_resource_templates = AsyncMock()
@@ -265,12 +263,88 @@ class TestWebServer:
         data = response.json()
         assert "resource_templates" in data
         assert data["resource_templates"] == [
-            {"id": "test_template_1", "name": "Test Template 1", "schema": {"type": "object"}},
-            {"id": "test_template_2", "name": "Test Template 2", "schema": {"type": "object"}},
+            {"id": "test_template_1", "name": "Test Template 1"},
+            {"id": "test_template_2", "name": "Test Template 2"},
         ]
 
         # Verify the method was called
         mock_mcp.list_resource_templates.assert_called_once()
+
+    def test_health_endpoint_with_fixture(self, test_client: TestClient) -> None:
+        """Test the health check endpoint returns the expected status and server info."""
+        # Test the endpoint directly without additional mocking - it's already set up in the fixture
+        response = test_client.get("/health")
+        
+        # Verify response
+        assert response.status_code == 200
+        data = response.json()
+        assert "status" in data
+        assert "server" in data
+        assert data["status"] == "ok"
+        assert data["server"] == "ClickUp MCP Server"
+
+    def test_health_endpoint_returns_correct_dto(self) -> None:
+        """Test that the health endpoint returns the correct HealthyCheckResponseDto instance."""
+        # Create the app with the real health check endpoint
+        with patch("clickup_mcp.mcp_server.app.MCPServerFactory") as mock_mcp_factory:
+            # Create mock MCP server
+            mock_mcp = MagicMock()
+            mock_mcp_factory.create.return_value = mock_mcp
+            mock_mcp_factory.get.return_value = mock_mcp
+            
+            # Import here to avoid circular imports
+            from clickup_mcp.web_server.app import WebServerFactory, create_app
+            from clickup_mcp.models.cli import ServerConfig, MCPTransportType
+            from clickup_mcp.models.dto.health_check import HealthyCheckResponseDto
+            
+            # Create MCP server first
+            MCPServerFactory.create()
+            
+            # Then create the web server
+            WebServerFactory.create()
+            
+            # Now create the app with configuration
+            app = create_app(ServerConfig(transport=MCPTransportType.SSE))
+            
+            # Create test client
+            client = TestClient(app)
+            
+            # Test health endpoint
+            response = client.get("/health")
+            
+            # Verify response matches DTO structure and values
+            assert response.status_code == 200
+            data = response.json()
+            
+            # Create an instance of the actual DTO to compare
+            expected_dto = HealthyCheckResponseDto()
+            expected_data = expected_dto.model_dump()
+            
+            # Verify the response matches the expected DTO values
+            assert data == expected_data
+            assert data["status"] == "ok"
+            assert data["server"] == "ClickUp MCP Server"
+
+    def test_health_endpoint_content_type(self, test_client: TestClient) -> None:
+        """Test that the health endpoint returns the correct content type."""
+        response = test_client.get("/health")
+        assert response.status_code == 200
+        assert "application/json" in response.headers["content-type"]
+
+    def test_health_endpoint_schema_validation(self) -> None:
+        """Test that the health endpoint response schema is valid."""
+        from clickup_mcp.models.dto.health_check import HealthyCheckResponseDto
+        from pydantic import ValidationError
+        
+        # Test with valid data
+        valid_data = {"status": "ok", "server": "ClickUp MCP Server"}
+        dto = HealthyCheckResponseDto.model_validate(valid_data)
+        assert dto.status == "ok"
+        assert dto.server == "ClickUp MCP Server"
+        
+        # Test with invalid data (should raise ValidationError)
+        with pytest.raises(ValidationError):
+            HealthyCheckResponseDto.model_validate({"status": 123, "server": "ClickUp MCP Server"})
 
     def test_mount_service_integration(self, mock_mcp: MagicMock) -> None:
         """Test that mount_service is called during app initialization and mounts services correctly."""
