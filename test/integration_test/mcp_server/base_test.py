@@ -76,6 +76,16 @@ class BaseMCPServerTest(metaclass=ABCMeta):
     @pytest.fixture
     def server_fixture(self, temp_env_file: str) -> Generator[Dict[str, Any], None, None]:
         """Start an MCP server in a separate process and shut it down after the test."""
+        # Import and reset singletons
+        from clickup_mcp.client import ClickUpAPIClientFactory
+        from clickup_mcp.mcp_server.app import MCPServerFactory
+        from clickup_mcp.web_server.app import WebServerFactory
+
+        # Reset all singletons before test
+        WebServerFactory.reset()
+        MCPServerFactory.reset()
+        ClickUpAPIClientFactory.reset()
+
         # Find a free port to avoid conflicts
         port = find_free_port()
         host = "127.0.0.1"
