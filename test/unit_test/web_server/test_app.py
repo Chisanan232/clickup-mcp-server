@@ -72,7 +72,7 @@ class TestWebServer:
         """Test the health check endpoint returns the expected status and server info."""
         # Test the endpoint directly without additional mocking - it's already set up in the fixture
         response = test_client.get("/health")
-        
+
         # Verify response
         assert response.status_code == 200
         data = response.json()
@@ -89,35 +89,35 @@ class TestWebServer:
             mock_mcp = MagicMock()
             mock_mcp_factory.create.return_value = mock_mcp
             mock_mcp_factory.get.return_value = mock_mcp
-            
+
             # Import here to avoid circular imports
-            from clickup_mcp.web_server.app import WebServerFactory, create_app
-            from clickup_mcp.models.cli import ServerConfig, MCPTransportType
+            from clickup_mcp.models.cli import MCPTransportType, ServerConfig
             from clickup_mcp.models.dto.health_check import HealthyCheckResponseDto
-            
+            from clickup_mcp.web_server.app import WebServerFactory, create_app
+
             # Create MCP server first
             MCPServerFactory.create()
-            
+
             # Then create the web server
             WebServerFactory.create()
-            
+
             # Now create the app with configuration
             app = create_app(ServerConfig(transport=MCPTransportType.SSE))
-            
+
             # Create test client
             client = TestClient(app)
-            
+
             # Test health endpoint
             response = client.get("/health")
-            
+
             # Verify response matches DTO structure and values
             assert response.status_code == 200
             data = response.json()
-            
+
             # Create an instance of the actual DTO to compare
             expected_dto = HealthyCheckResponseDto()
             expected_data = expected_dto.model_dump()
-            
+
             # Verify the response matches the expected DTO values
             assert data == expected_data
             assert data["status"] == "ok"
@@ -131,15 +131,16 @@ class TestWebServer:
 
     def test_health_endpoint_schema_validation(self) -> None:
         """Test that the health endpoint response schema is valid."""
-        from clickup_mcp.models.dto.health_check import HealthyCheckResponseDto
         from pydantic import ValidationError
-        
+
+        from clickup_mcp.models.dto.health_check import HealthyCheckResponseDto
+
         # Test with valid data
         valid_data = {"status": "ok", "server": "ClickUp MCP Server"}
         dto = HealthyCheckResponseDto.model_validate(valid_data)
         assert dto.status == "ok"
         assert dto.server == "ClickUp MCP Server"
-        
+
         # Test with invalid data (should raise ValidationError)
         with pytest.raises(ValidationError):
             HealthyCheckResponseDto.model_validate({"status": 123, "server": "ClickUp MCP Server"})

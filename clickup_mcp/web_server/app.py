@@ -5,7 +5,7 @@ This module provides a FastAPI web server that mounts the MCP server
 for exposing ClickUp functionality through a RESTful API.
 """
 
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

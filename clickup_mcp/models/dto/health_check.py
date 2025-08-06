@@ -13,17 +13,18 @@ from clickup_mcp.models.dto.base import BaseResponseDTO
 class HealthyCheckResponseDto(BaseResponseDTO):
     """
     Health check response DTO.
-    
+
     This class represents the response from the server's health check endpoint.
     It provides information about the server status and identity.
-    
+
     Attributes:
         status: Current status of the server (default: "ok")
         server: Name of the server instance (default: "ClickUp MCP Server")
     """
+
     model_config = ConfigDict(
         populate_by_name=True,
-        extra="allow", 
+        extra="allow",
         arbitrary_types_allowed=True,
         frozen=True,
     )
