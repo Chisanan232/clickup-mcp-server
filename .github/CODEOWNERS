@@ -5,47 +5,47 @@
 #######################################
 # Repository Default Owner
 #######################################
-*                                     @<your username>
+*                                     @Chisanan232
 
 # Software license annotation
-/LICENSE                              @<your username>
+/LICENSE                              @Chisanan232
 
 #######################################
 # Source Code
 #######################################
-/src/                                 @<your username>
-*.py                                  @<your username>
+/src/                                 @Chisanan232
+*.py                                  @Chisanan232
 
 #######################################
 # Tests
 #######################################
-/test/                                @<your username>
+/test/                                @Chisanan232
 
 #######################################
 # Documentation
 #######################################
-/docs/                                @<your username>
-*.md                                  @<your username>
+/docs/                                @Chisanan232
+*.md                                  @Chisanan232
 
 #######################################
 # CI/CD Configuration
 #######################################
-/.github/                             @<your username>
-/.github/workflows/                   @<your username>
+/.github/                             @Chisanan232
+/.github/workflows/                   @Chisanan232
 
 #######################################
 # Build Configuration
 #######################################
-/pyproject.toml                       @<your username>
-/scripts/                             @<your username>
+/pyproject.toml                       @Chisanan232
+/scripts/                             @Chisanan232
 
 #######################################
 # Code Quality and Testing
 #######################################
-/.pre-commit-config.yaml              @<your username>
-/pytest.ini                           @<your username>
-/.coveragerc                          @<your username>
-/mypy.ini                             @<your username>
-/.pylintrc                            @<your username>
-/sonar-project.properties             @<your username>
-/codecov.yml                          @<your username>
+/.pre-commit-config.yaml              @Chisanan232
+/pytest.ini                           @Chisanan232
+/.coveragerc                          @Chisanan232
+/mypy.ini                             @Chisanan232
+/.pylintrc                            @Chisanan232
+/sonar-project.properties             @Chisanan232
+/codecov.yml                          @Chisanan232
