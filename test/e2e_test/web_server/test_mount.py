@@ -176,23 +176,6 @@ def test_http_streaming_mcp_endpoint(server_fixture: Dict[str, Any]) -> None:
         assert isinstance(json_response["detail"], list), "Detail field should be a list of validation errors"
 
 
-@pytest.mark.parametrize("server_fixture", [MCPTransportType.HTTP_STREAMING], indirect=True)
-def test_http_streaming_tools_endpoint(server_fixture: Dict[str, Any]) -> None:
-    """Test if the MCP utils tools endpoint is correctly mounted."""
-    base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
-    tools_url = f"{base_url}/mcp-utils/tools"
-
-    with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
-        response = client.get(tools_url)
-
-    assert response.status_code == 200, f"Expected status 200 for /mcp-utils/tools, got {response.status_code}"
-
-    # Verify response structure
-    json_response = response.json()
-    assert "tools" in json_response, "Missing tools field in response"
-    assert isinstance(json_response["tools"], list), "Tools field should be a list"
-
-
 # Test SSE Transport
 
 
@@ -216,23 +199,6 @@ def test_sse_mcp_endpoint(server_fixture: Dict[str, Any]) -> None:
     assert isinstance(json_response["detail"], list), "Detail field should be a list of validation errors"
 
 
-@pytest.mark.parametrize("server_fixture", [MCPTransportType.SSE], indirect=True)
-def test_sse_tools_endpoint(server_fixture: Dict[str, Any]) -> None:
-    """Test if the MCP utils tools endpoint is correctly mounted with SSE transport."""
-    base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
-    tools_url = f"{base_url}/mcp-utils/tools"
-
-    with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
-        response = client.get(tools_url)
-
-    assert response.status_code == 200, f"Expected status 200 for /mcp-utils/tools, got {response.status_code}"
-
-    # Verify response structure
-    json_response = response.json()
-    assert "tools" in json_response, "Missing tools field in response"
-    assert isinstance(json_response["tools"], list), "Tools field should be a list"
-
-
 # Test Common Endpoints (regardless of transport)
 
 
@@ -240,10 +206,7 @@ def test_sse_tools_endpoint(server_fixture: Dict[str, Any]) -> None:
 @pytest.mark.parametrize(
     "endpoint",
     [
-        "/",  # Root health check
-        "/mcp-utils/resources",  # Resources endpoint
-        "/mcp-utils/prompts",  # Prompts endpoint
-        "/mcp-utils/resource_templates",  # Resource templates endpoint
+        "/health",  # Root health check
     ],
 )
 def test_common_endpoints(server_fixture: Dict[str, Any], endpoint: str) -> None:
@@ -257,7 +220,7 @@ def test_common_endpoints(server_fixture: Dict[str, Any], endpoint: str) -> None
     assert response.status_code == 200, f"Expected status 200 for {endpoint}, got {response.status_code}"
 
     # Verify root endpoint response
-    if endpoint == "/":
+    if endpoint == "/health":
         json_response = response.json()
         assert "status" in json_response, "Missing status field in response"
         assert json_response.get("status") == "ok", "Invalid status in response"

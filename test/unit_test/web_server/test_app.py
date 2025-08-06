@@ -44,111 +44,23 @@ class TestWebServer:
         clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE = self.original_mcp_instance
 
     @pytest.fixture
-    def mock_mcp(self) -> MagicMock:
-        """Fixture to create a mock MCP server."""
-        mock = MagicMock()
-
-        # Create mock Pydantic model objects with model_dump method
-        resource1 = MagicMock()
-        resource1.model_dump.return_value = {"id": "resource1", "name": "Resource 1"}
-        resource2 = MagicMock()
-        resource2.model_dump.return_value = {"id": "resource2", "name": "Resource 2"}
-
-        tool1 = MagicMock()
-        tool1.model_dump.return_value = {"name": "tool1", "description": "Tool 1"}
-        tool2 = MagicMock()
-        tool2.model_dump.return_value = {"name": "tool2", "description": "Tool 2"}
-
-        prompt1 = MagicMock()
-        prompt1.model_dump.return_value = {"name": "prompt1", "content": "Prompt 1 content"}
-        prompt2 = MagicMock()
-        prompt2.model_dump.return_value = {"name": "prompt2", "content": "Prompt 2 content"}
-
-        template1 = MagicMock()
-        template1.model_dump.return_value = {"id": "template1", "name": "Template 1", "schema": {"type": "object"}}
-        template2 = MagicMock()
-        template2.model_dump.return_value = {"id": "template2", "name": "Template 2", "schema": {"type": "object"}}
-
-        # Set up asynchronous method returns
-        mock.list_resources = AsyncMock()
-        mock.list_resources.return_value = [resource1, resource2]
-
-        mock.list_tools = AsyncMock()
-        mock.list_tools.return_value = [tool1, tool2]
-
-        mock.list_prompts = AsyncMock()
-        mock.list_prompts.return_value = [prompt1, prompt2]
-
-        mock.list_resource_templates = AsyncMock()
-        mock.list_resource_templates.return_value = [template1, template2]
-
-        # Set up proper mock for the execute method
-        mock.execute = AsyncMock()
-        mock.execute.return_value = "result data"
-
-        # Set up SSE and streaming HTTP apps
-        mock_sse_app = MagicMock()
-        mock_streamable_app = MagicMock()
-        mock.sse_app.return_value = mock_sse_app
-        mock.streamable_http_app.return_value = mock_streamable_app
-
-        return mock
-
-    @pytest.fixture
-    def test_client(self, mock_mcp: MagicMock) -> TestClient:
+    def test_client(self) -> TestClient:
         """Fixture to create a FastAPI test client with a mock MCP server."""
-        # Patch the MCPServerFactory.get to return our mock
-        with patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp):
-            # Create an MCP server first (required before creating web server)
-            MCPServerFactory.create()
+        # Create an MCP server first (required before creating web server)
+        MCPServerFactory.create()
 
-            # Create the web app
-            app = WebServerFactory.create()
+        # Create the web app
+        WebServerFactory.create()
 
-            # Apply routing and endpoints using the create_app function
-            from clickup_mcp.models.cli import ServerConfig
-            from clickup_mcp.web_server.app import mount_service
+        # Apply routing and endpoints using the create_app function
+        from clickup_mcp.models.cli import ServerConfig
 
-            # Create minimal server config for testing
-            test_config = ServerConfig(env_file=".env.test")
+        # # Create minimal server config for testing
+        test_config = ServerConfig(env_file=".env.test")
+        app = create_app(test_config)
 
-            # Mount service and configure routes
-            mount_service()
-
-            # Add required endpoints directly to match create_app logic
-            @app.get("/")
-            def root():
-                return {"message": "ClickUp MCP Server is running"}
-
-            @app.get("/mcp-utils/resources")
-            async def get_resources():
-                resources = await mock_mcp.list_resources()
-                return {"resources": [r.model_dump() for r in resources]}
-
-            @app.get("/mcp-utils/tools")
-            async def get_tools():
-                tools = await mock_mcp.list_tools()
-                return {"tools": [t.model_dump() for t in tools]}
-
-            @app.get("/mcp-utils/prompts")
-            async def get_prompts():
-                prompts = await mock_mcp.list_prompts()
-                return {"prompts": [p.model_dump() for p in prompts]}
-
-            @app.get("/mcp-utils/resource_templates")
-            async def get_resource_templates():
-                templates = await mock_mcp.list_resource_templates()
-                return {"resource_templates": [t.model_dump() for t in templates]}
-
-            # Return a test client
-            return TestClient(app)
-
-    def test_root_endpoint_with_fixture(self, test_client: TestClient) -> None:
-        """Test that the root endpoint returns proper status."""
-        response = test_client.get("/")
-        assert response.status_code == 200
-        assert "message" in response.json()
-        assert "ClickUp MCP Server" in response.json()["message"]
+        # Return a test client
+        return TestClient(app)
 
     def test_docs_endpoint_with_fixture(self, test_client: TestClient) -> None:
         """Test that Swagger UI docs are available."""
@@ -156,127 +68,87 @@ class TestWebServer:
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]
 
-    def test_mcp_resource_endpoint_with_fixture(self, test_client: TestClient, mock_mcp: MagicMock) -> None:
-        """Test the MCP resource listing endpoint."""
-        # Create mock resource objects with model_dump method
-        resource1 = MagicMock()
-        resource1.model_dump.return_value = {"id": "test_resource_1", "name": "Test Resource 1"}
-        resource2 = MagicMock()
-        resource2.model_dump.return_value = {"id": "test_resource_2", "name": "Test Resource 2"}
+    def test_health_endpoint_with_fixture(self, test_client: TestClient) -> None:
+        """Test the health check endpoint returns the expected status and server info."""
+        # Test the endpoint directly without additional mocking - it's already set up in the fixture
+        response = test_client.get("/health")
 
-        # Set up mock resources
-        mock_mcp.list_resources = AsyncMock()
-        mock_mcp.list_resources.return_value = [resource1, resource2]
-
-        # Test endpoint
-        response = test_client.get("/mcp-utils/resources")
+        # Verify response
         assert response.status_code == 200
-
-        # Verify the response
         data = response.json()
-        assert "resources" in data
-        assert data["resources"] == [
-            {"id": "test_resource_1", "name": "Test Resource 1"},
-            {"id": "test_resource_2", "name": "Test Resource 2"},
-        ]
+        assert "status" in data
+        assert "server" in data
+        assert data["status"] == "ok"
+        assert data["server"] == "ClickUp MCP Server"
 
-        # Verify the method was called
-        mock_mcp.list_resources.assert_called_once()
+    def test_health_endpoint_returns_correct_dto(self) -> None:
+        """Test that the health endpoint returns the correct HealthyCheckResponseDto instance."""
+        # Create the app with the real health check endpoint
+        with patch("clickup_mcp.mcp_server.app.MCPServerFactory") as mock_mcp_factory:
+            # Create mock MCP server
+            mock_mcp = MagicMock()
+            mock_mcp_factory.create.return_value = mock_mcp
+            mock_mcp_factory.get.return_value = mock_mcp
 
-    def test_mcp_tools_endpoint_with_fixture(self, test_client: TestClient, mock_mcp: MagicMock) -> None:
-        """Test the MCP tools listing endpoint."""
-        # Create mock tool objects with model_dump method
-        tool1 = MagicMock()
-        tool1.model_dump.return_value = {"name": "test_tool_1", "description": "Test Tool 1"}
-        tool2 = MagicMock()
-        tool2.model_dump.return_value = {"name": "test_tool_2", "description": "Test Tool 2"}
+            # Import here to avoid circular imports
+            from clickup_mcp.models.cli import MCPTransportType, ServerConfig
+            from clickup_mcp.models.dto.health_check import HealthyCheckResponseDto
+            from clickup_mcp.web_server.app import WebServerFactory, create_app
 
-        # Set up mock tools
-        mock_mcp.list_tools = AsyncMock()
-        mock_mcp.list_tools.return_value = [tool1, tool2]
+            # Create MCP server first
+            MCPServerFactory.create()
 
-        # Test endpoint
-        response = test_client.get("/mcp-utils/tools")
+            # Then create the web server
+            WebServerFactory.create()
+
+            # Now create the app with configuration
+            app = create_app(ServerConfig(transport=MCPTransportType.SSE))
+
+            # Create test client
+            client = TestClient(app)
+
+            # Test health endpoint
+            response = client.get("/health")
+
+            # Verify response matches DTO structure and values
+            assert response.status_code == 200
+            data = response.json()
+
+            # Create an instance of the actual DTO to compare
+            expected_dto = HealthyCheckResponseDto()
+            expected_data = expected_dto.model_dump()
+
+            # Verify the response matches the expected DTO values
+            assert data == expected_data
+            assert data["status"] == "ok"
+            assert data["server"] == "ClickUp MCP Server"
+
+    def test_health_endpoint_content_type(self, test_client: TestClient) -> None:
+        """Test that the health endpoint returns the correct content type."""
+        response = test_client.get("/health")
         assert response.status_code == 200
+        assert "application/json" in response.headers["content-type"]
 
-        # Verify the response
-        data = response.json()
-        assert "tools" in data
-        assert data["tools"] == [
-            {"name": "test_tool_1", "description": "Test Tool 1"},
-            {"name": "test_tool_2", "description": "Test Tool 2"},
-        ]
+    def test_health_endpoint_schema_validation(self) -> None:
+        """Test that the health endpoint response schema is valid."""
+        from pydantic import ValidationError
 
-        # Verify the method was called
-        mock_mcp.list_tools.assert_called_once()
+        from clickup_mcp.models.dto.health_check import HealthyCheckResponseDto
 
-    def test_mcp_prompts_endpoint_with_fixture(self, test_client: TestClient, mock_mcp: MagicMock) -> None:
-        """Test the MCP prompts listing endpoint."""
-        # Create mock prompt objects with model_dump method
-        prompt1 = MagicMock()
-        prompt1.model_dump.return_value = {"name": "test_prompt_1", "content": "Test Prompt 1 content"}
-        prompt2 = MagicMock()
-        prompt2.model_dump.return_value = {"name": "test_prompt_2", "content": "Test Prompt 2 content"}
+        # Test with valid data
+        valid_data = {"status": "ok", "server": "ClickUp MCP Server"}
+        dto = HealthyCheckResponseDto.model_validate(valid_data)
+        assert dto.status == "ok"
+        assert dto.server == "ClickUp MCP Server"
 
-        # Set up mock prompts
-        mock_mcp.list_prompts = AsyncMock()
-        mock_mcp.list_prompts.return_value = [prompt1, prompt2]
+        # Test with invalid data (should raise ValidationError)
+        with pytest.raises(ValidationError):
+            HealthyCheckResponseDto.model_validate({"status": 123, "server": "ClickUp MCP Server"})
 
-        # Test endpoint
-        response = test_client.get("/mcp-utils/prompts")
-        assert response.status_code == 200
-
-        # Verify the response
-        data = response.json()
-        assert "prompts" in data
-        assert data["prompts"] == [
-            {"name": "test_prompt_1", "content": "Test Prompt 1 content"},
-            {"name": "test_prompt_2", "content": "Test Prompt 2 content"},
-        ]
-
-        # Verify the method was called
-        mock_mcp.list_prompts.assert_called_once()
-
-    def test_mcp_resource_templates_endpoint_with_fixture(self, test_client: TestClient, mock_mcp: MagicMock) -> None:
-        """Test the MCP resource templates listing endpoint."""
-        # Create mock template objects with model_dump method
-        template1 = MagicMock()
-        template1.model_dump.return_value = {
-            "id": "test_template_1",
-            "name": "Test Template 1",
-            "schema": {"type": "object"},
-        }
-        template2 = MagicMock()
-        template2.model_dump.return_value = {
-            "id": "test_template_2",
-            "name": "Test Template 2",
-            "schema": {"type": "object"},
-        }
-
-        # Set up mock templates
-        mock_mcp.list_resource_templates = AsyncMock()
-        mock_mcp.list_resource_templates.return_value = [template1, template2]
-
-        # Test endpoint
-        response = test_client.get("/mcp-utils/resource_templates")
-        assert response.status_code == 200
-
-        # Verify the response
-        data = response.json()
-        assert "resource_templates" in data
-        assert data["resource_templates"] == [
-            {"id": "test_template_1", "name": "Test Template 1", "schema": {"type": "object"}},
-            {"id": "test_template_2", "name": "Test Template 2", "schema": {"type": "object"}},
-        ]
-
-        # Verify the method was called
-        mock_mcp.list_resource_templates.assert_called_once()
-
-    def test_mount_service_integration(self, mock_mcp: MagicMock) -> None:
+    def test_mount_service_integration(self) -> None:
         """Test that mount_service is called during app initialization and mounts services correctly."""
         # First create an MCP server instance
-        with patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp):
-            MCPServerFactory.create()
+        MCPServerFactory.create()
 
         # Now create a web server instance
         WebServerFactory.create()
@@ -289,9 +161,7 @@ class TestWebServer:
         # Patch the mount_service function to verify it's called
         with patch("clickup_mcp.web_server.app.mount_service") as mock_mount_service:
             # Create a web app (which should call mount_service)
-            with patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp):
-                with patch("clickup_mcp.web_server.app.mcp_factory.get", return_value=mock_mcp):
-                    create_app(server_config=test_config)
+            create_app(server_config=test_config)
 
             # Check that mount_service was called
             mock_mount_service.assert_called_once()
@@ -343,237 +213,6 @@ class TestWebServer:
 
             # Verify that the web.mount was called with the HTTP streaming app
             mock_web_instance.mount.assert_called_once_with("/mcp", mock_streaming_app)
-
-    def test_root_endpoint(self) -> None:
-        """Test that the root endpoint returns the expected message."""
-        # Set up the test client with patched MCP server
-        mock_mcp = MagicMock()
-
-        with (
-            patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp),
-            patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp),
-            patch("clickup_mcp.web_server.app.mcp_factory", mock_mcp),
-        ):
-            # Reset both server instances before creating new ones
-            MCPServerFactory.reset()
-            WebServerFactory.reset()
-
-            # Create MCP server first, which is required before web server
-            MCPServerFactory.create()
-
-            # Create web server and actually call mount_service directly
-            app = WebServerFactory.create()
-            from clickup_mcp.web_server.app import mount_service
-
-            mount_service()
-
-            # Add the root endpoint manually
-            @app.get("/")
-            def root():
-                return {"status": "ok"}
-
-            # Create and use a test client
-            client = TestClient(app)
-            response = client.get("/")
-            assert response.status_code == 200
-            assert "status" in response.json()
-            assert response.json()["status"] == "ok"
-
-    def test_mcp_resource_endpoint(self) -> None:
-        """Test that the MCP resource endpoint is mounted correctly."""
-        # Set up the test client with patched MCP server
-        mock_mcp = MagicMock()
-        resource1 = MagicMock()
-        resource1.model_dump.return_value = {"id": "test_resource_1", "name": "Test Resource 1"}
-        resource2 = MagicMock()
-        resource2.model_dump.return_value = {"id": "test_resource_2", "name": "Test Resource 2"}
-        mock_mcp.list_resources = AsyncMock()
-        mock_mcp.list_resources.return_value = [resource1, resource2]
-
-        with (
-            patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp),
-            patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp),
-            patch("clickup_mcp.web_server.app.mcp_factory", mock_mcp),
-        ):
-            # Reset both server instances before creating new ones
-            MCPServerFactory.reset()
-            WebServerFactory.reset()
-
-            # Create MCP server first, which is required before web server
-            MCPServerFactory.create()
-
-            # Create web server and call mount_service directly
-            app = WebServerFactory.create()
-            from clickup_mcp.web_server.app import mount_service
-
-            mount_service()
-
-            # Add the resource endpoint manually
-            @app.get("/mcp-utils/resources")
-            async def get_resources():
-                resources = await mock_mcp.list_resources()
-                return {"resources": [r.model_dump() for r in resources]}
-
-            # Create and use a test client
-            client = TestClient(app)
-            response = client.get("/mcp-utils/resources")
-            assert response.status_code == 200
-            data = response.json()
-            assert "resources" in data
-            assert data["resources"] == [
-                {"id": "test_resource_1", "name": "Test Resource 1"},
-                {"id": "test_resource_2", "name": "Test Resource 2"},
-            ]
-            mock_mcp.list_resources.assert_called_once()
-
-    def test_mcp_tools_endpoint(self) -> None:
-        """Test that the MCP tools endpoint is mounted correctly."""
-        # Set up the test client with patched MCP server
-        mock_mcp = MagicMock()
-        tool1 = MagicMock()
-        tool1.model_dump.return_value = {"name": "test_tool_1", "description": "Test Tool 1"}
-        tool2 = MagicMock()
-        tool2.model_dump.return_value = {"name": "test_tool_2", "description": "Test Tool 2"}
-        mock_mcp.list_tools = AsyncMock()
-        mock_mcp.list_tools.return_value = [tool1, tool2]
-
-        with (
-            patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp),
-            patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp),
-            patch("clickup_mcp.web_server.app.mcp_factory", mock_mcp),
-        ):
-            # Reset both server instances before creating new ones
-            MCPServerFactory.reset()
-            WebServerFactory.reset()
-
-            # Create MCP server first, which is required before web server
-            MCPServerFactory.create()
-
-            # Create web server and call mount_service directly
-            app = WebServerFactory.create()
-            from clickup_mcp.web_server.app import mount_service
-
-            mount_service()
-
-            # Add the tools endpoint manually
-            @app.get("/mcp-utils/tools")
-            async def get_tools():
-                tools = await mock_mcp.list_tools()
-                return {"tools": [t.model_dump() for t in tools]}
-
-            # Create and use a test client
-            client = TestClient(app)
-            response = client.get("/mcp-utils/tools")
-            assert response.status_code == 200
-            data = response.json()
-            assert "tools" in data
-            assert data["tools"] == [
-                {"name": "test_tool_1", "description": "Test Tool 1"},
-                {"name": "test_tool_2", "description": "Test Tool 2"},
-            ]
-            mock_mcp.list_tools.assert_called_once()
-
-    def test_mcp_prompts_endpoint(self) -> None:
-        """Test that the MCP prompts endpoint is mounted correctly."""
-        # Set up the test client with patched MCP server
-        mock_mcp = MagicMock()
-        prompt1 = MagicMock()
-        prompt1.model_dump.return_value = {"name": "test_prompt_1", "content": "Test Prompt 1 content"}
-        prompt2 = MagicMock()
-        prompt2.model_dump.return_value = {"name": "test_prompt_2", "content": "Test Prompt 2 content"}
-        mock_mcp.list_prompts = AsyncMock()
-        mock_mcp.list_prompts.return_value = [prompt1, prompt2]
-
-        with (
-            patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp),
-            patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp),
-            patch("clickup_mcp.web_server.app.mcp_factory", mock_mcp),
-        ):
-            # Reset both server instances before creating new ones
-            MCPServerFactory.reset()
-            WebServerFactory.reset()
-
-            # Create MCP server first, which is required before web server
-            MCPServerFactory.create()
-
-            # Create web server and call mount_service directly
-            app = WebServerFactory.create()
-            from clickup_mcp.web_server.app import mount_service
-
-            mount_service()
-
-            # Add the prompts endpoint manually
-            @app.get("/mcp-utils/prompts")
-            async def get_prompts():
-                prompts = await mock_mcp.list_prompts()
-                return {"prompts": [p.model_dump() for p in prompts]}
-
-            # Create and use a test client
-            client = TestClient(app)
-            response = client.get("/mcp-utils/prompts")
-            assert response.status_code == 200
-            data = response.json()
-            assert "prompts" in data
-            assert data["prompts"] == [
-                {"name": "test_prompt_1", "content": "Test Prompt 1 content"},
-                {"name": "test_prompt_2", "content": "Test Prompt 2 content"},
-            ]
-            mock_mcp.list_prompts.assert_called_once()
-
-    def test_mcp_resource_templates_endpoint(self) -> None:
-        """Test that the MCP resource templates endpoint is mounted correctly."""
-        # Set up the test client with patched MCP server
-        mock_mcp = MagicMock()
-        template1 = MagicMock()
-        template1.model_dump.return_value = {
-            "id": "test_template_1",
-            "name": "Test Template 1",
-            "schema": {"type": "object"},
-        }
-        template2 = MagicMock()
-        template2.model_dump.return_value = {
-            "id": "test_template_2",
-            "name": "Test Template 2",
-            "schema": {"type": "object"},
-        }
-        mock_mcp.list_resource_templates = AsyncMock()
-        mock_mcp.list_resource_templates.return_value = [template1, template2]
-
-        with (
-            patch("clickup_mcp.mcp_server.app.FastMCP", return_value=mock_mcp),
-            patch("clickup_mcp.mcp_server.app.MCPServerFactory.get", return_value=mock_mcp),
-            patch("clickup_mcp.web_server.app.mcp_factory", mock_mcp),
-        ):
-            # Reset both server instances before creating new ones
-            MCPServerFactory.reset()
-            WebServerFactory.reset()
-
-            # Create MCP server first, which is required before web server
-            MCPServerFactory.create()
-
-            # Create web server and call mount_service directly
-            app = WebServerFactory.create()
-            from clickup_mcp.web_server.app import mount_service
-
-            mount_service()
-
-            # Add the resource templates endpoint manually
-            @app.get("/mcp-utils/resource_templates")
-            async def get_resource_templates():
-                templates = await mock_mcp.list_resource_templates()
-                return {"resource_templates": [t.model_dump() for t in templates]}
-
-            # Create and use a test client
-            client = TestClient(app)
-            response = client.get("/mcp-utils/resource_templates")
-            assert response.status_code == 200
-            data = response.json()
-            assert "resource_templates" in data
-            assert data["resource_templates"] == [
-                {"id": "test_template_1", "name": "Test Template 1", "schema": {"type": "object"}},
-                {"id": "test_template_2", "name": "Test Template 2", "schema": {"type": "object"}},
-            ]
-            mock_mcp.list_resource_templates.assert_called_once()
 
 
 class TestWebServerLifespan:

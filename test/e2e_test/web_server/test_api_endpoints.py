@@ -148,54 +148,6 @@ class TestAPIEndpoints:
             assert data["server"] == "ClickUp MCP Server"
 
     @pytest.mark.asyncio
-    async def test_api_tools_endpoint(self, server_fixture: Dict[str, Any]) -> None:
-        """Test that the /mcp-utils/tools endpoint is accessible."""
-        base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
-
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(f"{base_url}/mcp-utils/tools")
-            assert response.status_code == 200
-            data = response.json()
-            assert "tools" in data
-            assert isinstance(data["tools"], list)
-
-    @pytest.mark.asyncio
-    async def test_api_resources_endpoint(self, server_fixture: Dict[str, Any]) -> None:
-        """Test that the /mcp-utils/resources endpoint is accessible."""
-        base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
-
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(f"{base_url}/mcp-utils/resources")
-            assert response.status_code == 200
-            data = response.json()
-            assert "resources" in data
-            assert isinstance(data["resources"], list)
-
-    @pytest.mark.asyncio
-    async def test_api_prompts_endpoint(self, server_fixture: Dict[str, Any]) -> None:
-        """Test that the /mcp-utils/prompts endpoint is accessible."""
-        base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
-
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(f"{base_url}/mcp-utils/prompts")
-            assert response.status_code == 200
-            data = response.json()
-            assert "prompts" in data
-            assert isinstance(data["prompts"], list)
-
-    @pytest.mark.asyncio
-    async def test_api_resource_templates_endpoint(self, server_fixture: Dict[str, Any]) -> None:
-        """Test that the /mcp-utils/resource_templates endpoint is accessible."""
-        base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
-
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(f"{base_url}/mcp-utils/resource_templates")
-            assert response.status_code == 200
-            data = response.json()
-            assert "resource_templates" in data
-            assert isinstance(data["resource_templates"], list)
-
-    @pytest.mark.asyncio
     async def test_mcp_mounted_app(self, server_fixture: Dict[str, Any]) -> None:
         """
         Test that the mounted MCP app is accessible.
@@ -212,41 +164,3 @@ class TestAPIEndpoints:
             # The important thing is that it's not a 404, which would indicate the app isn't mounted
             print(f"MCP mounted app response: {response.status_code} - {response.text}")
             assert response.status_code != 404, "MCP app not properly mounted"
-
-    @pytest.mark.asyncio
-    async def test_no_conflict_between_routes(self, server_fixture: Dict[str, Any]) -> None:
-        """
-        Test that there is no conflict between the explicit API routes and the mounted MCP app.
-
-        This test specifically verifies that the old paths (/mcp/tools, etc.) return 404s,
-        confirming that the API endpoints are only available at /mcp-utils/* paths.
-        """
-        base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
-
-        # These paths should NOT be accessible as they'd conflict with the mounted MCP app
-        conflict_paths = [
-            "/mcp/tools",
-            "/mcp/resources",
-            "/mcp/prompts",
-            "/mcp/resource_templates",
-        ]
-
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            for path in conflict_paths:
-                print(f"Testing potential conflict path: {path}")
-                response = await client.get(f"{base_url}{path}")
-
-                # These should either return 404 (not found) or some other non-200 status
-                # We specifically want to confirm they don't return 200 OK with our API data
-                if response.status_code == 200:
-                    # If status is 200, make sure the response isn't our API response format
-                    try:
-                        data = response.json()
-                        # Check if this looks like our API response
-                        path_part = path.split("/")[-1]  # 'tools', 'resources', etc.
-                        assert path_part not in data, f"Path {path} appears to conflict with API endpoint"
-                    except:
-                        # If it's not JSON, then it's definitely not our API response
-                        pass
-
-                print(f"Path {path} returned status code {response.status_code}")

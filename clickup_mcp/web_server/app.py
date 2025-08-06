@@ -5,7 +5,7 @@ This module provides a FastAPI web server that mounts the MCP server
 for exposing ClickUp functionality through a RESTful API.
 """
 
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +15,7 @@ from clickup_mcp._base import BaseServerFactory
 from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
 from clickup_mcp.mcp_server.app import mcp_factory
 from clickup_mcp.models.cli import MCPTransportType, ServerConfig
+from clickup_mcp.models.dto.health_check import HealthyCheckResponseDto
 from clickup_mcp.utils import load_environment_from_file
 
 _WEB_SERVER_INSTANCE: Optional[FastAPI] = None
@@ -118,59 +119,14 @@ def create_app(
     mount_service(transport=transport)
 
     # Root endpoint for health checks
-    @web.get("/", response_class=JSONResponse)
-    async def root() -> Dict[str, str]:
+    @web.get("/health", response_class=JSONResponse)
+    async def root() -> HealthyCheckResponseDto:
         """
         Root endpoint providing basic health check.
 
         Returns:
             JSON response with server status
         """
-        return {"status": "ok", "server": "ClickUp MCP Server"}
-
-    # Add endpoints for utility functions of the MCP server which be mounted at */mcp*
-    @web.get("/mcp-utils/resources", response_class=JSONResponse)
-    async def list_resources() -> Dict[str, Any]:
-        """
-        List available MCP resources.
-
-        Returns:
-            JSON response containing available MCP resources
-        """
-        resources = await mcp_factory.get().list_resources()
-        return {"resources": [r.model_dump() for r in resources]}
-
-    @web.get("/mcp-utils/tools", response_class=JSONResponse)
-    async def get_tools() -> Dict[str, Any]:
-        """
-        Get available MCP tools.
-
-        Returns:
-            JSON response containing available MCP tools
-        """
-        tools = await mcp_factory.get().list_tools()
-        return {"tools": [t.model_dump() for t in tools]}
-
-    @web.get("/mcp-utils/prompts", response_class=JSONResponse)
-    async def get_prompts() -> Dict[str, Any]:
-        """
-        Get available MCP prompts.
-
-        Returns:
-            JSON response containing available MCP prompts
-        """
-        prompts = await mcp_factory.get().list_prompts()
-        return {"prompts": [t.model_dump() for t in prompts]}
-
-    @web.get("/mcp-utils/resource_templates", response_class=JSONResponse)
-    async def get_resource_templates() -> Dict[str, Any]:
-        """
-        Get available MCP resource templates.
-
-        Returns:
-            JSON response containing available MCP resource templates
-        """
-        resource_templates = await mcp_factory.get().list_resource_templates()
-        return {"resource_templates": [t.model_dump() for t in resource_templates]}
+        return HealthyCheckResponseDto()
 
     return web
