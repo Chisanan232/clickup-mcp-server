@@ -88,7 +88,7 @@ class MCPClientFixtureValue:
     transport: str
 
 
-class MCPClientFixture(metaclass=ABCMeta):
+class MCPClientFixture:
     """
     Base fixture class for MCP client testing.
     
@@ -159,7 +159,20 @@ def wait_for_port(port: int, timeout: int = SERVER_START_TIMEOUT) -> bool:
     return False
 
 
-class BaseMCPServerFunctionTest(MCPClientFixture, ABC):
+@dataclass
+class MCPServerFixtureValue:
+    """
+    Data object returned by the client fixture.
+
+    Attributes:
+        url_suffix: The URL suffix for connecting to the MCP server
+        transport: The transport option for MCP server command line
+    """
+    url_suffix: str
+    transport: str
+
+
+class MCPServerFixture:
     """Base class for MCP server end-to-end tests."""
 
     @pytest.fixture
@@ -187,22 +200,31 @@ class BaseMCPServerFunctionTest(MCPClientFixture, ABC):
         # Clean up
         Path(temp_file_path).unlink(missing_ok=True)
 
-    @pytest.fixture
-    def server_fixture(self, temp_env_file: str, client: MCPClientFixtureValue) -> Generator[Dict[str, Any], None, None]:
+    @pytest.fixture(
+        params=[
+            MCPServerFixtureValue(url_suffix="/sse/sse", transport="sse"),
+            MCPServerFixtureValue(url_suffix="/mcp/mcp", transport="http-streaming"),
+        ],
+        ids=["sse", "streaming-http"],
+    )
+    def server_fixture(self, request: pytest.FixtureRequest, temp_env_file: str) -> Generator[Dict[str, Any], None, None]:
         """
         Start an MCP server in a separate process and shut it down after the test.
         
         Args:
+            request: The pytest fixture request
             temp_env_file: Path to the temporary .env file
-            client: Client fixture value containing transport information
-            
+
         Yields:
             Dictionary containing server details (port, host, process, env_file)
             
         Raises:
             pytest.fail: If the server fails to start or terminates prematurely
         """
+        mcp_server_fixture: MCPServerFixtureValue = request.param
+
         # Find a free port to avoid conflicts
+        port = find_free_port()
         host = "127.0.0.1"
         process = None
 
@@ -213,7 +235,7 @@ class BaseMCPServerFunctionTest(MCPClientFixture, ABC):
                 "-m",
                 "clickup_mcp",
                 "--port",
-                str(_FREE_PORT),
+                str(port),
                 "--host",
                 host,
                 "--log-level",
@@ -221,11 +243,11 @@ class BaseMCPServerFunctionTest(MCPClientFixture, ABC):
                 "--env",
                 temp_env_file,
                 "--transport",
-                client.transport,
+                mcp_server_fixture.transport,
             ]
 
             print(f"[DEBUG] Starting server with command: {' '.join(cmd)}")
-            print(f"[DEBUG] Transport type: {client.transport}")
+            print(f"[DEBUG] Transport type: {mcp_server_fixture.transport}")
 
             # Start the server process with non-blocking I/O
             process = subprocess.Popen(
@@ -272,7 +294,7 @@ class BaseMCPServerFunctionTest(MCPClientFixture, ABC):
                     print(f"[SERVER STDERR] {stderr_data}")
 
             # Provide the server details to the test
-            yield {"port": port, "host": host, "process": process, "env_file": temp_env_file}
+            yield {"port": port, "host": host, "process": process, "env_file": temp_env_file, "url_suffix": mcp_server_fixture.url_suffix, "transport": mcp_server_fixture.transport}
 
         finally:
             # Ensure we always terminate the process
@@ -286,3 +308,7 @@ class BaseMCPServerFunctionTest(MCPClientFixture, ABC):
                         process.wait(timeout=1)
                     except subprocess.TimeoutExpired:
                         pass  # We've tried our best to kill it
+
+
+class BaseMCPServerFunctionTest(ABC):
+    pass
