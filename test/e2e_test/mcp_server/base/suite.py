@@ -18,7 +18,7 @@ import pytest
 from dotenv import load_dotenv
 from mcp import ClientSession
 
-from .base.client import SSEClient, StreamingHTTPClient, EndpointClient
+from test.e2e_test.mcp_server.base.client import SSEClient, StreamingHTTPClient, EndpointClient
 
 # Load any .env file in current directory if present
 load_dotenv()
