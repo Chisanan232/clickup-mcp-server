@@ -118,7 +118,8 @@ class MCPClientFixture(metaclass=ABCMeta):
             MCPClientFixtureValue containing the client and transport information
         """
         cls: MCPClientParameterValue = request.param
-        mcp_server_url = f"http://localhost:{_FREE_PORT}{cls.url_suffix}"
+        port = find_free_port()
+        mcp_server_url = f"http://localhost:{port}{cls.url_suffix}"
         c = cls.client(url=mcp_server_url)
         await c.connect()
         yield MCPClientFixtureValue(client=c, url_suffix=cls.url_suffix, transport=cls.transport)
@@ -202,7 +203,6 @@ class BaseMCPServerFunctionTest(MCPClientFixture, ABC):
             pytest.fail: If the server fails to start or terminates prematurely
         """
         # Find a free port to avoid conflicts
-        port = find_free_port()
         host = "127.0.0.1"
         process = None
 
@@ -213,7 +213,7 @@ class BaseMCPServerFunctionTest(MCPClientFixture, ABC):
                 "-m",
                 "clickup_mcp",
                 "--port",
-                str(port),
+                str(_FREE_PORT),
                 "--host",
                 host,
                 "--log-level",
