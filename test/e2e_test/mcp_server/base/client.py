@@ -51,7 +51,7 @@ class EndpointClient(ABC):
         ...
 
     @abstractmethod
-    async def call_function(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def call_function(self, payload: FunctionPayloadDto) -> Dict[str, Any]:
         """
         Call a function on the MCP server.
         
@@ -96,7 +96,7 @@ class SSEClient(EndpointClient):
         await self.session.__aenter__()
         await self.session.initialize()
 
-    async def call_function(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def call_function(self, payload: FunctionPayloadDto) -> Dict[str, Any]:
         """
         Call a function on the MCP server using the SSE connection.
         
@@ -111,14 +111,11 @@ class SSEClient(EndpointClient):
         """
         if not self.session:
             raise ValueError("Client not connected. Call connect() first.")
-            
-        # Validate payload using DTO
-        validated_payload = FunctionPayloadDto(**payload)
-        
+
         # Call the tool via MCP session
         result = await self.session.call_tool(
-            name=validated_payload.function,
-            **validated_payload.arguments
+            name=payload.function,
+            **payload.arguments
         )
         
         # Convert response to dict
@@ -164,7 +161,7 @@ class StreamingHTTPClient(EndpointClient):
         await self.session.__aenter__()
         await self.session.initialize()
 
-    async def call_function(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def call_function(self, payload: FunctionPayloadDto) -> Dict[str, Any]:
         """
         Call a function on the MCP server using the HTTP streaming connection.
         
@@ -179,14 +176,11 @@ class StreamingHTTPClient(EndpointClient):
         """
         if not self.session:
             raise ValueError("Client not connected. Call connect() first.")
-            
-        # Validate payload using DTO
-        validated_payload = FunctionPayloadDto(**payload)
-        
+
         # Call the tool via MCP session
         result = await self.session.call_tool(
-            name=validated_payload.function,
-            **validated_payload.arguments
+            name=payload.function,
+            **payload.arguments
         )
         
         # Convert response to dict
