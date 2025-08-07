@@ -10,31 +10,66 @@ import asyncio
 from contextlib import closing, asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator
-from abc import abstractmethod, ABCMeta
+from abc import abstractmethod, ABCMeta, ABC
 from pathlib import Path
 from typing import Type, AsyncGenerator, Generator, Dict, Any, Sequence
 
 import pytest
 from dotenv import load_dotenv
 from mcp import ClientSession
+from dataclasses import dataclass
 
-from test.e2e_test.mcp_server.base.client import SSEClient, StreamingHTTPClient, EndpointClient
+from .client import SSEClient, StreamingHTTPClient, EndpointClient
 
 # Load any .env file in current directory if present
 load_dotenv()
 
 
-class MCPClientFixture(metaclass=ABCMeta):
-    @pytest.fixture
-    def mcp_server_url(self, *args, **kwargs) -> str:
-        raise NotImplementedError
+@dataclass
+class MCPClientParameterValue:
+    """
+    Data object for fixture.
 
-    @pytest.fixture(params=[SSEClient, StreamingHTTPClient], ids=["sse", "streaming-http"])
-    async def client(self, request: pytest.FixtureRequest, mcp_server_url: str) -> AsyncGenerator[EndpointClient, None]:
-        cls: Type[EndpointClient] = request.param
-        c = cls(url=mcp_server_url)
+    Attributes:
+        client: The object of the client to test
+        url_suffix: The url suffix for connecting to the MCP server
+        transport: For the MCP server command line option *--transport*
+    """
+    client: Type[EndpointClient]
+    url_suffix: str
+    transport: str
+
+
+@dataclass
+class MCPClientFixtureValue:
+    """
+    Data object for fixture.
+
+    Attributes:
+        client: The object of the client to test
+        url_suffix: The url suffix for connecting to the MCP server
+        transport: For the MCP server command line option *--transport*
+    """
+    client: EndpointClient
+    url_suffix: str
+    transport: str
+
+
+class MCPClientFixture(metaclass=ABCMeta):
+
+    @pytest.fixture(
+        params=[
+            MCPClientParameterValue(client=SSEClient, url_suffix="/sse/sse", transport="sse"),
+            MCPClientParameterValue(client=StreamingHTTPClient, url_suffix="/mcp/mcp", transport="http-streaming"),
+        ],
+        ids=["sse", "streaming-http"],
+    )
+    async def client(self, request: pytest.FixtureRequest) -> AsyncGenerator[MCPClientFixtureValue, None]:
+        cls: MCPClientParameterValue = request.param
+        mcp_server_url = f"http://localhost:{_FREE_PORT}{cls.url_suffix}"
+        c = cls.client(url=mcp_server_url)
         await c.connect()
-        yield c
+        yield MCPClientFixtureValue(client=c, url_suffix=cls.url_suffix, transport=cls.transport)
         await c.close()
 
 
@@ -50,13 +85,17 @@ ROUTES_REGISTRATION_TIME = 2
 # Timeout for operations (seconds)
 OPERATION_TIMEOUT = 5.0
 
+_FREE_PORT: int | None = None
+
 
 def find_free_port() -> int:
     """Find an available port on the local machine."""
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
         s.bind(("", 0))
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        return s.getsockname()[1]
+        global _FREE_PORT
+        _FREE_PORT = s.getsockname()[1]
+        return _FREE_PORT
 
 
 def is_port_in_use(port: int) -> bool:
@@ -75,7 +114,7 @@ def wait_for_port(port: int, timeout: int = SERVER_START_TIMEOUT) -> bool:
     return False
 
 
-class BaseMCPServerFunctionTest(metaclass=ABCMeta):
+class BaseMCPServerFunctionTest(MCPClientFixture, ABC):
     """Base class for MCP server end-to-end tests."""
 
     @pytest.fixture
@@ -97,7 +136,7 @@ class BaseMCPServerFunctionTest(metaclass=ABCMeta):
         Path(temp_file_path).unlink(missing_ok=True)
 
     @pytest.fixture
-    def server_fixture(self, temp_env_file: str) -> Generator[Dict[str, Any], None, None]:
+    def server_fixture(self, temp_env_file: str, client: MCPClientFixtureValue) -> Generator[Dict[str, Any], None, None]:
         """Start an MCP server in a separate process and shut it down after the test."""
         # Find a free port to avoid conflicts
         port = find_free_port()
@@ -119,11 +158,11 @@ class BaseMCPServerFunctionTest(metaclass=ABCMeta):
                 "--env",
                 temp_env_file,
                 "--transport",
-                self.get_transport_option(),
+                client.transport,
             ]
 
             print(f"[DEBUG] Starting server with command: {' '.join(cmd)}")
-            print(f"[DEBUG] Transport type: {self.get_transport_option()}")
+            print(f"[DEBUG] Transport type: {client.transport}")
 
             # Start the server process with non-blocking I/O
             process = subprocess.Popen(
@@ -184,17 +223,3 @@ class BaseMCPServerFunctionTest(metaclass=ABCMeta):
                         process.wait(timeout=1)
                     except subprocess.TimeoutExpired:
                         pass  # We've tried our best to kill it
-
-    @abstractmethod
-    def get_transport_option(self) -> str:
-        """
-        Get the transport option to use for this test.
-
-        This method should be overridden by subclasses to specify which
-        transport to use (e.g. 'http-streaming' or 'sse').
-        """
-        raise NotImplementedError("Subclasses must implement get_transport_option")
-
-    @pytest.fixture
-    def mcp_server_url(self, server_fixture: Dict[str, Any]) -> str:
-        return f"http://{server_fixture['host']}:{server_fixture['port']}"
