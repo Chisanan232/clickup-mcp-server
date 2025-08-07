@@ -27,6 +27,36 @@ from .client import SSEClient, StreamingHTTPClient, EndpointClient
 # Load any .env file in current directory if present
 load_dotenv()
 
+# Path to the project root
+PROJECT_ROOT: Path = Path(__file__).parent.parent.parent.parent
+
+# Maximum time to wait for server to start (seconds)
+SERVER_START_TIMEOUT: int = 3
+
+# Additional time to wait for routes to be registered (seconds)
+ROUTES_REGISTRATION_TIME: float = 2.0
+
+# Timeout for operations (seconds)
+OPERATION_TIMEOUT: float = 5.0
+
+# Free port detected for server use
+_FREE_PORT: int | None = None
+
+
+def find_free_port() -> int:
+    """
+    Find an available port on the local machine.
+
+    Returns:
+        An available port number
+    """
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(("", 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        global _FREE_PORT
+        _FREE_PORT = s.getsockname()[1]
+        return _FREE_PORT
+
 
 @dataclass
 class MCPClientParameterValue:
@@ -93,37 +123,6 @@ class MCPClientFixture(metaclass=ABCMeta):
         await c.connect()
         yield MCPClientFixtureValue(client=c, url_suffix=cls.url_suffix, transport=cls.transport)
         await c.close()
-
-
-# Path to the project root
-PROJECT_ROOT: Path = Path(__file__).parent.parent.parent.parent
-
-# Maximum time to wait for server to start (seconds)
-SERVER_START_TIMEOUT: int = 3
-
-# Additional time to wait for routes to be registered (seconds)
-ROUTES_REGISTRATION_TIME: float = 2.0
-
-# Timeout for operations (seconds)
-OPERATION_TIMEOUT: float = 5.0
-
-# Free port detected for server use
-_FREE_PORT: int | None = None
-
-
-def find_free_port() -> int:
-    """
-    Find an available port on the local machine.
-    
-    Returns:
-        An available port number
-    """
-    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-        s.bind(("", 0))
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        global _FREE_PORT
-        _FREE_PORT = s.getsockname()[1]
-        return _FREE_PORT
 
 
 def is_port_in_use(port: int) -> bool:
