@@ -39,7 +39,7 @@ ROUTES_REGISTRATION_TIME: float = 2.0
 # Timeout for operations (seconds)
 OPERATION_TIMEOUT: float = 5.0
 
-# Free port detected for server use
+# Initialize free port variable
 _FREE_PORT: int | None = None
 
 
@@ -53,9 +53,7 @@ def find_free_port() -> int:
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
         s.bind(("", 0))
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        global _FREE_PORT
-        _FREE_PORT = s.getsockname()[1]
-        return _FREE_PORT
+        return s.getsockname()[1]
 
 
 def is_port_in_use(port: int) -> bool:
@@ -268,7 +266,9 @@ class MCPClientFixture:
         """
         client: Type[EndpointClient] = server_fixture["client"]
         url_suffix: str = server_fixture["url_suffix"]
-        mcp_server_url = f"http://localhost:{_FREE_PORT}{url_suffix}"
+        mcp_server_url = f"http://localhost:{server_fixture['port']}{url_suffix}"
+        
+        # Create but don't connect client yet
         c = client(url=mcp_server_url)
         await c.connect()
         yield c
