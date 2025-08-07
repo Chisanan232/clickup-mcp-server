@@ -51,7 +51,7 @@ class EndpointClient(ABC):
         ...
 
     @abstractmethod
-    async def call_function(self, payload: FunctionPayloadDto) -> Dict[str, Any]:
+    async def call_function(self, payload: FunctionPayloadDto) -> Any:
         """
         Call a function on the MCP server.
         
@@ -59,7 +59,7 @@ class EndpointClient(ABC):
             payload: Dictionary containing 'function' name and 'arguments'
             
         Returns:
-            Dictionary containing the function result
+            Any: The function result
         """
         ...
 
@@ -83,50 +83,51 @@ class SSEClient(EndpointClient):
     
     async def connect(self) -> None:
         """
-        Connect to the MCP endpoint using SSE.
-        
-        Sets up the read and write streams and initializes the session.
+        Connect to the MCP server using SSE transport.
         """
         # Create SSE client and extract read/write streams
         self._cm = sse_client(self.url)
         self.read_stream, self.write_stream = await self._cm.__aenter__()
         
-        # Create and initialize MCP session
+        # Create session using the streams
         self.session = ClientSession(self.read_stream, self.write_stream)
         await self.session.__aenter__()
         await self.session.initialize()
 
-    async def call_function(self, payload: FunctionPayloadDto) -> Dict[str, Any]:
+    async def call_function(self, payload: FunctionPayloadDto) -> Any:
         """
-        Call a function on the MCP server using the SSE connection.
-        
+        Call a function on the MCP server via SSE transport.
+
         Args:
-            payload: Dictionary with 'function' name and 'arguments'
-            
+            payload: The function payload containing function name and arguments
+
         Returns:
-            Dictionary containing the function result
-        
-        Raises:
-            ValueError: If client is not connected
+            Any: The function result
         """
         if not self.session:
-            raise ValueError("Client not connected. Call connect() first.")
+            raise ValueError("Client not connected")
 
-        # Call the tool via MCP session
+        # Call the function using the session
         result = await self.session.call_tool(
             name=payload.function,
             **payload.arguments
         )
         
-        # Convert response to dict
-        return result.model_dump()
+        # The result is already a structured object, extract it if needed
+        if hasattr(result, 'model_dump'):
+            result_dict = result.model_dump()
+            # Check if response has the new structured format
+            if isinstance(result_dict, dict) and 'structuredContent' in result_dict and 'result' in result_dict['structuredContent']:
+                return result_dict['structuredContent']['result']
+            return result_dict
+        
+        return result
 
     async def close(self) -> None:
         """
         Close the SSE connection and clean up resources.
         """
         if self.session:
-            await self.session.close()
             await self.session.__aexit__(None, None, None)
             
         if hasattr(self, '_cm'):
@@ -148,50 +149,51 @@ class StreamingHTTPClient(EndpointClient):
     
     async def connect(self) -> None:
         """
-        Connect to the MCP endpoint using HTTP streaming.
-        
-        Sets up the read and write streams and initializes the session.
+        Connect to the MCP server using HTTP streaming transport.
         """
         # Create HTTP streaming client and extract read/write streams
         self._cm = streamablehttp_client(self.url)
         self.read_stream, self.write_stream, self._close_fn = await self._cm.__aenter__()
         
-        # Create and initialize MCP session
+        # Create session using the streams
         self.session = ClientSession(self.read_stream, self.write_stream)
         await self.session.__aenter__()
         await self.session.initialize()
 
-    async def call_function(self, payload: FunctionPayloadDto) -> Dict[str, Any]:
+    async def call_function(self, payload: FunctionPayloadDto) -> Any:
         """
-        Call a function on the MCP server using the HTTP streaming connection.
-        
+        Call a function on the MCP server via HTTP streaming transport.
+
         Args:
-            payload: Dictionary with 'function' name and 'arguments'
-            
+            payload: The function payload containing function name and arguments
+
         Returns:
-            Dictionary containing the function result
-            
-        Raises:
-            ValueError: If client is not connected
+            Any: The function result
         """
         if not self.session:
-            raise ValueError("Client not connected. Call connect() first.")
+            raise ValueError("Client not connected")
 
-        # Call the tool via MCP session
+        # Call the function using the session
         result = await self.session.call_tool(
             name=payload.function,
             **payload.arguments
         )
         
-        # Convert response to dict
-        return result.model_dump()
+        # The result is already a structured object, extract it if needed
+        if hasattr(result, 'model_dump'):
+            result_dict = result.model_dump()
+            # Check if response has the new structured format
+            if isinstance(result_dict, dict) and 'structuredContent' in result_dict and 'result' in result_dict['structuredContent']:
+                return result_dict['structuredContent']['result']
+            return result_dict
+        
+        return result
 
     async def close(self) -> None:
         """
         Close the HTTP streaming connection and clean up resources.
         """
         if self.session:
-            await self.session.close()
             await self.session.__aexit__(None, None, None)
             
         # Call the explicit close function if available
