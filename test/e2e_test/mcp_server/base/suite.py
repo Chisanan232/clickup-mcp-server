@@ -1,3 +1,10 @@
+"""
+Test suite base classes for MCP server end-to-end tests.
+
+This module provides the foundation for running end-to-end tests against
+MCP server endpoints with different transport types.
+"""
+
 import os
 import select
 import subprocess
@@ -5,19 +12,15 @@ import sys
 import tempfile
 import time
 import socket
-import time
-import asyncio
-from contextlib import closing, asynccontextmanager
+from contextlib import closing
+from dataclasses import dataclass
 from pathlib import Path
-from typing import AsyncGenerator
-from abc import abstractmethod, ABCMeta, ABC
-from pathlib import Path
-from typing import Type, AsyncGenerator, Generator, Dict, Any, Sequence
+from typing import AsyncGenerator, Dict, Generator, Any, Sequence, Type, Optional, cast
 
 import pytest
+from abc import ABCMeta, ABC
 from dotenv import load_dotenv
 from mcp import ClientSession
-from dataclasses import dataclass
 
 from .client import SSEClient, StreamingHTTPClient, EndpointClient
 
@@ -28,12 +31,12 @@ load_dotenv()
 @dataclass
 class MCPClientParameterValue:
     """
-    Data object for fixture.
+    Data object for fixture parameters.
 
     Attributes:
-        client: The object of the client to test
-        url_suffix: The url suffix for connecting to the MCP server
-        transport: For the MCP server command line option *--transport*
+        client: The client class to instantiate for testing
+        url_suffix: The URL suffix for connecting to the MCP server
+        transport: The transport option for MCP server command line
     """
     client: Type[EndpointClient]
     url_suffix: str
@@ -43,12 +46,12 @@ class MCPClientParameterValue:
 @dataclass
 class MCPClientFixtureValue:
     """
-    Data object for fixture.
+    Data object returned by the client fixture.
 
     Attributes:
-        client: The object of the client to test
-        url_suffix: The url suffix for connecting to the MCP server
-        transport: For the MCP server command line option *--transport*
+        client: The instantiated client object for testing
+        url_suffix: The URL suffix for connecting to the MCP server
+        transport: The transport option for MCP server command line
     """
     client: EndpointClient
     url_suffix: str
@@ -56,6 +59,12 @@ class MCPClientFixtureValue:
 
 
 class MCPClientFixture(metaclass=ABCMeta):
+    """
+    Base fixture class for MCP client testing.
+    
+    This class provides a client fixture that can be parameterized to test
+    with different transport types (SSE and HTTP streaming).
+    """
 
     @pytest.fixture(
         params=[
@@ -65,6 +74,19 @@ class MCPClientFixture(metaclass=ABCMeta):
         ids=["sse", "streaming-http"],
     )
     async def client(self, request: pytest.FixtureRequest) -> AsyncGenerator[MCPClientFixtureValue, None]:
+        """
+        Provide a client instance for MCP server testing.
+        
+        This fixture creates an instance of either SSEClient or StreamingHTTPClient,
+        connects it to the MCP server, and yields a fixture value containing the client
+        and its transport information.
+        
+        Args:
+            request: The pytest fixture request
+            
+        Yields:
+            MCPClientFixtureValue containing the client and transport information
+        """
         cls: MCPClientParameterValue = request.param
         mcp_server_url = f"http://localhost:{_FREE_PORT}{cls.url_suffix}"
         c = cls.client(url=mcp_server_url)
@@ -74,22 +96,28 @@ class MCPClientFixture(metaclass=ABCMeta):
 
 
 # Path to the project root
-PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+PROJECT_ROOT: Path = Path(__file__).parent.parent.parent.parent
 
 # Maximum time to wait for server to start (seconds)
-SERVER_START_TIMEOUT = 3
+SERVER_START_TIMEOUT: int = 3
 
 # Additional time to wait for routes to be registered (seconds)
-ROUTES_REGISTRATION_TIME = 2
+ROUTES_REGISTRATION_TIME: float = 2.0
 
 # Timeout for operations (seconds)
-OPERATION_TIMEOUT = 5.0
+OPERATION_TIMEOUT: float = 5.0
 
+# Free port detected for server use
 _FREE_PORT: int | None = None
 
 
 def find_free_port() -> int:
-    """Find an available port on the local machine."""
+    """
+    Find an available port on the local machine.
+    
+    Returns:
+        An available port number
+    """
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
         s.bind(("", 0))
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -99,13 +127,30 @@ def find_free_port() -> int:
 
 
 def is_port_in_use(port: int) -> bool:
-    """Check if a port is in use."""
+    """
+    Check if a port is in use.
+    
+    Args:
+        port: The port number to check
+        
+    Returns:
+        True if the port is in use, False otherwise
+    """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(("localhost", port)) == 0
 
 
 def wait_for_port(port: int, timeout: int = SERVER_START_TIMEOUT) -> bool:
-    """Wait for a port to become available."""
+    """
+    Wait for a port to become available.
+    
+    Args:
+        port: The port number to wait for
+        timeout: Maximum time to wait in seconds
+        
+    Returns:
+        True if the port became available, False if timed out
+    """
     start_time = time.time()
     while time.time() - start_time < timeout:
         if is_port_in_use(port):
@@ -119,7 +164,14 @@ class BaseMCPServerFunctionTest(MCPClientFixture, ABC):
 
     @pytest.fixture
     def temp_env_file(self) -> Generator[str, None, None]:
-        """Create a temporary .env file with test API token."""
+        """
+        Create a temporary .env file with test API token.
+        
+        Yields:
+            Path to the temporary .env file
+            
+        Skips the test if the CLICKUP_API_TOKEN environment variable is not set.
+        """
         # Get API token from environment
         api_token = os.environ.get("CLICKUP_API_TOKEN")
         if not api_token:
@@ -137,7 +189,19 @@ class BaseMCPServerFunctionTest(MCPClientFixture, ABC):
 
     @pytest.fixture
     def server_fixture(self, temp_env_file: str, client: MCPClientFixtureValue) -> Generator[Dict[str, Any], None, None]:
-        """Start an MCP server in a separate process and shut it down after the test."""
+        """
+        Start an MCP server in a separate process and shut it down after the test.
+        
+        Args:
+            temp_env_file: Path to the temporary .env file
+            client: Client fixture value containing transport information
+            
+        Yields:
+            Dictionary containing server details (port, host, process, env_file)
+            
+        Raises:
+            pytest.fail: If the server fails to start or terminates prematurely
+        """
         # Find a free port to avoid conflicts
         port = find_free_port()
         host = "127.0.0.1"

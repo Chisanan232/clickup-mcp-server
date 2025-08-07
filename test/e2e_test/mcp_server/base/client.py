@@ -6,12 +6,14 @@ communication with the MCP server endpoints.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Tuple, AsyncIterator
+from typing import Any, Dict, Optional, Tuple, AsyncIterator, Protocol, TypeVar
+from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 
 import aiohttp
 from mcp import ClientSession
 from mcp.client.sse import sse_client
-from mcp.client.streamable_http import streamablehttp_client
+from mcp.client.streamable_http import streamablehttp_client, GetSessionIdCallback
+from mcp.shared.message import ClientMessageMetadata, SessionMessage
 
 from .dto import FunctionPayloadDto, FunctionResponseDto
 
@@ -25,18 +27,18 @@ class EndpointClient(ABC):
     MCP endpoints.
     """
 
-    def __init__(self, url: str):
+    def __init__(self, url: str) -> None:
         """
         Initialize the client with the endpoint URL.
         
         Args:
             url: The URL of the MCP endpoint
         """
-        self.url = url
-        self.read_stream = None
-        self.write_stream = None
-        self.session = None
-        self._close_fn = None
+        self.url: str = url
+        self.read_stream: MemoryObjectReceiveStream[SessionMessage | Exception] | None = None
+        self.write_stream: MemoryObjectSendStream[SessionMessage] | None = None
+        self.session: ClientSession | None = None
+        self._close_fn: GetSessionIdCallback | None = None
 
     @abstractmethod
     async def connect(self) -> None:
