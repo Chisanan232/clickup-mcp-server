@@ -58,74 +58,6 @@ def find_free_port() -> int:
         return _FREE_PORT
 
 
-@dataclass
-class MCPClientParameterValue:
-    """
-    Data object for fixture parameters.
-
-    Attributes:
-        client: The client class to instantiate for testing
-        url_suffix: The URL suffix for connecting to the MCP server
-        transport: The transport option for MCP server command line
-    """
-    client: Type[EndpointClient]
-    url_suffix: str
-    transport: str
-
-
-@dataclass
-class MCPClientFixtureValue:
-    """
-    Data object returned by the client fixture.
-
-    Attributes:
-        client: The instantiated client object for testing
-        url_suffix: The URL suffix for connecting to the MCP server
-        transport: The transport option for MCP server command line
-    """
-    client: EndpointClient
-    url_suffix: str
-    transport: str
-
-
-class MCPClientFixture:
-    """
-    Base fixture class for MCP client testing.
-    
-    This class provides a client fixture that can be parameterized to test
-    with different transport types (SSE and HTTP streaming).
-    """
-
-    @pytest.fixture(
-        params=[
-            MCPClientParameterValue(client=SSEClient, url_suffix="/sse/sse", transport="sse"),
-            MCPClientParameterValue(client=StreamingHTTPClient, url_suffix="/mcp/mcp", transport="http-streaming"),
-        ],
-        ids=["sse", "streaming-http"],
-    )
-    async def client(self, request: pytest.FixtureRequest) -> AsyncGenerator[MCPClientFixtureValue, None]:
-        """
-        Provide a client instance for MCP server testing.
-        
-        This fixture creates an instance of either SSEClient or StreamingHTTPClient,
-        connects it to the MCP server, and yields a fixture value containing the client
-        and its transport information.
-        
-        Args:
-            request: The pytest fixture request
-            
-        Yields:
-            MCPClientFixtureValue containing the client and transport information
-        """
-        cls: MCPClientParameterValue = request.param
-        port = find_free_port()
-        mcp_server_url = f"http://localhost:{port}{cls.url_suffix}"
-        c = cls.client(url=mcp_server_url)
-        await c.connect()
-        yield MCPClientFixtureValue(client=c, url_suffix=cls.url_suffix, transport=cls.transport)
-        await c.close()
-
-
 def is_port_in_use(port: int) -> bool:
     """
     Check if a port is in use.
@@ -168,6 +100,7 @@ class MCPServerFixtureValue:
         url_suffix: The URL suffix for connecting to the MCP server
         transport: The transport option for MCP server command line
     """
+    client: Type[EndpointClient]
     url_suffix: str
     transport: str
 
@@ -202,8 +135,8 @@ class MCPServerFixture:
 
     @pytest.fixture(
         params=[
-            MCPServerFixtureValue(url_suffix="/sse/sse", transport="sse"),
-            MCPServerFixtureValue(url_suffix="/mcp/mcp", transport="http-streaming"),
+            MCPServerFixtureValue(client=SSEClient, url_suffix="/sse/sse", transport="sse"),
+            MCPServerFixtureValue(client=StreamingHTTPClient, url_suffix="/mcp/mcp", transport="http-streaming"),
         ],
         ids=["sse", "streaming-http"],
     )
@@ -294,7 +227,7 @@ class MCPServerFixture:
                     print(f"[SERVER STDERR] {stderr_data}")
 
             # Provide the server details to the test
-            yield {"port": port, "host": host, "process": process, "env_file": temp_env_file, "url_suffix": mcp_server_fixture.url_suffix, "transport": mcp_server_fixture.transport}
+            yield {"port": port, "host": host, "process": process, "env_file": temp_env_file, "client": mcp_server_fixture.client, "url_suffix": mcp_server_fixture.url_suffix, "transport": mcp_server_fixture.transport}
 
         finally:
             # Ensure we always terminate the process
@@ -310,5 +243,37 @@ class MCPServerFixture:
                         pass  # We've tried our best to kill it
 
 
-class BaseMCPServerFunctionTest(ABC):
+class MCPClientFixture:
+    """
+    Base fixture class for MCP client testing.
+
+    This class provides a client fixture that can be parameterized to test
+    with different transport types (SSE and HTTP streaming).
+    """
+
+    @pytest.fixture
+    async def client(self, server_fixture: Dict[str, Any]) -> AsyncGenerator[EndpointClient, None]:
+        """
+        Provide a client instance for MCP server testing.
+
+        This fixture creates an instance of either SSEClient or StreamingHTTPClient,
+        connects it to the MCP server, and yields a fixture value containing the client
+        and its transport information.
+
+        Args:
+            server_fixture: The pytest fixture request
+
+        Yields:
+            EndpointClient containing the client and transport information
+        """
+        client: Type[EndpointClient] = server_fixture["client"]
+        url_suffix: str = server_fixture["url_suffix"]
+        mcp_server_url = f"http://localhost:{_FREE_PORT}{url_suffix}"
+        c = client(url=mcp_server_url)
+        await c.connect()
+        yield c
+        await c.close()
+
+
+class BaseMCPServerFunctionTest(MCPServerFixture, MCPClientFixture, ABC):
     pass
