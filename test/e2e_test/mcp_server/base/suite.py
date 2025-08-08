@@ -90,7 +90,7 @@ def wait_for_port(port: int, timeout: int = SERVER_START_TIMEOUT) -> bool:
 
 
 @dataclass
-class MCPServerFixtureValue:
+class MCPServerFixtureParameters:
     """
     Data object returned by the client fixture.
 
@@ -134,8 +134,8 @@ class MCPServerFixture:
 
     @pytest.fixture(
         params=[
-            MCPServerFixtureValue(client=SSEClient, url_suffix="/sse/sse", transport="sse"),
-            MCPServerFixtureValue(client=StreamingHTTPClient, url_suffix="/mcp/mcp", transport="http-streaming"),
+            MCPServerFixtureParameters(client=SSEClient, url_suffix="/sse/sse", transport="sse"),
+            MCPServerFixtureParameters(client=StreamingHTTPClient, url_suffix="/mcp/mcp", transport="http-streaming"),
         ],
         ids=["sse", "streaming-http"],
     )
@@ -155,7 +155,7 @@ class MCPServerFixture:
         Raises:
             pytest.fail: If the server fails to start or terminates prematurely
         """
-        mcp_server_fixture: MCPServerFixtureValue = request.param
+        mcp_server_fixture: MCPServerFixtureParameters = request.param
 
         # Find a free port to avoid conflicts
         port = find_free_port()
