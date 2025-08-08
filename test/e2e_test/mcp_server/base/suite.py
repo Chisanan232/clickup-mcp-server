@@ -20,6 +20,7 @@ from typing import Any, AsyncGenerator, Dict, Generator, Sequence, Type
 
 import pytest
 from dotenv import load_dotenv
+from mcp import ClientSession
 
 from .client import EndpointClient, SSEClient, StreamingHTTPClient
 
@@ -286,4 +287,9 @@ class MCPClientFixture:
 
 
 class BaseMCPServerFunctionTest(MCPServerFixture, MCPClientFixture, ABC):
-    pass
+
+    @pytest.fixture(scope="class")
+    def mcp_session(self, client: EndpointClient) -> ClientSession:
+        assert hasattr(client, "session")
+        session: ClientSession = getattr(client, "session")
+        return session

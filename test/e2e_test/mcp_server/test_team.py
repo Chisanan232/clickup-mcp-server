@@ -8,6 +8,7 @@ MCP server instance using both HTTP streaming and SSE transports.
 import asyncio
 
 import pytest
+from mcp import ClientSession
 
 from .base.client import EndpointClient
 from .base.dto import FunctionPayloadDto
@@ -18,10 +19,10 @@ class TestClickUpTeam(BaseMCPServerFunctionTest):
     """Base test suite for end-to-end tests for MCP functions related to teams."""
 
     @pytest.mark.asyncio
-    async def test_get_authorized_teams_in_tools(self, client: EndpointClient) -> None:
+    async def test_functions_in_tools(self, mcp_session: ClientSession) -> None:
         """Test successful retrieval of authorized teams."""
         # Call the MCP function with real server connection with timeout
-        result = await asyncio.wait_for(client.session.list_tools(), timeout=OPERATION_TIMEOUT)
+        result = await asyncio.wait_for(mcp_session.list_tools(), timeout=OPERATION_TIMEOUT)
         tools = [r.name for r in result.tools]
         assert "get_authorized_teams" in tools
 
