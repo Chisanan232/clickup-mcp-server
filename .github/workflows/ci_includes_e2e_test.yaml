@@ -5,6 +5,26 @@ on:
   schedule:
     - cron: '33 19 * * 2'
   workflow_dispatch:        # Manually trigger（optional）
+  pull_request:
+    branches:
+      - "*e2e*"
+    paths:
+#     For GitHub Action
+      - ".github/workflows/ci_includes_e2e_test.yaml"
+      - ".github/workflows/rw_build_and_test.yaml"
+      - ".github/workflows/rw_uv_run_test.yaml"
+      - ".github/workflows/rw_run_all_test_and_record.yaml"
+      - ".github/workflows/rw_uv_run_test_with_multi_py_versions.yaml"
+#     For test code
+      - "test/e2e_test/**/*.py"
+#     For configurations for test or CI
+      - ".coveragerc"
+      - "codecov.yml"
+      - "pytest.ini"
+      - "sonar-project.properties"
+#     For Python project configuration
+      - "pyproject.toml"
+      - "uv.lock"
 
 jobs:
   build-and-test_all:
