@@ -80,6 +80,8 @@ class TestAPIEndpoints:
             "debug",
             "--env",
             temp_env_file,
+            "--transport",
+            "http-streaming",
         ]
 
         # Start the server process
@@ -141,7 +143,7 @@ class TestAPIEndpoints:
         base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
 
         async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(f"{base_url}/")
+            response = await client.get(f"{base_url}/health")
             assert response.status_code == 200
             data = response.json()
             assert data["status"] == "ok"
