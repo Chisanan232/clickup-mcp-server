@@ -6,8 +6,8 @@ on:
   push:
     branches:
       - "master"
-      - "!*e2e"
-      - "!e2e*"
+      - "!**e2e"
+      - "!e2e**"
     paths:
 #     For GitHub Action
       - ".github/workflows/ci.yaml"

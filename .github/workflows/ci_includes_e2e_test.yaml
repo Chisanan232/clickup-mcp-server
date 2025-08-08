@@ -7,9 +7,8 @@ on:
   workflow_dispatch:        # Manually trigger（optional）
   push:
     branches:
-      - "develop/src-code_e2e"
-      - "*e2e"
-      - "e2e*"
+      - "**e2e"
+      - "e2e**"
     paths:
 #     For GitHub Action
       - ".github/workflows/ci_includes_e2e_test.yaml"
