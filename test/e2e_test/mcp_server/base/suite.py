@@ -7,22 +7,21 @@ MCP server endpoints with different transport types.
 
 import os
 import select
+import socket
 import subprocess
 import sys
 import tempfile
 import time
-import socket
+from abc import ABC
 from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import AsyncGenerator, Dict, Generator, Any, Sequence, Type, Optional, cast
+from typing import Any, AsyncGenerator, Dict, Generator, Sequence, Type
 
 import pytest
-from abc import ABCMeta, ABC
 from dotenv import load_dotenv
-from mcp import ClientSession
 
-from .client import SSEClient, StreamingHTTPClient, EndpointClient
+from .client import EndpointClient, SSEClient, StreamingHTTPClient
 
 # Load any .env file in current directory if present
 load_dotenv()
@@ -59,10 +58,10 @@ def find_free_port() -> int:
 def is_port_in_use(port: int) -> bool:
     """
     Check if a port is in use.
-    
+
     Args:
         port: The port number to check
-        
+
     Returns:
         True if the port is in use, False otherwise
     """
@@ -73,11 +72,11 @@ def is_port_in_use(port: int) -> bool:
 def wait_for_port(port: int, timeout: int = SERVER_START_TIMEOUT) -> bool:
     """
     Wait for a port to become available.
-    
+
     Args:
         port: The port number to wait for
         timeout: Maximum time to wait in seconds
-        
+
     Returns:
         True if the port became available, False if timed out
     """
@@ -98,6 +97,7 @@ class MCPServerFixtureValue:
         url_suffix: The URL suffix for connecting to the MCP server
         transport: The transport option for MCP server command line
     """
+
     client: Type[EndpointClient]
     url_suffix: str
     transport: str
@@ -110,10 +110,10 @@ class MCPServerFixture:
     def temp_env_file(self) -> Generator[str, None, None]:
         """
         Create a temporary .env file with test API token.
-        
+
         Yields:
             Path to the temporary .env file
-            
+
         Skips the test if the CLICKUP_API_TOKEN environment variable is not set.
         """
         # Get API token from environment
@@ -138,17 +138,19 @@ class MCPServerFixture:
         ],
         ids=["sse", "streaming-http"],
     )
-    def server_fixture(self, request: pytest.FixtureRequest, temp_env_file: str) -> Generator[Dict[str, Any], None, None]:
+    def server_fixture(
+        self, request: pytest.FixtureRequest, temp_env_file: str
+    ) -> Generator[Dict[str, Any], None, None]:
         """
         Start an MCP server in a separate process and shut it down after the test.
-        
+
         Args:
             request: The pytest fixture request
             temp_env_file: Path to the temporary .env file
 
         Yields:
             Dictionary containing server details (port, host, process, env_file)
-            
+
         Raises:
             pytest.fail: If the server fails to start or terminates prematurely
         """
@@ -225,7 +227,15 @@ class MCPServerFixture:
                     print(f"[SERVER STDERR] {stderr_data}")
 
             # Provide the server details to the test
-            yield {"port": port, "host": host, "process": process, "env_file": temp_env_file, "client": mcp_server_fixture.client, "url_suffix": mcp_server_fixture.url_suffix, "transport": mcp_server_fixture.transport}
+            yield {
+                "port": port,
+                "host": host,
+                "process": process,
+                "env_file": temp_env_file,
+                "client": mcp_server_fixture.client,
+                "url_suffix": mcp_server_fixture.url_suffix,
+                "transport": mcp_server_fixture.transport,
+            }
 
         finally:
             # Ensure we always terminate the process
@@ -267,7 +277,7 @@ class MCPClientFixture:
         client: Type[EndpointClient] = server_fixture["client"]
         url_suffix: str = server_fixture["url_suffix"]
         mcp_server_url = f"http://localhost:{server_fixture['port']}{url_suffix}"
-        
+
         # Create but don't connect client yet
         c = client(url=mcp_server_url)
         await c.connect()
