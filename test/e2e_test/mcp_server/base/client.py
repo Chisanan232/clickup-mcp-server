@@ -34,9 +34,9 @@ class EndpointClient(ABC):
             url: The URL of the MCP endpoint
         """
         self.url: str = url
+        self.session: ClientSession
         self.read_stream: MemoryObjectReceiveStream[SessionMessage | Exception] | None = None
         self.write_stream: MemoryObjectSendStream[SessionMessage] | None = None
-        self.session: ClientSession | None = None
         self._close_fn: GetSessionIdCallback | None = None
 
     @abstractmethod
