@@ -179,7 +179,7 @@ class TestClickUpMCPCliE2E:
             time.sleep(2)
 
             # Test root endpoint
-            with urllib.request.urlopen(f"http://127.0.0.1:{port}/") as response:
+            with urllib.request.urlopen(f"http://127.0.0.1:{port}/health") as response:
                 data = response.read().decode("utf-8")
                 assert response.status == 200
                 assert "status" in data.lower()
@@ -314,7 +314,7 @@ class TestClickUpMCPCliE2E:
             assert server_started, "Server failed to start with custom host and port"
 
             # Test the endpoint
-            with urllib.request.urlopen(f"http://127.0.0.1:{port}/") as response:
+            with urllib.request.urlopen(f"http://127.0.0.1:{port}/health") as response:
                 assert response.status == 200
 
         finally:

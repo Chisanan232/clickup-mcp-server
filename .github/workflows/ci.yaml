@@ -6,9 +6,11 @@ on:
   push:
     branches:
       - "master"
+      - "!**e2e"
+      - "!e2e**"
     paths:
 #     For GitHub Action
-      - ".github/workflows/**ci.yaml"
+      - ".github/workflows/ci.yaml"
       - ".github/workflows/rw_build_and_test.yaml"
       - ".github/workflows/rw_uv_run_test.yaml"
       - ".github/workflows/rw_run_all_test_and_record.yaml"
@@ -35,7 +37,7 @@ on:
       - "master"
     paths:
 #     For GitHub Action
-      - ".github/workflows/**ci.yaml"
+      - ".github/workflows/ci.yaml"
       - ".github/workflows/rw_build_and_test.yaml"
       - ".github/workflows/rw_uv_run_test.yaml"
       - ".github/workflows/rw_run_all_test_and_record.yaml"
