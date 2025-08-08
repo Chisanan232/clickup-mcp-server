@@ -5,7 +5,7 @@ This module provides the DTOs for MCP function calls and responses,
 separating the data representation from business logic.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from pydantic import BaseModel, Field
 
@@ -33,4 +33,4 @@ class FunctionResponseDto(BaseModel):
     """
 
     result: Any = Field(None, description="Result data from the function call")
-    error: Optional[str] = Field(None, description="Error message if the call failed")
+    error: str | None = Field(None, description="Error message if the call failed")
