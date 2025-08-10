@@ -104,6 +104,25 @@ class MCPServerFixtureParameters:
     transport: str
 
 
+@dataclass
+class MCPServerFixtureValue:
+    """
+    Data object returned by the client fixture.
+
+    Attributes:
+        url_suffix: The URL suffix for connecting to the MCP server
+        transport: The transport option for MCP server command line
+    """
+
+    host: str
+    port: int
+    process: subprocess.Popen
+    env_file: str
+    client: Type[EndpointClient]
+    url_suffix: str
+    transport: str
+
+
 class MCPServerFixture:
     """Base class for MCP server end-to-end tests."""
 
@@ -141,7 +160,7 @@ class MCPServerFixture:
     )
     def server_fixture(
         self, request: pytest.FixtureRequest, temp_env_file: str
-    ) -> Generator[Dict[str, Any], None, None]:
+    ) -> Generator[MCPServerFixtureValue, None, None]:
         """
         Start an MCP server in a separate process and shut it down after the test.
 
@@ -228,15 +247,15 @@ class MCPServerFixture:
                     print(f"[SERVER STDERR] {stderr_data}")
 
             # Provide the server details to the test
-            yield {
-                "port": port,
-                "host": host,
-                "process": process,
-                "env_file": temp_env_file,
-                "client": mcp_server_fixture.client,
-                "url_suffix": mcp_server_fixture.url_suffix,
-                "transport": mcp_server_fixture.transport,
-            }
+            yield MCPServerFixtureValue(
+                port=port,
+                host=host,
+                process=process,
+                env_file=temp_env_file,
+                client=mcp_server_fixture.client,
+                url_suffix=mcp_server_fixture.url_suffix,
+                transport=mcp_server_fixture.transport,
+            )
 
         finally:
             # Ensure we always terminate the process
@@ -261,7 +280,7 @@ class MCPClientFixture:
     """
 
     @pytest.fixture
-    async def client(self, server_fixture: Dict[str, Any]) -> AsyncGenerator[EndpointClient, None]:
+    async def client(self, server_fixture: MCPServerFixtureValue) -> AsyncGenerator[EndpointClient, None]:
         """
         Provide a client instance for MCP server testing.
 
@@ -275,20 +294,21 @@ class MCPClientFixture:
         Yields:
             EndpointClient containing the client and transport information
         """
-        client: Type[EndpointClient] = server_fixture["client"]
-        url_suffix: str = server_fixture["url_suffix"]
-        mcp_server_url = f"http://localhost:{server_fixture['port']}{url_suffix}"
+        client: Type[EndpointClient] = server_fixture.client
+        mcp_server_url = f"http://localhost:{server_fixture.port}{server_fixture.url_suffix}"
 
         # Create but don't connect client yet
         c = client(url=mcp_server_url)
         await c.connect()
+        assert hasattr(c, "session")
+        assert getattr(c, "session"), "The property 'session' is not set on the client"
         yield c
         await c.close()
 
 
 class BaseMCPServerFunctionTest(MCPServerFixture, MCPClientFixture, ABC):
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture
     def mcp_session(self, client: EndpointClient) -> ClientSession:
         assert hasattr(client, "session")
         session: ClientSession = getattr(client, "session")
