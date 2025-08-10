@@ -10,9 +10,9 @@ import asyncio
 import pytest
 from mcp import ClientSession
 
-from .base.client import EndpointClient
-from .base.dto import FunctionPayloadDto
-from .base.suite import OPERATION_TIMEOUT, BaseMCPServerFunctionTest
+from test.e2e_test.base import EndpointClient
+from test.e2e_test.base.dto import FunctionPayloadDto
+from test.e2e_test.base import OPERATION_TIMEOUT, BaseMCPServerFunctionTest
 
 
 class TestClickUpTeam(BaseMCPServerFunctionTest):
