@@ -9,6 +9,7 @@ on:
   # For testing and development
   push:
     branches:
+      - "develop/ci-cd"
       - "**ci"
       - "ci**"
 
