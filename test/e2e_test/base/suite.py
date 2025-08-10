@@ -16,7 +16,7 @@ from abc import ABC
 from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, Generator, Sequence, Type
+from typing import AsyncGenerator, Generator, Sequence, Type
 
 import pytest
 from dotenv import load_dotenv
@@ -183,7 +183,9 @@ class MCPServerFixture:
 
         try:
             # Start the server in a separate process using the CLI entry point
-            cmd: Sequence[str] = self._get_command_line_to_run_server(host=host, port=port, mcp_server_fixture=mcp_server_fixture, temp_env_file=temp_env_file)
+            cmd: Sequence[str] = self._get_command_line_to_run_server(
+                host=host, port=port, mcp_server_fixture=mcp_server_fixture, temp_env_file=temp_env_file
+            )
 
             print(f"[DEBUG] Starting server with command: {' '.join(cmd)}")
             print(f"[DEBUG] Transport type: {mcp_server_fixture.transport}")
@@ -256,7 +258,9 @@ class MCPServerFixture:
                     except subprocess.TimeoutExpired:
                         pass  # We've tried our best to kill it
 
-    def _get_command_line_to_run_server(self, host: str, port: int, mcp_server_fixture: MCPServerFixtureParameters, temp_env_file: str) -> list[str]:
+    def _get_command_line_to_run_server(
+        self, host: str, port: int, mcp_server_fixture: MCPServerFixtureParameters, temp_env_file: str
+    ) -> list[str]:
         return [
             sys.executable,
             "-m",

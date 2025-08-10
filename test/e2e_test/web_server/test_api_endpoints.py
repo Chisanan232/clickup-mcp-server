@@ -5,26 +5,18 @@ This module tests all the API endpoints to ensure there are no routing conflicts
 and that both the mounted MCP server and explicit API routes are working correctly.
 """
 
-import os
-import socket
-import subprocess
-import sys
-import tempfile
-import time
-from pathlib import Path
-from typing import Any, Dict, Generator
+from test.e2e_test.base.suite import (
+    OPERATION_TIMEOUT,
+    BaseE2ETestWithRunningServer,
+    MCPServerFixtureValue,
+)
 
 import httpx
 import pytest
-from dotenv import load_dotenv
-
-from clickup_mcp.models.cli import MCPTransportType
-from test.e2e_test.base.suite import BaseE2ETestWithRunningServer, MCPServerFixtureValue, OPERATION_TIMEOUT
 
 
 class TestAPIEndpoints(BaseE2ETestWithRunningServer):
     # Test Common Endpoints (regardless of transport)
-
 
     @pytest.mark.parametrize(
         "endpoint",

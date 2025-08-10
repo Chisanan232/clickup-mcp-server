@@ -6,13 +6,15 @@ MCP server instance using both HTTP streaming and SSE transports.
 """
 
 import asyncio
+from test.e2e_test.base import (
+    OPERATION_TIMEOUT,
+    BaseMCPServerFunctionTest,
+    EndpointClient,
+)
+from test.e2e_test.base.dto import FunctionPayloadDto
 
 import pytest
 from mcp import ClientSession
-
-from test.e2e_test.base import EndpointClient
-from test.e2e_test.base.dto import FunctionPayloadDto
-from test.e2e_test.base import OPERATION_TIMEOUT, BaseMCPServerFunctionTest
 
 
 class TestClickUpTeam(BaseMCPServerFunctionTest):

@@ -5,26 +5,17 @@ This module tests whether the MCP server endpoints are correctly mounted
 and accessible at the expected API paths.
 """
 
-import os
-import socket
-import subprocess
-import sys
-import tempfile
-import time
-from pathlib import Path
-from typing import Any, Dict, Generator
+from test.e2e_test.base.suite import (
+    OPERATION_TIMEOUT,
+    BaseE2ETestWithRunningServer,
+    MCPServerFixtureValue,
+)
 
 import httpx
-import pytest
-from dotenv import load_dotenv
-
-from clickup_mcp.models.cli import MCPTransportType
-from test.e2e_test.base.suite import BaseE2ETestWithRunningServer, MCPServerFixtureValue, OPERATION_TIMEOUT
 
 
 class TestWebServerMountMcpServer(BaseE2ETestWithRunningServer):
     # Test SSE Transport and HTTP Streaming Transport
-
 
     def test_mcp_endpoint(self, server_fixture: MCPServerFixtureValue) -> None:
         """Test if the MCP server endpoint is correctly mounted for every transports."""
@@ -39,4 +30,7 @@ class TestWebServerMountMcpServer(BaseE2ETestWithRunningServer):
         # If the endpoint is mounted, we should get a (200,307) status
         # If the endpoint is not mounted, we would get a 404 Not Found
         assert status_code != 404, f"Expected status non-(404) for {server_fixture.url_suffix}, got {status_code}"
-        assert status_code in (200, 307), f"Expected status (200,307) for {server_fixture.url_suffix}, got {status_code}"
+        assert status_code in (
+            200,
+            307,
+        ), f"Expected status (200,307) for {server_fixture.url_suffix}, got {status_code}"
