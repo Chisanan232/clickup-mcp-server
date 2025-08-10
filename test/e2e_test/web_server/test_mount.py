@@ -31,17 +31,29 @@ class TestWebServerMountMcpServer(BaseE2ETestWithRunningServer):
         mcp_url = f"http://{server_fixture.host}:{server_fixture.port}{server_fixture.url_suffix}"
 
         # Simply check if the endpoint exists - we'll get a 307 if it's mounted
-        with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
-            if server_fixture.transport == "sse":
-                # mcp_url = f"http://{server_fixture.host}:{server_fixture.port}/sse"
-                response = client.get(mcp_url)
-            else:
+        if server_fixture.transport == "sse":
+            # For SSE endpoints, we need to handle streaming responses differently
+            # We'll just check if the connection can be established with a HEAD request first
+            with httpx.Client(timeout=2.0) as client:  # Short timeout
+                try:
+                    # Try HEAD request first to check if endpoint exists
+                    response = client.head(mcp_url)
+                    status_code = response.status_code
+                except httpx.ReadTimeout:
+                    # If we get a timeout, the endpoint likely exists but is waiting for events
+                    # This is normal for SSE endpoints
+                    # Let's verify with a request that won't keep the connection open
+                    response = client.request("GET", mcp_url, headers={"Accept": "application/json"}, timeout=1.0)
+                    status_code = response.status_code
+        else:
+            with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
                 response = client.post(mcp_url)
+                status_code = response.status_code
 
         # If the endpoint is mounted, we should get a (200,307) status
         # If the endpoint is not mounted, we would get a 404 Not Found
-        assert response.status_code != 404, f"Expected status non-(404) for {server_fixture.url_suffix}, got {response.status_code}"
-        assert response.status_code in (200, 307), f"Expected status non-(200,307) for {server_fixture.url_suffix}, got {response.status_code}"
+        assert status_code != 404, f"Expected status non-(404) for {server_fixture.url_suffix}, got {status_code}"
+        assert status_code in (200, 307), f"Expected status (200,307) for {server_fixture.url_suffix}, got {status_code}"
 
 
     # Test Common Endpoints (regardless of transport)

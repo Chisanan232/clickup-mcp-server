@@ -15,3 +15,13 @@ The modules in this subpackage are responsible for:
 * Cleaning up the environment after the tests have completed
 
 """
+
+# Re-export client classes for easier imports
+from .client import EndpointClient, SSEClient, StreamingHTTPClient
+from .suite import (
+    BaseMCPServerFunctionTest,
+    BaseE2ETestWithRunningServer,
+    OPERATION_TIMEOUT,
+    SERVER_START_TIMEOUT,
+    ROUTES_REGISTRATION_TIME,
+)
