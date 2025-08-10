@@ -36,7 +36,7 @@ jobs:
           uv run python scripts/ci/api_spec_checker.py --verbose
       
       - name: Create issue if changes detected
-        if: failure()
+        if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
         uses: JasonEtco/create-an-issue@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
