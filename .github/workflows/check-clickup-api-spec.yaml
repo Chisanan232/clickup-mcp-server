@@ -6,6 +6,11 @@ on:
     - cron: '0 0 * * *'
   # Allow manual triggering
   workflow_dispatch:
+  # For testing and development
+  push:
+    branches:
+      - "**ci"
+      - "ci**"
 
 jobs:
   check-api-spec:
