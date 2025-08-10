@@ -16,10 +16,11 @@ from abc import ABC
 from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, Generator, Sequence, Type
+from typing import AsyncGenerator, Generator, Sequence, Type
 
 import pytest
 from dotenv import load_dotenv
+from mcp import ClientSession
 
 from .client import EndpointClient, SSEClient, StreamingHTTPClient
 
@@ -89,6 +90,21 @@ def wait_for_port(port: int, timeout: int = SERVER_START_TIMEOUT) -> bool:
 
 
 @dataclass
+class MCPServerFixtureParameters:
+    """
+    Data object returned by the client fixture.
+
+    Attributes:
+        url_suffix: The URL suffix for connecting to the MCP server
+        transport: The transport option for MCP server command line
+    """
+
+    client: Type[EndpointClient]
+    url_suffix: str
+    transport: str
+
+
+@dataclass
 class MCPServerFixtureValue:
     """
     Data object returned by the client fixture.
@@ -98,6 +114,10 @@ class MCPServerFixtureValue:
         transport: The transport option for MCP server command line
     """
 
+    host: str
+    port: int
+    process: subprocess.Popen
+    env_file: str
     client: Type[EndpointClient]
     url_suffix: str
     transport: str
@@ -133,14 +153,14 @@ class MCPServerFixture:
 
     @pytest.fixture(
         params=[
-            MCPServerFixtureValue(client=SSEClient, url_suffix="/sse/sse", transport="sse"),
-            MCPServerFixtureValue(client=StreamingHTTPClient, url_suffix="/mcp/mcp", transport="http-streaming"),
+            MCPServerFixtureParameters(client=SSEClient, url_suffix="/sse/sse", transport="sse"),
+            MCPServerFixtureParameters(client=StreamingHTTPClient, url_suffix="/mcp/mcp", transport="http-streaming"),
         ],
         ids=["sse", "streaming-http"],
     )
     def server_fixture(
         self, request: pytest.FixtureRequest, temp_env_file: str
-    ) -> Generator[Dict[str, Any], None, None]:
+    ) -> Generator[MCPServerFixtureValue, None, None]:
         """
         Start an MCP server in a separate process and shut it down after the test.
 
@@ -154,7 +174,7 @@ class MCPServerFixture:
         Raises:
             pytest.fail: If the server fails to start or terminates prematurely
         """
-        mcp_server_fixture: MCPServerFixtureValue = request.param
+        mcp_server_fixture: MCPServerFixtureParameters = request.param
 
         # Find a free port to avoid conflicts
         port = find_free_port()
@@ -163,21 +183,9 @@ class MCPServerFixture:
 
         try:
             # Start the server in a separate process using the CLI entry point
-            cmd: Sequence[str] = [
-                sys.executable,
-                "-m",
-                "clickup_mcp",
-                "--port",
-                str(port),
-                "--host",
-                host,
-                "--log-level",
-                "debug",  # Ensure debug logging is enabled
-                "--env",
-                temp_env_file,
-                "--transport",
-                mcp_server_fixture.transport,
-            ]
+            cmd: Sequence[str] = self._get_command_line_to_run_server(
+                host=host, port=port, mcp_server_fixture=mcp_server_fixture, temp_env_file=temp_env_file
+            )
 
             print(f"[DEBUG] Starting server with command: {' '.join(cmd)}")
             print(f"[DEBUG] Transport type: {mcp_server_fixture.transport}")
@@ -227,15 +235,15 @@ class MCPServerFixture:
                     print(f"[SERVER STDERR] {stderr_data}")
 
             # Provide the server details to the test
-            yield {
-                "port": port,
-                "host": host,
-                "process": process,
-                "env_file": temp_env_file,
-                "client": mcp_server_fixture.client,
-                "url_suffix": mcp_server_fixture.url_suffix,
-                "transport": mcp_server_fixture.transport,
-            }
+            yield MCPServerFixtureValue(
+                port=port,
+                host=host,
+                process=process,
+                env_file=temp_env_file,
+                client=mcp_server_fixture.client,
+                url_suffix=mcp_server_fixture.url_suffix,
+                transport=mcp_server_fixture.transport,
+            )
 
         finally:
             # Ensure we always terminate the process
@@ -250,6 +258,25 @@ class MCPServerFixture:
                     except subprocess.TimeoutExpired:
                         pass  # We've tried our best to kill it
 
+    def _get_command_line_to_run_server(
+        self, host: str, port: int, mcp_server_fixture: MCPServerFixtureParameters, temp_env_file: str
+    ) -> list[str]:
+        return [
+            sys.executable,
+            "-m",
+            "clickup_mcp",
+            "--port",
+            str(port),
+            "--host",
+            host,
+            "--log-level",
+            "debug",  # Ensure debug logging is enabled
+            "--env",
+            temp_env_file,
+            "--transport",
+            mcp_server_fixture.transport,
+        ]
+
 
 class MCPClientFixture:
     """
@@ -260,7 +287,7 @@ class MCPClientFixture:
     """
 
     @pytest.fixture
-    async def client(self, server_fixture: Dict[str, Any]) -> AsyncGenerator[EndpointClient, None]:
+    async def client(self, server_fixture: MCPServerFixtureValue) -> AsyncGenerator[EndpointClient, None]:
         """
         Provide a client instance for MCP server testing.
 
@@ -274,16 +301,26 @@ class MCPClientFixture:
         Yields:
             EndpointClient containing the client and transport information
         """
-        client: Type[EndpointClient] = server_fixture["client"]
-        url_suffix: str = server_fixture["url_suffix"]
-        mcp_server_url = f"http://localhost:{server_fixture['port']}{url_suffix}"
+        client: Type[EndpointClient] = server_fixture.client
+        mcp_server_url = f"http://localhost:{server_fixture.port}{server_fixture.url_suffix}"
 
         # Create but don't connect client yet
         c = client(url=mcp_server_url)
         await c.connect()
+        assert hasattr(c, "session")
+        assert getattr(c, "session"), "The property 'session' is not set on the client"
         yield c
         await c.close()
 
 
-class BaseMCPServerFunctionTest(MCPServerFixture, MCPClientFixture, ABC):
+class BaseE2ETestWithRunningServer(MCPServerFixture, MCPClientFixture, ABC):
     pass
+
+
+class BaseMCPServerFunctionTest(MCPServerFixture, MCPClientFixture, ABC):
+
+    @pytest.fixture
+    def mcp_session(self, client: EndpointClient) -> ClientSession:
+        assert hasattr(client, "session")
+        session: ClientSession = getattr(client, "session")
+        return session
