@@ -60,159 +60,160 @@ def wait_for_port(port: int, timeout: int = SERVER_START_TIMEOUT) -> bool:
     return False
 
 
-@pytest.fixture
-def temp_env_file() -> Generator[str, None, None]:
-    """Create a temporary .env file with test API token."""
-    # Get API token from environment
-    api_token = os.environ.get("CLICKUP_API_TOKEN")
-    if not api_token:
-        pytest.skip("CLICKUP_API_TOKEN environment variable is required for this test")
+class TestWebServerMountMcpServer:
+    @pytest.fixture
+    def temp_env_file(self) -> Generator[str, None, None]:
+        """Create a temporary .env file with test API token."""
+        # Get API token from environment
+        api_token = os.environ.get("CLICKUP_API_TOKEN")
+        if not api_token:
+            pytest.skip("CLICKUP_API_TOKEN environment variable is required for this test")
 
-    # Create a temporary file with the token
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as temp_file:
-        temp_file.write(f"CLICKUP_API_TOKEN={api_token}\n")
-        temp_file_path = temp_file.name
+        # Create a temporary file with the token
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as temp_file:
+            temp_file.write(f"CLICKUP_API_TOKEN={api_token}\n")
+            temp_file_path = temp_file.name
 
-    yield temp_file_path
+        yield temp_file_path
 
-    # Clean up
-    Path(temp_file_path).unlink(missing_ok=True)
+        # Clean up
+        Path(temp_file_path).unlink(missing_ok=True)
 
 
-@pytest.fixture
-def server_fixture(temp_env_file: str, request) -> Generator[Dict[str, Any], None, None]:
-    """Start an MCP server in a separate process and shut it down after the test."""
-    # Get transport type from the test parameter or fixture
-    transport_type = request.param if hasattr(request, "param") else "http-streaming"
+    @pytest.fixture
+    def server_fixture(self, temp_env_file: str, request) -> Generator[Dict[str, Any], None, None]:
+        """Start an MCP server in a separate process and shut it down after the test."""
+        # Get transport type from the test parameter or fixture
+        transport_type = request.param if hasattr(request, "param") else "http-streaming"
 
-    # Find a free port to avoid conflicts
-    port = find_free_port()
-    host = "127.0.0.1"
-    process = None
+        # Find a free port to avoid conflicts
+        port = find_free_port()
+        host = "127.0.0.1"
+        process = None
 
-    try:
-        # Start the server in a separate process using the CLI entry point
-        cmd = [
-            sys.executable,
-            "-m",
-            "clickup_mcp",
-            "--port",
-            str(port),
-            "--host",
-            host,
-            "--log-level",
-            "debug",
-            "--env",
-            temp_env_file,
-            "--transport",
-            transport_type,
-        ]
+        try:
+            # Start the server in a separate process using the CLI entry point
+            cmd = [
+                sys.executable,
+                "-m",
+                "clickup_mcp",
+                "--port",
+                str(port),
+                "--host",
+                host,
+                "--log-level",
+                "debug",
+                "--env",
+                temp_env_file,
+                "--transport",
+                transport_type,
+            ]
 
-        # Start the server process with non-blocking I/O
-        process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            cwd=PROJECT_ROOT,
-            text=True,
-            bufsize=1,
-        )
+            # Start the server process with non-blocking I/O
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=PROJECT_ROOT,
+                text=True,
+                bufsize=1,
+            )
 
-        # Wait for the server to start
-        server_started = wait_for_port(port)
-        if not server_started:
-            if process.poll() is not None:
-                # Process has terminated prematurely
-                stdout, stderr = process.communicate(timeout=1)
-                error_msg = f"Server process terminated with exit code {process.returncode}\n"
-                error_msg += f"STDOUT: {stdout}\n"
-                error_msg += f"STDERR: {stderr}"
-                pytest.fail(error_msg)
-            else:
-                pytest.fail(f"Server failed to start within {SERVER_START_TIMEOUT} seconds")
+            # Wait for the server to start
+            server_started = wait_for_port(port)
+            if not server_started:
+                if process.poll() is not None:
+                    # Process has terminated prematurely
+                    stdout, stderr = process.communicate(timeout=1)
+                    error_msg = f"Server process terminated with exit code {process.returncode}\n"
+                    error_msg += f"STDOUT: {stdout}\n"
+                    error_msg += f"STDERR: {stderr}"
+                    pytest.fail(error_msg)
+                else:
+                    pytest.fail(f"Server failed to start within {SERVER_START_TIMEOUT} seconds")
 
-        # Small additional delay to ensure routes are registered
-        time.sleep(ROUTES_REGISTRATION_TIME)
+            # Small additional delay to ensure routes are registered
+            time.sleep(ROUTES_REGISTRATION_TIME)
 
-        # Provide the server details to the test
-        yield {"port": port, "host": host, "process": process, "transport": transport_type}
+            # Provide the server details to the test
+            yield {"port": port, "host": host, "process": process, "transport": transport_type}
 
-    finally:
-        # Ensure we always terminate the process
-        if process and process.poll() is None:
-            process.terminate()
-            try:
-                process.wait(timeout=2)
-            except subprocess.TimeoutExpired:
-                process.kill()
+        finally:
+            # Ensure we always terminate the process
+            if process and process.poll() is None:
+                process.terminate()
                 try:
-                    process.wait(timeout=1)
+                    process.wait(timeout=2)
                 except subprocess.TimeoutExpired:
-                    pass  # We've tried our best to kill it
+                    process.kill()
+                    try:
+                        process.wait(timeout=1)
+                    except subprocess.TimeoutExpired:
+                        pass  # We've tried our best to kill it
 
 
-# Test HTTP Streaming Transport
+    # Test HTTP Streaming Transport
 
 
-@pytest.mark.parametrize("server_fixture", [MCPTransportType.HTTP_STREAMING], indirect=True)
-def test_http_streaming_mcp_endpoint(server_fixture: Dict[str, Any]) -> None:
-    """Test if the MCP server endpoint is correctly mounted for HTTP streaming transport."""
-    base_url = f"http://{server_fixture['host']}:{server_fixture['port']}/mcp"
-    mcp_url = f"{base_url}/mcp"
+    @pytest.mark.parametrize("server_fixture", [MCPTransportType.HTTP_STREAMING], indirect=True)
+    def test_http_streaming_mcp_endpoint(self, server_fixture: Dict[str, Any]) -> None:
+        """Test if the MCP server endpoint is correctly mounted for HTTP streaming transport."""
+        base_url = f"http://{server_fixture['host']}:{server_fixture['port']}/mcp"
+        mcp_url = f"{base_url}/mcp"
 
-    # Simply check if the endpoint exists - we'll get a 307 if it's mounted
-    with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
-        response = client.post(mcp_url)
+        # Simply check if the endpoint exists - we'll get a 307 if it's mounted
+        with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
+            response = client.post(mcp_url)
 
-    # If the endpoint is mounted, we should get a (200,307) status
-    # If the endpoint is not mounted, we would get a 404 Not Found
-    assert response.status_code != 404, f"Expected status non-(404) for /mcp, got {response.status_code}"
-    assert response.status_code in (200, 307), f"Expected status non-(200,307) for /mcp, got {response.status_code}"
-
-
-# Test SSE Transport
+        # If the endpoint is mounted, we should get a (200,307) status
+        # If the endpoint is not mounted, we would get a 404 Not Found
+        assert response.status_code != 404, f"Expected status non-(404) for /mcp, got {response.status_code}"
+        assert response.status_code in (200, 307), f"Expected status non-(200,307) for /mcp, got {response.status_code}"
 
 
-@pytest.mark.parametrize("server_fixture", [MCPTransportType.SSE], indirect=True)
-def test_sse_mcp_endpoint(server_fixture: Dict[str, Any]) -> None:
-    """Test if the MCP server endpoint is correctly mounted for SSE transport."""
-    base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
-    mcp_url = f"{base_url}/sse"  # SSE endpoint is now mounted at '/sse'
-
-    # Simply check if the endpoint exists - we'll get a 307 if it's mounted
-    with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
-        response = client.post(mcp_url)
-
-    # If the endpoint is mounted, we should get a (200,307) status
-    # If the endpoint is not mounted, we would get a 404 Not Found
-    assert response.status_code != 404, f"Expected status non-(404) for /sse, got {response.status_code}"
-    assert response.status_code in (200, 307), f"Expected status non-(200,307) for /sse, got {response.status_code}"
+    # Test SSE Transport
 
 
-# Test Common Endpoints (regardless of transport)
+    @pytest.mark.parametrize("server_fixture", [MCPTransportType.SSE], indirect=True)
+    def test_sse_mcp_endpoint(self, server_fixture: Dict[str, Any]) -> None:
+        """Test if the MCP server endpoint is correctly mounted for SSE transport."""
+        base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
+        mcp_url = f"{base_url}/sse"  # SSE endpoint is now mounted at '/sse'
+
+        # Simply check if the endpoint exists - we'll get a 307 if it's mounted
+        with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
+            response = client.post(mcp_url)
+
+        # If the endpoint is mounted, we should get a (200,307) status
+        # If the endpoint is not mounted, we would get a 404 Not Found
+        assert response.status_code != 404, f"Expected status non-(404) for /sse, got {response.status_code}"
+        assert response.status_code in (200, 307), f"Expected status non-(200,307) for /sse, got {response.status_code}"
 
 
-@pytest.mark.parametrize("server_fixture", [MCPTransportType.HTTP_STREAMING], indirect=True)
-@pytest.mark.parametrize(
-    "endpoint",
-    [
-        "/health",  # Root health check
-    ],
-)
-def test_common_endpoints(server_fixture: Dict[str, Any], endpoint: str) -> None:
-    """Test that common endpoints are available regardless of transport type."""
-    base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
-    url = f"{base_url}{endpoint}"
+    # Test Common Endpoints (regardless of transport)
 
-    with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
-        response = client.get(url)
 
-    assert response.status_code == 200, f"Expected status 200 for {endpoint}, got {response.status_code}"
+    @pytest.mark.parametrize("server_fixture", [MCPTransportType.HTTP_STREAMING], indirect=True)
+    @pytest.mark.parametrize(
+        "endpoint",
+        [
+            "/health",  # Root health check
+        ],
+    )
+    def test_common_endpoints(self, server_fixture: Dict[str, Any], endpoint: str) -> None:
+        """Test that common endpoints are available regardless of transport type."""
+        base_url = f"http://{server_fixture['host']}:{server_fixture['port']}"
+        url = f"{base_url}{endpoint}"
 
-    # Verify root endpoint response
-    if endpoint == "/health":
-        json_response = response.json()
-        assert "status" in json_response, "Missing status field in response"
-        assert json_response.get("status") == "ok", "Invalid status in response"
-        assert "server" in json_response, "Missing server field in response"
-        assert json_response.get("server") == "ClickUp MCP Server", "Invalid server in response"
+        with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
+            response = client.get(url)
+
+        assert response.status_code == 200, f"Expected status 200 for {endpoint}, got {response.status_code}"
+
+        # Verify root endpoint response
+        if endpoint == "/health":
+            json_response = response.json()
+            assert "status" in json_response, "Missing status field in response"
+            assert json_response.get("status") == "ok", "Invalid status in response"
+            assert "server" in json_response, "Missing server field in response"
+            assert json_response.get("server") == "ClickUp MCP Server", "Invalid server in response"
