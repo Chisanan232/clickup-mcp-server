@@ -309,6 +309,10 @@ class MCPClientFixture:
         await c.close()
 
 
+class BaseE2ETestWithRunningServer(MCPServerFixture, MCPClientFixture, ABC):
+    pass
+
+
 class BaseMCPServerFunctionTest(MCPServerFixture, MCPClientFixture, ABC):
 
     @pytest.fixture
