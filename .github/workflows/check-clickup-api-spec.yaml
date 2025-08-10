@@ -25,7 +25,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          python-version: 3.14
+          python-version: 3.13    # NOTE: Caused by *PyO3's maximum supported version (3.13)*
 
       - name: Activate the uv virtual environment
         run: |
