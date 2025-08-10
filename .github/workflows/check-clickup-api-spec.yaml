@@ -33,7 +33,7 @@ jobs:
           . .venv/bin/activate
 
       - name: Install all the project dependencies
-        run: uv sync --locked
+        run: uv sync --no-install-project --no-dev
       
       - name: Check API specification changes
         id: check-api-spec
