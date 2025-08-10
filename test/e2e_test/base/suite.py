@@ -183,21 +183,7 @@ class MCPServerFixture:
 
         try:
             # Start the server in a separate process using the CLI entry point
-            cmd: Sequence[str] = [
-                sys.executable,
-                "-m",
-                "clickup_mcp",
-                "--port",
-                str(port),
-                "--host",
-                host,
-                "--log-level",
-                "debug",  # Ensure debug logging is enabled
-                "--env",
-                temp_env_file,
-                "--transport",
-                mcp_server_fixture.transport,
-            ]
+            cmd: Sequence[str] = self._get_command_line_to_run_server(host=host, port=port, mcp_server_fixture=mcp_server_fixture, temp_env_file=temp_env_file)
 
             print(f"[DEBUG] Starting server with command: {' '.join(cmd)}")
             print(f"[DEBUG] Transport type: {mcp_server_fixture.transport}")
@@ -269,6 +255,23 @@ class MCPServerFixture:
                         process.wait(timeout=1)
                     except subprocess.TimeoutExpired:
                         pass  # We've tried our best to kill it
+
+    def _get_command_line_to_run_server(self, host: str, port: int, mcp_server_fixture: MCPServerFixtureParameters, temp_env_file: str) -> list[str]:
+        return [
+            sys.executable,
+            "-m",
+            "clickup_mcp",
+            "--port",
+            str(port),
+            "--host",
+            host,
+            "--log-level",
+            "debug",  # Ensure debug logging is enabled
+            "--env",
+            temp_env_file,
+            "--transport",
+            mcp_server_fixture.transport,
+        ]
 
 
 class MCPClientFixture:
