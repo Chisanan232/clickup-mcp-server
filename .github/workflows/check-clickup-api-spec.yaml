@@ -71,7 +71,7 @@ jobs:
           git commit -m "🔧 Update ClickUp API spec to version $API_VERSION"
           
           # Push changes
-          git push origin $BRANCH_NAME
+          git push -u origin $BRANCH_NAME
 
       - name: Process PR template
         if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
