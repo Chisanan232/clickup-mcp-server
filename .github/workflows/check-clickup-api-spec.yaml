@@ -46,8 +46,8 @@ jobs:
       - name: Check API specification changes
         id: check-api-spec
         run: |
-          chmod +x scripts/ci/api_spec_checker.py
           uv run python scripts/ci/api_spec_checker.py --update --verbose
+#          chmod +x scripts/ci/api_spec_checker.py
 
       - name: Create PR branch if changes detected
         if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
