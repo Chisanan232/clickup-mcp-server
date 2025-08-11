@@ -350,9 +350,7 @@ def main() -> int:
             if args.update:
                 logger.info("Updating local specification file")
                 checker.save_spec(remote_spec, args.local_spec)
-                return 1
-            else:
-                return 1
+            return 1
         else:
             logger.info("No changes detected in API specification")
             return 0
