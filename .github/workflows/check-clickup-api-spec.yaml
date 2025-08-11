@@ -51,6 +51,7 @@ jobs:
           uv run python scripts/ci/api_spec_checker.py --update --verbose
 
       - name: Sync branches from remote repository
+        if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
         run: |
           git fetch origin "${BASE_BRANCH}" "${BRANCH_NAME}" || true
           git pull --rebase origin "${BRANCH_NAME}" || true
