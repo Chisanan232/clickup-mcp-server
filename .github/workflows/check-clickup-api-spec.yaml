@@ -67,20 +67,29 @@ jobs:
           
           # Push changes
           git push origin $BRANCH_NAME
-      
+
+      - name: Process PR template
+        if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
+        run: |
+          # Get current date
+          CURRENT_DATE=$(date +"%Y-%m-%d")
+          
+          # Create a processed template
+          mkdir -p /tmp
+          cat .github/api-spec-pr-template.md | \
+            sed "s/{{ version }}/${{ env.API_VERSION }}/g" | \
+            sed "s/{{ date }}/$CURRENT_DATE/g" > /tmp/processed-pr-template.md
+          
+          echo "PR_TEMPLATE_PATH=/tmp/processed-pr-template.md" >> $GITHUB_ENV
+
       - name: Create Pull Request
         if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Auto-update ClickUp API spec to version ${{ env.API_VERSION }}"
-          title: "Auto-update ClickUp API spec to version ${{ env.API_VERSION }}"
-          body: |
-            This PR was automatically created by the API spec checker workflow.
-            
-            The ClickUp API specification has been updated to version ${{ env.API_VERSION }}.
-            
-            Please review the changes and ensure that our client implementation is compatible with the new API specification.
+          commit-message: "🔧 Auto-update ClickUp API spec to version ${{ env.API_VERSION }}"
+          title: "🔧 Auto-update ClickUp API spec to version ${{ env.API_VERSION }}"
+          body-path: ${{ env.PR_TEMPLATE_PATH }}
           branch: ${{ env.BRANCH_NAME }}
           base: ${{ github.ref_name }}
           labels: api, automated-pr
