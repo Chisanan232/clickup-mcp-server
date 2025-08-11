@@ -13,14 +13,24 @@ on:
 #      - "**ci"
 #      - "ci**"
 
+env:
+  BASE_BRANCH: master
+  BRANCH_NAME: update-clickup-api-spec
+
 jobs:
   check-api-spec:
     name: Check API Specification Changes
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
@@ -35,17 +45,77 @@ jobs:
       - name: Install all the project dependencies
         run: uv sync --no-install-project --no-default-groups
 
+      - name: Sync branches from remote repository
+        run: |
+          # Setup git
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Sync git branches
+          git fetch origin "${BASE_BRANCH}" "${BRANCH_NAME}" || true
+          git pull --rebase origin "${BRANCH_NAME}" || true
+
       - name: Check API specification changes
         id: check-api-spec
         run: |
-          chmod +x scripts/ci/api_spec_checker.py
-          uv run python scripts/ci/api_spec_checker.py --verbose
-      
-      - name: Create issue if changes detected
+          uv run python scripts/ci/api_spec_checker.py --update --verbose
+
+      - name: Create PR branch if changes detected
         if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
-        uses: JasonEtco/create-an-issue@v2
+        run: |
+          # Create a new branch with timestamp
+          git switch ${{ env.BASE_BRANCH }}
+          git checkout -b ${{ env.BRANCH_NAME }}
+          echo "[DEBUG] Check the current changes"
+          git status
+          
+          # Get current API version
+          API_VERSION=$(jq -r '.info.version' docs/api_spec/openapi.json)
+          echo "API_VERSION=$API_VERSION" >> $GITHUB_ENV
+          
+          # Commit changes
+          git add ./docs/api_spec/openapi.json
+          echo "[DEBUG] Check the current changes"
+          git status
+          git commit -m "🔧 Update ClickUp API spec to version $API_VERSION"
+          
+          # Push changes
+          git push -u origin ${{ env.BRANCH_NAME }}
+
+      - name: Process PR template
+        if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
+        run: |
+          # Get current date
+          CURRENT_DATE=$(date +"%Y-%m-%d")
+          
+          # Create a processed template
+          mkdir -p /tmp
+          cat .github/api-spec-pr-template.md | \
+            sed "s/{{ version }}/${{ env.API_VERSION }}/g" | \
+            sed "s/{{ date }}/$CURRENT_DATE/g" > /tmp/processed-pr-template.md
+          
+          echo "PR_TEMPLATE_PATH=/tmp/processed-pr-template.md" >> $GITHUB_ENV
+          echo "[DEBUG] PR body:"
+          cat ${{ env.PR_TEMPLATE_PATH }}
+
+      - name: Create PR (gh cli)
+        if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          filename: .github/api-spec-change-template.md
-          update_existing: true
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Make sure there is no diff vs base branch
+          git fetch origin "${BASE_BRANCH}"
+          if [ "$(git rev-list --right-only --count ${BASE_BRANCH}...HEAD)" -eq 0 ]; then
+            echo "No diff vs ${BASE_BRANCH}, skip PR."
+            exit 0
+          fi
+
+          echo "[DEBUG] PR body:"
+          cat ${{ env.PR_TEMPLATE_PATH }}
+      
+          gh pr create \
+            --head "${BRANCH_NAME}" \
+            --base "${BASE_BRANCH}" \
+            --title "🛠 Auto-update ClickUp API spec to version ${API_VERSION}" \
+            --body-file "${PR_TEMPLATE_PATH}" \
+            --label "api,👨‍🔧 breaking change"

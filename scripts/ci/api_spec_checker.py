@@ -346,13 +346,11 @@ def main() -> int:
                     f"{f' - New: {diff.new_value}' if diff.new_value is not None else ''}"
                 )
 
+            logger.error("API specification has changed! Update the client and specification.")
             if args.update:
                 logger.info("Updating local specification file")
                 checker.save_spec(remote_spec, args.local_spec)
-                return 0
-            else:
-                logger.error("API specification has changed! Update the client and specification.")
-                return 1
+            return 1
         else:
             logger.info("No changes detected in API specification")
             return 0
