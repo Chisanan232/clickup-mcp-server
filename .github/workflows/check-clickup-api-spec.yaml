@@ -60,6 +60,8 @@ jobs:
           BRANCH_NAME="auto-update-clickup-api-spec-$(date +%Y%m%d-%H%M%S)"
           git switch ${{ env.BASE_BRANCH }}
           git checkout -b $BRANCH_NAME
+          echo "[DEBUG] Check the current changes"
+          git staus
           
           # Get current API version
           API_VERSION=$(jq -r '.info.version' docs/api_spec/openapi.json)
@@ -67,7 +69,7 @@ jobs:
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
           
           # Commit changes
-          git add docs/api_spec/openapi.json
+          git add ./docs/api_spec/openapi.json
           git commit -m "🔧 Update ClickUp API spec to version $API_VERSION"
           
           # Push changes
