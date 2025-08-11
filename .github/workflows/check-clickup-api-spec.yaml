@@ -53,6 +53,7 @@ jobs:
           
           # Create a new branch with timestamp
           BRANCH_NAME="auto-update-clickup-api-spec-$(date +%Y%m%d-%H%M%S)"
+          git switch naster
           git checkout -b $BRANCH_NAME
           
           # Get current API version
