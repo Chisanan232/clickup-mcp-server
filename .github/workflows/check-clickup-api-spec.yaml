@@ -49,7 +49,6 @@ jobs:
         id: check-api-spec
         run: |
           uv run python scripts/ci/api_spec_checker.py --update --verbose
-#          chmod +x scripts/ci/api_spec_checker.py
 
       - name: Create PR branch if changes detected
         if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
@@ -67,7 +66,6 @@ jobs:
           # Get current API version
           API_VERSION=$(jq -r '.info.version' docs/api_spec/openapi.json)
           echo "API_VERSION=$API_VERSION" >> $GITHUB_ENV
-#          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
           
           # Commit changes
           git add ./docs/api_spec/openapi.json
