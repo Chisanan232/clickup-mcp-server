@@ -15,6 +15,7 @@ on:
 
 env:
   BASE_BRANCH: master
+  BRANCH_NAME: update-clickup-api-spec
 
 jobs:
   check-api-spec:
@@ -58,23 +59,24 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           # Create a new branch with timestamp
-          BRANCH_NAME="auto-update-clickup-api-spec-$(date +%Y%m%d-%H%M%S)"
           git switch ${{ env.BASE_BRANCH }}
-          git checkout -b $BRANCH_NAME
+          git checkout -b {{ $env.BRANCH_NAME }}
           echo "[DEBUG] Check the current changes"
           git status
           
           # Get current API version
           API_VERSION=$(jq -r '.info.version' docs/api_spec/openapi.json)
           echo "API_VERSION=$API_VERSION" >> $GITHUB_ENV
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+#          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
           
           # Commit changes
           git add ./docs/api_spec/openapi.json
+          echo "[DEBUG] Check the current changes"
+          git status
           git commit -m "🔧 Update ClickUp API spec to version $API_VERSION"
           
           # Push changes
-          git push -u origin $BRANCH_NAME
+          git push -u origin {{ $env.BRANCH_NAME }}
 
       - name: Process PR template
         if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
