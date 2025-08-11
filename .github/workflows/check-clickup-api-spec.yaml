@@ -47,6 +47,11 @@ jobs:
 
       - name: Sync branches from remote repository
         run: |
+          # Setup git
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Sync git branches
           git fetch origin "${BASE_BRANCH}" "${BRANCH_NAME}" || true
           git pull --rebase origin "${BRANCH_NAME}" || true
 
@@ -58,10 +63,6 @@ jobs:
       - name: Create PR branch if changes detected
         if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
         run: |
-          # Setup git
-          git config user.name "GitHub Actions Bot"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
           # Create a new branch with timestamp
           git switch ${{ env.BASE_BRANCH }}
           git checkout -b ${{ env.BRANCH_NAME }}
