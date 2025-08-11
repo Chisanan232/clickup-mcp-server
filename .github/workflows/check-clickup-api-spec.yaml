@@ -107,4 +107,4 @@ jobs:
             --base "${BASE_BRANCH}" \
             --title "🛠 Auto-update ClickUp API spec to version ${API_VERSION}" \
             --body-file "${PR_TEMPLATE_PATH}" \
-            --label "api,automated-pr"
+            --label "api,👨‍🔧 breaking change"
