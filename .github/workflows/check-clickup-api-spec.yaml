@@ -43,7 +43,6 @@ jobs:
         run: |
           chmod +x scripts/ci/api_spec_checker.py
           uv run python scripts/ci/api_spec_checker.py --update --verbose
-        continue-on-error: true
 
       - name: Create PR branch if changes detected
         if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
