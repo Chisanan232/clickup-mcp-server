@@ -6,6 +6,12 @@ on:
     - cron: '0 0 * * *'
   # Allow manual triggering
   workflow_dispatch:
+  # For testing and development
+#  push:
+#    branches:
+#      - "develop/ci-cd"
+#      - "**ci"
+#      - "ci**"
 
 jobs:
   check-api-spec:
@@ -19,7 +25,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          python-version: 3.14
+          python-version: 3.13    # NOTE: Caused by *PyO3's maximum supported version (3.13)*
 
       - name: Activate the uv virtual environment
         run: |
@@ -27,8 +33,8 @@ jobs:
           . .venv/bin/activate
 
       - name: Install all the project dependencies
-        run: uv sync --locked --all-extras --dev
-      
+        run: uv sync --no-install-project --no-default-groups
+
       - name: Check API specification changes
         id: check-api-spec
         run: |
@@ -36,7 +42,7 @@ jobs:
           uv run python scripts/ci/api_spec_checker.py --verbose
       
       - name: Create issue if changes detected
-        if: failure()
+        if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
         uses: JasonEtco/create-an-issue@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
