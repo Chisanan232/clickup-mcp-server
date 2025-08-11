@@ -17,6 +17,9 @@ jobs:
   check-api-spec:
     name: Check API Specification Changes
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     
     steps:
       - name: Checkout code
@@ -39,9 +42,51 @@ jobs:
         id: check-api-spec
         run: |
           chmod +x scripts/ci/api_spec_checker.py
-          uv run python scripts/ci/api_spec_checker.py --verbose
+          uv run python scripts/ci/api_spec_checker.py --update --verbose
+        continue-on-error: true
+
+      - name: Create PR branch if changes detected
+        if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
+        run: |
+          # Setup git
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create a new branch with timestamp
+          BRANCH_NAME="auto-update-clickup-api-spec-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b $BRANCH_NAME
+          
+          # Get current API version
+          API_VERSION=$(jq -r '.info.version' docs/api_spec/openapi.json)
+          echo "API_VERSION=$API_VERSION" >> $GITHUB_ENV
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          
+          # Commit changes
+          git add docs/api_spec/openapi.json
+          git commit -m "🔧 Update ClickUp API spec to version $API_VERSION"
+          
+          # Push changes
+          git push origin $BRANCH_NAME
       
-      - name: Create issue if changes detected
+      - name: Create Pull Request
+        if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Auto-update ClickUp API spec to version ${{ env.API_VERSION }}"
+          title: "Auto-update ClickUp API spec to version ${{ env.API_VERSION }}"
+          body: |
+            This PR was automatically created by the API spec checker workflow.
+            
+            The ClickUp API specification has been updated to version ${{ env.API_VERSION }}.
+            
+            Please review the changes and ensure that our client implementation is compatible with the new API specification.
+          branch: ${{ env.BRANCH_NAME }}
+          base: ${{ github.ref_name }}
+          labels: api, automated-pr
+          draft: false
+      
+      - name: Create issue if auto-fix failed
         if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
         uses: JasonEtco/create-an-issue@v2
         env:
