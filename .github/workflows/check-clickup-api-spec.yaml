@@ -61,7 +61,7 @@ jobs:
           git switch ${{ env.BASE_BRANCH }}
           git checkout -b $BRANCH_NAME
           echo "[DEBUG] Check the current changes"
-          git staus
+          git status
           
           # Get current API version
           API_VERSION=$(jq -r '.info.version' docs/api_spec/openapi.json)
