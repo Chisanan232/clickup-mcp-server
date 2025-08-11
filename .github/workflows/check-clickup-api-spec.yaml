@@ -13,6 +13,9 @@ on:
       - "**ci"
       - "ci**"
 
+env:
+  BASE_BRANCH: master
+
 jobs:
   check-api-spec:
     name: Check API Specification Changes
@@ -53,7 +56,7 @@ jobs:
           
           # Create a new branch with timestamp
           BRANCH_NAME="auto-update-clickup-api-spec-$(date +%Y%m%d-%H%M%S)"
-          git switch naster
+          git switch ${{ env.BASE_BRANCH }}
           git checkout -b $BRANCH_NAME
           
           # Get current API version
@@ -91,6 +94,6 @@ jobs:
           title: "🔧 Auto-update ClickUp API spec to version ${{ env.API_VERSION }}"
           body-path: ${{ env.PR_TEMPLATE_PATH }}
           branch: ${{ env.BRANCH_NAME }}
-          base: ${{ github.ref_name }}
+          base: ${{ env.BASE_BRANCH }}
           labels: api, automated-pr
           draft: false
