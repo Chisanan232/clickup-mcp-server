@@ -90,15 +90,21 @@ jobs:
           
           echo "PR_TEMPLATE_PATH=/tmp/processed-pr-template.md" >> $GITHUB_ENV
 
-      - name: Create Pull Request
+      - name: Create PR (gh cli)
         if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "🔧 Auto-update ClickUp API spec to version ${{ env.API_VERSION }}"
-          title: "🔧 Auto-update ClickUp API spec to version ${{ env.API_VERSION }}"
-          body-path: ${{ env.PR_TEMPLATE_PATH }}
-          branch: ${{ env.BRANCH_NAME }}
-          base: ${{ env.BASE_BRANCH }}
-          labels: api, automated-pr
-          draft: false
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Make sure there is no diff vs base branch
+          git fetch origin "${BASE_BRANCH}"
+          if [ "$(git rev-list --right-only --count ${BASE_BRANCH}...HEAD)" -eq 0 ]; then
+            echo "No diff vs ${BASE_BRANCH}, skip PR."
+            exit 0
+          fi
+      
+          gh pr create \
+            --head "${BRANCH_NAME}" \
+            --base "${BASE_BRANCH}" \
+            --title "🛠 Auto-update ClickUp API spec to version ${API_VERSION}" \
+            --body-file "${PR_TEMPLATE_PATH}" \
+            --label "api,automated-pr"
