@@ -50,6 +50,11 @@ jobs:
         run: |
           uv run python scripts/ci/api_spec_checker.py --update --verbose
 
+      - name: Sync branches from remote repository
+        run: |
+          git fetch origin "${BASE_BRANCH}" "${BRANCH_NAME}" || true
+          git pull --rebase origin "${BRANCH_NAME}" || true
+
       - name: Create PR branch if changes detected
         if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
         run: |
