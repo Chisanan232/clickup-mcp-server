@@ -153,7 +153,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright ${new Date().getFullYear()} - PRESENT, ClickUp MCP Server is owned by @Chisanan232. Built with Docusaurus.`,
+      copyright: `Copyright ${new Date().getFullYear()} - PRESENT, ClickUp MCP Server is owned by <a href="https://github.com/Chisanan232">@Chisanan232</a>.<br />Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,
