@@ -59,7 +59,7 @@ const config: Config = {
         id: 'documentation',
         path: 'contents/document',
         routeBasePath: 'document',
-        sidebarPath: './sidebars-documentation.ts',
+        sidebarPath: './contents/document/sidebars.ts',
         sidebarCollapsible: true,
         editUrl:
           'https://github.com/Chisanan232/clickup-mcp-server/tree/master/docs/',
@@ -71,7 +71,7 @@ const config: Config = {
         id: 'development',
         path: 'contents/development',
         routeBasePath: 'development',
-        sidebarPath: './sidebars-development.ts',
+        sidebarPath: './contents/development/sidebars.ts',
         sidebarCollapsible: true,
         editUrl:
           'https://github.com/Chisanan232/clickup-mcp-server/tree/master/docs/',
