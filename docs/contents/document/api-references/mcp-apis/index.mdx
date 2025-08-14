@@ -1,0 +1,68 @@
+---
+id: mcp-apis
+title: MCP Server APIs
+sidebar_position: 2
+---
+
+# MCP Server APIs
+
+The MCP (Model Context Protocol) Server APIs provide programmatic interfaces for client libraries and applications to interact with ClickUp resources through a standardized protocol. For more information about MCP, see the [official documentation](https://modelcontextprotocol.io/docs/getting-started/intro).
+
+## Transport Options
+
+MCP Server supports two transport mechanisms:
+
+1. **HTTP Streaming** - Long-lived HTTP connections with streaming responses
+2. **Server-Sent Events (SSE)** - Event-based communication over HTTP
+
+## Available Resources
+
+The following resource endpoints are available:
+
+- ✅ [Team](./team.md) - Team management
+- 🚧 [Space](./space.md) - Space management within teams
+- ⛔️ [Folder](./folder.md) - Folder management within folders
+- ⛔️ [List](./list.md) - List management within folders
+- ⛔️ [Task](./task.md) - Task management within lists
+- ⛔️ [User](./user.md) - User management and information
+
+## Protocol Format
+
+MCP requests and responses follow a standardized JSON format:
+
+**Request:**
+```json
+{
+  "id": "request-id",
+  "method": "resource.action",
+  "params": {
+    // Request parameters
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "id": "request-id",
+  "result": {
+    // Response data
+  },
+  "error": null
+}
+```
+
+**Error Response:**
+```json
+{
+  "id": "request-id",
+  "result": null,
+  "error": {
+    "code": 400,
+    "message": "Error message",
+    "data": {
+      // Additional error details
+    }
+  }
+}
+```
