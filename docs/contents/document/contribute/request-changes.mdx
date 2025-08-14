@@ -1,0 +1,88 @@
+---
+id: request-changes
+title: Request Additions or Changes
+sidebar_position: 2
+---
+
+# Requesting Additions or Changes
+
+Have an idea for improving ClickUp MCP Server? We welcome feature requests and suggestions from our community! This guide will help you submit effective feature requests.
+
+## Before Submitting
+
+Before submitting a feature request, please:
+
+1. **Check existing requests**: Search the [GitHub Issues](https://github.com/Chisanan232/clickup-mcp-server/issues) to see if someone has already suggested a similar feature.
+2. **Read the documentation**: Make sure the feature doesn't already exist or isn't already planned in our roadmap.
+3. **Consider compatibility**: Think about how your suggestion fits with the existing architecture and goals of the project.
+
+## How to Submit a Feature Request
+
+Please submit feature requests through our [GitHub Issues](https://github.com/Chisanan232/clickup-mcp-server/issues) page using the "Feature Request" template.
+
+### What to Include
+
+An effective feature request should include:
+
+1. **Clear and descriptive title**: Summarize the proposed feature concisely.
+2. **Problem statement**: Describe the problem that this feature would solve.
+   - What are you trying to accomplish?
+   - Why is it difficult or impossible with the current implementation?
+   - Who else might benefit from this feature?
+
+3. **Proposed solution**: Describe your idea for implementing the feature.
+   - Be as specific as possible
+   - Include mockups or diagrams if applicable
+   - Consider edge cases and potential issues
+
+4. **Alternative solutions**: Have you considered other ways to solve this problem?
+
+5. **Implementation considerations**: If you have technical insights about how to implement the feature, please share them.
+
+6. **Impact and importance**: Explain why this feature would be valuable to users and the project.
+
+## Example Feature Request
+
+```
+Title: Add WebSocket transport option for real-time updates
+
+Problem Statement:
+Currently, ClickUp MCP Server supports HTTP streaming and SSE for client communication. 
+However, for truly bidirectional real-time communication, these options have limitations. 
+Many modern web applications would benefit from WebSocket support for more efficient 
+real-time updates and lower latency.
+
+Proposed Solution:
+Add a new transport option "websocket" that implements the WebSocket protocol. This would:
+- Allow bidirectional communication between client and server
+- Reduce overhead compared to HTTP polling or SSE
+- Enable real-time updates for task changes, comments, etc.
+- Follow the same MCP message format as existing transports
+
+The implementation should include:
+1. New WebSocketTransport class implementing the Transport interface
+2. Client-side connection handling and reconnection logic
+3. Support for the same authentication mechanisms as existing transports
+
+Alternative Solutions:
+1. Enhance the SSE implementation with custom headers for upstream communication
+2. Implement long-polling with improved efficiency
+
+Implementation Considerations:
+This would require adding a WebSocket library dependency (e.g., websockets for Python).
+Care should be taken to ensure proper connection management and resource cleanup.
+
+Impact and Importance:
+This feature would greatly improve real-time applications built on ClickUp MCP Server,
+reducing latency and improving the user experience for collaborative tools.
+```
+
+## After Submitting
+
+After you've submitted a feature request:
+
+- Be responsive to questions about your proposal
+- Be open to feedback and suggestions
+- Consider contributing to the implementation if you have the skills
+
+Thank you for helping improve ClickUp MCP Server!
