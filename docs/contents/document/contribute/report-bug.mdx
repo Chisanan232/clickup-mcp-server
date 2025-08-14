@@ -1,0 +1,90 @@
+---
+id: report-bug
+title: Report a Bug
+sidebar_position: 1
+---
+
+# Reporting Bugs
+
+We appreciate your help in identifying and reporting bugs in ClickUp MCP Server. A well-documented bug report helps us understand and fix issues quickly.
+
+## Before Reporting
+
+Before submitting a bug report, please:
+
+1. **Check existing issues**: Search the [GitHub Issues](https://github.com/Chisanan232/clickup-mcp-server/issues) to see if the bug has already been reported.
+2. **Update to the latest version**: Verify that you're using the latest version of the software, as the bug may have been fixed already.
+3. **Confirm it's a bug**: Make sure the behavior you're experiencing is truly a bug and not expected behavior or a configuration issue.
+
+## How to Submit a Bug Report
+
+Please submit bug reports through our [GitHub Issues](https://github.com/Chisanan232/clickup-mcp-server/issues) page using the "Bug Report" template.
+
+### What to Include
+
+An effective bug report should include:
+
+1. **Clear and descriptive title**: Summarize the issue concisely.
+2. **Environment details**:
+   - Operating system and version
+   - Python version
+   - ClickUp MCP Server version
+   - Installation method (pip, source, Docker)
+   - Any relevant configuration
+
+3. **Steps to reproduce**:
+   - Be specific and provide a step-by-step guide to reproduce the issue
+   - Include example code if applicable
+   - Mention any specific conditions or setup required
+
+4. **Expected behavior**: Describe what you expected to happen.
+
+5. **Actual behavior**: Describe what actually happened.
+
+6. **Error messages**: Include any error messages or logs (use code blocks for formatting).
+
+7. **Screenshots or recordings**: If applicable, include visual evidence of the issue.
+
+8. **Possible solution**: If you have insights into what might be causing the issue or ideas for fixing it, please share them.
+
+## Example Bug Report
+
+```
+Title: Server crashes when handling concurrent requests with SSE transport
+
+Environment:
+- OS: Ubuntu 22.04
+- Python: 3.10.4
+- ClickUp MCP Server: 0.2.1
+- Installed via pip
+
+Steps to Reproduce:
+1. Start the server with SSE transport: `clickup-mcp-server --transport sse`
+2. Create a test script that sends 10 concurrent requests
+3. Execute the test script
+
+Expected Behavior:
+All requests should be processed correctly, and responses returned to clients.
+
+Actual Behavior:
+Server crashes with the following error:
+```
+[ERROR] 2025-08-10 14:23:47 - Exception in SSE transport: RuntimeError: Cannot process concurrent requests
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/dist-packages/clickup_mcp_server/transport/sse.py", line 127, in handle_request
+    ...
+```
+
+Additional Information:
+This only happens with SSE transport. HTTP streaming works fine with concurrent requests.
+```
+
+## After Submitting
+
+After you've submitted a bug report:
+
+- Be responsive to questions about the issue
+- Provide additional information if requested
+- Consider helping test the fix when it becomes available
+
+Thank you for helping improve ClickUp MCP Server!
