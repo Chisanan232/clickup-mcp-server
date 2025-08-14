@@ -1,0 +1,15 @@
+---
+id: quick-start
+title: Quick Start
+sidebar_position: 2
+---
+
+# Getting Started with ClickUp MCP Server
+
+This guide will help you quickly set up and start using the ClickUp MCP Server in your environment. Follow these steps to install, configure, and run the server for your applications.
+
+Choose one of the sections below to learn more:
+
+- [Requirements](./requirements.md) - System and software prerequisites
+- [Installation](./installation.md) - Step-by-step installation guide
+- [How to Run](./how-to-run.md) - Instructions for running and configuring the server
