@@ -4,6 +4,11 @@ title: Installation
 sidebar_position: 2
 ---
 
+```mdx-code-block
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+```
+
 # Installation
 
 This guide provides step-by-step instructions for installing the ClickUp MCP Server on your system.
@@ -48,20 +53,26 @@ For the latest development version or to contribute to the project:
 
 2. Install in development mode:
 
-   Using pip (Python's native package installer):
-   ```bash
-   pip install -e .
-   ```
+   <Tabs>
+     <TabItem value="pip" label="pip" default>
+      ```bash
+      pip install -e .
+      ```
 
-   Using Poetry:
-   ```bash
-   poetry install
-   ```
+     </TabItem>
+     <TabItem value="poetry" label="poetry">
+      ```bash
+      poetry install
+      ```
 
-   Using uv:
-   ```bash
-   uv pip install .
-   ```
+     </TabItem>
+     <TabItem value="uv" label="uv">
+      ```bash
+      uv pip install .
+      ```
+
+     </TabItem>
+   </Tabs>
 
 ## Docker Installation
 
@@ -79,23 +90,26 @@ You can also run ClickUp MCP Server using Docker:
    docker build -t clickup-mcp-server .
    ```
 
-## Verify Installation
+## Verifying Installation
 
 To verify that the installation was successful, run:
 
-Install by using pip (Python's native package installer):
-```bash
-clickup-mcp-server --version
-```
-
-Install by using Poetry:
-```bash
-poetry run clickup-mcp-server --version
-```
-
-Install by using uv:
-```bash
-uv run clickup-mcp-server --version
-```
+<Tabs>
+  <TabItem value="pip" label="pip" default>
+  ```bash
+  clickup-mcp-server --version
+  ```
+  </TabItem>
+  <TabItem value="poetry" label="poetry">
+  ```bash
+  poetry run clickup-mcp-server --version
+  ```
+  </TabItem>
+  <TabItem value="uv" label="uv">
+  ```bash
+  uv run clickup-mcp-server --version
+  ```
+  </TabItem>
+</Tabs>
 
 You should see the current version of the ClickUp MCP Server displayed.
