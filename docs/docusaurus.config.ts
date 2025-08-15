@@ -61,6 +61,8 @@ const config: Config = {
         routeBasePath: 'document',
         sidebarPath: './contents/document/sidebars.ts',
         sidebarCollapsible: true,
+        showLastUpdateTime: true,
+        showLastUpdateAuthor: true,
         editUrl:
           'https://github.com/Chisanan232/clickup-mcp-server/tree/master/docs/',
       },
@@ -73,6 +75,8 @@ const config: Config = {
         routeBasePath: 'development',
         sidebarPath: './contents/development/sidebars.ts',
         sidebarCollapsible: true,
+        showLastUpdateTime: true,
+        showLastUpdateAuthor: true,
         editUrl:
           'https://github.com/Chisanan232/clickup-mcp-server/tree/master/docs/',
       },
