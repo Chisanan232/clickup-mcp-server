@@ -3668,6 +3668,20 @@
                         }
                       }
                     }
+                  },
+                  {
+                    "type": "object",
+                    "title": "Button Custom Field",
+                    "description": "Set a button Custom Field to `true` to \"click\" it. This will trigger the button's action as if it was clicked in the UI.",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "boolean",
+                        "example": true
+                      }
+                    }
                   }
                 ]
               },
@@ -3772,6 +3786,11 @@
                       },
                       "formatted_address": "Gold Coast QLD, Australia"
                     }
+                  }
+                },
+                "Button Custom Field": {
+                  "value": {
+                    "value": true
                   }
                 }
               }
@@ -16450,7 +16469,7 @@
         "tags": [
           "Tasks"
         ],
-        "description": "View the tasks in a List. Responses are limited to 100 tasks per page. You can only view task information of tasks you can access. \\\n \\\nThis endpoint only includes tasks where the specified `list_id` is their home List. Tasks added to the `list_id` with a different home List are not included in the response. \\\n \\\nThe `time_spent` field displays time tracked in milliseconds, and is only included in the response for tasks with time entries.",
+        "description": "View the tasks in a List. Responses are limited to 100 tasks per page. You can only view task information of tasks you can access. \\\n \\\nThis endpoint only includes tasks where the specified `list_id` is their home List. Tasks added to the `list_id` with a different home List are not included in the response by default. To include tasks that exist in multiple lists, use the `include_timl` parameter. \\\n \\\nThe `time_spent` field displays time tracked in milliseconds, and is only included in the response for tasks with time entries.",
         "operationId": "GetTasks",
         "parameters": [
           {
@@ -16551,6 +16570,16 @@
             "name": "include_closed",
             "in": "query",
             "description": "Include or excluse closed tasks. By default, they are excluded.\\\n \\\nTo include closed tasks, use `include_closed: true`.",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "include_timl",
+            "in": "query",
+            "description": "Include Tasks in Multiple Lists. By default, tasks that exist in multiple lists are excluded from the response.\\\n \\\nTo include tasks that exist in multiple lists, use `include_timl: true`.",
             "style": "form",
             "explode": true,
             "schema": {
