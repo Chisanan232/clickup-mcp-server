@@ -1,0 +1,354 @@
+---
+id: coding-style
+title: Coding Styles and Rules
+sidebar_position: 4
+---
+
+# Coding Styles and Rules
+
+To maintain consistency and quality across the codebase, we follow these coding standards and rules. All contributors are expected to adhere to these guidelines.
+
+## Python Code Style
+
+### PEP 8
+
+We follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for Python code style with a few modifications:
+
+- Maximum line length: 100 characters
+- Use 4 spaces for indentation (never tabs)
+- Use snake_case for functions, methods, and variables
+- Use CamelCase for classes
+- Use UPPER_CASE for constants
+
+### Type Annotations
+
+We use type annotations throughout the codebase to improve code readability and enable static type checking:
+
+```python
+def get_task(task_id: str) -> ClickUpTask:
+    """
+    Retrieve a task by its ID.
+    
+    Args:
+        task_id: The ID of the task to retrieve
+        
+    Returns:
+        ClickUpTask: The retrieved task object
+        
+    Raises:
+        TaskNotFoundError: If the task doesn't exist
+    """
+    # Implementation
+```
+
+Type annotations are checked using MyPy during CI/CD.
+
+### Python Typing Standards
+
+We adhere to modern Python typing standards as defined in various PEPs:
+
+#### PEP 484 - Type Hints
+
+[PEP 484](https://www.python.org/dev/peps/pep-0484/) introduced the typing module and the core syntax for type annotations:
+
+```python
+from typing import Dict, List, Optional, Union
+
+# Use Optional for values that may be None
+def get_user(user_id: Optional[str] = None) -> Optional[User]:
+    pass
+
+# Use Union for values that could be multiple types
+def process_input(data: Union[str, bytes]) -> Dict[str, int]:
+    pass
+```
+
+#### PEP 585 - Type Hinting Generics in Standard Collections
+
+[PEP 585](https://www.python.org/dev/peps/pep-0585/) allows using built-in collection types directly for annotations (Python 3.9+):
+
+```python
+# Python 3.9+ preferred style
+def process_items(items: list[str]) -> dict[str, int]:
+    return {item: len(item) for item in items}
+
+# Instead of the older style with the typing module
+# def process_items(items: List[str]) -> Dict[str, int]:
+```
+
+When supporting Python versions before 3.9, use the typing module equivalents.
+
+#### PEP 646 - Variadic Generics
+
+[PEP 646](https://peps.python.org/pep-0646/) introduced TypeVarTuple for variadic generics (Python 3.11+):
+
+```python
+from typing import TypeVar, TypeVarTuple, Unpack
+
+T = TypeVar('T')
+Ts = TypeVarTuple('Ts')
+
+def process_batch(batch: tuple[T, *Unpack[Ts]]) -> list[T]:
+    first, *rest = batch
+    return [first]
+```
+
+Use this for handling arbitrary homogeneous sequences when needed in higher-order functions.
+
+#### PEP 695 - Type Parameter Syntax
+
+[PEP 695](https://peps.python.org/pep-0695/) introduced simplified syntax for generic type definitions (Python 3.12+):
+
+```python
+# Python 3.12+ simplified generic syntax
+def identity[T](x: T) -> T:
+    return x
+
+# Instead of the more verbose
+# T = TypeVar('T')
+# def identity(x: T) -> T:
+#     return x
+```
+
+For backward compatibility, use the TypeVar approach when targeting Python versions before 3.12.
+
+### Duck Typing and Protocols
+
+Following Python's "duck typing" philosophy while maintaining type safety, we use Protocols (PEP 544) instead of requiring specific classes:
+
+```python
+from typing import Protocol, runtime_checkable
+
+@runtime_checkable
+class Clickable(Protocol):
+    def click(self) -> None:
+        ...
+
+def perform_click(item: Clickable) -> None:
+    item.click()  # Works with any object that has a click() method
+```
+
+#### Protocol Best Practices
+
+1. **Use structural subtyping**: Focus on what objects do (methods/attributes they provide) rather than what they are (their class hierarchy)
+
+2. **Define minimal interfaces**: Only include methods and attributes that are actually needed
+
+3. **Use `@runtime_checkable` sparingly**: Only when you need `isinstance()` checks, which should be rare
+
+4. **Combine with generics when appropriate**:
+
+```python
+from typing import TypeVar, Protocol, Generic
+
+T = TypeVar('T')
+
+class Repository(Protocol, Generic[T]):
+    def get(self, id: str) -> T:
+        ...
+    def save(self, item: T) -> None:
+        ...
+```
+
+5. **Use TypedDict for dictionary interfaces**:
+
+```python
+from typing import TypedDict
+
+class TaskData(TypedDict):
+    id: str
+    name: str
+    status: str
+    priority: int
+```
+
+### Type Narrowing
+
+Use type guards and assertion functions for type narrowing:
+
+```python
+from typing import TypeGuard, assert_type
+
+def is_string_list(val: list[object]) -> TypeGuard[list[str]]:
+    return all(isinstance(x, str) for x in val)
+
+def process_strings(items: list[object]) -> None:
+    if is_string_list(items):
+        # items is now known to be list[str]
+        for item in items:
+            assert_type(item, str)
+            print(item.upper())
+```
+
+### Docstrings
+
+We use Google-style docstrings:
+
+```python
+def function_name(param1: type, param2: type) -> return_type:
+    """Short description of the function.
+    
+    Longer description if necessary, explaining details.
+    
+    Args:
+        param1: Description of param1
+        param2: Description of param2
+        
+    Returns:
+        Description of the return value
+        
+    Raises:
+        ExceptionType: When and why this exception is raised
+    """
+    # Implementation
+```
+
+## Code Organization
+
+### Imports
+
+Organize imports in the following order, with a blank line between each group:
+
+1. Standard library imports
+2. Third-party library imports
+3. Local application imports
+
+```python
+import os
+import sys
+from typing import Dict, List, Optional
+
+import httpx
+from pydantic import BaseModel, Field
+
+from clickup_mcp_server.models import ClickUpTask
+from clickup_mcp_server.utils import logger
+```
+
+### File and Directory Structure
+
+- One class per file where appropriate
+- Group related functionality into modules
+- Keep files focused on a single responsibility
+
+## Code Quality Tools
+
+We use several tools to ensure code quality:
+
+### Pre-commit Hooks
+
+We use pre-commit hooks to automatically check code quality before committing. Install them with:
+
+```bash
+pre-commit install
+```
+
+Our pre-commit hooks include:
+
+- Black for code formatting
+- isort for import sorting
+- flake8 for linting
+- mypy for type checking
+
+### PyLint Configuration
+
+The project uses PyLint for comprehensive code analysis with configuration in [.pylintrc](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.pylintrc). Our PyLint rules are based on the [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html).
+
+Key PyLint settings include:
+
+```ini
+[MASTER]
+ignore=CVS
+ignore-patterns=
+persistent=yes
+load-plugins=
+jobs=0
+
+[MESSAGES CONTROL]
+# Disable specific PyLint checks that conflict with our style choices
+disable=raw-checker-failed,
+        bad-inline-option,
+        locally-disabled,
+        file-ignored,
+        suppressed-message,
+        useless-suppression,
+        deprecated-pragma,
+        use-symbolic-message-instead
+```
+
+Run PyLint on your code with:
+
+```bash
+pylint your_module_or_file.py
+```
+
+### MyPy Configuration
+
+MyPy type checking is configured in [mypy.ini](https://github.com/Chisanan232/clickup-mcp-server/blob/master/mypy.ini), enforcing strict typing rules:
+
+```ini
+[mypy]
+python_version = 3.13
+warn_return_any = True
+warn_unused_configs = True
+disallow_untyped_defs = True
+disallow_incomplete_defs = True
+check_untyped_defs = True
+disallow_untyped_decorators = True
+no_implicit_optional = True
+strict_optional = True
+
+# Exclude scripts directory from type checking
+[mypy-scripts.*]
+ignore_errors = True
+```
+
+Run MyPy to check your code with:
+
+```bash
+mypy your_module_or_package
+```
+
+### Black Configuration
+
+Black is configured in `pyproject.toml`:
+
+```toml
+[tool.black]
+line-length = 100
+target-version = ['py39']
+```
+
+### Flake8 Configuration
+
+Flake8 is configured in `.flake8`:
+
+```ini
+[flake8]
+max-line-length = 100
+exclude = .git,__pycache__,build,dist
+```
+
+### Testing
+
+- All code should have unit tests
+- Aim for high test coverage, especially for critical paths
+- Tests should be fast and independent of each other
+
+## Pull Request Guidelines
+
+- Keep changes focused and limited in scope
+- Include tests for new functionality
+- Update documentation as needed
+- Run pre-commit hooks before submitting
+- Address all CI/CD failures
+
+## Best Practices
+
+- Write self-documenting code with descriptive variable and function names
+- Follow the DRY (Don't Repeat Yourself) principle
+- Keep functions small and focused on a single responsibility
+- Use exceptions for error handling, not return codes
+- Use type annotations consistently
+- Write comprehensive tests
+- Document all public APIs
