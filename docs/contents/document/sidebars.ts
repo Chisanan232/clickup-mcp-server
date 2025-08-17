@@ -1,10 +1,10 @@
 import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
 /**
- * Sidebar for the Documentation section
+ * Sidebar for the Docs section
  */
 const sidebars: SidebarsConfig = {
-  documentation: [
+  docs: [
     'introduction',
     {
       type: 'category',
