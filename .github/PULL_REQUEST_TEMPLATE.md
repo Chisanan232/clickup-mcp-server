@@ -24,7 +24,7 @@
 [//]: # (What's the scope in project it would affect with your modify? For example, would it affect CI workflow? Or any feature usage? Please list all the items which may be affected.)
 ## _Effecting Scope_
 
-* Types:
+* Action Types:
     * [ ] ✨ Adding new something
         * [ ] 🟢 No breaking change
         * [ ] 🟠 Has breaking change
@@ -35,13 +35,6 @@
     * [ ] 🔧 Fixing bug
     * [ ] ♻️ Refactoring something
     * [ ] 🚀 Improving something (maybe performance, code quality, security, etc.)
-    * [ ] 🧪 Test
-    * [ ] 📚 Document
-    * [ ] 🎨 UI/UX (maybe command line interface, etc.)
-    * [ ] ⚙️ Chore
-        * [ ] 🤖 CI/CD
-        * [ ] 🔗 Dependencies
-        * [ ] 📦 Project configurations
 * Scopes:
     * [ ] ✍️ Command line interface
     * [ ] 💼 Core feature
@@ -49,6 +42,7 @@
         * [ ] 🤖 MCP server
         * [ ] 🪡 API client
         * [ ] 🫀 Data model
+    * [ ] 🎨 UI/UX (maybe command line interface, etc.)
     * [ ] ⛑️ Error handling
     * [ ] 🧪 Testing
         * [ ] 🧪 Unit testing
