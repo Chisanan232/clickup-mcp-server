@@ -92,6 +92,23 @@ const config: Config = {
           'https://github.com/Chisanan232/clickup-mcp-server/tree/master/docs/',
       },
     ],
+    [
+      require.resolve('@easyops-cn/docusaurus-search-local'),
+      {
+        // Options for docusaurus-search-local
+        hashed: true,
+        language: ['en'],
+        docsRouteBasePath: ['/clickup-mcp-server'],
+        docsDir: ['./contents/document', './contents/development'],
+        blogDir: ['./contents/blog'],
+        highlightSearchTermsOnTargetPage: true,
+        explicitSearchResultPath: true,
+        docsPluginIdForPreferredVersion: 'docs',
+        indexDocs: true,
+        indexBlog: true,
+        indexPages: true,
+      },
+    ],
   ],
 
   themes: [
