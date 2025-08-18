@@ -81,6 +81,17 @@ const config: Config = {
           'https://github.com/Chisanan232/clickup-mcp-server/tree/master/docs/',
       },
     ],
+    [
+      '@docusaurus/plugin-content-blog',
+      {
+        id: 'blog',
+        path: 'contents/blog',
+        routeBasePath: 'blog',
+        showReadingTime: true,
+        editUrl:
+          'https://github.com/Chisanan232/clickup-mcp-server/tree/master/docs/',
+      },
+    ],
   ],
 
   themes: [
@@ -112,6 +123,11 @@ const config: Config = {
           docsPluginId: 'dev',
         },
         {
+          to: '/blog',
+          label: 'Blog',
+          position: 'left',
+        },
+        {
           href: 'https://github.com/Chisanan232/clickup-mcp-server',
           label: 'GitHub',
           position: 'right',
@@ -131,6 +147,10 @@ const config: Config = {
             {
               label: 'Dev',
               to: '/dev',
+            },
+            {
+              label: 'Blog',
+              to: '/blog',
             },
           ],
         },
