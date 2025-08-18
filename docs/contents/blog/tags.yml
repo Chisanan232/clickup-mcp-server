@@ -1,0 +1,14 @@
+clickup:
+  label: ClickUp
+  permalink: /clickup
+  description: Posts related to ClickUp service and integration
+
+mcp:
+  label: MCP
+  permalink: /mcp
+  description: Model Context Protocol (MCP) related content
+
+python:
+  label: Python
+  permalink: /python
+  description: Python programming and development
