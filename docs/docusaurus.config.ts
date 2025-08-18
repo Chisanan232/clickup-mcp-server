@@ -56,9 +56,9 @@ const config: Config = {
     [
       '@docusaurus/plugin-content-docs',
       {
-        id: 'documentation',
+        id: 'docs',
         path: 'contents/document',
-        routeBasePath: 'document',
+        routeBasePath: 'docs',
         sidebarPath: './contents/document/sidebars.ts',
         sidebarCollapsible: true,
         showLastUpdateTime: true,
@@ -70,9 +70,9 @@ const config: Config = {
     [
       '@docusaurus/plugin-content-docs',
       {
-        id: 'development',
+        id: 'dev',
         path: 'contents/development',
-        routeBasePath: 'development',
+        routeBasePath: 'dev',
         sidebarPath: './contents/development/sidebars.ts',
         sidebarCollapsible: true,
         showLastUpdateTime: true,
@@ -99,17 +99,17 @@ const config: Config = {
       items: [
         {
           type: 'docSidebar',
-          sidebarId: 'documentation',
+          sidebarId: 'docs',
           position: 'left',
-          label: 'Documentation',
-          docsPluginId: 'documentation',
+          label: 'Docs',
+          docsPluginId: 'docs',
         },
         {
           type: 'docSidebar',
-          sidebarId: 'development',
+          sidebarId: 'dev',
           position: 'left',
-          label: 'Development',
-          docsPluginId: 'development',
+          label: 'Dev',
+          docsPluginId: 'dev',
         },
         {
           href: 'https://github.com/Chisanan232/clickup-mcp-server',
@@ -125,12 +125,12 @@ const config: Config = {
           title: 'Docs',
           items: [
             {
-              label: 'Documentation',
-              to: '/document/introduction',
+              label: 'Docs',
+              to: '/docs/introduction',
             },
             {
-              label: 'Development',
-              to: '/development',
+              label: 'Dev',
+              to: '/dev',
             },
           ],
         },
@@ -173,7 +173,7 @@ const config: Config = {
       tagName: 'link',
       attributes: {
         rel: 'canonical',
-        href: 'https://chisanan232.github.io/clickup-mcp-server/document/introduction',
+        href: 'https://chisanan232.github.io/clickup-mcp-server/docs/introduction',
       },
     },
   ],

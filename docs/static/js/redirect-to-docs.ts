@@ -14,7 +14,7 @@
   // Perform the redirect if needed
   const redirectToDocs = (): void => {
     if (isHomepage()) {
-      const targetUrl: string = `${window.location.origin}/clickup-mcp-server/document/introduction`;
+      const targetUrl: string = `${window.location.origin}/clickup-mcp-server/docs`;
       window.location.replace(targetUrl);
     }
   };

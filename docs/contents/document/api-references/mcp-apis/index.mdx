@@ -52,17 +52,25 @@ MCP requests and responses follow a standardized JSON format:
 }
 ```
 
-**Error Response:**
+Or in case of an error:
+
 ```json
 {
   "id": "request-id",
   "result": null,
   "error": {
-    "code": 400,
-    "message": "Error message",
-    "data": {
-      // Additional error details
-    }
+    "code": 404,
+    "message": "Resource not found"
   }
 }
 ```
+
+## Error Handling
+
+MCP Server API errors follow a standard format with an error code and descriptive message. Common error codes include:
+
+- `400` - Bad Request (invalid parameters)
+- `401` - Unauthorized (authentication required)
+- `403` - Forbidden (insufficient permissions)
+- `404` - Not Found (resource doesn't exist)
+- `500` - Server Error (internal error)
