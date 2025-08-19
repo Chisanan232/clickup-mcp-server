@@ -199,42 +199,58 @@ export default function UnifiedVersionsDropdownNavbarItem({
           
         // Create version label with badges if needed
         let versionLabel = version.label || version.name;
-        let badgeHtml = '';
-        
-        if (showBadges) {
-          if (isLatest && showNextLabel && version.name === 'current') {
-            badgeHtml = `<span class="${styles.badge}">Next</span>`;
-          } else if (showUnmaintainedLabel && version.banner === 'unmaintained') {
-            badgeHtml = `<span class="${clsx(styles.badge, styles.unmaintained)}">Unmaintained</span>`;
-          }
-        }
         
         // URL for this version - ensure we have a valid path
         const firstDocPath = version.docs?.[0]?.path;
         const fallbackPath = `/docs/${version.path || ''}`;
         const versionUrl = firstDocPath || fallbackPath;
         
-        // For versions, use a proper navbar item type
-        dropdownItems.push({
-          type: 'default',
-          key: `${pluginId}-${version.name}`,
-          className: clsx(
-            {
-              'dropdown__link--active': isActivePluginVersion,
-              [styles.dropdownItemActive]: isActivePluginVersion,
-              [styles.latestVersion]: isLatest && !isActivePluginVersion,
-            },
-          ),
-          label: badgeHtml ? `${versionLabel} ${badgeHtml}` : versionLabel,
-          to: versionUrl,
-          isDropdownItem: true,
-          onClick: () => {
-            // Just save the version URL in localStorage to simulate preference
-            if (typeof window !== 'undefined' && version.name) {
-              localStorage.setItem(`docusaurus.preferredVersion.${pluginId}`, version.name);
-            }
-          },
-        });
+        // For badge rendering, we need to handle it differently
+        if (showBadges && isLatest && showNextLabel && version.name === 'current') {
+          // Use HTML for badge (with proper classes for styling)
+          dropdownItems.push({
+            type: 'html',
+            key: `${pluginId}-${version.name}`,
+            className: clsx(
+              {
+                'dropdown__link--active': isActivePluginVersion,
+                [styles.dropdownItemActive]: isActivePluginVersion,
+                [styles.latestVersion]: isLatest && !isActivePluginVersion,
+              },
+            ),
+            value: `<a href="${versionUrl}" class="dropdown__link">${versionLabel} <span class="${styles.badge}">Next</span></a>`,
+          });
+        } else if (showBadges && showUnmaintainedLabel && version.banner === 'unmaintained') {
+          // Use HTML for unmaintained badge
+          dropdownItems.push({
+            type: 'html',
+            key: `${pluginId}-${version.name}`,
+            className: clsx(
+              {
+                'dropdown__link--active': isActivePluginVersion,
+                [styles.dropdownItemActive]: isActivePluginVersion,
+                [styles.latestVersion]: isLatest && !isActivePluginVersion,
+              },
+            ),
+            value: `<a href="${versionUrl}" class="dropdown__link">${versionLabel} <span class="${clsx(styles.badge, styles.unmaintained)}">Unmaintained</span></a>`,
+          });
+        } else {
+          // Regular version without badge - use standard item type
+          dropdownItems.push({
+            type: 'default',
+            key: `${pluginId}-${version.name}`,
+            className: clsx(
+              {
+                'dropdown__link--active': isActivePluginVersion,
+                [styles.dropdownItemActive]: isActivePluginVersion,
+                [styles.latestVersion]: isLatest && !isActivePluginVersion,
+              },
+            ),
+            label: versionLabel,
+            to: versionUrl,
+            isDropdownItem: true,
+          });
+        }
       });
     }
   });
