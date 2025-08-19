@@ -65,6 +65,14 @@ const config: Config = {
         showLastUpdateAuthor: true,
         editUrl:
           'https://github.com/Chisanan232/clickup-mcp-server/tree/master/docs/',
+        versions: {
+          current: {
+            label: 'Next',
+            path: 'next',
+          },
+        },
+        includeCurrentVersion: true,
+        lastVersion: 'current',
       },
     ],
     [
@@ -79,6 +87,14 @@ const config: Config = {
         showLastUpdateAuthor: true,
         editUrl:
           'https://github.com/Chisanan232/clickup-mcp-server/tree/master/docs/',
+        versions: {
+          current: {
+            label: 'Next',
+            path: 'next',
+          },
+        },
+        includeCurrentVersion: true,
+        lastVersion: 'current',
       },
     ],
     [
@@ -133,10 +149,24 @@ const config: Config = {
           docsPluginId: 'docs',
         },
         {
+          type: 'docsVersionDropdown',
+          position: 'right',
+          dropdownItemsBefore: [],
+          dropdownItemsAfter: [],
+          docsPluginId: 'docs',
+        },
+        {
           type: 'docSidebar',
           sidebarId: 'dev',
           position: 'left',
           label: 'Dev',
+          docsPluginId: 'dev',
+        },
+        {
+          type: 'docsVersionDropdown',
+          position: 'right',
+          dropdownItemsBefore: [],
+          dropdownItemsAfter: [],
           docsPluginId: 'dev',
         },
         {
