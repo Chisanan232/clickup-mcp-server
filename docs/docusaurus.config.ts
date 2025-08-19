@@ -149,13 +149,6 @@ const config: Config = {
           docsPluginId: 'docs',
         },
         {
-          type: 'docsVersionDropdown',
-          position: 'right',
-          dropdownItemsBefore: [],
-          dropdownItemsAfter: [],
-          docsPluginId: 'docs',
-        },
-        {
           type: 'docSidebar',
           sidebarId: 'dev',
           position: 'left',
@@ -163,16 +156,24 @@ const config: Config = {
           docsPluginId: 'dev',
         },
         {
-          type: 'docsVersionDropdown',
-          position: 'right',
-          dropdownItemsBefore: [],
-          dropdownItemsAfter: [],
-          docsPluginId: 'dev',
-        },
-        {
           to: '/blog',
           label: 'Blog',
           position: 'left',
+        },
+        {
+          type: 'custom-unifiedVersions',
+          position: 'right',
+          pluginIds: ['docs', 'dev'],
+          pluginTitles: {
+            docs: 'User Guide',
+            dev: 'Developer Guide',
+          },
+          showBadges: true,
+          showDividers: true,
+          showNextLabel: true,
+          showUnmaintainedLabel: true,
+          dropdownItemsBefore: [],
+          dropdownItemsAfter: [],
         },
         {
           href: 'https://github.com/Chisanan232/clickup-mcp-server',
