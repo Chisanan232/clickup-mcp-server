@@ -260,7 +260,7 @@ export default function UnifiedVersionsDropdownNavbarItem({
     dropdownItems.push({
       type: 'html',
       key: 'divider-all-versions',
-      value: `<div class="${styles.divider}"></div>`,
+      value: `<div class="${styles.allVersionsSeparator}"></div>`,
     });
     
     // Add "All versions" link at the bottom

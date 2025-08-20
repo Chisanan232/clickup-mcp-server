@@ -48,6 +48,15 @@
   background-color: var(--ifm-color-warning);
 }
 
+/* Separator for "All versions" link */
+.allVersionsSeparator {
+  margin: 0.5rem 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--ifm-color-emphasis-300);
+  font-weight: 500;
+  color: var(--ifm-color-emphasis-700);
+}
+
 /* Active dropdown item */
 .dropdownItemActive {
   background-color: var(--ifm-dropdown-link-active-bg);
