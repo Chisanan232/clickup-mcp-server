@@ -1,0 +1,116 @@
+/**
+ * Styling for the VersionsArchived component
+ */
+
+.versionsContainer {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.pluginSection {
+  margin-bottom: 3rem;
+}
+
+.pluginTitle {
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--ifm-color-primary);
+}
+
+.versionSection {
+  margin-bottom: 2rem;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.versionSectionTitle {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.versionSectionDescription {
+  color: var(--ifm-color-emphasis-700);
+  margin-bottom: 1.5rem;
+}
+
+.versionRow {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--ifm-color-emphasis-100);
+}
+
+.versionRow:last-child {
+  border-bottom: none;
+}
+
+.versionItem {
+  flex: 0 0 150px;
+  font-weight: bold;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.versionLinks {
+  flex: 1;
+  display: flex;
+  gap: 1rem;
+}
+
+.versionLink {
+  display: inline-block;
+  padding: 0.25rem 1rem;
+  background-color: var(--ifm-color-emphasis-100);
+  border-radius: 0.25rem;
+  color: var(--ifm-color-emphasis-800);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.versionLink:hover {
+  background-color: var(--ifm-color-emphasis-200);
+  text-decoration: none;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background-color: var(--ifm-color-primary);
+  color: white;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.unmaintained {
+  background-color: var(--ifm-color-warning);
+}
+
+.allVersionsLink {
+  margin-top: 3rem;
+  text-align: center;
+}
+
+.homeLink {
+  display: inline-block;
+  padding: 0.5rem 1.5rem;
+  background-color: var(--ifm-color-primary);
+  color: white;
+  border-radius: 0.25rem;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.homeLink:hover {
+  background-color: var(--ifm-color-primary-darker);
+  text-decoration: none;
+  color: white;
+}
