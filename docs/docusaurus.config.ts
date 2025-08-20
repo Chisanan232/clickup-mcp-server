@@ -69,6 +69,7 @@ const config: Config = {
           current: {
             label: 'Next',
             path: 'next',
+            banner: 'unreleased',
           },
         },
         includeCurrentVersion: true,
@@ -91,6 +92,7 @@ const config: Config = {
           current: {
             label: 'Next',
             path: 'next',
+            banner: 'unreleased',
           },
         },
         includeCurrentVersion: true,
