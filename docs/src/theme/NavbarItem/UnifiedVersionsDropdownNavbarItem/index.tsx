@@ -255,6 +255,28 @@ export default function UnifiedVersionsDropdownNavbarItem({
     }
   });
   
+  // Add divider before "All versions" link
+  if (dropdownItems.length > 0) {
+    dropdownItems.push({
+      type: 'html',
+      key: 'divider-all-versions',
+      value: `<div class="${styles.divider}"></div>`,
+    });
+    
+    // Add "All versions" link at the bottom
+    dropdownItems.push({
+      type: 'default',
+      key: 'all-versions',
+      label: translate({
+        id: 'theme.navbar.allVersions',
+        message: 'All versions',
+        description: 'The label for the link to all versions in dropdown',
+      }),
+      to: '/versions',
+      isDropdownItem: true,
+    });
+  }
+  
   // Add items specified to come after
   if (dropdownItemsAfter.length > 0) {
     if (showDividers && pluginsVersionInfo.some(info => info.versions.length > 0)) {
