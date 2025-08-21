@@ -21,7 +21,7 @@ function HomepageHeader() {
   
   // Calculate the path to the stable documentation with fallbacks
   const stableDocsPath = stableVersion?.path || 
-    (stableVersion?.name ? `${docsBasePath}/${stableVersion.name}/introduction` : `${docsBasePath}/0.0.1/introduction`);
+    (stableVersion?.name ? `${docsBasePath}/${stableVersion.name}/introduction` : `${docsBasePath}/next/introduction`);
   
   return (
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
