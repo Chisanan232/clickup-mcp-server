@@ -59,6 +59,9 @@
   --dropdown-background: #2d2d2d;
   --dropdown-text-color: #ffffff;
   --dropdown-hover-background: #3d3d3d;
+  
+  /* Navbar text color */
+  --navbar-text-color: #ffffff;
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -86,6 +89,9 @@
   --dropdown-background: #2d2d2d;
   --dropdown-text-color: #ffffff;
   --dropdown-hover-background: #3d3d3d;
+  
+  /* Navbar text color */
+  --navbar-text-color: #ffffff;
 }
 
 /* Force consistent background color for homepage */
@@ -108,6 +114,15 @@
   border-image-slice: 1;
   backdrop-filter: blur(10px);
   z-index: 10;
+}
+
+/* Ensure all navbar items have white text for better readability */
+.navbar__items .navbar__item,
+.navbar__items .navbar__link,
+.navbar__items .navbar__link svg,
+.navbar__items .clean-btn {
+  color: var(--navbar-text-color) !important;
+  -webkit-text-fill-color: var(--navbar-text-color) !important;
 }
 
 /* Rainbow style for navbar brand/title */
