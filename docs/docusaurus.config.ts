@@ -65,6 +65,16 @@ const config: Config = {
         showLastUpdateAuthor: true,
         editUrl:
           'https://github.com/Chisanan232/clickup-mcp-server/tree/master/docs/',
+        versions: {
+          current: {
+            label: 'Next',
+            path: 'next',
+            banner: 'unreleased',
+            badge: true,
+          },
+        },
+        includeCurrentVersion: true,
+        lastVersion: 'current',
       },
     ],
     [
@@ -79,6 +89,16 @@ const config: Config = {
         showLastUpdateAuthor: true,
         editUrl:
           'https://github.com/Chisanan232/clickup-mcp-server/tree/master/docs/',
+        versions: {
+          current: {
+            label: 'Next',
+            path: 'next',
+            banner: 'unreleased',
+            badge: true,
+          },
+        },
+        includeCurrentVersion: true,
+        lastVersion: 'current',
       },
     ],
     [
@@ -143,6 +163,21 @@ const config: Config = {
           to: '/blog',
           label: 'Blog',
           position: 'left',
+        },
+        {
+          type: 'custom-unifiedVersions',
+          position: 'right',
+          pluginIds: ['docs', 'dev'],
+          pluginTitles: {
+            docs: 'User Guide',
+            dev: 'Developer Guide',
+          },
+          showBadges: true,
+          showDividers: true,
+          showNextLabel: true,
+          showUnmaintainedLabel: true,
+          dropdownItemsBefore: [],
+          dropdownItemsAfter: [],
         },
         {
           href: 'https://github.com/Chisanan232/clickup-mcp-server',
