@@ -251,13 +251,4 @@ const config: Config = {
   ],
 };
 
-// Set homepage to redirect to documentation
-config.scripts = [
-  {
-    src: '/clickup-mcp-server/js/dist/redirect-to-docs.js',
-    async: false,
-    defer: false,
-  },
-];
-
 export default config;
