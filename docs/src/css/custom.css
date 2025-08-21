@@ -54,6 +54,11 @@
   /* Homepage background color */
   --homepage-background: #1c1e21;
   --homepage-text-color: #ffffff;
+  
+  /* Dropdown specific colors */
+  --dropdown-background: #2d2d2d;
+  --dropdown-text-color: #ffffff;
+  --dropdown-hover-background: #3d3d3d;
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -76,6 +81,11 @@
   /* Homepage dark mode background */
   --homepage-background: #1c1e21;
   --homepage-text-color: #ffffff;
+  
+  /* Dropdown specific dark mode colors */
+  --dropdown-background: #2d2d2d;
+  --dropdown-text-color: #ffffff;
+  --dropdown-hover-background: #3d3d3d;
 }
 
 /* Force consistent background color for homepage */
@@ -97,6 +107,7 @@
   border-image: var(--rainbow-gradient);
   border-image-slice: 1;
   backdrop-filter: blur(10px);
+  z-index: 10;
 }
 
 /* Rainbow style for navbar brand/title */
@@ -107,13 +118,32 @@
   font-weight: bold;
 }
 
-/* Rainbow hover effect for navbar items */
-.navbar__item:hover, 
-.navbar__link:hover, 
-.navbar__link--active {
+/* Rainbow hover effect for navbar items - MORE SPECIFIC SELECTORS */
+.navbar__items .navbar__item:hover:not(.dropdown),
+.navbar__items .navbar__link:hover:not(.dropdown__link),
+.navbar__items .navbar__link--active:not(.dropdown__link) {
   background: var(--rainbow-text-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  font-weight: bold;
+}
+
+/* Special handling for dropdown items */
+.dropdown__menu {
+  background-color: var(--dropdown-background);
+}
+
+/* Ensure dropdown links have visible text */
+.dropdown__link {
+  color: var(--dropdown-text-color) !important;
+  -webkit-text-fill-color: var(--dropdown-text-color) !important;
+}
+
+/* Hover state for dropdown items */
+.dropdown__link:hover {
+  background-color: var(--dropdown-hover-background) !important;
+  color: var(--dropdown-text-color) !important;
+  -webkit-text-fill-color: var(--dropdown-text-color) !important;
   font-weight: bold;
 }
 
@@ -153,11 +183,12 @@ main h1 {
   border-image: var(--rainbow-gradient);
   border-image-slice: 1;
   transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* Rainbow accent for buttons */
