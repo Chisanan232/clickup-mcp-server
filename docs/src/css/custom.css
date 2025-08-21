@@ -278,8 +278,15 @@ pre::before {
   font-weight: bold;
 }
 
-/* Ensure table headers have a rainbow background */
+/* Ensure table headers have a solid, readable background instead of rainbow gradient */
 table th {
-  background: var(--rainbow-gradient);
+  background-color: var(--ifm-color-primary-dark);
   color: white;
+  font-weight: bold;
+  border-bottom: 2px solid var(--ifm-color-primary-lighter);
+}
+
+/* Add subtle rainbow accent on hover for table headers */
+table th:hover {
+  background-color: var(--ifm-color-primary-darker);
 }
