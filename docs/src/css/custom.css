@@ -117,9 +117,9 @@
 }
 
 /* Ensure all navbar items have white text for better readability */
-.navbar__items .navbar__item,
-.navbar__items .navbar__link,
-.navbar__items .navbar__link svg,
+.navbar__items .navbar__item:not(.navbar__link--active),
+.navbar__items .navbar__link:not(.navbar__link--active),
+.navbar__items .navbar__link:not(.navbar__link--active) svg,
 .navbar__items .clean-btn {
   color: var(--navbar-text-color) !important;
   -webkit-text-fill-color: var(--navbar-text-color) !important;
