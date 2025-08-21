@@ -194,11 +194,11 @@ const config: Config = {
           items: [
             {
               label: 'Docs',
-              to: '/docs/introduction',
+              to: '/docs/next/introduction',
             },
             {
               label: 'Dev',
-              to: '/dev',
+              to: '/dev/next',
             },
             {
               label: 'Blog',
