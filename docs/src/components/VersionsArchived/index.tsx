@@ -34,6 +34,9 @@ export default function VersionsArchived(): JSX.Element {
     // Add other plugin titles here
   };
 
+  // Base URL for GitHub releases - update this to the appropriate repository URL
+  const releaseBaseUrl = 'https://github.com/Chisanan232/clickup-mcp-server/releases/tag/v';
+
   // Process version data for each plugin
   const pluginsVersionInfo = Object.keys(allDocsData).map((pluginId) => {
     const docsData = allDocsData[pluginId];
@@ -49,6 +52,15 @@ export default function VersionsArchived(): JSX.Element {
       latestVersion,
     };
   });
+
+  // Helper function to get release URL for a version
+  const getReleaseUrl = (version: string): string => {
+    // Skip "next" and "current" versions for release notes
+    if (version === 'next' || version === 'current') {
+      return `${releaseBaseUrl}latest`;
+    }
+    return `${releaseBaseUrl}${version}`;
+  };
 
   return (
     <div className={styles.versionsContainer}>
@@ -86,6 +98,18 @@ export default function VersionsArchived(): JSX.Element {
                   to={pluginInfo.versions.find(v => v.name === 'current')?.docs[0]?.path || `/${pluginInfo.pluginId}`}>
                   Documentation
                 </Link>
+                <Link
+                  className={`${styles.versionLink} ${styles.releaseNotesLink}`}
+                  to={getReleaseUrl('current')}
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  <Translate
+                    id="versions.releaseNotes"
+                    description="The label for release notes link"
+                  >
+                    Release Notes
+                  </Translate>
+                </Link>
               </div>
             </div>
           </div>
@@ -121,6 +145,18 @@ export default function VersionsArchived(): JSX.Element {
                     className={styles.versionLink}
                     to={pluginInfo.versions.find(v => v.name === 'next')?.docs[0]?.path || `/${pluginInfo.pluginId}/next`}>
                     Documentation
+                  </Link>
+                  <Link
+                    className={`${styles.versionLink} ${styles.releaseNotesLink}`}
+                    to="https://github.com/Chisanan232/clickup-mcp-server/commits/master"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    <Translate
+                      id="versions.devChanges"
+                      description="The label for development changes link"
+                    >
+                      Development Changes
+                    </Translate>
                   </Link>
                 </div>
               </div>
@@ -158,6 +194,18 @@ export default function VersionsArchived(): JSX.Element {
                         className={styles.versionLink}
                         to={version.docs[0]?.path || `/${pluginInfo.pluginId}/${version.name}`}>
                         Documentation
+                      </Link>
+                      <Link
+                        className={`${styles.versionLink} ${styles.releaseNotesLink}`}
+                        to={getReleaseUrl(version.name)}
+                        target="_blank"
+                        rel="noopener noreferrer">
+                        <Translate
+                          id="versions.releaseNotes"
+                          description="The label for release notes link"
+                        >
+                          Release Notes
+                        </Translate>
                       </Link>
                     </div>
                   </div>
