@@ -57,9 +57,23 @@
   color: var(--ifm-color-emphasis-700);
 }
 
-/* Active dropdown item */
+/* Active dropdown item - Enhance to make it more visually distinct */
 .dropdownItemActive {
-  background-color: var(--ifm-dropdown-link-active-bg);
+  background: linear-gradient(to right, rgba(126, 213, 111, 0.1), rgba(40, 180, 131, 0.2)) !important;
+  border-left: 3px solid var(--ifm-color-primary) !important;
+  font-weight: bold !important;
+  color: var(--ifm-color-primary) !important;
+  -webkit-text-fill-color: var(--ifm-color-primary) !important;
+}
+
+/* Also style the Docusaurus default active dropdown link class */
+:global(.dropdown__link--active) {
+  background: linear-gradient(to right, rgba(126, 213, 111, 0.1), rgba(40, 180, 131, 0.2)) !important;
+  border-left: 3px solid var(--ifm-color-primary) !important;
+  font-weight: bold !important;
+  color: var(--ifm-color-primary) !important;
+  -webkit-text-fill-color: var(--ifm-color-primary) !important;
+  padding-left: calc(var(--ifm-dropdown-link-padding-horizontal) - 3px) !important;
 }
 
 /* Latest version styling (non-active) */

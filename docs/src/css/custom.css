@@ -4,27 +4,304 @@
  * work well for content-centric websites.
  */
 
-/* You can override the default Infima variables here. */
+/* Rainbow gradient colors and theme setup */
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
+  /* Rainbow gradient for various elements */
+  --rainbow-gradient: linear-gradient(
+    to right,
+    #ff3366,
+    #ff6633,
+    #ffcc33,
+    #33cc66,
+    #3399ff,
+    #6633cc,
+    #cc33ff
+  );
+  
+  /* Rainbow text gradient for special elements */
+  --rainbow-text-gradient: linear-gradient(
+    to right, 
+    #ff3366, 
+    #ff6633, 
+    #ffcc33, 
+    #33cc66, 
+    #3399ff, 
+    #6633cc, 
+    #cc33ff
+  );
+  
+  /* Primary color derived from the gradient's mid-point */
+  --ifm-color-primary: #33cc66;
+  --ifm-color-primary-dark: #2bb459;
+  --ifm-color-primary-darker: #29aa54;
+  --ifm-color-primary-darkest: #228c45;
+  --ifm-color-primary-light: #47d176;
+  --ifm-color-primary-lighter: #53d47f;
+  --ifm-color-primary-lightest: #73dd97;
+  
+  /* Code highlighting and other UI elements */
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  
+  /* Navbar and footer colors */
+  --ifm-navbar-background-color: rgba(36, 37, 38, 0.9);
+  --ifm-footer-background-color: #242526;
+  
+  /* Link colors */
+  --ifm-link-color: #3399ff;
+  --ifm-link-hover-color: #6633cc;
+  
+  /* Homepage background color */
+  --homepage-background: #1c1e21;
+  --homepage-text-color: #ffffff;
+  
+  /* Dropdown specific colors */
+  --dropdown-background: #2d2d2d;
+  --dropdown-text-color: #ffffff;
+  --dropdown-hover-background: #3d3d3d;
+  
+  /* Navbar text color */
+  --navbar-text-color: #ffffff;
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
+  --ifm-color-primary: #33cc66;
+  --ifm-color-primary-dark: #2bb459;
+  --ifm-color-primary-darker: #29aa54;
+  --ifm-color-primary-darkest: #228c45;
+  --ifm-color-primary-light: #47d176;
+  --ifm-color-primary-lighter: #53d47f;
+  --ifm-color-primary-lightest: #73dd97;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  
+  /* Dark mode specific colors */
+  --ifm-navbar-background-color: rgba(36, 37, 38, 0.9);
+  --ifm-footer-background-color: #242526;
+  --ifm-link-color: #6ab7ff;
+  --ifm-link-hover-color: #a680ff;
+  
+  /* Homepage dark mode background */
+  --homepage-background: #1c1e21;
+  --homepage-text-color: #ffffff;
+  
+  /* Dropdown specific dark mode colors */
+  --dropdown-background: #2d2d2d;
+  --dropdown-text-color: #ffffff;
+  --dropdown-hover-background: #3d3d3d;
+  
+  /* Navbar text color */
+  --navbar-text-color: #ffffff;
+}
+
+/* Force consistent background color for homepage */
+.homepage-wrapper {
+  background-color: var(--homepage-background);
+  color: var(--homepage-text-color);
+}
+
+/* Set main content area to use homepage background on homepage only */
+[class*='docMainContainer'] main,
+[class*='mainContainer'] main {
+  background-color: var(--homepage-background);
+}
+
+/* Apply rainbow gradient to navbar */
+.navbar {
+  background: var(--ifm-navbar-background-color);
+  border-bottom: 4px solid;
+  border-image: var(--rainbow-gradient);
+  border-image-slice: 1;
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+/* Ensure all navbar items have white text for better readability */
+.navbar__items .navbar__item:not(.navbar__link--active),
+.navbar__items .navbar__link:not(.navbar__link--active),
+.navbar__items .navbar__link:not(.navbar__link--active) svg,
+.navbar__items .clean-btn {
+  color: var(--navbar-text-color) !important;
+  -webkit-text-fill-color: var(--navbar-text-color) !important;
+}
+
+/* Rainbow style for navbar brand/title */
+.navbar__title {
+  background: var(--rainbow-text-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+}
+
+/* Rainbow hover effect for navbar items - MORE SPECIFIC SELECTORS */
+.navbar__items .navbar__item:hover:not(.dropdown),
+.navbar__items .navbar__link:hover:not(.dropdown__link),
+.navbar__items .navbar__link--active:not(.dropdown__link) {
+  background: var(--rainbow-text-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+}
+
+/* Special handling for dropdown items */
+.dropdown__menu {
+  background-color: var(--dropdown-background);
+}
+
+/* Ensure dropdown links have visible text */
+.dropdown__link {
+  color: var(--dropdown-text-color) !important;
+  -webkit-text-fill-color: var(--dropdown-text-color) !important;
+}
+
+/* Hover state for dropdown items */
+.dropdown__link:hover {
+  background-color: var(--dropdown-hover-background) !important;
+  color: var(--dropdown-text-color) !important;
+  -webkit-text-fill-color: var(--dropdown-text-color) !important;
+  font-weight: bold;
+}
+
+/* Footer styling */
+.footer {
+  position: relative;
+}
+
+.footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--rainbow-gradient);
+}
+
+/* Rainbow gradient for main headings */
+.hero__title, 
+main h1 {
+  background: var(--rainbow-text-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+}
+
+/* Override for hero section to use dark background */
+.hero--primary {
+  background-color: var(--homepage-background);
+  color: var(--homepage-text-color);
+}
+
+/* Rainbow border for cards */
+.card {
+  border-top: 4px solid;
+  border-image: var(--rainbow-gradient);
+  border-image-slice: 1;
+  transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Rainbow accent for buttons */
+.button--primary {
+  background: var(--rainbow-gradient);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.button--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  filter: brightness(1.1);
+}
+
+/* Rainbow style for tabs */
+.tabs__item--active {
+  border-bottom-color: transparent;
+  position: relative;
+}
+
+.tabs__item--active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--rainbow-gradient);
+}
+
+/* Rainbow border for blockquotes */
+blockquote {
+  border-left: 4px solid;
+  border-image: var(--rainbow-gradient);
+  border-image-slice: 1;
+}
+
+/* Animated rainbow border for code blocks */
+pre {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+pre::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--rainbow-gradient);
+  z-index: 1;
+}
+
+/* Custom scrollbar with rainbow colors */
+::-webkit-scrollbar-thumb {
+  background: var(--rainbow-gradient);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ifm-background-color);
+}
+
+/* Rainbow hover for sidebar items */
+.menu__link:hover {
+  background: linear-gradient(to right, rgba(255, 51, 102, 0.1), rgba(51, 204, 102, 0.1), rgba(102, 51, 204, 0.1));
+}
+
+.menu__link--active {
+  border-left: 3px solid;
+  border-image: var(--rainbow-gradient);
+  border-image-slice: 1;
+}
+
+/* Version badge with rainbow background */
+.badge--primary {
+  background: var(--rainbow-gradient);
+  color: white;
+  font-weight: bold;
+}
+
+/* Ensure table headers have a solid, readable background instead of rainbow gradient */
+table th {
+  background-color: var(--ifm-color-primary-dark);
+  color: white;
+  font-weight: bold;
+  border-bottom: 2px solid var(--ifm-color-primary-lighter);
+}
+
+/* Add subtle rainbow accent on hover for table headers */
+table th:hover {
+  background-color: var(--ifm-color-primary-darker);
 }
