@@ -4,7 +4,7 @@ on:
   push:
     branches:
 #      - "develop/**"    # For testing
-      - "sample_master_never_run"
+      - "master"
     paths:
 #     Documentation
 #     Doc - CI workflow
