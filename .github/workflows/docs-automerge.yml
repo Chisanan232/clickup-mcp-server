@@ -66,13 +66,19 @@ jobs:
               - '**/*.webp'
               - '**/*.svg'
 
-      - name: Stop if not docs-only
-        if: steps.changes.outputs.docs != 'true' || steps.changes.outputs.code == 'true'
+      # Define a docs-only condition we can reuse
+      - name: Check if docs-only
+        id: docs_only_check
         run: |
-          echo "Not docs-only. Skipping."
-          exit 0
+          if [[ "${{ steps.changes.outputs.docs }}" == "true" && "${{ steps.changes.outputs.code }}" != "true" ]]; then
+            echo "is_docs_only=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_docs_only=false" >> $GITHUB_OUTPUT
+            echo "Not docs-only changes. Skipping remaining steps."
+          fi
 
-      - name: Add label docs-only (optional)
+      - name: Add label docs-only
+        if: steps.docs_only_check.outputs.is_docs_only == 'true'
         uses: actions-ecosystem/action-add-labels@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -80,7 +86,7 @@ jobs:
 
       # Auto-approve（required setting「Allow GitHub Actions to create and approve pull requests」in repo）
       - name: Approve PR via REST API
-        if: steps.changes.outputs.docs == 'true' && steps.changes.outputs.code != 'true'
+        if: steps.docs_only_check.outputs.is_docs_only == 'true'
         uses: actions/github-script@v7
         with:
           script: |
@@ -95,6 +101,7 @@ jobs:
 
       # Activate GitHub auto-merge（required setting「Allow auto-merge」in repo）
       - name: Enable auto-merge (squash)
+        if: steps.docs_only_check.outputs.is_docs_only == 'true'
         uses: peter-evans/enable-pull-request-automerge@v3
         with:
           pull-request-number: ${{ github.event.pull_request.number }}
