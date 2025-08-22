@@ -79,11 +79,19 @@ jobs:
           labels: 📝 docs-only
 
       # Auto-approve（required setting「Allow GitHub Actions to create and approve pull requests」in repo）
-      - name: Approve the PR
-        uses: peter-evans/approve-pull-request@v6
+      - name: Approve PR via REST API
+        if: steps.changes.outputs.docs == 'true' && steps.changes.outputs.code != 'true'
+        uses: actions/github-script@v7
         with:
-          pull-request-number: ${{ github.event.pull_request.number }}
-          review-message: "✅ Auto-approved: docs-only changes."
+          script: |
+            const pr = context.payload.pull_request;
+            await github.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              event: 'APPROVE',              // other valid options: 'REQUEST_CHANGES' or 'COMMENT'
+              body: '✅ Auto-approved: docs-only changes.'
+            });
 
       # Activate GitHub auto-merge（required setting「Allow auto-merge」in repo）
       - name: Enable auto-merge (squash)
