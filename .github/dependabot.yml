@@ -38,3 +38,13 @@ updates:
       - dependency-type: "development"
     commit-message:
       prefix: ⬆
+    groups:
+      tooling:
+        patterns:
+          - "webpack*"
+          - "eslint*"
+          - "vite*"
+        update-types:
+          - "major"
+          - "minor"
+          - "patch"
