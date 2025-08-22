@@ -12,8 +12,8 @@
   <a href="https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/ci.yaml">
     <img src="https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/ci.yaml/badge.svg" alt="CI/CD status">
   </a>
-  <a href="https://codecov.io/gh/Chisanan232/clickup-mcp-server" > 
-    <img src="https://codecov.io/gh/Chisanan232/clickup-mcp-server/graph/badge.svg?token=VVZ0cGPVvp"/> 
+  <a href="https://codecov.io/gh/Chisanan232/clickup-mcp-server" >
+    <img src="https://codecov.io/gh/Chisanan232/clickup-mcp-server/graph/badge.svg?token=VVZ0cGPVvp"/>
   </a>
   <a href="https://results.pre-commit.ci/latest/github/Chisanan232/clickup-mcp-server/master">
     <img src="https://results.pre-commit.ci/badge/github/Chisanan232/clickup-mcp-server/master.svg" alt="Pre-Commit building state">
@@ -38,8 +38,8 @@
 
 ## Overview
 
-🦾 A strong Model, Capability, Protocol (MCP) server for ClickUp API integration. This server provides a standardized 
-interface for interacting with ClickUp's API through the MCP protocol, making it easier to build AI-enabled applications 
+🦾 A strong Model, Capability, Protocol (MCP) server for ClickUp API integration. This server provides a standardized
+interface for interacting with ClickUp's API through the MCP protocol, making it easier to build AI-enabled applications
 that leverage ClickUp's project management capabilities.
 
 
@@ -186,7 +186,7 @@ The server supports various configuration options:
 The [documentation](https://chisanan232.github.io/clickup-mcp-server/) contains more details,
 demonstrations and anything you need about **_clickup-mcp-server_**.
 
-* [Getting start](https://chisanan232.github.io/clickup-mcp-server/docs/next/quick-start) helps you start to prepare the 
+* [Getting start](https://chisanan232.github.io/clickup-mcp-server/docs/next/quick-start) helps you start to prepare the
 environment, install dependencies and configure the detail settings with explanation in detail.
     * What [requirement](https://chisanan232.github.io/clickup-mcp-server/docs/next/quick-start/requirements) I need to prepare?
     * How can I [install](https://chisanan232.github.io/clickup-mcp-server/docs/next/quick-start/installation) it?
