@@ -173,6 +173,29 @@ The `docker-ci.yml` workflow tests Docker image building and functionality.
 
 The `dockerhub-readme-ci.yml` workflow updates the Docker Hub repository description.
 
+### Documentation Auto-Approve & Auto-Merge
+
+[![docs-automerge](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/docs-automerge.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/docs-automerge.yml)
+
+The `docs-automerge.yml` workflow automatically approves and merges pull requests that only contain documentation changes. This streamlines the process for documentation updates by:
+
+1. **Identifying Documentation-Only Changes**: 
+   - Uses path filtering to detect changes limited to documentation files
+   - Checks that no code, configuration, or infrastructure files are modified
+
+2. **Automatic Processing**:
+   - Adds a "📝 docs-only" label to qualifying PRs
+   - Automatically approves the PR with a review comment
+   - Enables auto-merge functionality (merge commit)
+
+The workflow is triggered on pull request events (opened, reopened, synchronize, ready for review) targeting the master branch, but only processes PRs that are not in draft state.
+
+#### Requirements for Auto-Merge:
+- Repository must have "Allow auto-merge" enabled in settings
+- Repository must have "Allow GitHub Actions to create and approve pull requests" enabled
+
+This workflow helps reduce the maintenance burden for documentation-focused contributions while maintaining proper review processes for code changes.
+
 ## CI/CD Configuration Files
 
 All CI/CD workflows are defined in the `.github/workflows/` directory:
