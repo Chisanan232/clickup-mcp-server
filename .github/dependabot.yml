@@ -39,12 +39,26 @@ updates:
     commit-message:
       prefix: ⬆
     groups:
-      tooling:
+      security-patches:
+        applies-to: security-updates
         patterns:
-          - "webpack*"
-          - "eslint*"
-          - "vite*"
+          - "*"                  # all the security patches in this group
         update-types:
           - "major"
           - "minor"
           - "patch"
+
+      tooling:
+        applies-to: version-updates
+        patterns:
+          - "webpack*"
+          - "eslint*"
+          - "vite*"
+          - "mermaid"
+        update-types:
+          - "major"
+          - "minor"
+          - "patch"
+
+    # recommend：let Dependabot modify config package.json directly (not only adjust lockfile)
+    versioning-strategy: increase
