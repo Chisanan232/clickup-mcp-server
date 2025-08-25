@@ -1,0 +1,104 @@
+##############################################################################################
+#
+# Workflow Description:
+#     Build a git tag on a specific commit in every git branch. And create GitHub release if current git branch is 'master'.
+#
+# Workflow input parameters:
+#     * General arguments:
+#         * project_type: Different project type would get the software version info in different way.
+#         * debug_mode: It would run the tasks as log message, doesn't essentially run feature if this option is true.
+#         * project_name: The project name.
+#         * software_version_format: The format of software version.
+#
+# Workflow running output:
+#     Yes, it has running result output. The output is the release version.
+#
+#     * Workflow output:
+#          It would output the version which would be build as git tag and create GitHub release version title.
+#         * python_release_version: Python project release version info.
+#         * github-action_reusable_workflow_release_version: GitHub Action reusable workflow project release version info.
+#
+##############################################################################################
+
+name: Build git tag and create GitHub release with software version
+
+on:
+  workflow_call:
+    inputs:
+      project_type:
+        description: "Different project type would get the software version info in different way."
+        required: true
+        type: string    # Option: python, github-action_reusable-workflow
+#      activate_git_event:
+#        description: "Which git event should activate the workflow."
+#        type: string
+#        required: false
+#        default: push
+      debug_mode:
+        description: "It would run the tasks as log message, doesn't essentially run feature if this option is true."
+        type: boolean
+        required: false
+        default: false
+      project_name:
+        description: "The project name."
+        type: string
+        required: false
+      software_version_format:
+        description: "The format of software version."
+        type: string
+        required: false
+
+    secrets:
+      github_auth_token:
+        description: "The authentication token for doing some operators with GitHub."
+        required: false
+
+    outputs:
+      python_release_version:
+        description: "The version which would be build as git tag and create GitHub release version title."
+        value: ${{ jobs.build_git-tag_and_create_github-release.outputs.matrix_python }}
+      github-action_reusable_workflow_release_version:
+        description: "The version which would be build as git tag and create GitHub release version title."
+        value: ${{ jobs.build_git-tag_and_create_github-release.outputs.matrix_github_action_reusable_workflow }}
+
+
+jobs:
+  build_git-tag_and_create_github-release:
+#    name: Build git tag and GitHub release if it needs
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix_python: ${{ steps.python_release.outputs.release_type }}
+      matrix_github_action_reusable_workflow: ${{ steps.github_action_reusable_workflow_release.outputs.release_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # This flow for the project type is Python project
+      - name: Build git tag and create GitHub release for Python project
+        if: ${{ inputs.project_type == 'python-package' }}
+        id: python_release
+        run: | 
+          release=$(bash ./scripts/ci/build_git-tag_or_create_github-release.sh ${{ inputs.project_type }}  ${{ inputs.debug_mode }} ${{ inputs.project_name }} ${{ inputs.software_version_format }})
+          echo "📄 Release log: $release"
+
+          release_type=$(echo "$release" | grep -E "\[Python\] \[Final Running Result\] ((Official\-Release)|(Pre\-Release))" | grep -E -o "((Official\-Release)|(Pre\-Release))")
+          echo "🐍 Release Type: $release_type"
+
+          echo "release_type=$(echo $release_type)" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_auth_token }}
+
+      # This flow for the project type is GitHub Action reusable workflow
+      - name: Build git tag and create GitHub release for GitHub Action reusable workflow project
+        if: ${{ inputs.project_type == 'github-action-reusable-workflow' }}
+        id: github_action_reusable_workflow_release
+        run: | 
+          release_info=$(bash ./scripts/ci/generate_release_info.sh ${{ inputs.project_type }} ${{ inputs.debug_mode }})
+          echo "🧾 release_info: $release_info"
+          release_version=$(echo "$release_info" | grep -E "Target version which would be pass to deployment process: (([0-9]{1,}\.{0,1}[0-9]{0,}\.{0,1}[0-9]{0,})|(Pre\-Release))" | grep -E -o "(([0-9]{1,}\.{0,1}[0-9]{0,}\.{0,1}[0-9]{0,})|(Pre\-Release))")
+          echo "🤖 Release Version: $release_version"
+
+          echo "release_version=$(echo $release_version)" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_auth_token }}

@@ -159,7 +159,7 @@ jobs:
           git push origin HEAD:${{ github.ref_name }}
 
   build_git-tag_and_create_github-release:
-    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_build_git-tag_and_create_github-release.yaml@v7.3
+    uses: ./.github/workflows/rw_build_git-tag_and_create_github-release.yaml
     needs: bump_version
     secrets:
       github_auth_token: ${{ secrets.GITHUB_TOKEN }}
