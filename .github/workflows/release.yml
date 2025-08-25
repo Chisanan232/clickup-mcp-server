@@ -177,6 +177,7 @@ jobs:
       - name: Create release and build package
         run: |
           uv run semantic-release version --push --vcs-release ${{ needs.compute_version.outputs.force_flag }}
+          uv build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -185,9 +186,8 @@ jobs:
           path: dist/
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          skip-existing: true
+        run: |
+          uv publish
 
   release_docker:
     name: Release Docker Image

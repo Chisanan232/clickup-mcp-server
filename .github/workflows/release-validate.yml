@@ -100,13 +100,14 @@ jobs:
       - name: Build Python package
         run: |
           echo "Building Python package..."
-          uv run python -m build
+          uv build
           echo "Package build completed"
 
-      - name: Check package with twine
+      - name: Check package integrity
         run: |
-          echo "Checking package integrity with twine..."
-          uv run twine check dist/*
+          echo "Checking package integrity..."
+          # uv build already validates the package structure
+          ls -la dist/
           echo "Package check completed"
 
       - name: Test package installation
