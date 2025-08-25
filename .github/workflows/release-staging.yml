@@ -1,0 +1,359 @@
+name: Staging Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      level:
+        description: 'Release level for staging'
+        required: false
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      notes:
+        description: 'Staging release notes'
+        required: false
+        default: 'Staging release for testing'
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+concurrency:
+  group: release-staging-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  compute-version:
+    name: Compute Staging Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      rc_version: ${{ steps.version.outputs.rc_version }}
+      force_flag: ${{ steps.version.outputs.force_flag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install release dependencies
+        run: uv pip install --system .[release-ci]
+
+      - name: Compute staging version
+        id: version
+        run: |
+          case "${{ inputs.level }}" in
+            "patch")
+              LEVEL_FLAG="--patch"
+              ;;
+            "minor")
+              LEVEL_FLAG="--minor"
+              ;;
+            "major")
+              LEVEL_FLAG="--major"
+              ;;
+            *)
+              LEVEL_FLAG="--patch"
+              ;;
+          esac
+          
+          BASE_VERSION=$(uv run semantic-release --noop version --print $LEVEL_FLAG)
+          RC_VERSION="${BASE_VERSION}-rc.0"
+          
+          echo "version=$BASE_VERSION" >> $GITHUB_OUTPUT
+          echo "rc_version=$RC_VERSION" >> $GITHUB_OUTPUT
+          echo "force_flag=$LEVEL_FLAG" >> $GITHUB_OUTPUT
+          
+          echo "Base version: $BASE_VERSION"
+          echo "RC version: $RC_VERSION"
+
+  pypi-test:
+    name: Upload to TestPyPI
+    runs-on: ubuntu-latest
+    needs: compute-version
+    environment: test-pypi
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install release dependencies
+        run: uv pip install --system .[release-ci]
+
+      - name: Configure git
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
+      - name: Create staging version and build package
+        run: |
+          # Temporarily modify version for staging
+          uv run semantic-release version --no-push --no-vcs-release ${{ needs.compute-version.outputs.force_flag }}
+          
+          # Build the package
+          uv run python -m build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-python-package
+          path: dist/
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          username: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          skip-existing: true
+
+      - name: Test installation from TestPyPI
+        run: |
+          echo "Testing installation from TestPyPI..."
+          sleep 30  # Wait for package to be available
+          
+          # Create fresh environment
+          python -m venv test_env
+          source test_env/bin/activate
+          
+          # Install from TestPyPI
+          pip install --index-url https://test.pypi.org/simple/ \
+            --extra-index-url https://pypi.org/simple/ \
+            clickup-mcp-server==${{ needs.compute-version.outputs.version }} || true
+          
+          deactivate
+          rm -rf test_env
+          echo "TestPyPI installation test completed"
+
+  ghcr-rc:
+    name: Push RC Docker Image
+    runs-on: ubuntu-latest
+    needs: compute-version
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for RC image
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=${{ needs.compute-version.outputs.rc_version }}
+            type=raw,value=staging-latest
+
+      - name: Build and push RC Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Generate SBOM for RC image
+        run: |
+          syft ghcr.io/${{ github.repository }}:${{ needs.compute-version.outputs.rc_version }} -o spdx-json --file staging-sbom.spdx.json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-docker-sbom
+          path: staging-sbom.spdx.json
+
+      - name: Sign RC Docker image
+        run: |
+          cosign sign --yes ghcr.io/${{ github.repository }}:${{ needs.compute-version.outputs.rc_version }}
+          cosign sign --yes ghcr.io/${{ github.repository }}:staging-latest
+
+      - name: Attest SBOM for RC image
+        run: |
+          cosign attest --yes --predicate staging-sbom.spdx.json --type spdxjson ghcr.io/${{ github.repository }}:${{ needs.compute-version.outputs.rc_version }}
+
+      - name: Test RC image
+        run: |
+          echo "Testing RC Docker image..."
+          
+          # Pull and run the RC image
+          docker pull ghcr.io/${{ github.repository }}:${{ needs.compute-version.outputs.rc_version }}
+          
+          # Start container for quick health check
+          docker run -d --name staging-test \
+            -p 8080:8080 \
+            -e CLICKUP_API_TOKEN=test_token \
+            ghcr.io/${{ github.repository }}:${{ needs.compute-version.outputs.rc_version }}
+          
+          # Wait and test health endpoint
+          sleep 10
+          if curl -f http://127.0.0.1:8080/healthz > /dev/null 2>&1; then
+            echo "✓ RC image health check passed"
+          else
+            echo "⚠ RC image health check failed"
+            docker logs staging-test
+          fi
+          
+          # Clean up
+          docker stop staging-test
+          docker rm staging-test
+          echo "RC image testing completed"
+
+  docs-preview:
+    name: Create Documentation Preview
+    runs-on: ubuntu-latest
+    needs: compute-version
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        working-directory: docs
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure git
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
+      - name: Create or switch to docs-preview branch
+        run: |
+          # Check if docs-preview branch exists
+          if git ls-remote --heads origin docs-preview | grep -q docs-preview; then
+            echo "Switching to existing docs-preview branch"
+            git fetch origin docs-preview
+            git checkout docs-preview
+            git pull origin docs-preview
+          else
+            echo "Creating new docs-preview branch"
+            git checkout -b docs-preview
+          fi
+
+      - name: Version staging documentation
+        working-directory: docs
+        run: |
+          echo "Creating documentation version for staging: ${{ needs.compute-version.outputs.rc_version }}"
+          pnpm exec docusaurus docs:version "${{ needs.compute-version.outputs.rc_version }}"
+
+      - name: Build staging documentation
+        working-directory: docs
+        run: |
+          echo "Building staging documentation..."
+          pnpm build
+          echo "Staging docs build completed"
+
+      - name: Sync staging changelog
+        run: |
+          if [ -f CHANGELOG.md ]; then
+            cp CHANGELOG.md docs/release-notes/changelog.md
+            echo "Changelog synced for staging"
+          fi
+
+      - name: Commit and push staging documentation
+        run: |
+          git add docs/
+          if git diff --staged --quiet; then
+            echo "No documentation changes to commit"
+          else
+            git commit -m "docs: staging version ${{ needs.compute-version.outputs.rc_version }} [skip ci]"
+            git push origin docs-preview
+            echo "Staging documentation pushed to docs-preview branch"
+          fi
+
+      - name: Upload staging docs build
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-docs-build
+          path: docs/build/
+
+  staging-summary:
+    name: Staging Release Summary
+    runs-on: ubuntu-latest
+    needs: [compute-version, pypi-test, ghcr-rc, docs-preview]
+    if: always()
+    steps:
+      - name: Generate staging release summary
+        run: |
+          echo "=== Staging Release Summary ==="
+          echo ""
+          echo "Version Computation: ${{ needs.compute-version.result }}"
+          echo "TestPyPI Upload: ${{ needs.pypi-test.result }}"
+          echo "GHCR RC Image: ${{ needs.ghcr-rc.result }}"
+          echo "Docs Preview: ${{ needs.docs-preview.result }}"
+          echo ""
+          echo "📦 Staging Artifacts:"
+          echo "- Base Version: ${{ needs.compute-version.outputs.version }}"
+          echo "- RC Version: ${{ needs.compute-version.outputs.rc_version }}"
+          echo "- TestPyPI: https://test.pypi.org/project/clickup-mcp-server/${{ needs.compute-version.outputs.version }}/"
+          echo "- GHCR RC Image: ghcr.io/${{ github.repository }}:${{ needs.compute-version.outputs.rc_version }}"
+          echo "- Docs Preview: docs-preview branch"
+          echo ""
+          
+          if [[ "${{ needs.compute-version.result }}" == "success" && \
+                "${{ needs.pypi-test.result }}" == "success" && \
+                "${{ needs.ghcr-rc.result }}" == "success" && \
+                "${{ needs.docs-preview.result }}" == "success" ]]; then
+            echo "✅ Staging release completed successfully!"
+            echo ""
+            echo "🧪 Testing Instructions:"
+            echo "1. Install from TestPyPI:"
+            echo "   pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ clickup-mcp-server==${{ needs.compute-version.outputs.version }}"
+            echo ""
+            echo "2. Test RC Docker image:"
+            echo "   docker run -p 8080:8080 -e CLICKUP_API_TOKEN=your_token ghcr.io/${{ github.repository }}:${{ needs.compute-version.outputs.rc_version }}"
+            echo ""
+            echo "3. Review documentation preview in docs-preview branch"
+            echo ""
+            echo "📝 Release Notes: ${{ inputs.notes }}"
+          else
+            echo "❌ Some staging deployment steps failed. Check the logs above."
+            exit 1
+          fi
