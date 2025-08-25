@@ -1,0 +1,11 @@
+# Example release intent configuration
+# This file controls whether and how to release the project
+# If this file doesn't exist, defaults will be used
+
+release: true
+level: auto  # auto | patch | minor | major
+artifacts:
+  python: auto  # auto | force | skip
+  docker: auto  # auto | force | skip
+  docs: auto    # auto | force | skip
+notes: "Automatic release based on semantic versioning"
