@@ -34,7 +34,6 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       rc_version: ${{ steps.version.outputs.rc_version }}
-      force_flag: ${{ steps.version.outputs.force_flag }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -57,25 +56,25 @@ jobs:
         run: |
           case "${{ inputs.level }}" in
             "patch")
-              LEVEL_FLAG="--patch"
+              BUMP_FLAG="--bump patch"
               ;;
             "minor")
-              LEVEL_FLAG="--minor"
+              BUMP_FLAG="--bump minor"
               ;;
             "major")
-              LEVEL_FLAG="--major"
+              BUMP_FLAG="--bump major"
               ;;
             *)
-              LEVEL_FLAG="--patch"
+              BUMP_FLAG="--bump patch"
               ;;
           esac
           
-          BASE_VERSION=$(uv run semantic-release --noop version --print $LEVEL_FLAG)
+          echo "Computing staging version with: uv version --dry-run $BUMP_FLAG"
+          BASE_VERSION=$(uv version --dry-run $BUMP_FLAG)
           RC_VERSION="${BASE_VERSION}-rc.0"
           
           echo "version=$BASE_VERSION" >> $GITHUB_OUTPUT
           echo "rc_version=$RC_VERSION" >> $GITHUB_OUTPUT
-          echo "force_flag=$LEVEL_FLAG" >> $GITHUB_OUTPUT
           
           echo "Base version: $BASE_VERSION"
           echo "RC version: $RC_VERSION"
@@ -109,10 +108,9 @@ jobs:
 
       - name: Create staging version and build package
         run: |
-          # Temporarily modify version for staging
-          uv run semantic-release version --no-push --no-vcs-release ${{ needs.compute-version.outputs.force_flag }}
-          
-          # Build the package
+          echo "Building staging package for version ${{ needs.compute-version.outputs.version }}"
+          # Note: We don't actually bump the version in staging, just build with current version
+          # The RC version will be used for Docker image tagging
           uv build
 
       - name: Upload build artifacts

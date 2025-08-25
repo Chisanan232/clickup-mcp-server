@@ -98,60 +98,13 @@ jobs:
           INPUT_NOTES: ${{ inputs.notes }}
         run: uv run release-intent
 
-  compute_version:
-    name: Compute Next Version
+  bump_version:
+    name: Bump Version and Commit
     runs-on: ubuntu-latest
     needs: intent
     if: needs.intent.outputs.do_release == 'true'
     outputs:
-      version: ${{ steps.version.outputs.version }}
-      force_flag: ${{ steps.version.outputs.force_flag }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-
-      - name: Install release dependencies
-        run: uv pip install --system .[release-ci]
-
-      - name: Compute version
-        id: version
-        run: |
-          case "${{ needs.intent.outputs.level }}" in
-            "patch")
-              LEVEL_FLAG="--patch"
-              ;;
-            "minor")
-              LEVEL_FLAG="--minor"
-              ;;
-            "major")
-              LEVEL_FLAG="--major"
-              ;;
-            *)
-              LEVEL_FLAG=""
-              ;;
-          esac
-          
-          VERSION=$(uv run semantic-release --noop version --print $LEVEL_FLAG)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "force_flag=$LEVEL_FLAG" >> $GITHUB_OUTPUT
-          echo "Computed version: $VERSION"
-
-  release_python:
-    name: Release Python Package
-    runs-on: ubuntu-latest
-    needs: [intent, compute_version]
-    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.python != 'skip'
-    environment: pypi
+      version: ${{ steps.bump.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -174,9 +127,73 @@ jobs:
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
 
-      - name: Create release and build package
+      - name: Bump version with uv
+        id: bump
         run: |
-          uv run semantic-release version --push --vcs-release ${{ needs.compute_version.outputs.force_flag }}
+          case "${{ needs.intent.outputs.level }}" in
+            "patch")
+              BUMP_FLAG="--bump patch"
+              ;;
+            "minor")
+              BUMP_FLAG="--bump minor"
+              ;;
+            "major")
+              BUMP_FLAG="--bump major"
+              ;;
+            *)
+              BUMP_FLAG="--bump patch"  # Default to patch for auto
+              ;;
+          esac
+          
+          echo "Bumping version with: uv version $BUMP_FLAG"
+          uv version $BUMP_FLAG
+          
+          # Get the new version
+          NEW_VERSION=$(uv version)
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+          
+          # Commit the version bump
+          git add pyproject.toml
+          git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
+          git push origin HEAD:${{ github.ref_name }}
+
+  build_git-tag_and_create_github-release:
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_build_git-tag_and_create_github-release.yaml@v7.3
+    needs: bump_version
+    secrets:
+      github_auth_token: ${{ secrets.GITHUB_TOKEN }}
+    with:
+      project_type: python-package
+      project_name: ${{ github.event.repository.name }}
+      software_version_format: general-3
+
+  release_python:
+    name: Release Python Package
+    runs-on: ubuntu-latest
+    needs: [intent, bump_version, build_git-tag_and_create_github-release]
+    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.python != 'skip'
+    environment: pypi
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install release dependencies
+        run: uv pip install --system .[release-ci]
+
+      - name: Build package
+        run: |
+          echo "Building Python package for version ${{ needs.bump_version.outputs.version }}"
           uv build
 
       - name: Upload build artifacts
@@ -192,7 +209,7 @@ jobs:
   release_docker:
     name: Release Docker Image
     runs-on: ubuntu-latest
-    needs: [intent, compute_version]
+    needs: [intent, bump_version, build_git-tag_and_create_github-release]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docker != 'skip'
     steps:
       - name: Checkout repository
@@ -214,7 +231,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=raw,value=${{ needs.compute_version.outputs.version }}
+            type=raw,value=${{ needs.bump_version.outputs.version }}
             type=raw,value=latest
 
       - name: Build and push Docker image
@@ -236,7 +253,7 @@ jobs:
 
       - name: Generate SBOM
         run: |
-          syft ghcr.io/${{ github.repository }}:${{ needs.compute_version.outputs.version }} -o spdx-json --file sbom.spdx.json
+          syft ghcr.io/${{ github.repository }}:${{ needs.bump_version.outputs.version }} -o spdx-json --file sbom.spdx.json
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
@@ -246,17 +263,17 @@ jobs:
 
       - name: Sign Docker image
         run: |
-          cosign sign --yes ghcr.io/${{ github.repository }}:${{ needs.compute_version.outputs.version }}
+          cosign sign --yes ghcr.io/${{ github.repository }}:${{ needs.bump_version.outputs.version }}
           cosign sign --yes ghcr.io/${{ github.repository }}:latest
 
       - name: Attest SBOM
         run: |
-          cosign attest --yes --predicate sbom.spdx.json --type spdxjson ghcr.io/${{ github.repository }}:${{ needs.compute_version.outputs.version }}
+          cosign attest --yes --predicate sbom.spdx.json --type spdxjson ghcr.io/${{ github.repository }}:${{ needs.bump_version.outputs.version }}
 
   release_docs:
     name: Release Documentation
     runs-on: ubuntu-latest
-    needs: [intent, compute_version]
+    needs: [intent, bump_version, build_git-tag_and_create_github-release]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docs != 'skip'
     steps:
       - name: Checkout repository
@@ -278,7 +295,7 @@ jobs:
 
       - name: Version documentation
         working-directory: docs
-        run: pnpm exec docusaurus docs:version "${{ needs.compute_version.outputs.version }}"
+        run: pnpm exec docusaurus docs:version "${{ needs.bump_version.outputs.version }}"
 
       - name: Sync changelog
         run: |
@@ -297,6 +314,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No documentation changes to commit"
           else
-            git commit -m "docs: version ${{ needs.compute_version.outputs.version }} [skip ci]"
+            git commit -m "docs: version ${{ needs.bump_version.outputs.version }} [skip ci]"
             git push origin HEAD:master
           fi

@@ -91,11 +91,14 @@ jobs:
       - name: Install release dependencies
         run: uv pip install --system .[release-ci]
 
-      - name: Test semantic-release (dry run)
+      - name: Test uv version (dry run)
         run: |
-          echo "Testing semantic-release version calculation..."
-          uv run semantic-release --noop version --print || true
-          echo "Semantic-release dry run completed"
+          echo "Testing uv version bump calculation..."
+          echo "Current version: $(uv version)"
+          uv version --dry-run --bump patch || true
+          uv version --dry-run --bump minor || true  
+          uv version --dry-run --bump major || true
+          echo "UV version dry run completed"
 
       - name: Build Python package
         run: |

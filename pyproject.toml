@@ -64,7 +64,6 @@ pre-commit-ci = [
 release-ci = [
     "pyyaml>=6.0.1,<7",
     "jsonschema>=4.17.0,<5",
-    "python-semantic-release>=9.0.0,<10",
 ]
 
 [tool.uv]
