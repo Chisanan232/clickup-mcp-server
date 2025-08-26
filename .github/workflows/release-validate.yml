@@ -170,7 +170,7 @@ jobs:
           echo "Testing container startup and health check..."
           
           # Start container in background
-          docker run -d --name test-container -p 8080:8080 \
+          docker run -d --name test-container -p 8000:8000 \
             -e CLICKUP_API_TOKEN=test_token \
             clickup-mcp-test:latest
           
@@ -181,7 +181,7 @@ jobs:
           
           while [ $elapsed -lt $timeout ]; do
             if docker ps | grep -q test-container; then
-              if curl -f http://127.0.0.1:8080/health > /dev/null 2>&1; then
+              if curl -f http://127.0.0.1:8000/health > /dev/null 2>&1; then
                 echo "✓ Health check passed"
                 break
               fi
