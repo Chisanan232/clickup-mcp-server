@@ -163,10 +163,6 @@ jobs:
     needs: bump_version
     secrets:
       github_auth_token: ${{ secrets.GITHUB_TOKEN }}
-    with:
-      project_type: python-package
-      project_name: ${{ github.event.repository.name }}
-      software_version_format: general-3
 
   release_python:
     name: Release Python Package
