@@ -5,7 +5,7 @@ on:
     branches:
       - master
     paths:
-      - .github/tag_and_release/**
+      - .github/tag_and_release/release-**
   workflow_dispatch:
     inputs:
       level:
