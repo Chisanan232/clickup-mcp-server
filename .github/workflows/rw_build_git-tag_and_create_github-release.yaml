@@ -5,10 +5,7 @@
 #
 # Workflow input parameters:
 #     * General arguments:
-#         * project_type: Different project type would get the software version info in different way.
 #         * debug_mode: It would run the tasks as log message, doesn't essentially run feature if this option is true.
-#         * project_name: The project name.
-#         * software_version_format: The format of software version.
 #
 # Workflow running output:
 #     Yes, it has running result output. The output is the release version.
@@ -16,7 +13,6 @@
 #     * Workflow output:
 #          It would output the version which would be build as git tag and create GitHub release version title.
 #         * python_release_version: Python project release version info.
-#         * github-action_reusable_workflow_release_version: GitHub Action reusable workflow project release version info.
 #
 ##############################################################################################
 
@@ -25,10 +21,6 @@ name: Build git tag and create GitHub release with software version
 on:
   workflow_call:
     inputs:
-      project_type:
-        description: "Different project type would get the software version info in different way."
-        required: true
-        type: string    # Option: python, github-action_reusable-workflow
 #      activate_git_event:
 #        description: "Which git event should activate the workflow."
 #        type: string
@@ -39,14 +31,6 @@ on:
         type: boolean
         required: false
         default: false
-      project_name:
-        description: "The project name."
-        type: string
-        required: false
-      software_version_format:
-        description: "The format of software version."
-        type: string
-        required: false
 
     secrets:
       github_auth_token:
@@ -57,9 +41,6 @@ on:
       python_release_version:
         description: "The version which would be build as git tag and create GitHub release version title."
         value: ${{ jobs.build_git-tag_and_create_github-release.outputs.matrix_python }}
-      github-action_reusable_workflow_release_version:
-        description: "The version which would be build as git tag and create GitHub release version title."
-        value: ${{ jobs.build_git-tag_and_create_github-release.outputs.matrix_github_action_reusable_workflow }}
 
 
 jobs:
@@ -69,7 +50,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix_python: ${{ steps.python_release.outputs.release_type }}
-      matrix_github_action_reusable_workflow: ${{ steps.github_action_reusable_workflow_release.outputs.release_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
