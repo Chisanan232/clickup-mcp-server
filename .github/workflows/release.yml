@@ -156,7 +156,7 @@ jobs:
           
           # Commit the version bump
           git add pyproject.toml
-          git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
+          git commit -m "⬆️ chore: bump version to $NEW_VERSION [skip ci]"
           git push origin HEAD:${{ github.ref_name }}
 
   build_git-tag_and_create_github-release:
@@ -311,6 +311,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No documentation changes to commit"
           else
-            git commit -m "docs: version ${{ needs.bump_version.outputs.version }} [skip ci]"
+            git commit -m "⬆️ docs: version ${{ needs.bump_version.outputs.version }} [skip ci]"
             git push origin HEAD:master
           fi
