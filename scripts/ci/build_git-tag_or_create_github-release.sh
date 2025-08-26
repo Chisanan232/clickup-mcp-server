@@ -80,7 +80,8 @@ fi
 #Input_Arg_Software_Version_Format=$3
 
 declare Software_Version_Reg
-declare Python_Version_Reg
+## Deprecate
+#declare Python_Version_Reg
 
 declare version_reg
 if [ "$Input_Arg_Software_Version_Format" == "general-2" ]; then
@@ -95,14 +96,15 @@ else
 fi
 Software_Version_Reg="$version_reg*([\.,-]*([a-zA-Z]{1,})*([0-9]{0,})*){0,}"
 
-if [ "$Input_Arg_Release_Type" == 'python-package' ]; then
-    if [ "$Input_Arg_Python_Pkg_Name" == "" ]; then
-        echo "❌ The argument 'Input_Arg_Python_Pkg_Name' (second argument) cannot be empty if option 'Input_Arg_Release_Type' (first argument) is 'python-package'."
-        exit 1
-    fi
-
-    Python_Version_Reg="__version__ = \"$Software_Version_Reg\""
-fi
+## Deprecate
+#if [ "$Input_Arg_Release_Type" == 'python-package' ]; then
+#    if [ "$Input_Arg_Python_Pkg_Name" == "" ]; then
+#        echo "❌ The argument 'Input_Arg_Python_Pkg_Name' (second argument) cannot be empty if option 'Input_Arg_Release_Type' (first argument) is 'python-package'."
+#        exit 1
+#    fi
+#
+#    Python_Version_Reg="__version__ = \"$Software_Version_Reg\""
+#fi
 
 #if [ "$Input_Arg_Release_Type" == 'python-package' ]; then
 #    if [ "$software_version_evolution" == "sema" ]; then
@@ -164,9 +166,15 @@ declare New_Release_Tag    # This is the return value of function 'generate_new_
 generate_new_version_as_tag() {
     project_type=$1
     if [ "$project_type" == "python" ]; then
-        echo "🔎 🐍 📦  Get the new version info from Python package."
-        New_Release_Version=$(cat ./"$Input_Arg_Python_Pkg_Name"/__pkg_info__.py | grep -E "$Python_Version_Reg" | grep -E -o "$Software_Version_Reg")
-        New_Release_Tag=$New_Release_Version
+        echo "🔎 🐍 📦  Get the new version info from UV version command."
+        # Use uv version --short to get just the version number directly
+        New_Release_Version=$(uv version --short 2>/dev/null || echo "")
+        if [ "$New_Release_Version" == "" ]; then
+            echo "❌ Failed to get version from 'uv version --short' command. Please ensure uv is installed and project has valid pyproject.toml"
+            exit 1
+        fi
+        New_Release_Tag="v$New_Release_Version"
+        echo "🔎 📃  Current Version from UV: $New_Release_Version"
     elif [ "$project_type" == "github-action_reusable-workflow" ]; then
         echo "🔎 🐙 🐈 🏷  Get the current version info from GitHub release."
         # Generate the new version from previous tag

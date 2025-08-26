@@ -76,7 +76,6 @@ jobs:
 
       # This flow for the project type is Python project
       - name: Build git tag and create GitHub release for Python project
-        if: ${{ inputs.project_type == 'python-package' }}
         id: python_release
         run: | 
           release=$(bash ./scripts/ci/build_git-tag_or_create_github-release.sh ${{ inputs.project_type }}  ${{ inputs.debug_mode }} ${{ inputs.project_name }} ${{ inputs.software_version_format }})
@@ -86,19 +85,5 @@ jobs:
           echo "🐍 Release Type: $release_type"
 
           echo "release_type=$(echo $release_type)" >> $GITHUB_OUTPUT
-        env:
-          GITHUB_TOKEN: ${{ secrets.github_auth_token }}
-
-      # This flow for the project type is GitHub Action reusable workflow
-      - name: Build git tag and create GitHub release for GitHub Action reusable workflow project
-        if: ${{ inputs.project_type == 'github-action-reusable-workflow' }}
-        id: github_action_reusable_workflow_release
-        run: | 
-          release_info=$(bash ./scripts/ci/generate_release_info.sh ${{ inputs.project_type }} ${{ inputs.debug_mode }})
-          echo "🧾 release_info: $release_info"
-          release_version=$(echo "$release_info" | grep -E "Target version which would be pass to deployment process: (([0-9]{1,}\.{0,1}[0-9]{0,}\.{0,1}[0-9]{0,})|(Pre\-Release))" | grep -E -o "(([0-9]{1,}\.{0,1}[0-9]{0,}\.{0,1}[0-9]{0,})|(Pre\-Release))")
-          echo "🤖 Release Version: $release_version"
-
-          echo "release_version=$(echo $release_version)" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.github_auth_token }}
