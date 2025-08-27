@@ -227,7 +227,7 @@ jobs:
           
           # Wait and test health endpoint
           sleep 10
-          if curl -f http://127.0.0.1:8000/healthz > /dev/null 2>&1; then
+          if curl -f http://127.0.0.1:8000/health > /dev/null 2>&1; then
             echo "✓ RC image health check passed"
           else
             echo "⚠ RC image health check failed"
