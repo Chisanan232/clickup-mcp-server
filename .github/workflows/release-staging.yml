@@ -79,10 +79,18 @@ jobs:
           echo "Base version: $BASE_VERSION"
           echo "RC version: $RC_VERSION"
 
+  build_git-tag_and_create_github-release:
+    uses: ./.github/workflows/rw_build_git-tag_and_create_github-release.yaml
+    needs: compute-version
+    secrets:
+      github_auth_token: ${{ secrets.GITHUB_TOKEN }}
+    with:
+      debug_mode: 'true'
+
   pypi-test:
     name: Upload to TestPyPI
     runs-on: ubuntu-latest
-    needs: compute-version
+    needs: build_git-tag_and_create_github-release
     environment: test-pypi
     steps:
       - name: Checkout repository
