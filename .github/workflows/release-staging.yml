@@ -221,13 +221,13 @@ jobs:
           
           # Start container for quick health check
           docker run -d --name staging-test \
-            -p 8080:8080 \
+            -p 8000:8000 \
             -e CLICKUP_API_TOKEN=test_token \
             ghcr.io/${{ github.repository }}:${{ needs.compute-version.outputs.rc_version }}
           
           # Wait and test health endpoint
           sleep 10
-          if curl -f http://127.0.0.1:8080/healthz > /dev/null 2>&1; then
+          if curl -f http://127.0.0.1:8000/healthz > /dev/null 2>&1; then
             echo "✓ RC image health check passed"
           else
             echo "⚠ RC image health check failed"
@@ -350,7 +350,7 @@ jobs:
             echo "   pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ clickup-mcp-server==${{ needs.compute-version.outputs.version }}"
             echo ""
             echo "2. Test RC Docker image:"
-            echo "   docker run -p 8080:8080 -e CLICKUP_API_TOKEN=your_token ghcr.io/${{ github.repository }}:${{ needs.compute-version.outputs.rc_version }}"
+            echo "   docker run -p 8000:8000 -e CLICKUP_API_TOKEN=your_token ghcr.io/${{ github.repository }}:${{ needs.compute-version.outputs.rc_version }}"
             echo ""
             echo "3. Review documentation preview in docs-preview branch"
             echo ""
