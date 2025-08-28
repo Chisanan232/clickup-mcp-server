@@ -71,6 +71,128 @@ jobs:
       docs: ${{ inputs.docs }}
       notes: ${{ inputs.notes }}
 
+  detect_changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      docs_changed: ${{ steps.changes.outputs.docs }}
+      dev_changed: ${{ steps.changes.outputs.dev }}
+      any_docs_changed: ${{ steps.changes.outputs.docs == 'true' || steps.changes.outputs.dev == 'true' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect docs section changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            docs:
+              - 'docs/src/**'
+              - 'docs/contents/document/**'
+              - 'docs/static/**'
+              - 'docs/docusaurus.config.*'
+              - 'docs/package.json'
+              - 'docs/pnpm-lock.yaml'
+            dev:
+              - 'docs/contents/development/**'
+
+  prepare_docs_matrix:
+    name: Prepare Docs Matrix
+    runs-on: ubuntu-latest
+    needs: [intent, detect_changes]
+    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docs != 'skip'
+    outputs:
+      sections_to_version: ${{ steps.matrix.outputs.sections_to_version }}
+      has_sections: ${{ steps.matrix.outputs.has_sections }}
+      strategy: ${{ steps.matrix.outputs.strategy }}
+    steps:
+      - name: Prepare sections matrix
+        id: matrix
+        run: |
+          echo "🔍 Preparing docs versioning matrix..."
+          
+          # Get outputs from intent parsing
+          DOCS_MODE="${{ needs.intent.outputs.docs_mode }}"
+          DOCS_SECTIONS='${{ needs.intent.outputs.docs_sections }}'
+          DOCS_STRATEGY="${{ needs.intent.outputs.docs_strategy }}"
+          
+          echo "Docs mode: $DOCS_MODE"
+          echo "Docs sections: $DOCS_SECTIONS"
+          echo "Docs strategy: $DOCS_STRATEGY"
+          
+          # Get changed sections from change detection
+          DOCS_CHANGED="${{ needs.detect_changes.outputs.docs_changed }}"
+          DEV_CHANGED="${{ needs.detect_changes.outputs.dev_changed }}"
+          
+          echo "Docs changed: $DOCS_CHANGED"
+          echo "Dev changed: $DEV_CHANGED"
+          
+          # Build array of changed sections dynamically based on what was detected
+          # Use Python to build the changed sections array more reliably
+          python3 -c "
+          import json
+          
+          # Get requested sections from intent
+          requested_sections = json.loads('$DOCS_SECTIONS')
+          print(f'Requested sections: {requested_sections}')
+          
+          # Build changed sections based on change detection results
+          changed_sections = []
+          
+          if '$DOCS_CHANGED' == 'true' and 'docs' in requested_sections:
+              changed_sections.append('docs')
+          if '$DEV_CHANGED' == 'true' and 'dev' in requested_sections:
+              changed_sections.append('dev')
+          
+          print(f'Changed sections: {changed_sections}')
+          print(json.dumps(changed_sections))
+          " > changed_sections_result.txt
+          
+          # Extract the changed sections JSON from the last line
+          CHANGED_SECTIONS=$(tail -n 1 changed_sections_result.txt)
+          cat changed_sections_result.txt
+          rm changed_sections_result.txt
+          
+          echo "Final changed sections: $CHANGED_SECTIONS"
+          
+          # Determine sections to version based on strategy
+          if [ "$DOCS_STRATEGY" = "changed" ]; then
+            # Only version sections that have changes
+            echo "Using changed sections strategy"
+            
+            if [ "$CHANGED_SECTIONS" != "[]" ] && [ "$CHANGED_SECTIONS" != "" ]; then
+              # Use the changed sections we already calculated
+              SECTIONS_TO_VERSION="$CHANGED_SECTIONS"
+              echo "Versioning changed sections: $SECTIONS_TO_VERSION"
+            else
+              # No changes detected, don't version anything
+              SECTIONS_TO_VERSION="[]"
+              echo "No changes detected, skipping versioning"
+            fi
+          else
+            # Version all requested sections (strategy: always)
+            echo "Using all sections strategy"
+            SECTIONS_TO_VERSION="$DOCS_SECTIONS"
+            echo "Versioning all requested sections: $SECTIONS_TO_VERSION"
+          fi
+          
+          echo "Sections to version: $SECTIONS_TO_VERSION"
+          
+          # Check if we have any sections to version
+          if [ "$SECTIONS_TO_VERSION" = "[]" ] || [ "$SECTIONS_TO_VERSION" = "" ]; then
+            echo "No sections to version"
+            echo "has_sections=false" >> $GITHUB_OUTPUT
+            echo "sections_to_version=[]" >> $GITHUB_OUTPUT
+          else
+            echo "has_sections=true" >> $GITHUB_OUTPUT
+            echo "sections_to_version=$SECTIONS_TO_VERSION" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "strategy=$DOCS_STRATEGY" >> $GITHUB_OUTPUT
+
   bump_version:
     name: Bump Version and Commit
     runs-on: ubuntu-latest
@@ -155,9 +277,12 @@ jobs:
 
   release_docs:
     uses: ./.github/workflows/rw_docs_operations.yaml
-    needs: [intent, bump_version, build_git-tag_and_create_github-release]
-    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docs != 'skip'
+    needs: [intent, prepare_docs_matrix, bump_version, build_git-tag_and_create_github-release]
+    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docs != 'skip' && needs.prepare_docs_matrix.outputs.has_sections == 'true'
     with:
       operation: 'version'
       version: ${{ needs.bump_version.outputs.version }}
+      sections: ${{ needs.prepare_docs_matrix.outputs.sections_to_version }}
+      strategy: ${{ needs.prepare_docs_matrix.outputs.strategy }}
+      changed-sections: ${{ needs.prepare_docs_matrix.outputs.sections_to_version }}
       commit-changes: true
