@@ -1,0 +1,90 @@
+name: 'Parse Release Intent'
+description: 'Parse release intent from configuration files and workflow inputs'
+
+on:
+  workflow_call:
+    inputs:
+      level:
+        description: 'Release level'
+        required: false
+        default: ''
+        type: string
+      python:
+        description: 'Python package release'
+        required: false
+        default: ''
+        type: string
+      docker:
+        description: 'Docker image release'
+        required: false
+        default: ''
+        type: string
+      docs:
+        description: 'Documentation versioning'
+        required: false
+        default: ''
+        type: string
+      notes:
+        description: 'Release notes'
+        required: false
+        default: ''
+        type: string
+      python-version:
+        description: 'Python version to use'
+        required: false
+        default: '3.13'
+        type: string
+
+    outputs:
+      do_release:
+        description: 'Whether to proceed with release'
+        value: ${{ jobs.parse_intent.outputs.do_release }}
+      level:
+        description: 'Computed release level'
+        value: ${{ jobs.parse_intent.outputs.level }}
+      python:
+        description: 'Python release decision'
+        value: ${{ jobs.parse_intent.outputs.python }}
+      docker:
+        description: 'Docker release decision'
+        value: ${{ jobs.parse_intent.outputs.docker }}
+      docs:
+        description: 'Documentation release decision'
+        value: ${{ jobs.parse_intent.outputs.docs }}
+      notes:
+        description: 'Release notes'
+        value: ${{ jobs.parse_intent.outputs.notes }}
+
+jobs:
+  parse_intent:
+    name: Parse Release Intent
+    runs-on: ubuntu-latest
+    outputs:
+      do_release: ${{ steps.intent.outputs.do_release }}
+      level: ${{ steps.intent.outputs.level }}
+      python: ${{ steps.intent.outputs.python }}
+      docker: ${{ steps.intent.outputs.docker }}
+      docs: ${{ steps.intent.outputs.docs }}
+      notes: ${{ steps.intent.outputs.notes }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python with UV
+        uses: ./.github/actions/setup-python-uv
+        with:
+          python-version: ${{ inputs.python-version }}
+          install-dependencies: 'true'
+          dependency-groups: 'release-ci'
+
+      - name: Parse release intent
+        id: intent
+        env:
+          INPUT_LEVEL: ${{ inputs.level }}
+          INPUT_PYTHON: ${{ inputs.python }}
+          INPUT_DOCKER: ${{ inputs.docker }}
+          INPUT_DOCS: ${{ inputs.docs }}
+          INPUT_NOTES: ${{ inputs.notes }}
+        run: uv run release-intent
