@@ -49,9 +49,6 @@ jobs:
   docker-build-smoke:
     uses: ./.github/workflows/rw_docker_operations.yaml
     needs: intent-parse
-    secrets:
-      dockerhub-user: ''
-      registry-token: ''
     with:
       operation: 'test'
       image-name: ${{ github.repository }}
@@ -69,9 +66,6 @@ jobs:
   supply-chain-loopback:
     uses: ./.github/workflows/rw_docker_operations.yaml
     needs: docker-build-smoke
-    secrets:
-      dockerhub-user: ''
-      registry-token: ''
     with:
       operation: 'security-scan'
       image-name: ${{ github.repository }}
