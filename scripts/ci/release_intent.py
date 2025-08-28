@@ -124,10 +124,10 @@ def merge_intent_data(
 def parse_docs_config(docs_artifact: Any) -> tuple[str, str, str]:
     """
     Parse docs artifact and return (mode, sections, strategy).
-    
+
     Args:
         docs_artifact: Either a string or dict with docs configuration
-        
+
     Returns:
         Tuple of (mode, sections_json, strategy)
     """
@@ -140,18 +140,18 @@ def parse_docs_config(docs_artifact: Any) -> tuple[str, str, str]:
         else:
             # Assume it's a mode value
             return docs_artifact, '["docs", "dev"]', "all"
-    
+
     elif isinstance(docs_artifact, dict):
         # New object format
         mode = docs_artifact.get("mode", "auto")
         sections = docs_artifact.get("sections", ["docs", "dev"])
         strategy = docs_artifact.get("strategy", "all")
-        
+
         # Convert sections list to JSON string for output
         sections_json = json.dumps(sections)
-        
+
         return mode, sections_json, strategy
-    
+
     else:
         # Fallback to defaults
         return "auto", '["docs", "dev"]', "all"
@@ -176,7 +176,7 @@ def write_github_outputs(intent: ReleaseIntent) -> None:
         return
 
     # Parse docs configuration
-    docs_mode, docs_sections, docs_strategy = parse_docs_config(intent['artifacts']['docs'])
+    docs_mode, docs_sections, docs_strategy = parse_docs_config(intent["artifacts"]["docs"])
 
     try:
         with open(github_output, "a", encoding="utf-8") as f:
@@ -185,7 +185,7 @@ def write_github_outputs(intent: ReleaseIntent) -> None:
             f.write(f"python={intent['artifacts']['python']}\n")
             f.write(f"docker={intent['artifacts']['docker']}\n")
             # Legacy docs output for backward compatibility
-            if isinstance(intent['artifacts']['docs'], str):
+            if isinstance(intent["artifacts"]["docs"], str):
                 f.write(f"docs={intent['artifacts']['docs']}\n")
             else:
                 f.write(f"docs={docs_mode}\n")
