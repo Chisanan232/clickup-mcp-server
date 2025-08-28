@@ -21,7 +21,7 @@ on:
       upload-artifacts:
         description: 'Whether to upload build artifacts'
         required: false
-        default: 'true'
+        default: true
         type: boolean
       artifact-name:
         description: 'Name for uploaded artifacts'
