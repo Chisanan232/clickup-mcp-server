@@ -41,17 +41,17 @@ on:
       enable-sbom:
         description: 'Generate and upload SBOM'
         required: false
-        default: 'false'
+        default: false
         type: boolean
       enable-signing:
         description: 'Sign image with cosign'
         required: false
-        default: 'false'
+        default: false
         type: boolean
       cache-enabled:
         description: 'Enable build cache'
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
     secrets:

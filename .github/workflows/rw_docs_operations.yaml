@@ -46,12 +46,12 @@ on:
       commit-changes:
         description: 'Whether to commit version changes'
         required: false
-        default: 'false'
+        default: false
         type: boolean
       upload-artifacts:
         description: 'Whether to upload build artifacts'
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
     outputs:
