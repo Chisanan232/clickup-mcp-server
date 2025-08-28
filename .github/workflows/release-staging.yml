@@ -94,7 +94,8 @@ jobs:
     uses: ./.github/workflows/rw_docker_operations.yaml
     needs: compute-version
     secrets:
-      registry-token: ${{ secrets.GITHUB_TOKEN }}
+      dockerhub-user: ${{ secrets.DOCKERHUB_USERNAME }}
+      registry-token: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
       operation: 'push'
       version: ${{ needs.compute-version.outputs.rc_version }}

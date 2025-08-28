@@ -55,6 +55,9 @@ on:
         type: boolean
 
     secrets:
+      dockerhub-user:
+        description: 'Registry username'
+        required: false
       registry-token:
         description: 'Registry authentication token'
         required: false
@@ -88,7 +91,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ inputs.registry }}
-          username: ${{ github.actor }}
+          username: ${{ secrets.dockerhub-user }}
           password: ${{ secrets.registry-token }}
 
       - name: Extract metadata

@@ -268,7 +268,8 @@ jobs:
     needs: [intent, bump_version, build_git-tag_and_create_github-release]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docker != 'skip'
     secrets:
-      registry-token: ${{ secrets.GITHUB_TOKEN }}
+      dockerhub-user: ${{ secrets.DOCKERHUB_USERNAME }}
+      registry-token: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
       operation: 'push'
       version: ${{ needs.bump_version.outputs.version }}
