@@ -121,6 +121,42 @@ def merge_intent_data(
     return merged
 
 
+def parse_docs_config(docs_artifact: Any) -> tuple[str, str, str]:
+    """
+    Parse docs artifact and return (mode, sections, strategy).
+    
+    Args:
+        docs_artifact: Either a string or dict with docs configuration
+        
+    Returns:
+        Tuple of (mode, sections_json, strategy)
+    """
+    if isinstance(docs_artifact, str):
+        # Legacy string format - convert to new format
+        if docs_artifact == "skip":
+            return "skip", "[]", "all"
+        elif docs_artifact == "auto":
+            return "auto", '["docs", "dev"]', "all"
+        else:
+            # Assume it's a mode value
+            return docs_artifact, '["docs", "dev"]', "all"
+    
+    elif isinstance(docs_artifact, dict):
+        # New object format
+        mode = docs_artifact.get("mode", "auto")
+        sections = docs_artifact.get("sections", ["docs", "dev"])
+        strategy = docs_artifact.get("strategy", "all")
+        
+        # Convert sections list to JSON string for output
+        sections_json = json.dumps(sections)
+        
+        return mode, sections_json, strategy
+    
+    else:
+        # Fallback to defaults
+        return "auto", '["docs", "dev"]', "all"
+
+
 def validate_intent(intent: ReleaseIntent, schema: SchemaType) -> None:
     """Validate the release intent against the JSON schema."""
     try:
@@ -139,13 +175,24 @@ def write_github_outputs(intent: ReleaseIntent) -> None:
         # Running locally, skip GitHub output
         return
 
+    # Parse docs configuration
+    docs_mode, docs_sections, docs_strategy = parse_docs_config(intent['artifacts']['docs'])
+
     try:
         with open(github_output, "a", encoding="utf-8") as f:
             f.write(f"do_release={'true' if intent['release'] else 'false'}\n")
             f.write(f"level={intent['level']}\n")
             f.write(f"python={intent['artifacts']['python']}\n")
             f.write(f"docker={intent['artifacts']['docker']}\n")
-            f.write(f"docs={intent['artifacts']['docs']}\n")
+            # Legacy docs output for backward compatibility
+            if isinstance(intent['artifacts']['docs'], str):
+                f.write(f"docs={intent['artifacts']['docs']}\n")
+            else:
+                f.write(f"docs={docs_mode}\n")
+            # New docs outputs
+            f.write(f"docs_mode={docs_mode}\n")
+            f.write(f"docs_sections={docs_sections}\n")
+            f.write(f"docs_strategy={docs_strategy}\n")
             f.write(f"notes={intent['notes']}\n")
     except OSError as e:
         raise ReleaseIntentError(f"Failed to write GitHub outputs: {e}") from e
