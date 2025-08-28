@@ -1,0 +1,231 @@
+name: 'Docker Operations'
+description: 'Build, test, and optionally push Docker images with security scanning'
+
+on:
+  workflow_call:
+    inputs:
+      operation:
+        description: 'Operation to perform: build, test, push, security-scan'
+        required: true
+        type: string
+      image-name:
+        description: 'Docker image name (without registry)'
+        required: false
+        default: ${{ github.repository }}
+        type: string
+      registry:
+        description: 'Container registry to use'
+        required: false
+        default: 'ghcr.io'
+        type: string
+      version:
+        description: 'Image version/tag'
+        required: false
+        default: 'latest'
+        type: string
+      platforms:
+        description: 'Target platforms for multi-arch build'
+        required: false
+        default: 'linux/amd64,linux/arm64'
+        type: string
+      health-check-port:
+        description: 'Port for health check'
+        required: false
+        default: '8000'
+        type: string
+      health-check-path:
+        description: 'Health check endpoint path'
+        required: false
+        default: '/health'
+        type: string
+      enable-sbom:
+        description: 'Generate and upload SBOM'
+        required: false
+        default: 'false'
+        type: boolean
+      enable-signing:
+        description: 'Sign image with cosign'
+        required: false
+        default: 'false'
+        type: boolean
+      cache-enabled:
+        description: 'Enable build cache'
+        required: false
+        default: 'true'
+        type: boolean
+
+    secrets:
+      registry-token:
+        description: 'Registry authentication token'
+        required: false
+
+    outputs:
+      image-digest:
+        description: 'Built image digest'
+        value: ${{ jobs.docker_operations.outputs.digest }}
+      image-tags:
+        description: 'Built image tags'
+        value: ${{ jobs.docker_operations.outputs.tags }}
+
+jobs:
+  docker_operations:
+    name: Docker ${{ inputs.operation }}
+    runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+      tags: ${{ steps.meta.outputs.tags }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          buildkitd-flags: --debug
+
+      - name: Login to Container Registry
+        if: contains(fromJSON('["push", "security-scan"]'), inputs.operation) && secrets.registry-token != ''
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.registry }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.registry-token }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ inputs.registry }}/${{ inputs.image-name }}
+          tags: |
+            type=raw,value=${{ inputs.version }}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build Docker image
+        if: contains(fromJSON('["build", "test", "push", "security-scan"]'), inputs.operation)
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ inputs.operation == 'push' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: ${{ inputs.operation == 'push' && inputs.platforms || 'linux/amd64' }}
+          cache-from: ${{ inputs.cache-enabled == 'true' && 'type=gha' || '' }}
+          cache-to: ${{ inputs.cache-enabled == 'true' && 'type=gha,mode=max' || '' }}
+          load: ${{ inputs.operation != 'push' }}
+
+      - name: Test Docker image
+        if: contains(fromJSON('["test", "push"]'), inputs.operation)
+        run: |
+          echo "🧪 Testing Docker image functionality..."
+          
+          # Get the local image tag for testing
+          if [ "${{ inputs.operation }}" = "push" ]; then
+            IMAGE_TAG="${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.version }}"
+          else
+            IMAGE_TAG="${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.version }}"
+          fi
+          
+          echo "Testing image: $IMAGE_TAG"
+          
+          # Start container in background
+          docker run -d --name test-container \
+            -p ${{ inputs.health-check-port }}:${{ inputs.health-check-port }} \
+            -e CLICKUP_API_TOKEN=test_token \
+            $IMAGE_TAG
+          
+          # Wait for container to be ready and test health endpoint
+          echo "Waiting for container to start..."
+          timeout=30
+          elapsed=0
+          
+          while [ $elapsed -lt $timeout ]; do
+            if docker ps | grep -q test-container; then
+              if curl -f http://127.0.0.1:${{ inputs.health-check-port }}${{ inputs.health-check-path }} > /dev/null 2>&1; then
+                echo "✅ Health check passed"
+                break
+              fi
+            fi
+            
+            sleep 2
+            elapsed=$((elapsed + 2))
+            echo "Waiting... ($elapsed/$timeout seconds)"
+          done
+          
+          # Check final status
+          if [ $elapsed -ge $timeout ]; then
+            echo "❌ Health check failed after $timeout seconds"
+            echo "Container logs:"
+            docker logs test-container
+            exit 1
+          fi
+          
+          # Cleanup
+          docker stop test-container || true
+          docker rm test-container || true
+          
+          echo "✅ Docker image test completed successfully"
+
+      - name: Install security tools
+        if: inputs.operation == 'security-scan' || inputs.enable-sbom || inputs.enable-signing
+        run: |
+          # Install Cosign
+          if [ "${{ inputs.enable-signing }}" = "true" ]; then
+            echo "Installing Cosign..."
+            curl -O -L "https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64"
+            sudo mv cosign-linux-amd64 /usr/local/bin/cosign
+            sudo chmod +x /usr/local/bin/cosign
+          fi
+          
+          # Install Syft for SBOM generation
+          if [ "${{ inputs.enable-sbom }}" = "true" ]; then
+            echo "Installing Syft..."
+            curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          fi
+
+      - name: Generate SBOM
+        if: inputs.enable-sbom
+        run: |
+          echo "🔍 Generating SBOM..."
+          IMAGE_TAG="${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.version }}"
+          syft $IMAGE_TAG -o spdx-json --file sbom.spdx.json
+          echo "✅ SBOM generated"
+
+      - name: Upload SBOM
+        if: inputs.enable-sbom
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-sbom-${{ inputs.version }}
+          path: sbom.spdx.json
+          retention-days: 30
+
+      - name: Sign Docker image
+        if: inputs.enable-signing && inputs.operation == 'push'
+        run: |
+          echo "🔐 Signing Docker image..."
+          IMAGE_TAG="${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.version }}"
+          cosign sign --yes $IMAGE_TAG
+          
+          if [ "${{ inputs.version }}" != "latest" ]; then
+            cosign sign --yes ${{ inputs.registry }}/${{ inputs.image-name }}:latest
+          fi
+          echo "✅ Image signed successfully"
+
+      - name: Attest SBOM
+        if: inputs.enable-sbom && inputs.enable-signing && inputs.operation == 'push'
+        run: |
+          echo "🔏 Attesting SBOM..."
+          IMAGE_TAG="${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.version }}"
+          cosign attest --yes --predicate sbom.spdx.json --type spdxjson $IMAGE_TAG
+          echo "✅ SBOM attestation completed"
+
+      - name: Operation summary
+        run: |
+          echo "## Docker Operation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Operation**: ${{ inputs.operation }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: ${{ inputs.registry }}/${{ inputs.image-name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms**: ${{ inputs.platforms }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **SBOM**: ${{ inputs.enable-sbom && '✅ Generated' || '❌ Disabled' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Signing**: ${{ inputs.enable-signing && '✅ Enabled' || '❌ Disabled' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Completed successfully" >> $GITHUB_STEP_SUMMARY
