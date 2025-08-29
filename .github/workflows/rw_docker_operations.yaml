@@ -81,6 +81,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Initial Docker image tag name
+        id: initial-docker-tag-meta
+        run: |
+          image_name="(echo '${{ inputs.registry }}/${{ inputs.image-name }}' | tr '[:upper:]' '[:lower:]')"
+          echo "🐳 Docker image name: $image_name"
+          echo "image_name=$image_name" >> "$GITHUB_OUTPUT"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
@@ -98,7 +105,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ inputs.registry }}/${{ inputs.image-name }}
+          images: ${{ steps.initial-docker-tag-meta.outputs.image_name }}
           tags: |
             type=raw,value=${{ inputs.version }}
             type=raw,value=latest,enable={{is_default_branch}}
@@ -124,9 +131,9 @@ jobs:
           
           # Get the local image tag for testing
           if [ "${{ inputs.operation }}" = "push" ]; then
-            IMAGE_TAG="${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.version }}"
+            IMAGE_TAG="${{ steps.initial-docker-tag-meta.outputs.image_name }}:${{ inputs.version }}"
           else
-            IMAGE_TAG="${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.version }}"
+            IMAGE_TAG="${{ steps.initial-docker-tag-meta.outputs.image_name }}:${{ inputs.version }}"
           fi
           
           echo "Testing image: $IMAGE_TAG"
@@ -190,7 +197,7 @@ jobs:
         if: inputs.enable-sbom
         run: |
           echo "🔍 Generating SBOM..."
-          IMAGE_TAG="${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.version }}"
+          IMAGE_TAG="(echo '${{ steps.initial-docker-tag-meta.outputs.image_name }}:${{ inputs.version }}' | tr '[:upper:]' '[:lower:]')"
           syft $IMAGE_TAG -o spdx-json --file sbom.spdx.json
           echo "✅ SBOM generated"
 
@@ -206,11 +213,11 @@ jobs:
         if: inputs.enable-signing && inputs.operation == 'push'
         run: |
           echo "🔐 Signing Docker image..."
-          IMAGE_TAG="${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.version }}"
+          IMAGE_TAG="${{ steps.initial-docker-tag-meta.outputs.image_name }}:${{ inputs.version }}"
           cosign sign --yes $IMAGE_TAG
           
           if [ "${{ inputs.version }}" != "latest" ]; then
-            cosign sign --yes ${{ inputs.registry }}/${{ inputs.image-name }}:latest
+            cosign sign --yes ${{ steps.initial-docker-tag-meta.outputs.image_name }}:latest
           fi
           echo "✅ Image signed successfully"
 
@@ -218,7 +225,7 @@ jobs:
         if: inputs.enable-sbom && inputs.enable-signing && inputs.operation == 'push'
         run: |
           echo "🔏 Attesting SBOM..."
-          IMAGE_TAG="${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.version }}"
+          IMAGE_TAG="${{ steps.initial-docker-tag-meta.outputs.image_name }}:${{ inputs.version }}"
           cosign attest --yes --predicate sbom.spdx.json --type spdxjson $IMAGE_TAG
           echo "✅ SBOM attestation completed"
 
@@ -226,7 +233,7 @@ jobs:
         run: |
           echo "## Docker Operation Summary" >> $GITHUB_STEP_SUMMARY
           echo "- **Operation**: ${{ inputs.operation }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Image**: ${{ inputs.registry }}/${{ inputs.image-name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: ${{ steps.initial-docker-tag-meta.outputs.image_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Version**: ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Platforms**: ${{ inputs.platforms }}" >> $GITHUB_STEP_SUMMARY
           echo "- **SBOM**: ${{ inputs.enable-sbom && '✅ Generated' || '❌ Disabled' }}" >> $GITHUB_STEP_SUMMARY
