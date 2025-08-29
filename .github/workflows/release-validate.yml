@@ -69,7 +69,7 @@ jobs:
     with:
       operation: 'security-scan'
       image-name: ${{ github.repository }}
-      version: 'security-test'
+      version: 'validation-test'  # 🔧 FIX: Use same tag as build job
       enable-sbom: true
 
   validation-summary:

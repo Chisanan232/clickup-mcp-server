@@ -69,6 +69,15 @@ on:
       image-tags:
         description: 'Built image tags'
         value: ${{ jobs.docker_operations.outputs.tags }}
+      image-name:
+        description: 'Built image name'
+        value: ${{ jobs.docker_operations.outputs.image_name }}
+      image-tag:
+        description: 'Built image tag'
+        value: ${{ jobs.docker_operations.outputs.image_tag }}
+      image-ref:
+        description: 'Built image reference (name:tag)'
+        value: ${{ jobs.docker_operations.outputs.image_ref }}
 
 jobs:
   docker_operations:
@@ -77,6 +86,9 @@ jobs:
     outputs:
       digest: ${{ steps.build.outputs.digest }}
       tags: ${{ steps.meta.outputs.tags }}
+      image_name: ${{ steps.image_meta.outputs.image_name }}
+      image_tag: ${{ steps.image_meta.outputs.image_tag }}
+      image_ref: ${{ steps.image_meta.outputs.image_ref }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -87,6 +99,22 @@ jobs:
           image_name=$(echo "${{ inputs.registry }}/${{ inputs.image-name }}" | cut -d/ -f1 | tr '[:upper:]' '[:lower:]')
           echo "🐳 Docker image name: $image_name"
           echo "image_name=$image_name" >> "$GITHUB_OUTPUT"
+
+      - name: Set image metadata outputs
+        id: image_meta
+        run: |
+          IMAGE_NAME="${{ steps.initial-docker-tag-meta.outputs.image_name }}"
+          IMAGE_TAG="${{ inputs.version }}"
+          IMAGE_REF="$IMAGE_NAME:$IMAGE_TAG"
+          
+          echo "image_name=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
+          echo "image_tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+          echo "image_ref=$IMAGE_REF" >> "$GITHUB_OUTPUT"
+          
+          echo "📊 Image metadata:"
+          echo "  Name: $IMAGE_NAME"
+          echo "  Tag: $IMAGE_TAG"
+          echo "  Reference: $IMAGE_REF"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -176,6 +204,29 @@ jobs:
           
           echo "✅ Docker image test completed successfully"
 
+      - name: Ensure local image exists (guard)
+        if: inputs.operation == 'security-scan'
+        shell: bash
+        run: |
+          IMAGE_NAME="${{ steps.initial-docker-tag-meta.outputs.image_name }}"
+          IMAGE_TAG="${{ inputs.version }}"
+          IMAGE_REF="$IMAGE_NAME:$IMAGE_TAG"
+          
+          echo "🔍 Checking for image: $IMAGE_REF"
+          
+          if ! docker image inspect "$IMAGE_REF" >/dev/null 2>&1; then
+            echo "::group::Available local images"
+            docker images "$IMAGE_NAME" --format '{{.Repository}}:{{.Tag}}' | head -20 || true
+            echo "::endgroup::"
+            echo "::error::Image $IMAGE_REF not found locally."
+            echo "Expected image: $IMAGE_REF"
+            echo "This indicates a tag mismatch between build and security scan operations."
+            echo "Make sure the build job produced this exact tag before running security scan."
+            exit 1
+          fi
+          
+          echo "✅ Image $IMAGE_REF found locally"
+
       - name: Install security tools
         if: inputs.operation == 'security-scan' || inputs.enable-sbom || inputs.enable-signing
         run: |
@@ -187,22 +238,147 @@ jobs:
             sudo chmod +x /usr/local/bin/cosign
           fi
           
+          # Install Grype for vulnerability scanning
+          if [ "${{ inputs.operation }}" = "security-scan" ]; then
+            echo "Installing Grype..."
+            curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+          fi
+          
           # Install Syft for SBOM generation
-          if [ "${{ inputs.enable-sbom }}" = "true" ]; then
+          if [ "${{ inputs.enable-sbom }}" = "true" ] || [ "${{ inputs.operation }}" = "security-scan" ]; then
             echo "Installing Syft..."
             curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
           fi
 
-      - name: Generate SBOM
-        if: inputs.enable-sbom
+      - name: Security scan and SBOM generation
+        if: inputs.operation == 'security-scan'
+        id: security-scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          
+          IMAGE_NAME="${{ steps.initial-docker-tag-meta.outputs.image_name }}"
+          IMAGE_TAG="${{ inputs.version }}"
+          IMAGE_REF="$IMAGE_NAME:$IMAGE_TAG"
+          
+          echo "🔍 Starting security scan for: $IMAGE_REF"
+          
+          # Step 1: Generate SBOM from Docker image
+          echo "::group::Generating SBOM from Docker image"
+          if syft "$IMAGE_REF" -o spdx-json --file sbom-docker.spdx.json; then
+            echo "✅ SBOM generated from Docker image"
+            PRIMARY_SBOM="sbom-docker.spdx.json"
+          else
+            echo "❌ Failed to generate SBOM from Docker image"
+            PRIMARY_SBOM=""
+          fi
+          echo "::endgroup::"
+          
+          # Step 2: Fallback SBOM generation from workspace
+          echo "::group::Generating fallback SBOM from workspace"
+          if syft . -o spdx-json --file sbom-workspace.spdx.json; then
+            echo "✅ Fallback SBOM generated from workspace"
+            FALLBACK_SBOM="sbom-workspace.spdx.json"
+          else
+            echo "❌ Failed to generate fallback SBOM from workspace"
+            FALLBACK_SBOM=""
+          fi
+          echo "::endgroup::"
+          
+          # Determine which SBOM to use
+          if [[ -n "$PRIMARY_SBOM" && -f "$PRIMARY_SBOM" ]]; then
+            FINAL_SBOM="$PRIMARY_SBOM"
+            echo "📄 Using primary SBOM from Docker image"
+            # Copy as standard name for consistency
+            cp "$PRIMARY_SBOM" sbom.spdx.json
+          elif [[ -n "$FALLBACK_SBOM" && -f "$FALLBACK_SBOM" ]]; then
+            FINAL_SBOM="$FALLBACK_SBOM"
+            echo "📄 Using fallback SBOM from workspace"
+            # Copy fallback as primary for consistency
+            cp "$FALLBACK_SBOM" sbom.spdx.json
+          else
+            echo "::error::Failed to generate any SBOM. Both Docker image and workspace scans failed."
+            exit 1
+          fi
+          
+          # Step 3: Vulnerability scanning with Grype
+          echo "::group::Vulnerability scanning with Grype"
+          echo "🔍 Scanning Docker image for vulnerabilities..."
+          
+          # Scan the Docker image
+          if grype "$IMAGE_REF" -o json --file grype-vulnerabilities.json; then
+            echo "✅ Vulnerability scan completed"
+            
+            # Generate human-readable report
+            grype "$IMAGE_REF" -o table > grype-report.txt || true
+            
+            # Check for high/critical vulnerabilities
+            HIGH_CRITICAL=$(jq -r '[.matches[] | select(.vulnerability.severity == "High" or .vulnerability.severity == "Critical")] | length' grype-vulnerabilities.json 2>/dev/null || echo "0")
+            
+            echo "📊 Vulnerability Summary:"
+            echo "  High/Critical vulnerabilities found: $HIGH_CRITICAL"
+            
+            if [[ "$HIGH_CRITICAL" -gt 0 ]]; then
+              echo "::warning::Found $HIGH_CRITICAL high/critical vulnerabilities. Review grype-report.txt for details."
+            else
+              echo "✅ No high/critical vulnerabilities found"
+            fi
+            
+            # Export for GitHub outputs
+            echo "vulnerabilities_found=$HIGH_CRITICAL" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Vulnerability scanning failed, continuing with SBOM generation"
+            echo "vulnerabilities_found=unknown" >> $GITHUB_OUTPUT
+          fi
+          echo "::endgroup::"
+          
+          # Step 4: Sign SBOM if signing is enabled
+          if [[ "${{ inputs.enable-signing }}" == "true" ]]; then
+            echo "::group::Signing SBOM"
+            echo "🔏 Signing SBOM..."
+            if cosign sign-blob --yes sbom.spdx.json --output-signature sbom.spdx.json.sig; then
+              echo "✅ SBOM signed successfully"
+            else
+              echo "❌ Failed to sign SBOM"
+            fi
+            echo "::endgroup::"
+          fi
+          
+          # Step 5: Generate attestation if signing is enabled
+          if [[ "${{ inputs.enable-signing }}" == "true" ]]; then
+            echo "::group::Generating attestation"
+            echo "📝 Generating attestation..."
+            if cosign attest --yes --predicate sbom.spdx.json --type spdxjson "$IMAGE_REF"; then
+              echo "✅ Attestation generated successfully"
+            else
+              echo "❌ Failed to generate attestation"
+            fi
+            echo "::endgroup::"
+          fi
+          
+          echo "🎉 Security scan completed successfully"
+
+      - name: Generate SBOM (legacy)
+        if: inputs.enable-sbom && inputs.operation != 'security-scan'
         run: |
           echo "🔍 Generating SBOM..."
           IMAGE_TAG="(echo '${{ steps.initial-docker-tag-meta.outputs.image_name }}:${{ inputs.version }}' | tr '[:upper:]' '[:lower:]')"
           syft $IMAGE_TAG -o spdx-json --file sbom.spdx.json
           echo "✅ SBOM generated"
 
-      - name: Upload SBOM
-        if: inputs.enable-sbom
+      - name: Upload security scan artifacts
+        if: inputs.operation == 'security-scan'
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-${{ inputs.version }}
+          path: |
+            sbom*.spdx.json
+            grype-*.json
+            grype-*.txt
+          retention-days: 30
+
+      - name: Upload SBOM (legacy)
+        if: inputs.enable-sbom && inputs.operation != 'security-scan'
         uses: actions/upload-artifact@v4
         with:
           name: docker-sbom-${{ inputs.version }}
@@ -236,6 +412,17 @@ jobs:
           echo "- **Image**: ${{ steps.initial-docker-tag-meta.outputs.image_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Version**: ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Platforms**: ${{ inputs.platforms }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **SBOM**: ${{ inputs.enable-sbom && '✅ Generated' || '❌ Disabled' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **SBOM**: ${{ inputs.enable-sbom && '✅ Generated' || (inputs.operation == 'security-scan' && '✅ Generated (Security Scan)') || '❌ Disabled' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Signing**: ${{ inputs.enable-signing && '✅ Enabled' || '❌ Disabled' }}" >> $GITHUB_STEP_SUMMARY
+          
+          # Add security scan specific details
+          if [[ "${{ inputs.operation }}" == "security-scan" ]]; then
+            echo "- **Vulnerability Scan**: ${{ steps.security-scan.outputs.vulnerabilities_found != 'unknown' && '✅ Completed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+            if [[ "${{ steps.security-scan.outputs.vulnerabilities_found }}" != "unknown" ]]; then
+              echo "- **High/Critical Vulnerabilities**: ${{ steps.security-scan.outputs.vulnerabilities_found }}" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "- **Defensive Checks**: ✅ Image existence verified" >> $GITHUB_STEP_SUMMARY
+            echo "- **Fallback SBOM**: ✅ Available if Docker scan fails" >> $GITHUB_STEP_SUMMARY
+          fi
+          
           echo "- **Status**: ✅ Completed successfully" >> $GITHUB_STEP_SUMMARY
