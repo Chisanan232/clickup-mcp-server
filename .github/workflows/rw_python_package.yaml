@@ -1,0 +1,135 @@
+name: 'Python Package Operations'
+description: 'Build, test, and optionally publish Python packages with UV'
+
+on:
+  workflow_call:
+    inputs:
+      operation:
+        description: 'Operation to perform: build, test, publish-pypi, publish-testpypi'
+        required: true
+        type: string
+      python-version:
+        description: 'Python version to use'
+        required: false
+        default: '3.13'
+        type: string
+      version:
+        description: 'Package version (for display purposes)'
+        required: false
+        default: ''
+        type: string
+      upload-artifacts:
+        description: 'Whether to upload build artifacts'
+        required: false
+        default: true
+        type: boolean
+      artifact-name:
+        description: 'Name for uploaded artifacts'
+        required: false
+        default: 'python-package'
+        type: string
+
+    outputs:
+      build-success:
+        description: 'Whether build was successful'
+        value: ${{ jobs.python_operations.outputs.build_success }}
+      package-version:
+        description: 'Built package version'
+        value: ${{ jobs.python_operations.outputs.package_version }}
+
+jobs:
+  python_operations:
+    name: Python Package ${{ inputs.operation }}
+    runs-on: ubuntu-latest
+    outputs:
+      build_success: ${{ steps.build.outputs.success }}
+      package_version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python with UV
+        uses: ./.github/actions/setup-python-uv
+        with:
+          python-version: ${{ inputs.python-version }}
+          install-dependencies: 'true'
+          dependency-groups: 'release-ci'
+
+      - name: Get package version
+        id: version
+        run: |
+          VERSION=$(uv version --short)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Package version: $VERSION"
+
+      - name: Build package
+        if: contains(fromJSON('["build", "test", "publish-pypi", "publish-testpypi"]'), inputs.operation)
+        id: build
+        run: |
+          echo "🔨 Building Python package..."
+          if [ "${{ inputs.version }}" != "" ]; then
+            echo "Target version: ${{ inputs.version }}"
+          fi
+          
+          uv build
+          
+          echo "✅ Build completed successfully"
+          echo "success=true" >> $GITHUB_OUTPUT
+          
+          # List built artifacts
+          echo "📁 Built artifacts:"
+          ls -la dist/
+
+      - name: Test package integrity
+        if: contains(fromJSON('["test", "publish-pypi", "publish-testpypi"]'), inputs.operation)
+        run: |
+          echo "🔍 Testing package integrity..."
+          
+          # Check that both wheel and sdist were created
+          if [ ! -f dist/*.whl ]; then
+            echo "❌ No wheel file found"
+            exit 1
+          fi
+          
+          if [ ! -f dist/*.tar.gz ]; then
+            echo "❌ No source distribution found"
+            exit 1
+          fi
+          
+          # Test installation in clean environment
+          echo "Testing package installation..."
+          uv pip install --system dist/*.whl --force-reinstall
+          
+          echo "✅ Package integrity test passed"
+
+      - name: Upload build artifacts
+        if: inputs.upload-artifacts && contains(fromJSON('["build", "test", "publish-pypi", "publish-testpypi"]'), inputs.operation)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: dist/
+          retention-days: 30
+
+      - name: Publish to PyPI
+        if: inputs.operation == 'publish-pypi'
+        run: |
+          echo "🚀 Publishing to PyPI..."
+          uv publish
+          echo "✅ Published to PyPI successfully"
+
+      - name: Publish to TestPyPI
+        if: inputs.operation == 'publish-testpypi'
+        run: |
+          echo "🚀 Publishing to TestPyPI..."
+          uv publish --publish-url https://test.pypi.org/legacy/
+          echo "✅ Published to TestPyPI successfully"
+
+      - name: Operation summary
+        run: |
+          echo "## Python Package Operation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Operation**: ${{ inputs.operation }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Python**: ${{ inputs.python-version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Completed successfully" >> $GITHUB_STEP_SUMMARY

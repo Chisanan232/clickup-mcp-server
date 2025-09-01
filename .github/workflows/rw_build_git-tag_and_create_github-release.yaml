@@ -1,0 +1,69 @@
+##############################################################################################
+#
+# Workflow Description:
+#     Build a git tag on a specific commit in every git branch. And create GitHub release if current git branch is 'master'.
+#
+# Workflow input parameters:
+#     * General arguments:
+#         * debug_mode: It would run the tasks as log message, doesn't essentially run feature if this option is true.
+#
+# Workflow running output:
+#     Yes, it has running result output. The output is the release version.
+#
+#     * Workflow output:
+#          It would output the version which would be build as git tag and create GitHub release version title.
+#         * python_release_version: Python project release version info.
+#
+##############################################################################################
+
+name: Build git tag and create GitHub release with software version
+
+on:
+  workflow_call:
+    inputs:
+#      activate_git_event:
+#        description: "Which git event should activate the workflow."
+#        type: string
+#        required: false
+#        default: push
+      debug_mode:
+        description: "It would run the tasks as log message, doesn't essentially run feature if this option is true."
+        type: boolean
+        required: false
+        default: false
+
+    secrets:
+      github_auth_token:
+        description: "The authentication token for doing some operators with GitHub."
+        required: false
+
+    outputs:
+      python_release_version:
+        description: "The version which would be build as git tag and create GitHub release version title."
+        value: ${{ jobs.build_git-tag_and_create_github-release.outputs.matrix_python }}
+
+
+jobs:
+  build_git-tag_and_create_github-release:
+#    name: Build git tag and GitHub release if it needs
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix_python: ${{ steps.python_release.outputs.release_type }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # This flow for the project type is Python project
+      - name: Build git tag and create GitHub release for Python project
+        id: python_release
+        run: | 
+          release=$(bash ./scripts/ci/build_git-tag_or_create_github-release.sh  ${{ inputs.debug_mode }}
+          echo "📄 Release log: $release"
+
+          release_type=$(echo "$release" | grep -E "\[Python\] \[Final Running Result\] ((Official\-Release)|(Pre\-Release))" | grep -E -o "((Official\-Release)|(Pre\-Release))")
+          echo "🐍 Release Type: $release_type"
+
+          echo "release_type=$(echo $release_type)" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_auth_token }}

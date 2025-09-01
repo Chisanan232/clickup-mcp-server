@@ -1,0 +1,289 @@
+# Production Release
+name: release
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - .github/tag_and_release/release-**
+  workflow_dispatch:
+    inputs:
+      level:
+        description: 'Release level'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+      python:
+        description: 'Python package release'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - force
+          - skip
+      docker:
+        description: 'Docker image release'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - force
+          - skip
+      docs:
+        description: 'Documentation versioning'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - force
+          - skip
+      notes:
+        description: 'Release notes'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  intent:
+    uses: ./.github/workflows/rw_parse_release_intent.yaml
+    with:
+      level: ${{ inputs.level }}
+      python: ${{ inputs.python }}
+      docker: ${{ inputs.docker }}
+      docs: ${{ inputs.docs }}
+      notes: ${{ inputs.notes }}
+
+  detect_changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      docs_changed: ${{ steps.changes.outputs.docs }}
+      dev_changed: ${{ steps.changes.outputs.dev }}
+      any_docs_changed: ${{ steps.changes.outputs.docs == 'true' || steps.changes.outputs.dev == 'true' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect docs section changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            docs:
+              - 'docs/src/**'
+              - 'docs/contents/document/**'
+              - 'docs/static/**'
+              - 'docs/docusaurus.config.*'
+              - 'docs/package.json'
+              - 'docs/pnpm-lock.yaml'
+            dev:
+              - 'docs/contents/development/**'
+
+  prepare_docs_matrix:
+    name: Prepare Docs Matrix
+    runs-on: ubuntu-latest
+    needs: [intent, detect_changes]
+    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docs != 'skip'
+    outputs:
+      sections_to_version: ${{ steps.matrix.outputs.sections_to_version }}
+      has_sections: ${{ steps.matrix.outputs.has_sections }}
+      strategy: ${{ steps.matrix.outputs.strategy }}
+    steps:
+      - name: Prepare sections matrix
+        id: matrix
+        run: |
+          echo "🔍 Preparing docs versioning matrix..."
+          
+          # Get outputs from intent parsing
+          DOCS_MODE="${{ needs.intent.outputs.docs_mode }}"
+          DOCS_SECTIONS='${{ needs.intent.outputs.docs_sections }}'
+          DOCS_STRATEGY="${{ needs.intent.outputs.docs_strategy }}"
+          
+          echo "Docs mode: $DOCS_MODE"
+          echo "Docs sections: $DOCS_SECTIONS"
+          echo "Docs strategy: $DOCS_STRATEGY"
+          
+          # Get changed sections from change detection
+          DOCS_CHANGED="${{ needs.detect_changes.outputs.docs_changed }}"
+          DEV_CHANGED="${{ needs.detect_changes.outputs.dev_changed }}"
+          
+          echo "Docs changed: $DOCS_CHANGED"
+          echo "Dev changed: $DEV_CHANGED"
+          
+          # Build array of changed sections dynamically based on what was detected
+          # Use Python to build the changed sections array more reliably
+          python3 -c "
+          import json
+          
+          # Get requested sections from intent
+          requested_sections = json.loads('$DOCS_SECTIONS')
+          print(f'Requested sections: {requested_sections}')
+          
+          # Build changed sections based on change detection results
+          changed_sections = []
+          
+          if '$DOCS_CHANGED' == 'true' and 'docs' in requested_sections:
+              changed_sections.append('docs')
+          if '$DEV_CHANGED' == 'true' and 'dev' in requested_sections:
+              changed_sections.append('dev')
+          
+          print(f'Changed sections: {changed_sections}')
+          print(json.dumps(changed_sections))
+          " > changed_sections_result.txt
+          
+          # Extract the changed sections JSON from the last line
+          CHANGED_SECTIONS=$(tail -n 1 changed_sections_result.txt)
+          cat changed_sections_result.txt
+          rm changed_sections_result.txt
+          
+          echo "Final changed sections: $CHANGED_SECTIONS"
+          
+          # Determine sections to version based on strategy
+          if [ "$DOCS_STRATEGY" = "changed" ]; then
+            # Only version sections that have changes
+            echo "Using changed sections strategy"
+            
+            if [ "$CHANGED_SECTIONS" != "[]" ] && [ "$CHANGED_SECTIONS" != "" ]; then
+              # Use the changed sections we already calculated
+              SECTIONS_TO_VERSION="$CHANGED_SECTIONS"
+              echo "Versioning changed sections: $SECTIONS_TO_VERSION"
+            else
+              # No changes detected, don't version anything
+              SECTIONS_TO_VERSION="[]"
+              echo "No changes detected, skipping versioning"
+            fi
+          else
+            # Version all requested sections (strategy: always)
+            echo "Using all sections strategy"
+            SECTIONS_TO_VERSION="$DOCS_SECTIONS"
+            echo "Versioning all requested sections: $SECTIONS_TO_VERSION"
+          fi
+          
+          echo "Sections to version: $SECTIONS_TO_VERSION"
+          
+          # Check if we have any sections to version
+          if [ "$SECTIONS_TO_VERSION" = "[]" ] || [ "$SECTIONS_TO_VERSION" = "" ]; then
+            echo "No sections to version"
+            echo "has_sections=false" >> $GITHUB_OUTPUT
+            echo "sections_to_version=[]" >> $GITHUB_OUTPUT
+          else
+            echo "has_sections=true" >> $GITHUB_OUTPUT
+            echo "sections_to_version=$SECTIONS_TO_VERSION" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "strategy=$DOCS_STRATEGY" >> $GITHUB_OUTPUT
+
+  bump_version:
+    name: Bump Version and Commit
+    runs-on: ubuntu-latest
+    needs: intent
+    if: needs.intent.outputs.do_release == 'true'
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python with UV
+        uses: ./.github/actions/setup-python-uv
+        with:
+          install-dependencies: 'true'
+          dependency-groups: 'release-ci'
+
+      - name: Configure git
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
+      - name: Bump version with uv
+        id: bump
+        run: |
+          case "${{ needs.intent.outputs.level }}" in
+            "patch")
+              BUMP_FLAG="--bump patch"
+              ;;
+            "minor")
+              BUMP_FLAG="--bump minor"
+              ;;
+            "major")
+              BUMP_FLAG="--bump major"
+              ;;
+            *)
+              BUMP_FLAG="--bump patch"  # Default to patch for auto
+              ;;
+          esac
+          
+          echo "Bumping version with: uv version $BUMP_FLAG"
+          uv version $BUMP_FLAG
+          
+          # Get the new version
+          NEW_VERSION=$(uv version --short)
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+          
+          # Commit the version bump
+          git add pyproject.toml
+          git commit -m "⬆️ chore: bump version to $NEW_VERSION [skip ci]"
+          git push origin HEAD:${{ github.ref_name }}
+
+  build_git-tag_and_create_github-release:
+    uses: ./.github/workflows/rw_build_git-tag_and_create_github-release.yaml
+    needs: bump_version
+    secrets:
+      github_auth_token: ${{ secrets.GITHUB_TOKEN }}
+
+  release_python:
+    uses: ./.github/workflows/rw_python_package.yaml
+    needs: [intent, bump_version, build_git-tag_and_create_github-release]
+    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.python != 'skip'
+    with:
+      operation: 'publish-pypi'
+      version: ${{ needs.bump_version.outputs.version }}
+      artifact-name: 'python-package-production'
+
+  release_docker:
+    uses: ./.github/workflows/rw_docker_operations.yaml
+    needs: [intent, bump_version, build_git-tag_and_create_github-release]
+    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docker != 'skip'
+    secrets:
+      dockerhub-user: ${{ secrets.DOCKERHUB_USERNAME }}
+      registry-token: ${{ secrets.DOCKERHUB_TOKEN }}
+    with:
+      operation: 'push'
+      version: ${{ needs.bump_version.outputs.version }}
+      enable-sbom: true
+      enable-signing: true
+
+  release_docs:
+    uses: ./.github/workflows/rw_docs_operations.yaml
+    needs: [intent, prepare_docs_matrix, bump_version, build_git-tag_and_create_github-release]
+    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docs != 'skip' && needs.prepare_docs_matrix.outputs.has_sections == 'true'
+    with:
+      operation: 'version'
+      version: ${{ needs.bump_version.outputs.version }}
+      sections: ${{ needs.prepare_docs_matrix.outputs.sections_to_version }}
+      strategy: ${{ needs.prepare_docs_matrix.outputs.strategy }}
+      changed-sections: ${{ needs.prepare_docs_matrix.outputs.sections_to_version }}
+      commit-changes: true

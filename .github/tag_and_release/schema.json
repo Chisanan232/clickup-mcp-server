@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/release-intent.schema.json",
+  "title": "Release Intent",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "release": {
+      "type": "boolean",
+      "description": "Whether this commit intends to trigger a release"
+    },
+    "level": {
+      "type": "string",
+      "description": "Semantic bump level",
+      "enum": ["auto", "patch", "minor", "major"]
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "python": {
+          "type": "string",
+          "enum": ["auto", "force", "skip"]
+        },
+        "docker": {
+          "type": "string",
+          "enum": ["auto", "force", "skip"]
+        },
+        "docs": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": ["auto", "force", "skip"],
+              "description": "Simple docs configuration (backward compatible)"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "mode": {
+                  "type": "string",
+                  "enum": ["auto", "force", "skip"],
+                  "description": "How to handle docs versioning"
+                },
+                "sections": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Array of Docusaurus plugin IDs to version",
+                  "default": ["docs", "dev"]
+                },
+                "strategy": {
+                  "type": "string",
+                  "enum": ["changed", "always"],
+                  "description": "When to version sections: only when changed or always",
+                  "default": "changed"
+                }
+              },
+              "required": ["mode"]
+            }
+          ]
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional human notes for this release"
+    }
+  },
+  "required": []
+}

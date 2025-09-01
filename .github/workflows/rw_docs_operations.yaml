@@ -1,0 +1,363 @@
+name: 'Documentation Operations'
+description: 'Build, test, version, and deploy documentation with Docusaurus'
+
+on:
+  workflow_call:
+    inputs:
+      operation:
+        description: 'Operation to perform: build, test, version, deploy-preview, deploy-production'
+        required: true
+        type: string
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        default: '22'
+        type: string
+      version:
+        description: 'Documentation version for versioning operation'
+        required: false
+        default: ''
+        type: string
+      sections:
+        description: 'JSON array of docs sections to version (e.g. ["docs", "dev"])'
+        required: false
+        default: '["docs"]'
+        type: string
+      strategy:
+        description: 'Versioning strategy: changed (only changed sections) or always (all sections)'
+        required: false
+        default: 'always'
+        type: string
+      changed-sections:
+        description: 'JSON array of sections that have changes (used with strategy: changed)'
+        required: false
+        default: '[]'
+        type: string
+      preview-branch:
+        description: 'Branch name for preview deployment'
+        required: false
+        default: 'docs-preview'
+        type: string
+      working-directory:
+        description: 'Working directory for documentation'
+        required: false
+        default: 'docs'
+        type: string
+      commit-changes:
+        description: 'Whether to commit version changes'
+        required: false
+        default: false
+        type: boolean
+      upload-artifacts:
+        description: 'Whether to upload build artifacts'
+        required: false
+        default: true
+        type: boolean
+
+    outputs:
+      build-success:
+        description: 'Whether build was successful'
+        value: ${{ jobs.docs_operations.outputs.build_success || jobs.version_docs_matrix.result == 'success' }}
+      deploy-url:
+        description: 'Deployment URL (for preview deployments)'
+        value: ${{ jobs.docs_operations.outputs.deploy_url }}
+      versioned-sections:
+        description: 'JSON array of sections that were versioned'
+        value: ${{ jobs.prepare_matrix.outputs.sections_to_version }}
+
+jobs:
+  prepare_matrix:
+    name: Prepare versioning matrix
+    if: inputs.operation == 'version'
+    runs-on: ubuntu-latest
+    outputs:
+      sections_to_version: ${{ steps.matrix.outputs.sections_to_version }}
+      has_sections: ${{ steps.matrix.outputs.has_sections }}
+    steps:
+      - name: Prepare sections matrix
+        id: matrix
+        run: |
+          echo "🔍 Preparing versioning matrix..."
+          
+          # Parse input sections
+          SECTIONS='${{ inputs.sections }}'
+          STRATEGY='${{ inputs.strategy }}'
+          CHANGED_SECTIONS='${{ inputs.changed-sections }}'
+          
+          echo "Input sections: $SECTIONS"
+          echo "Strategy: $STRATEGY"
+          echo "Changed sections: $CHANGED_SECTIONS"
+          
+          # Determine sections to version based on strategy
+          if [ "$STRATEGY" = "changed" ] && [ "$CHANGED_SECTIONS" != "[]" ]; then
+            # Only version sections that have changes
+            SECTIONS_TO_VERSION="$CHANGED_SECTIONS"
+            echo "Using changed sections only: $SECTIONS_TO_VERSION"
+          else
+            # Version all requested sections (strategy: always or no changes detected)
+            SECTIONS_TO_VERSION="$SECTIONS"
+            echo "Using all sections: $SECTIONS_TO_VERSION"
+          fi
+          
+          # Check if we have any sections to version
+          if [ "$SECTIONS_TO_VERSION" = "[]" ] || [ "$SECTIONS_TO_VERSION" = "" ]; then
+            echo "No sections to version"
+            echo "has_sections=false" >> $GITHUB_OUTPUT
+            echo "sections_to_version=[]" >> $GITHUB_OUTPUT
+          else
+            echo "Sections to version: $SECTIONS_TO_VERSION"
+            echo "has_sections=true" >> $GITHUB_OUTPUT
+            echo "sections_to_version=$SECTIONS_TO_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+  version_docs_matrix:
+    name: Version docs (${{ matrix.section }})
+    if: inputs.operation == 'version' && needs.prepare_matrix.outputs.has_sections == 'true'
+    needs: prepare_matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        section: ${{ fromJSON(needs.prepare_matrix.outputs.sections_to_version) }}
+      fail-fast: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ inputs.working-directory }}/node_modules
+            ~/.pnpm
+          key: docs-${{ runner.os }}-${{ inputs.node-version }}-${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.working-directory)) }}
+          restore-keys: |
+            docs-${{ runner.os }}-${{ inputs.node-version }}-
+            docs-${{ runner.os }}-
+
+      - name: Install dependencies
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          echo "📦 Installing documentation dependencies..."
+          pnpm install --frozen-lockfile
+          echo "✅ Dependencies installed successfully"
+
+      - name: Version documentation section
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          echo "🏷️ Versioning docs section '${{ matrix.section }}' to ${{ inputs.version }}..."
+          
+          # Check if this is the default docs section or a plugin-specific section
+          if [ "${{ matrix.section }}" = "docs" ]; then
+            # Default docs section
+            pnpm exec docusaurus docs:version "${{ inputs.version }}"
+          else
+            # Plugin-specific section (e.g., dev, api)
+            pnpm exec docusaurus docs:version:${{ matrix.section }} "${{ inputs.version }}"
+          fi
+          
+          echo "✅ Section '${{ matrix.section }}' versioned successfully"
+
+      - name: Configure git for commits
+        if: inputs.commit-changes
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
+      - name: Commit version changes
+        if: inputs.commit-changes
+        run: |
+          echo "💾 Committing version changes for section '${{ matrix.section }}'..."
+          git add ${{ inputs.working-directory }}/
+          if git diff --staged --quiet; then
+            echo "ℹ️ No documentation changes to commit for section '${{ matrix.section }}'"
+          else
+            git commit -m "📚 docs(${{ matrix.section }}): version ${{ inputs.version }} [skip ci]"
+            git push origin HEAD:${{ github.ref_name }}
+            echo "✅ Version changes committed for section '${{ matrix.section }}'"
+          fi
+
+  docs_operations:
+    name: Docs ${{ inputs.operation }}
+    if: inputs.operation != 'version'
+    runs-on: ubuntu-latest
+    outputs:
+      build_success: ${{ steps.build.outputs.success }}
+      deploy_url: ${{ steps.preview.outputs.url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ inputs.working-directory }}/node_modules
+            ~/.pnpm
+          key: docs-${{ runner.os }}-${{ inputs.node-version }}-${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.working-directory)) }}
+          restore-keys: |
+            docs-${{ runner.os }}-${{ inputs.node-version }}-
+            docs-${{ runner.os }}-
+
+      - name: Install dependencies
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          echo "📦 Installing documentation dependencies..."
+          pnpm install --frozen-lockfile
+          echo "✅ Dependencies installed successfully"
+
+      # Note: Versioning is now handled by the version_docs_matrix job
+
+      - name: Sync changelog
+        if: contains(fromJSON('["version", "build", "deploy-production"]'), inputs.operation)
+        run: |
+          echo "📄 Syncing changelog..."
+          if [ -f CHANGELOG.md ]; then
+            mkdir -p ${{ inputs.working-directory }}/release-notes
+            cp CHANGELOG.md ${{ inputs.working-directory }}/release-notes/changelog.md
+            echo "✅ Changelog synced"
+          else
+            echo "ℹ️ No CHANGELOG.md found, skipping sync"
+          fi
+
+      - name: Build documentation
+        if: contains(fromJSON('["build", "test", "deploy-preview", "deploy-production"]'), inputs.operation)
+        id: build
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          echo "🔨 Building documentation..."
+          pnpm build
+          
+          echo "✅ Documentation build completed successfully"
+          echo "success=true" >> $GITHUB_OUTPUT
+          
+          # Check build output
+          echo "📁 Build output:"
+          ls -la build/
+
+      - name: Test documentation
+        if: inputs.operation == 'test'
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          echo "🧪 Testing documentation..."
+          
+          # Test that essential files exist
+          if [ ! -f build/index.html ]; then
+            echo "❌ Missing main index.html"
+            exit 1
+          fi
+          
+          # Test that documentation structure is valid
+          if [ ! -d build/docs ]; then
+            echo "❌ Missing docs directory"
+            exit 1
+          fi
+          
+          # Check for broken links (if available)
+          if command -v linkchecker > /dev/null 2>&1; then
+            echo "🔗 Checking for broken links..."
+            linkchecker build/index.html || echo "⚠️ Link checker found issues"
+          fi
+          
+          echo "✅ Documentation tests passed"
+
+      - name: Upload build artifacts
+        if: inputs.upload-artifacts && contains(fromJSON('["build", "test", "deploy-preview", "deploy-production"]'), inputs.operation)
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-build
+          path: ${{ inputs.working-directory }}/build/
+          retention-days: 30
+
+      - name: Configure git for commits
+        if: inputs.commit-changes && contains(fromJSON('["version", "deploy-production"]'), inputs.operation)
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
+      - name: Commit version changes
+        if: inputs.commit-changes && inputs.operation == 'version'
+        run: |
+          echo "💾 Committing version changes..."
+          git add ${{ inputs.working-directory }}/
+          if git diff --staged --quiet; then
+            echo "ℹ️ No documentation changes to commit"
+          else
+            git commit -m "📚 docs: version ${{ inputs.version }} [skip ci]"
+            echo "✅ Version changes committed"
+          fi
+
+      - name: Deploy to preview branch
+        if: inputs.operation == 'deploy-preview'
+        id: preview
+        run: |
+          echo "🚀 Deploying to preview branch: ${{ inputs.preview-branch }}..."
+          
+          # Create or switch to preview branch
+          git checkout -B ${{ inputs.preview-branch }}
+          
+          # Copy build files to root for GitHub Pages
+          cp -r ${{ inputs.working-directory }}/build/* .
+          
+          # Add and commit
+          git add .
+          git commit -m "📚 docs: preview deployment $(date -u +%Y-%m-%dT%H:%M:%SZ)" || echo "No changes to commit"
+          
+          # Push to preview branch
+          git push origin ${{ inputs.preview-branch }} --force
+          
+          # Set preview URL
+          PREVIEW_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          echo "url=$PREVIEW_URL" >> $GITHUB_OUTPUT
+          echo "✅ Preview deployed to: $PREVIEW_URL"
+
+      - name: Deploy to production
+        if: inputs.operation == 'deploy-production'
+        run: |
+          echo "🚀 Deploying to production..."
+          
+          # Commit and push documentation changes if any
+          git add ${{ inputs.working-directory }}/
+          if ! git diff --staged --quiet; then
+            git commit -m "📚 docs: production deployment ${{ inputs.version }} [skip ci]"
+            git push origin HEAD:${{ github.ref_name }}
+            echo "✅ Documentation changes pushed to production"
+          else
+            echo "ℹ️ No documentation changes to deploy"
+          fi
+
+      - name: Operation summary
+        run: |
+          echo "## Documentation Operation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Operation**: ${{ inputs.operation }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Node.js**: ${{ inputs.node-version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Working Directory**: ${{ inputs.working-directory }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ inputs.operation }}" = "version" ] && [ "${{ inputs.version }}" != "" ]; then
+            echo "- **Version**: ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ inputs.operation }}" = "deploy-preview" ] && [ "${{ steps.preview.outputs.url }}" != "" ]; then
+            echo "- **Preview URL**: ${{ steps.preview.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "- **Status**: ✅ Completed successfully" >> $GITHUB_STEP_SUMMARY

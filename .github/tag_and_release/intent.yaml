@@ -1,0 +1,46 @@
+# Example release intent configuration
+# This file controls whether and how to release the project
+# If this file doesn't exist, defaults will be used
+
+release: true
+level: auto  # auto | patch | minor | major
+artifacts:
+  python: auto  # auto | force | skip
+  docker: auto  # auto | force | skip
+  # Documentation versioning (supports both legacy and enhanced formats)
+  docs:
+    # Enhanced multi-section configuration
+    mode: auto          # auto | force | skip - How to handle docs versioning
+    sections:           # Array of Docusaurus plugin IDs to version
+      - docs            # Main documentation section
+      - dev             # Development/contributor documentation  
+#      - api             # API reference documentation
+    strategy: changed   # changed | always - When to version sections
+    
+  # Legacy format (still supported for backward compatibility):
+  # docs: auto    # auto | force | skip
+
+notes: "Automatic release based on semantic versioning and enhanced release with multi-section docs versioning"
+
+# Configuration Examples:
+#
+# 1. Legacy format (backward compatible):
+#    docs: auto
+#
+# 2. Version all sections always:
+#    docs:
+#      mode: force
+#      sections: ["docs", "dev", "api"]
+#      strategy: always
+#
+# 3. Only version changed sections (recommended):
+#    docs:
+#      mode: auto
+#      sections: ["docs", "dev"]  
+#      strategy: changed
+#
+# 4. Skip docs versioning entirely:
+#    docs: skip
+#    # or
+#    docs:
+#      mode: skip

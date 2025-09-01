@@ -1,0 +1,109 @@
+name: Release Validation (Dry Run)
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - .github/tag_and_release/**
+      - pyproject.toml
+  workflow_dispatch:
+    inputs:
+      level:
+        description: 'Release level to test'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: read
+  packages: read
+  id-token: write  # For cosign keyless signing
+
+concurrency:
+  group: release-validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  intent-parse:
+    uses: ./.github/workflows/rw_parse_release_intent.yaml
+    with:
+      level: ${{ inputs.level || 'auto' }}
+      python: 'auto'
+      docker: 'auto'
+      docs: 'auto'
+      notes: 'Validation test run'
+
+  python-build-check:
+    uses: ./.github/workflows/rw_python_package.yaml
+    needs: intent-parse
+    with:
+      operation: 'test'
+      artifact-name: 'validation-python-package'
+
+  docker-build-smoke:
+    uses: ./.github/workflows/rw_docker_operations.yaml
+    needs: intent-parse
+    with:
+      operation: 'test'
+      image-name: ${{ github.repository }}
+      version: 'validation-test'
+      health-check-port: '8000'
+      health-check-path: '/health'
+
+  docs-build:
+    uses: ./.github/workflows/rw_docs_operations.yaml
+    needs: intent-parse
+    with:
+      operation: 'test'
+      upload-artifacts: true
+
+  supply-chain-loopback:
+    uses: ./.github/workflows/rw_docker_operations.yaml
+    needs: docker-build-smoke
+    with:
+      operation: 'security-scan'
+      image-name: ${{ github.repository }}
+      version: 'validation-test'  # 🔧 FIX: Use same tag as build job
+      enable-sbom: true
+
+  validation-summary:
+    name: Validation Summary
+    runs-on: ubuntu-latest
+    needs: [intent-parse, python-build-check, docker-build-smoke, docs-build, supply-chain-loopback]
+    if: always()
+    steps:
+      - name: Check validation results
+        run: |
+          echo "=== Release Validation Summary ==="
+          echo ""
+          echo "Intent Parsing: ${{ needs.intent-parse.result }}"
+          echo "Python Build: ${{ needs.python-build-check.result }}"
+          echo "Docker Build: ${{ needs.docker-build-smoke.result }}"
+          echo "Docs Build: ${{ needs.docs-build.result }}"
+          echo "Supply Chain: ${{ needs.supply-chain-loopback.result }}"
+          echo ""
+          
+          if [[ "${{ needs.intent-parse.result }}" == "success" && \
+                "${{ needs.python-build-check.result }}" == "success" && \
+                "${{ needs.docker-build-smoke.result }}" == "success" && \
+                "${{ needs.docs-build.result }}" == "success" && \
+                "${{ needs.supply-chain-loopback.result }}" == "success" ]]; then
+            echo "✅ All validation checks passed! Release process is ready."
+            echo ""
+            echo "Release Configuration:"
+            echo "- Do Release: ${{ needs.intent-parse.outputs.do_release }}"
+            echo "- Level: ${{ needs.intent-parse.outputs.level }}"
+            echo "- Python: ${{ needs.intent-parse.outputs.python }}"
+            echo "- Docker: ${{ needs.intent-parse.outputs.docker }}"
+            echo "- Docs: ${{ needs.intent-parse.outputs.docs }}"
+            echo "- Notes: ${{ needs.intent-parse.outputs.notes }}"
+          else
+            echo "❌ Some validation checks failed. Please review the logs above."
+            exit 1
+          fi
