@@ -250,6 +250,11 @@ jobs:
             curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
           fi
 
+      - name: Prepare for security scan and SBOM generation
+        if: inputs.operation == 'security-scan'
+        run: |
+          sudo apt-get install jq
+
       - name: Security scan and SBOM generation
         if: inputs.operation == 'security-scan'
         id: security-scan
