@@ -75,53 +75,398 @@ As part of the test process, the following checks are performed:
 
 The project uses a dedicated workflow (`rw_uv_run_test_with_multi_py_versions.yaml`) to test across multiple Python versions, ensuring compatibility.
 
-## Continuous Deployment
+## Release Deployment System
 
-[![CD](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/cd.yaml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/cd.yaml)
+The project uses a comprehensive release deployment system with three main workflows:
 
-### Deployment Triggers
+[![Release](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release.yml)
+[![Release Validation](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-validate.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-validate.yml)
+[![Release Staging](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-staging.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-staging.yml)
 
-The CD workflow (`cd.yaml`) is triggered when:
-- Changes are pushed to `__pkg_info__.py` files (which contain version information)
-- Only on specific branches (controlled by `sample_master_never_run` in the actual config)
-
-### CD Workflow Structure
+### Release System Overview
 
 ```mermaid
 graph TD
-    A[Version Update in __pkg_info__.py] --> B[check_version-state]
-    B -->|Version Updated| C[build_git-tag_and_create_github-release]
-    C --> D[push_python_pkg_to_pypi]
-    C --> E[push_to_dockerhub]
-    E --> F[Docker Image Testing]
+    A[Release Intent Configuration] --> B[Production Release]
+    A --> C[Release Validation]
+    A --> D[Staging Release]
+    
+    B --> E[Version Bump]
+    B --> F[Python Package]
+    B --> G[Docker Image]
+    B --> H[Documentation]
+    B --> I[GitHub Release]
+    
+    C --> J[Dry-run Validation]
+    C --> K[Supply Chain Security]
+    
+    D --> L[TestPyPI]
+    D --> M[Staging Docker]
+    D --> N[Preview Docs]
 ```
 
-### Main CD Workflow Steps
+### 1. Production Release Workflow (`release.yml`)
 
-#### 1. Version State Checking
+**Triggers:**
+- Push to `master` branch
+- Manual dispatch (`workflow_dispatch`)
 
-- Checks if the version has been updated in `__pkg_info__.py`
-- Only proceeds with deployment if version has changed
+**Key Features:**
+- **Release Intent Parsing**: Configurable release strategy via `.github/tag_and_release/intent.yaml`
+- **Version Management**: Uses `uv version` for semantic versioning
+- **Multi-Artifact Release**: Python package, Docker image, and documentation
+- **Supply Chain Security**: SBOM generation, cosign signing, SLSA attestation
+- **Multi-Section Documentation**: Selective docs versioning per section
 
-#### 2. Git Tag and GitHub Release Creation
+#### Release Workflow Structure
 
-- Creates a Git tag based on the new version
-- Generates release notes
-- Creates a GitHub release
+```mermaid
+graph LR
+    A[Intent Parse] --> B[Change Detection]
+    B --> C[Matrix Prep]
+    C --> D[Version Bump]
+    D --> E[Python Release]
+    D --> F[Docker Release]
+    D --> G[Docs Release]
+    E & F & G --> H[GitHub Release]
+```
 
-#### 3. PyPI Publication
+#### Release Intent Configuration
 
-- Builds the Python package using Poetry
-- Publishes the package to PyPI with appropriate version type (official release)
-- Uses PyPI credentials stored in GitHub Secrets
+The release process is controlled by `.github/tag_and_release/intent.yaml`:
 
-#### 4. Docker Hub Publication
+```yaml
+# Release configuration
+version_bump: "auto"  # auto, patch, minor, major, skip
+python: "auto"        # auto, skip, force
+docker: "auto"        # auto, skip, force
 
-- Logs in to Docker Hub
-- Sets up QEMU for cross-platform builds
-- Builds and exports the Docker image
-- Tests the Docker image with an API token
-- Pushes the image to Docker Hub
+# Enhanced docs configuration
+docs:
+  mode: "auto"        # auto, skip, force
+  sections: ["docs", "dev", "api"]
+  strategy: "changed"  # all, changed
+
+github_release: "auto"
+```
+
+#### Multi-Artifact Deployment
+
+1. **Python Package** (`PyPI`):
+   - Uses `uv build` and `uv publish`
+   - OIDC Trusted Publishers for secure authentication
+   - Automatic version synchronization
+
+2. **Docker Image** (`GHCR`):
+   - Multi-architecture builds (amd64, arm64)
+   - SBOM generation with Syft
+   - Cosign keyless signing
+   - SLSA attestation
+
+3. **Documentation** (`Docusaurus`):
+   - Multi-section versioning support
+   - Change detection for selective updates
+   - Matrix-based concurrent processing
+
+### 2. Release Validation Workflow (`release-validate.yml`)
+
+**Purpose**: Pre-release validation without publishing artifacts
+
+**Triggers:**
+- Pull requests to `master`
+- Manual dispatch
+
+**Validation Steps:**
+
+```mermaid
+graph TD
+    A[Intent Parse] --> B[Python Build Check]
+    A --> C[Docker Build & Test]
+    A --> D[Docs Build Test]
+    A --> E[Supply Chain Security]
+    
+    E --> F[SBOM Generation]
+    E --> G[Vulnerability Scanning]
+    E --> H[Security Attestation]
+    
+    B & C & D & E --> I[Validation Summary]
+```
+
+#### Enhanced Security Validation
+
+- **Defensive Checks**: Pre-flight image existence validation
+- **Vulnerability Scanning**: Grype integration for CVE detection
+- **Fallback SBOM**: Workspace scanning if Docker image scan fails
+- **Supply Chain Security**: Full SBOM, signing, and attestation testing
+
+### 3. Staging Release Workflow (`release-staging.yml`)
+
+**Purpose**: Deploy to staging environments for testing
+
+**Triggers:**
+- Manual dispatch only (`workflow_dispatch`)
+
+**Staging Targets:**
+
+1. **TestPyPI**: Pre-release Python packages
+2. **GHCR Staging**: Docker images with `-rc` tags
+3. **Documentation Preview**: Staging documentation branch
+
+#### Staging Validation Process
+
+- **RC Version Generation**: Creates release candidate versions
+- **Staging Artifact Testing**: Validates staging deployments
+- **Preview Environment**: Safe testing environment
+
+### Multi-Section Documentation Versioning
+
+The release system supports advanced documentation versioning:
+
+#### Features
+
+- **Section-Based Versioning**: Independent versioning for `docs`, `dev`, and `api` sections
+- **Change Detection**: Automatic detection of changes per section
+- **Strategy Control**: Version all sections or only changed sections
+- **Matrix Processing**: Concurrent versioning for performance
+
+#### Configuration Examples
+
+```yaml
+# Legacy format (backward compatible)
+docs: "auto"
+
+# Enhanced format
+docs:
+  mode: "auto"
+  sections: ["docs", "dev"]
+  strategy: "changed"  # Only version changed sections
+```
+
+### Supply Chain Security
+
+All release workflows include comprehensive supply chain security:
+
+#### Security Features
+
+- **SBOM Generation**: Software Bill of Materials with Syft
+- **Vulnerability Scanning**: CVE detection with Grype
+- **Digital Signing**: Cosign keyless signing
+- **Attestation**: SLSA provenance attestation
+- **Defensive Programming**: Pre-flight checks and clear error messages
+
+#### Security Workflow
+
+```mermaid
+graph LR
+    A[Build Artifact] --> B[Generate SBOM]
+    B --> C[Vulnerability Scan]
+    C --> D[Sign Artifacts]
+    D --> E[Create Attestation]
+    E --> F[Upload Security Reports]
+```
+
+### Release System Benefits
+
+✅ **Configurable**: Intent-based release configuration  
+✅ **Secure**: Full supply chain security pipeline  
+✅ **Validated**: Comprehensive pre-release validation  
+✅ **Staged**: Safe staging environment testing  
+✅ **Multi-Target**: Python, Docker, and docs deployment  
+✅ **Efficient**: Matrix-based concurrent processing  
+✅ **Robust**: Fallback mechanisms and defensive checks
+
+## Reusable Workflows Architecture
+
+The release system is built on a foundation of reusable workflows that provide standardized operations across different contexts:
+
+### Core Reusable Workflows
+
+#### 1. Docker Operations (`rw_docker_operations.yaml`)
+
+**Purpose**: Standardized Docker image operations with consistent metadata outputs
+
+**Operations:**
+- `build`: Build and optionally push Docker images
+- `test`: Health check and functionality testing
+- `security-scan`: Comprehensive security scanning with enhanced features
+
+**Key Features:**
+- **Consistent Image Metadata**: Single source of truth for image names, tags, and references
+- **Multi-Architecture Support**: amd64 and arm64 builds
+- **Enhanced Security Scanning**: 
+  - Defensive image existence checks
+  - Grype vulnerability scanning
+  - Fallback SBOM generation from workspace
+  - Cosign signing and SLSA attestation
+
+**Security Scan Operation:**
+```mermaid
+graph TD
+    A[Image Existence Check] --> B[Primary SBOM Generation]
+    B --> C[Fallback SBOM Generation]
+    C --> D[Vulnerability Scanning]
+    D --> E[Sign & Attest]
+    E --> F[Upload Artifacts]
+```
+
+#### 2. Documentation Operations (`rw_docs_operations.yaml`)
+
+**Purpose**: Docusaurus documentation operations with multi-section support
+
+**Operations:**
+- `build`: Build documentation
+- `test`: Validate documentation build
+- `version`: Create versioned documentation
+- `deploy-preview`: Deploy to preview branch
+- `deploy-production`: Deploy to production
+
+**Enhanced Features:**
+- **Multi-Section Versioning**: Independent versioning for `docs`, `dev`, `api` sections
+- **Change Detection**: Automatic detection of changes per section using `dorny/paths-filter`
+- **Matrix Processing**: Concurrent versioning jobs for performance
+- **Strategy Control**: Version all sections or only changed sections
+
+#### 3. Python Package Operations (`rw_python_package.yaml`)
+
+**Purpose**: Python package building, testing, and publishing
+
+**Operations:**
+- `build`: Build Python packages with `uv build`
+- `test`: Package installation and import testing
+- `publish`: Publish to PyPI/TestPyPI with `uv publish`
+
+**Features:**
+- **UV Integration**: Modern Python package management
+- **OIDC Authentication**: Secure PyPI publishing with Trusted Publishers
+- **Version Synchronization**: Consistent versioning across artifacts
+
+### Workflow Integration Pattern
+
+The reusable workflows follow a consistent pattern:
+
+```yaml
+jobs:
+  operation-name:
+    uses: ./.github/workflows/rw_operation_type.yaml
+    with:
+      operation: 'specific-operation'
+      # Operation-specific parameters
+    secrets: inherit
+```
+
+**Benefits:**
+- **DRY Principle**: Avoid duplicating workflow logic
+- **Consistency**: Standardized operations across contexts
+- **Maintainability**: Centralized workflow logic
+- **Testing**: Isolated testing of workflow components
+
+## Developer Guide
+
+### Using the Release System
+
+#### 1. Configuring a Release
+
+Edit `.github/tag_and_release/intent.yaml` to configure your release:
+
+```yaml
+# Example: Patch release with selective docs versioning
+version_bump: "patch"
+python: "auto"
+docker: "auto"
+docs:
+  mode: "auto"
+  sections: ["docs", "dev"]  # Only version docs and dev sections
+  strategy: "changed"        # Only version if changes detected
+github_release: "auto"
+```
+
+#### 2. Triggering Releases
+
+**Automatic Release** (Push to master):
+```bash
+git push origin master
+# Triggers release workflow automatically
+```
+
+**Manual Release** (GitHub UI):
+1. Go to Actions → Release
+2. Click "Run workflow"
+3. Optionally override intent configuration
+
+#### 3. Pre-Release Validation
+
+**For Pull Requests:**
+- Release validation runs automatically on PRs to master
+- Provides comprehensive validation without publishing
+- Reviews security scan results and vulnerability reports
+
+**Manual Validation:**
+```bash
+# Trigger validation workflow manually
+gh workflow run release-validate.yml
+```
+
+#### 4. Staging Releases
+
+**Deploy to Staging:**
+```bash
+# Manual staging release
+gh workflow run release-staging.yml
+```
+
+**Staging Artifacts:**
+- **TestPyPI**: `pip install -i https://test.pypi.org/simple/ clickup-mcp-server`
+- **GHCR Staging**: `docker pull ghcr.io/chisanan232/clickup-mcp-server:1.0.0-rc.0`
+- **Preview Docs**: Available on docs-preview branch
+
+### Common Workflows
+
+#### Release Preparation
+
+1. **Update Code**: Make your changes and ensure tests pass
+2. **Configure Intent**: Set release configuration in `intent.yaml`
+3. **Validate**: Create PR and review validation results
+4. **Stage** (Optional): Test in staging environment
+5. **Release**: Merge to master for automatic release
+
+#### Troubleshooting
+
+**Tag Mismatch Issues:**
+- Check that Docker build and security scan jobs use consistent tags
+- Validation workflow includes defensive checks to catch this early
+
+**SBOM Generation Failures:**
+- System includes fallback SBOM generation from workspace
+- Check security scan artifacts for detailed logs
+
+**Documentation Versioning Issues:**
+- Verify `sections` configuration matches actual docs structure
+- Use `strategy: "all"` to force versioning regardless of changes
+
+#### Monitoring Releases
+
+**Release Status:**
+- Monitor [Release Workflow](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release.yml)
+- Check [Validation Results](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-validate.yml)
+
+**Security Reports:**
+- Review vulnerability scan results in workflow summaries
+- Download security artifacts for detailed analysis
+
+**Artifact Verification:**
+- **PyPI**: Check package availability and version
+- **GHCR**: Verify Docker image and signatures
+- **Docs**: Confirm documentation versioning
+
+### Legacy Continuous Deployment
+
+:::info Legacy System
+The following describes the legacy CD system (`cd.yaml`) which is maintained for backward compatibility but superseded by the release system above.
+:::
+
+[![CD](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/cd.yaml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/cd.yaml)
+
+The legacy CD workflow is triggered by changes to `__pkg_info__.py` files and includes basic version checking, Git tagging, PyPI publication, and Docker Hub publishing.
 
 ## Documentation Deployment
 
