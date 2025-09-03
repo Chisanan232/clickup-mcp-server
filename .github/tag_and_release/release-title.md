@@ -1,1 +1,1 @@
-v0.0.0 - Sample release note title 🍻
+v0.1.0 - Newborn of ClickUp MCP server 🍻
