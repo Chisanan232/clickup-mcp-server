@@ -8,35 +8,41 @@ sidebar_position: 5
 
 This document provides a chronological record of all notable changes to ClickUp MCP Server.
 
-## [0.1.0] - 2025-07-15
+## [0.1.0] - 2025-09-04
 
-### Added
-- Initial release of ClickUp MCP Server
-- Support for HTTP streaming transport
-- Support for Server-Sent Events (SSE) transport
-- Basic API endpoints for Teams, Spaces, Folders, Lists, and Tasks
-- Environment variable loading from .env files with custom path support
-- Comprehensive test suite
-- Basic documentation
+### 🎉 New feature
 
-### Security
-- Secure token management for API authentication
+- Newborn of ClickUp MCP server project.
+    ```shell
+    >>> clickup-mcp-server --help
+    usage: clickup-mcp-server [-h] [--host HOST] [--port PORT] [--log-level {debug,info,warning,error,critical}] [--reload] [--env ENV_FILE] [--token TOKEN]
+                              [--transport {sse,http-streaming}]
+    
+    Run the ClickUp MCP FastAPI server
+    
+    options:
+      -h, --help            show this help message and exit
+      --host HOST           Host to bind the server to
+      --port PORT           Port to bind the server to
+      --log-level {debug,info,warning,error,critical}
+                            Logging level
+      --reload              Enable auto-reload for development
+      --env ENV_FILE        Path to the .env file for environment variables
+      --token TOKEN         ClickUp API token (overrides token from .env file if provided)
+      --transport {sse,http-streaming}
+                            Transport protocol to use for MCP (sse or http-streaming)
+    ```
 
-## [0.0.2] - 2025-06-30
+#### 👨‍💻 For development
 
-### Added
-- Pre-release version with core functionality
-- Initial implementation of MCP protocol
-- Basic transport interfaces
+- Provide the [development details] in [documentation].
 
-### Fixed
-- Resolved several critical bugs in API client implementation
-- Fixed issue with connection handling in HTTP streaming
+[development details]: https://chisanan232.github.io/clickup-mcp-server/dev/next
 
-## [0.0.1] - 2025-06-15
+### 📑 Docs
 
-### Added
-- Initial project structure
-- Basic ClickUp API client implementation
-- Core models for ClickUp resources
-- Project configuration and setup
+- Provide the [details] in [documentation].
+
+[details]: https://chisanan232.github.io/clickup-mcp-server/docs/next/introduction
+[documentation]: https://chisanan232.github.io/clickup-mcp-server/
+
