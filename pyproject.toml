@@ -39,6 +39,9 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/Chisanan232/clickup-mcp-server"
 Repository = "https://github.com/Chisanan232/clickup-mcp-server"
+Documentation = "https://chisanan232.github.io/clickup-mcp-server/"
+Changelog = "https://chisanan232.github.io/clickup-mcp-server/docs/next/changelog"
+"Project Management" = "https://app.clickup.com/9018752317/v/f/90185744050/90184991515"
 
 [project.scripts]
 clickup-mcp-server = "clickup_mcp.entry:main"
