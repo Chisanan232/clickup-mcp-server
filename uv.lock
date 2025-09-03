@@ -181,7 +181,7 @@ dev = [
     { name = "pytest-asyncio", specifier = ">=1.1.0,<2" },
     { name = "pytest-cov", specifier = ">=6.2.1,<7" },
     { name = "pytest-mock", specifier = ">=3.14.1,<4" },
-    { name = "pytest-rerunfailures", specifier = ">=15.1,<16" },
+    { name = "pytest-rerunfailures", specifier = ">=15.1,<17" },
     { name = "python-dotenv", specifier = ">=1.1.1,<2" },
 ]
 pre-commit-ci = [
