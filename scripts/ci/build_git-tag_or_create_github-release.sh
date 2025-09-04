@@ -43,13 +43,13 @@ fi
 
 #Current_Branch=$(git branch --show-current)
  # # # For debug
-echo "Verify the git branch info"
-git branch --list | cat
-echo "Verify all the git branch info"
-git branch -a | cat
-echo "Verify the git remote info"
-git remote -v
-echo "Get the current git branch info"
+#echo "Verify the git branch info"
+#git branch --list | cat
+#echo "Verify all the git branch info"
+#git branch -a | cat
+#echo "Verify the git remote info"
+#git remote -v
+#echo "Get the current git branch info"
 
 # This is the global value to provide after-handle to use
 Current_Branch=$(git branch --list | cat | grep -E '\* ([a-zA-Z0-9]{1,16})' | grep -E -o '([a-zA-Z0-9]{1,16})')

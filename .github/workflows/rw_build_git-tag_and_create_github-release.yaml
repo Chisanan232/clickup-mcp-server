@@ -57,6 +57,14 @@ jobs:
       - name: Build git tag and create GitHub release for Python project
         id: python_release
         run: | 
+          echo "Verify the git branch info"
+          git branch --list | cat
+          echo "Verify all the git branch info"
+          git branch -a | cat
+          echo "Verify the git remote info"
+          git remote -v
+          echo "Get the current git branch info"
+
           release=$(bash ./scripts/ci/build_git-tag_or_create_github-release.sh  ${{ inputs.debug_mode }})
           echo "📄 Release log: $release"
 
