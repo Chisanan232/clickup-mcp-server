@@ -46,7 +46,6 @@ on:
 jobs:
   build_git-tag_and_create_github-release:
 #    name: Build git tag and GitHub release if it needs
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       matrix_python: ${{ steps.python_release.outputs.release_type }}
