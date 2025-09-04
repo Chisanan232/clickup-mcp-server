@@ -52,7 +52,7 @@ jobs:
       matrix_python: ${{ steps.python_release.outputs.release_type }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # This flow for the project type is Python project
       - name: Build git tag and create GitHub release for Python project
