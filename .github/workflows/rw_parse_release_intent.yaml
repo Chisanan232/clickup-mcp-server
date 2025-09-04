@@ -49,8 +49,17 @@ on:
         description: 'Docker release decision'
         value: ${{ jobs.parse_intent.outputs.docker }}
       docs:
-        description: 'Documentation release decision'
+        description: 'Documentation release decision (legacy)'
         value: ${{ jobs.parse_intent.outputs.docs }}
+      docs_mode:
+        description: 'Documentation release mode'
+        value: ${{ jobs.parse_intent.outputs.docs_mode }}
+      docs_sections:
+        description: 'Documentation sections to version'
+        value: ${{ jobs.parse_intent.outputs.docs_sections }}
+      docs_strategy:
+        description: 'Documentation versioning strategy'
+        value: ${{ jobs.parse_intent.outputs.docs_strategy }}
       notes:
         description: 'Release notes'
         value: ${{ jobs.parse_intent.outputs.notes }}
@@ -65,6 +74,9 @@ jobs:
       python: ${{ steps.intent.outputs.python }}
       docker: ${{ steps.intent.outputs.docker }}
       docs: ${{ steps.intent.outputs.docs }}
+      docs_mode: ${{ steps.intent.outputs.docs_mode }}
+      docs_sections: ${{ steps.intent.outputs.docs_sections }}
+      docs_strategy: ${{ steps.intent.outputs.docs_strategy }}
       notes: ${{ steps.intent.outputs.notes }}
     steps:
       - name: Checkout repository

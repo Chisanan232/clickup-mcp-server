@@ -3,7 +3,7 @@
 # If this file doesn't exist, defaults will be used
 
 release: true
-level: minor  # auto | patch | minor | major
+level: patch  # auto | patch | minor | major
 artifacts:
   python: auto  # auto | force | skip
   docker: auto  # auto | force | skip
