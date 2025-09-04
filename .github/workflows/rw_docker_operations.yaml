@@ -91,7 +91,7 @@ jobs:
       image_ref: ${{ steps.image_meta.outputs.image_ref }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Initial Docker image tag name
         id: initial-docker-tag-meta
