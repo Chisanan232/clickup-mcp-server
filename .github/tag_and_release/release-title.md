@@ -1,1 +1,1 @@
-v0.1.0 - Newborn of ClickUp MCP server project 🍻
+v0.1.0 - Newborn of ClickUp MCP server 🍻
