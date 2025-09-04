@@ -58,7 +58,8 @@ jobs:
         id: python_release
         run: | 
           echo "Verify the git branch info"
-          git branch --list | cat
+          echo "GITHUB_HEAD_REF: $GITHUB_HEAD_REF"
+          git switch $GITHUB_HEAD_REF
           echo "Verify all the git branch info"
           git branch -a | cat
           echo "Verify the git remote info"
