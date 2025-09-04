@@ -80,7 +80,7 @@ jobs:
     secrets:
       github_auth_token: ${{ secrets.GITHUB_TOKEN }}
     with:
-      debug_mode: 'true'
+      debug_mode: true
 
   pypi-test:
     uses: ./.github/workflows/rw_python_package.yaml
