@@ -249,8 +249,11 @@ jobs:
           git push origin HEAD:${{ github.ref_name }}
 
   build_git-tag_and_create_github-release:
-    uses: ./.github/workflows/rw_build_git-tag_and_create_github-release.yaml
+    uses: ./.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml
     needs: bump_version
+    with:
+      version: ${{ needs.bump_version.outputs.version }}
+      debug_mode: false
     secrets:
       github_auth_token: ${{ secrets.GITHUB_TOKEN }}
 

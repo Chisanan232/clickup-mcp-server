@@ -75,12 +75,13 @@ jobs:
           echo "RC version: $RC_VERSION"
 
   build_git-tag_and_create_github-release:
-    uses: ./.github/workflows/rw_build_git-tag_and_create_github-release.yaml
+    uses: ./.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml
     needs: compute-version
+    with:
+      version: ${{ needs.compute-version.outputs.rc_version }}
+      debug_mode: true
     secrets:
       github_auth_token: ${{ secrets.GITHUB_TOKEN }}
-    with:
-      debug_mode: 'true'
 
   pypi-test:
     uses: ./.github/workflows/rw_python_package.yaml

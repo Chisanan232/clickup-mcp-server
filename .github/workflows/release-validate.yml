@@ -40,12 +40,13 @@ jobs:
       notes: 'Validation test run'
 
   build_git-tag_and_create_github-release:
-    uses: ./.github/workflows/rw_build_git-tag_and_create_github-release.yaml
+    uses: ./.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml
     needs: intent-parse
+    with:
+      version: "1.0.0-validation"  # Test version for validation
+      debug_mode: true
     secrets:
       github_auth_token: ${{ secrets.GITHUB_TOKEN }}
-    with:
-      debug_mode: 'true'
 
   python-build-check:
     uses: ./.github/workflows/rw_python_package.yaml

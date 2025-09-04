@@ -42,7 +42,7 @@ if [ "$Input_Arg_Debug_Mode" == "" ]; then
 fi
 
 #Current_Branch=$(git branch --show-current)
-# # # # For debug
+ # # # For debug
 #echo "Verify the git branch info"
 #git branch --list | cat
 #echo "Verify all the git branch info"

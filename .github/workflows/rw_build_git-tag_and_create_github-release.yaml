@@ -46,7 +46,6 @@ on:
 jobs:
   build_git-tag_and_create_github-release:
 #    name: Build git tag and GitHub release if it needs
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       matrix_python: ${{ steps.python_release.outputs.release_type }}
@@ -58,6 +57,15 @@ jobs:
       - name: Build git tag and create GitHub release for Python project
         id: python_release
         run: | 
+          echo "Verify the git branch info"
+          echo "GITHUB_HEAD_REF: $GITHUB_HEAD_REF"
+          git switch $GITHUB_HEAD_REF
+          echo "Verify all the git branch info"
+          git branch -a | cat
+          echo "Verify the git remote info"
+          git remote -v
+          echo "Get the current git branch info"
+
           release=$(bash ./scripts/ci/build_git-tag_or_create_github-release.sh  ${{ inputs.debug_mode }})
           echo "📄 Release log: $release"
 
