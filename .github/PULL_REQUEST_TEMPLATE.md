@@ -34,7 +34,8 @@
     * [ ] 🚮 Removing something
     * [ ] 🔧 Fixing bug
     * [ ] ♻️ Refactoring something
-    * [ ] 🚀 Improving something (maybe performance, code quality, security, etc.)
+    * [ ] 🍀 Improving something (maybe performance, code quality, security, etc.)
+    * [ ] 🚀 Release
 * Scopes:
     * [ ] ✍️ Command line interface
     * [ ] 💼 Core feature
