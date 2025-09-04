@@ -39,9 +39,17 @@ jobs:
       docs: 'auto'
       notes: 'Validation test run'
 
+  build_git-tag_and_create_github-release:
+    uses: ./.github/workflows/rw_build_git-tag_and_create_github-release.yaml
+    needs: intent-parse
+    secrets:
+      github_auth_token: ${{ secrets.GITHUB_TOKEN }}
+    with:
+      debug_mode: 'true'
+
   python-build-check:
     uses: ./.github/workflows/rw_python_package.yaml
-    needs: intent-parse
+    needs: build_git-tag_and_create_github-release
     with:
       operation: 'test'
       artifact-name: 'validation-python-package'
