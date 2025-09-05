@@ -87,7 +87,7 @@ jobs:
       # Auto-approve（required setting「Allow GitHub Actions to create and approve pull requests」in repo）
       - name: Approve PR via REST API
         if: steps.docs_only_check.outputs.is_docs_only == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const pr = context.payload.pull_request;
