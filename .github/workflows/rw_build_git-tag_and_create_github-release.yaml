@@ -52,6 +52,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref_name }}  # Always use latest commit on the branch
 
       # This flow for the project type is Python project
       - name: Build git tag and create GitHub release for Python project

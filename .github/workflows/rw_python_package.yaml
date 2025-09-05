@@ -49,6 +49,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ github.ref_name }}  # Always use latest commit on the branch
 
       - name: Setup Python with UV
         uses: ./.github/actions/setup-python-uv

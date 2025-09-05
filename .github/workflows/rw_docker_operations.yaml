@@ -92,6 +92,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref_name }}  # Always use latest commit on the branch
 
       - name: Initial Docker image tag name
         id: initial-docker-tag-meta
