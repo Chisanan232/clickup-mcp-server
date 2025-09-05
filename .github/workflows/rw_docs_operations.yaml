@@ -124,7 +124,9 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          ref: ${{ github.ref_name }}  # Always use latest commit on the branch
+          # Only use ref for push events to master to get latest commit after version bump
+          # In PR events, github.ref_name gives merge refs like "109/merge" which breaks checkout
+          ref: ${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '' }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -183,7 +185,8 @@ jobs:
             echo "ℹ️ No documentation changes to commit for section '${{ matrix.section }}'"
           else
             git commit -m "📚 docs(${{ matrix.section }}): version ${{ inputs.version }} [skip ci]"
-            git push origin HEAD:${{ github.ref_name }}
+            # Only push to ref_name for push events to master, use HEAD for PR events
+            git push origin HEAD:${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || github.head_ref || github.ref_name }}
             echo "✅ Version changes committed for section '${{ matrix.section }}'"
           fi
 
@@ -199,7 +202,9 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          ref: ${{ github.ref_name }}  # Always use latest commit on the branch
+          # Only use ref for push events to master to get latest commit after version bump
+          # In PR events, github.ref_name gives merge refs like "109/merge" which breaks checkout
+          ref: ${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '' }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -341,7 +346,8 @@ jobs:
           git add ${{ inputs.working-directory }}/
           if ! git diff --staged --quiet; then
             git commit -m "📚 docs: production deployment ${{ inputs.version }} [skip ci]"
-            git push origin HEAD:${{ github.ref_name }}
+            # Only push to ref_name for push events to master, use HEAD for PR events
+            git push origin HEAD:${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || github.head_ref || github.ref_name }}
             echo "✅ Documentation changes pushed to production"
           else
             echo "ℹ️ No documentation changes to deploy"

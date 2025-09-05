@@ -205,6 +205,9 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          # Only use ref for push events to master to get latest commit after version bump
+          # In PR events, github.ref_name gives merge refs like "109/merge" which breaks checkout
+          ref: ${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '' }}
 
       - name: Setup Python with UV
         uses: ./.github/actions/setup-python-uv
@@ -250,7 +253,8 @@ jobs:
           # Commit the version bump and updated lock file
           git add pyproject.toml uv.lock
           git commit -m "⬆️ chore: bump version to $NEW_VERSION and sync uv.lock [skip ci]"
-          git push origin HEAD:${{ github.ref_name }}
+          # Only push to ref_name for push events to master, use HEAD for PR events
+          git push origin HEAD:${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || github.head_ref || github.ref_name }}
 
   build_git-tag_and_create_github-release:
     uses: ./.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml

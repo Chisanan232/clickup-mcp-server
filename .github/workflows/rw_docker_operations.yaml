@@ -93,7 +93,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.ref_name }}  # Always use latest commit on the branch
+          # Only use ref for push events to master to get latest commit after version bump
+          # In PR events, github.ref_name gives merge refs like "109/merge" which breaks checkout
+          ref: ${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '' }}
 
       - name: Initial Docker image tag name
         id: initial-docker-tag-meta
