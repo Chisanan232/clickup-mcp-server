@@ -160,13 +160,8 @@ jobs:
           echo "🏷️ Versioning docs section '${{ matrix.section }}' to ${{ inputs.version }}..."
           
           # Check if this is the default docs section or a plugin-specific section
-          if [ "${{ matrix.section }}" = "docs" ]; then
-            # Default docs section
-            pnpm exec docusaurus docs:version "${{ inputs.version }}"
-          else
-            # Plugin-specific section (e.g., dev, api)
-            pnpm exec docusaurus docs:version:${{ matrix.section }} "${{ inputs.version }}"
-          fi
+          # Plugin-specific section (e.g., docs, dev)
+          pnpm exec docusaurus docs:version:${{ matrix.section }} "${{ inputs.version }}"
           
           echo "✅ Section '${{ matrix.section }}' versioned successfully"
 
