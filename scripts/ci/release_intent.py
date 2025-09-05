@@ -114,7 +114,15 @@ def merge_intent_data(
     if workflow_inputs["docker"]:
         merged["artifacts"]["docker"] = workflow_inputs["docker"]
     if workflow_inputs["docs"]:
-        merged["artifacts"]["docs"] = workflow_inputs["docs"]
+        # Handle docs carefully - don't override complex object with simple string
+        if isinstance(merged["artifacts"]["docs"], dict):
+            # If file config has complex docs object, only override mode if input is specific
+            if workflow_inputs["docs"] in ["skip", "force"]:
+                merged["artifacts"]["docs"]["mode"] = workflow_inputs["docs"]
+            # Otherwise preserve the complex configuration from file
+        else:
+            # If file config has simple string, replace it
+            merged["artifacts"]["docs"] = workflow_inputs["docs"]
     if workflow_inputs["notes"]:
         merged["notes"] = workflow_inputs["notes"]
 
