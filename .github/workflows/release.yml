@@ -238,14 +238,18 @@ jobs:
           echo "Bumping version with: uv version $BUMP_FLAG"
           uv version $BUMP_FLAG
           
+          # Update lock file to sync with new version
+          echo "Updating uv.lock file to sync with new version"
+          uv lock
+          
           # Get the new version
           NEW_VERSION=$(uv version --short)
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "New version: $NEW_VERSION"
           
-          # Commit the version bump
-          git add pyproject.toml
-          git commit -m "⬆️ chore: bump version to $NEW_VERSION [skip ci]"
+          # Commit the version bump and updated lock file
+          git add pyproject.toml uv.lock
+          git commit -m "⬆️ chore: bump version to $NEW_VERSION and sync uv.lock [skip ci]"
           git push origin HEAD:${{ github.ref_name }}
 
   build_git-tag_and_create_github-release:

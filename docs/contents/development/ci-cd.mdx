@@ -127,10 +127,11 @@ Both registries receive **identical images** with the **same version tags**, ens
 
 **Key Features:**
 - **Release Intent Parsing**: Configurable release strategy via `.github/tag_and_release/intent.yaml`
-- **Version Management**: Uses `uv version` for semantic versioning
+- **Version Management**: Uses `uv version` for semantic versioning with automatic `uv.lock` synchronization
 - **Multi-Artifact Release**: Python package, Docker image, and documentation
 - **Supply Chain Security**: SBOM generation, cosign signing, SLSA attestation
 - **Multi-Section Documentation**: Selective docs versioning per section
+- **Dependency Lock Synchronization**: Ensures `uv.lock` stays in sync with version bumps
 
 #### Release Workflow Structure
 
@@ -178,6 +179,7 @@ notes: "Release description"
    - Uses `uv build` and `uv publish`
    - OIDC Trusted Publishers for secure authentication
    - **Fixed**: Automatic version synchronization with git sync fix
+   - **Enhanced**: `uv.lock` file automatically updated and committed with version bumps
    - Builds from correct bumped version (e.g., 0.0.1, not 0.0.0)
 
 2. **Docker Image** (`GHCR` & `DockerHub`):
@@ -715,6 +717,12 @@ gh workflow run release-staging.yml
 - **Root Cause**: Downstream jobs used `actions/checkout@v5` without `ref` parameter, defaulting to original commit SHA
 - **Solution**: All workflows now use `ref: ${{ github.ref_name }}` to checkout latest branch state
 - **Impact**: Python packages, Docker images, and docs now use correct bumped version
+
+**UV Lock File Synchronization:**
+- **Enhanced**: Version bump now automatically updates `uv.lock` file to maintain dependency synchronization
+- **Process**: After `uv version --bump`, the workflow runs `uv lock` to update lock file
+- **Commit**: Both `pyproject.toml` and `uv.lock` are committed together in version bump
+- **Benefit**: Ensures dependency lock file stays in sync with version changes
 
 **Tag Mismatch Issues:**
 - Check that Docker build and security scan jobs use consistent tags
