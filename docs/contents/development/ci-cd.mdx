@@ -92,18 +92,32 @@ graph TD
     A --> D[Staging Release]
     
     B --> E[Version Bump]
-    B --> F[Python Package]
-    B --> G[Docker Image]
-    B --> H[Documentation]
-    B --> I[GitHub Release]
+    E --> F[Git Sync Fix]
+    F --> G[Python Package]
+    F --> H[Docker Image]
+    F --> I[Documentation]
+    G & H & I --> J[GitHub Release]
     
-    C --> J[Dry-run Validation]
-    C --> K[Supply Chain Security]
+    C --> K[Dry-run Validation]
+    C --> L[Supply Chain Security]
     
-    D --> L[TestPyPI]
-    D --> M[Staging Docker]
-    D --> N[Preview Docs]
+    D --> M[TestPyPI]
+    D --> N[Staging Docker]
+    D --> O[Preview Docs]
 ```
+
+:::info Critical Fix: Git Synchronization
+A critical git synchronization issue was identified and resolved where downstream jobs (Python package, Docker, docs) were building from stale code that didn't include the version bump commit. This has been fixed by ensuring all workflows checkout the latest branch state with `ref: ${{ github.ref_name }}`.
+:::
+
+:::note Dual Registry Docker Publishing
+The Docker release system publishes to **both Docker Hub and GitHub Container Registry (GHCR)** simultaneously:
+
+- **Docker Hub**: `chisanan232/clickup-mcp-server` - Public registry for broader community access
+- **GHCR**: `ghcr.io/chisanan232/clickup-mcp-server` - GitHub-integrated registry with better CI/CD integration
+
+Both registries receive **identical images** with the **same version tags**, ensuring users can pull from either registry based on their preference or organizational requirements.
+:::
 
 ### 1. Production Release Workflow (`release.yml`)
 
@@ -113,10 +127,11 @@ graph TD
 
 **Key Features:**
 - **Release Intent Parsing**: Configurable release strategy via `.github/tag_and_release/intent.yaml`
-- **Version Management**: Uses `uv version` for semantic versioning
+- **Version Management**: Uses `uv version` for semantic versioning with automatic `uv.lock` synchronization
 - **Multi-Artifact Release**: Python package, Docker image, and documentation
 - **Supply Chain Security**: SBOM generation, cosign signing, SLSA attestation
 - **Multi-Section Documentation**: Selective docs versioning per section
+- **Dependency Lock Synchronization**: Ensures `uv.lock` stays in sync with version bumps
 
 #### Release Workflow Structure
 
@@ -133,21 +148,29 @@ graph LR
 
 #### Release Intent Configuration
 
-The release process is controlled by `.github/tag_and_release/intent.yaml`:
+The release process is controlled by `.github/tag_and_release/intent.yaml`. This configuration file provides fine-grained control over what gets released and how:
 
 ```yaml
-# Release configuration
-version_bump: "auto"  # auto, patch, minor, major, skip
-python: "auto"        # auto, skip, force
-docker: "auto"        # auto, skip, force
+# Basic release configuration
+release: true         # true, false - Master enable/disable
+level: patch          # auto, patch, minor, major - Version bump level
 
-# Enhanced docs configuration
-docs:
-  mode: "auto"        # auto, skip, force
-  sections: ["docs", "dev", "api"]
-  strategy: "changed"  # all, changed
+# Artifact-specific configuration
+artifacts:
+  python: auto        # auto, skip, force - Python package publishing
+  docker: auto        # auto, skip, force - Docker image publishing
+  
+  # Enhanced multi-section docs configuration
+  docs:
+    mode: auto        # auto, skip, force - Docs versioning behavior
+    sections:         # Array of Docusaurus sections to version
+      - docs          # Main documentation
+      - dev           # Development documentation
+      - api           # API reference (optional)
+    strategy: always  # changed, always - When to version sections
 
-github_release: "auto"
+# Release notes
+notes: "Release description"
 ```
 
 #### Multi-Artifact Deployment
@@ -155,18 +178,26 @@ github_release: "auto"
 1. **Python Package** (`PyPI`):
    - Uses `uv build` and `uv publish`
    - OIDC Trusted Publishers for secure authentication
-   - Automatic version synchronization
+   - **Fixed**: Automatic version synchronization with git sync fix
+   - **Enhanced**: `uv.lock` file automatically updated and committed with version bumps
+   - Builds from correct bumped version (e.g., 0.0.1, not 0.0.0)
 
-2. **Docker Image** (`GHCR`):
-   - Multi-architecture builds (amd64, arm64)
-   - SBOM generation with Syft
-   - Cosign keyless signing
-   - SLSA attestation
+2. **Docker Image** (`GHCR` & `DockerHub`):
+   - **Dual Registry Publishing**: Publishes to both registries simultaneously
+     - **GitHub Container Registry (GHCR)**: `ghcr.io/chisanan232/clickup-mcp-server`
+     - **Docker Hub**: `chisanan232/clickup-mcp-server`
+   - **Parallel Publishing Jobs**: Separate jobs ensure isolated registry operations
+   - **Multi-architecture builds**: amd64, arm64 support for both registries
+   - **Supply Chain Security**: SBOM generation, Cosign signing, SLSA attestation
+   - **Registry-Specific Authentication**: GHCR uses GitHub token, Docker Hub uses dedicated credentials
+   - **Consistent Tagging**: Same version tags applied to both registries
+   - **Fixed**: Uses correct version tags from git sync fix
 
 3. **Documentation** (`Docusaurus`):
    - Multi-section versioning support
    - Change detection for selective updates
    - Matrix-based concurrent processing
+   - **Fixed**: Versions using correct bumped version
 
 ### 2. Release Validation Workflow (`release-validate.yml`)
 
@@ -360,6 +391,256 @@ jobs:
 - **Maintainability**: Centralized workflow logic
 - **Testing**: Isolated testing of workflow components
 
+## Release Intent Configuration Reference
+
+The `.github/tag_and_release/intent.yaml` file is the central configuration for controlling release behavior. This section provides comprehensive documentation for all available configuration options.
+
+### Configuration Schema
+
+```yaml
+# Master release control
+release: true                    # boolean - Enable/disable releases entirely
+
+# Version bump configuration  
+level: "auto"                    # string - Version bump level
+
+# Artifact publishing configuration
+artifacts:
+  python: "auto"                 # string - Python package publishing
+  docker: "auto"                 # string - Docker image publishing
+  docs:                          # object | string - Documentation versioning
+    mode: "auto"                 # string - Docs versioning mode
+    sections: ["docs", "dev"]    # array - Docusaurus sections to version
+    strategy: "changed"          # string - Versioning strategy
+
+# Release notes
+notes: "Release description"     # string - GitHub release notes
+```
+
+### Configuration Options
+
+#### 1. Master Release Control
+
+**`release`** (boolean, default: `true`)
+- `true`: Enable release processing
+- `false`: Skip all release operations
+
+```yaml
+# Enable releases
+release: true
+
+# Disable releases entirely
+release: false
+```
+
+#### 2. Version Bump Level
+
+**`level`** (string, default: `"auto"`)
+Controls semantic version bumping:
+
+- `"auto"`: Determine version bump automatically based on commit messages
+- `"patch"`: Force patch version bump (e.g., 1.0.0 → 1.0.1)
+- `"minor"`: Force minor version bump (e.g., 1.0.0 → 1.1.0)
+- `"major"`: Force major version bump (e.g., 1.0.0 → 2.0.0)
+
+```yaml
+# Automatic version detection
+level: auto
+
+# Force specific version bumps
+level: patch  # 1.0.0 → 1.0.1
+level: minor  # 1.0.0 → 1.1.0 
+level: major  # 1.0.0 → 2.0.0
+```
+
+#### 3. Python Package Configuration
+
+**`artifacts.python`** (string, default: `"auto"`)
+Controls Python package publishing to PyPI:
+
+- `"auto"`: Publish if package files changed
+- `"force"`: Always publish regardless of changes
+- `"skip"`: Skip Python package publishing
+
+```yaml
+artifacts:
+  # Conditional publishing (recommended)
+  python: auto
+  
+  # Always publish
+  python: force
+  
+  # Skip publishing
+  python: skip
+```
+
+#### 4. Docker Image Configuration
+
+**`artifacts.docker`** (string, default: `"auto"`)
+Controls Docker image publishing to **both Docker Hub and GitHub Container Registry (GHCR)**:
+
+- `"auto"`: Publish if Docker-related files changed (Dockerfile, scripts, etc.)
+- `"force"`: Always publish to both registries regardless of changes
+- `"skip"`: Skip Docker image publishing to both registries
+
+```yaml
+artifacts:
+  # Conditional publishing (recommended)
+  docker: auto    # Publishes to both registries if Docker files changed
+  
+  # Always publish
+  docker: force   # Always publishes to both registries
+  
+  # Skip publishing
+  docker: skip    # Skips both registries
+```
+
+:::info Dual Registry Publishing Details
+When `docker: auto` or `docker: force`, the workflow creates **two parallel jobs**:
+
+1. **Docker Hub Job** (`release_docker_dockerhub`):
+   - Registry: `docker.io`
+   - Image: `chisanan232/clickup-mcp-server:VERSION`
+   - Authentication: DockerHub credentials (`DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`)
+
+2. **GHCR Job** (`release_docker_ghcr`):
+   - Registry: `ghcr.io`  
+   - Image: `ghcr.io/chisanan232/clickup-mcp-server:VERSION`
+   - Authentication: GitHub token (`GITHUB_TOKEN`)
+
+Both jobs run **simultaneously** and produce **identical images** with the same version tags.
+:::
+
+#### 5. Documentation Configuration
+
+**`artifacts.docs`** (object | string)
+Controls documentation versioning with support for both legacy and enhanced formats.
+
+##### Legacy Format (String)
+
+```yaml
+artifacts:
+  docs: "auto"  # auto, force, skip
+```
+
+##### Enhanced Format (Object)
+
+```yaml
+artifacts:
+  docs:
+    mode: "auto"              # auto, force, skip
+    sections: ["docs", "dev"]  # array of section names
+    strategy: "changed"       # changed, always
+```
+
+**Configuration Options:**
+
+**`docs.mode`** (string, default: `"auto"`)
+- `"auto"`: Version docs based on strategy and change detection
+- `"force"`: Always version docs regardless of changes or strategy
+- `"skip"`: Skip documentation versioning entirely
+
+**`docs.sections`** (array, default: `["docs", "dev"]`)
+Array of Docusaurus plugin IDs to version:
+- `"docs"`: Main user documentation
+- `"dev"`: Development/contributor documentation
+- `"api"`: API reference documentation
+
+**`docs.strategy`** (string, default: `"changed"`)
+- `"changed"`: Only version sections that have file changes
+- `"always"`: Version all configured sections regardless of changes
+
+### Configuration Examples
+
+#### Example 1: Conservative Release (Recommended)
+```yaml
+# Only release what has actually changed
+release: true
+level: auto
+artifacts:
+  python: auto
+  docker: auto
+  docs:
+    mode: auto
+    sections: ["docs", "dev"]
+    strategy: changed
+notes: "Automatic release with change detection"
+```
+
+#### Example 2: Force Full Release
+```yaml
+# Force release all artifacts regardless of changes
+release: true
+level: patch
+artifacts:
+  python: force
+  docker: force
+  docs:
+    mode: force
+    sections: ["docs", "dev", "api"]
+    strategy: always
+notes: "Full release of all components"
+```
+
+#### Example 3: Selective Release
+```yaml
+# Only release Python package, skip others
+release: true
+level: minor
+artifacts:
+  python: force
+  docker: skip
+  docs: skip
+notes: "Python package only release"
+```
+
+#### Example 4: Documentation-Only Release
+```yaml
+# Only version documentation
+release: true
+level: patch
+artifacts:
+  python: skip
+  docker: skip
+  docs:
+    mode: force
+    sections: ["docs", "dev"]
+    strategy: always
+notes: "Documentation update release"
+```
+
+### Behavioral Matrix
+
+| Configuration | Changed Files | Behavior |
+|---------------|---------------|----------|
+| `python: auto` | Python files changed | ✅ Publishes to PyPI |
+| `python: auto` | No Python files changed | ⏭️ Skips publishing |
+| `python: force` | Any/no changes | ✅ Always publishes |
+| `python: skip` | Any/no changes | ⏭️ Always skips |
+| `docs.mode: auto, strategy: changed` | Docs files changed | ✅ Versions changed sections |
+| `docs.mode: auto, strategy: always` | Any changes | ✅ Versions all sections |
+| `docs.mode: force` | Any/no changes | ✅ Always versions |
+
+### Configuration Validation
+
+The release intent parser includes JSON schema validation to ensure configuration correctness:
+
+- **Invalid Options**: Unsupported values are rejected with clear error messages
+- **Type Checking**: Ensures correct data types for all fields
+- **Required Fields**: Validates that essential configuration is present
+- **Default Values**: Applies sensible defaults for missing optional fields
+
+**Example Validation Errors:**
+
+```yaml
+# ❌ Invalid configuration
+level: invalid_level        # Error: Must be auto, patch, minor, or major
+artifacts:
+  docs:
+    strategy: invalid       # Error: Must be changed or always
+    sections: "not-array"   # Error: Must be array of strings
+```
+
 ## Developer Guide
 
 ### Using the Release System
@@ -431,6 +712,18 @@ gh workflow run release-staging.yml
 
 #### Troubleshooting
 
+**Git Synchronization Issues:**
+- **Fixed**: Critical issue where artifacts built with old version (0.0.0) instead of bumped version (0.0.1)
+- **Root Cause**: Downstream jobs used `actions/checkout@v5` without `ref` parameter, defaulting to original commit SHA
+- **Solution**: All workflows now use `ref: ${{ github.ref_name }}` to checkout latest branch state
+- **Impact**: Python packages, Docker images, and docs now use correct bumped version
+
+**UV Lock File Synchronization:**
+- **Enhanced**: Version bump now automatically updates `uv.lock` file to maintain dependency synchronization
+- **Process**: After `uv version --bump`, the workflow runs `uv lock` to update lock file
+- **Commit**: Both `pyproject.toml` and `uv.lock` are committed together in version bump
+- **Benefit**: Ensures dependency lock file stays in sync with version changes
+
 **Tag Mismatch Issues:**
 - Check that Docker build and security scan jobs use consistent tags
 - Validation workflow includes defensive checks to catch this early
@@ -441,7 +734,53 @@ gh workflow run release-staging.yml
 
 **Documentation Versioning Issues:**
 - Verify `sections` configuration matches actual docs structure
-- Use `strategy: "all"` to force versioning regardless of changes
+- Use `strategy: "always"` to force versioning regardless of changes
+- Check that Docusaurus plugin IDs in `sections` array exist in docusaurus.config.ts
+
+**Intent Configuration Issues:**
+- Configuration is validated against JSON schema during parsing
+- Invalid configurations will fail with descriptive error messages
+- Use `release-validate.yml` workflow to test configuration changes
+
+**Common Configuration Mistakes:**
+
+1. **Incorrect Section Names:**
+   ```yaml
+   # ❌ Wrong - section doesn't exist
+   docs:
+     sections: ["documentation", "developer"]
+   
+   # ✅ Correct - matches Docusaurus config
+   docs:
+     sections: ["docs", "dev"]
+   ```
+
+2. **Conflicting Mode and Strategy:**
+   ```yaml
+   # ❌ Confusing - mode skip overrides strategy
+   docs:
+     mode: skip
+     strategy: always  # This has no effect
+   
+   # ✅ Clear intent
+   docs:
+     mode: auto
+     strategy: always
+   ```
+
+3. **Legacy vs Enhanced Format Mixing:**
+   ```yaml
+   # ❌ Wrong - can't mix formats
+   docs: auto
+   docs:
+     sections: ["docs"]
+   
+   # ✅ Choose one format consistently
+   docs:
+     mode: auto
+     sections: ["docs", "dev"]
+     strategy: changed
+   ```
 
 #### Monitoring Releases
 
@@ -454,9 +793,33 @@ gh workflow run release-staging.yml
 - Download security artifacts for detailed analysis
 
 **Artifact Verification:**
-- **PyPI**: Check package availability and version
-- **GHCR**: Verify Docker image and signatures
-- **Docs**: Confirm documentation versioning
+
+- **PyPI**: Check package availability and correct bumped version
+  ```bash
+  pip install clickup-mcp-server==<VERSION>
+  ```
+
+- **Docker Hub**: Verify Docker image availability and correct version tags
+  ```bash
+  docker pull chisanan232/clickup-mcp-server:<VERSION>
+  docker run --rm chisanan232/clickup-mcp-server:<VERSION> --version
+  ```
+
+- **GitHub Container Registry (GHCR)**: Verify Docker image availability and correct version tags
+  ```bash
+  docker pull ghcr.io/chisanan232/clickup-mcp-server:<VERSION>
+  docker run --rm ghcr.io/chisanan232/clickup-mcp-server:<VERSION> --version
+  ```
+
+- **Documentation**: Confirm documentation versioning with correct version
+  ```bash
+  # Check versioned documentation is available
+  curl -s https://chisanan232.github.io/clickup-mcp-server/docs/<VERSION>/
+  ```
+
+- **Version Consistency**: All artifacts should reflect the same bumped version
+  - Verify Python package, both Docker registries, and docs all use identical version tags
+  - Cross-check that no artifacts still reference the old version (e.g., 0.0.0 vs 0.0.1)
 
 ### Legacy Continuous Deployment
 

@@ -55,11 +55,25 @@ jobs:
       operation: 'test'
       artifact-name: 'validation-python-package'
 
-  docker-build-smoke:
+  docker-build-dockerhub:
+    name: Validate DockerHub Build
     uses: ./.github/workflows/rw_docker_operations.yaml
-    needs: intent-parse
+    needs: build_git-tag_and_create_github-release
     with:
       operation: 'test'
+      registry: 'docker.io'
+      image-name: ${{ github.repository }}
+      version: 'validation-test'
+      health-check-port: '8000'
+      health-check-path: '/health'
+
+  docker-build-ghcr:
+    name: Validate GHCR Build
+    uses: ./.github/workflows/rw_docker_operations.yaml
+    needs: build_git-tag_and_create_github-release
+    with:
+      operation: 'test'
+      registry: 'ghcr.io'
       image-name: ${{ github.repository }}
       version: 'validation-test'
       health-check-port: '8000'
@@ -73,18 +87,20 @@ jobs:
       upload-artifacts: true
 
   supply-chain-loopback:
+    name: Security Scan (Supply Chain)
     uses: ./.github/workflows/rw_docker_operations.yaml
-    needs: docker-build-smoke
+    needs: [docker-build-dockerhub, docker-build-ghcr]
     with:
       operation: 'security-scan'
+      registry: 'docker.io'  # Use DockerHub build for security scan
       image-name: ${{ github.repository }}
-      version: 'validation-test'  # 🔧 FIX: Use same tag as build job
+      version: 'validation-test'
       enable-sbom: true
 
   validation-summary:
     name: Validation Summary
     runs-on: ubuntu-latest
-    needs: [intent-parse, python-build-check, docker-build-smoke, docs-build, supply-chain-loopback]
+    needs: [intent-parse, python-build-check, docker-build-dockerhub, docker-build-ghcr, docs-build, supply-chain-loopback]
     if: always()
     steps:
       - name: Check validation results
@@ -93,14 +109,16 @@ jobs:
           echo ""
           echo "Intent Parsing: ${{ needs.intent-parse.result }}"
           echo "Python Build: ${{ needs.python-build-check.result }}"
-          echo "Docker Build: ${{ needs.docker-build-smoke.result }}"
+          echo "DockerHub Build: ${{ needs.docker-build-dockerhub.result }}"
+          echo "GHCR Build: ${{ needs.docker-build-ghcr.result }}"
           echo "Docs Build: ${{ needs.docs-build.result }}"
           echo "Supply Chain: ${{ needs.supply-chain-loopback.result }}"
           echo ""
           
           if [[ "${{ needs.intent-parse.result }}" == "success" && \
                 "${{ needs.python-build-check.result }}" == "success" && \
-                "${{ needs.docker-build-smoke.result }}" == "success" && \
+                "${{ needs.docker-build-dockerhub.result }}" == "success" && \
+                "${{ needs.docker-build-ghcr.result }}" == "success" && \
                 "${{ needs.docs-build.result }}" == "success" && \
                 "${{ needs.supply-chain-loopback.result }}" == "success" ]]; then
             echo "✅ All validation checks passed! Release process is ready."

@@ -39,6 +39,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ github.ref_name }}  # Always use latest commit on the branch
 
       - name: Setup Python with UV
         uses: ./.github/actions/setup-python-uv
@@ -91,14 +92,29 @@ jobs:
       version: ${{ needs.compute-version.outputs.version }}
       artifact-name: 'staging-python-package'
 
-  ghcr-rc:
+  dockerhub-rc:
+    name: Staging Release to DockerHub
     uses: ./.github/workflows/rw_docker_operations.yaml
-    needs: compute-version
+    needs: [compute-version, build_git-tag_and_create_github-release]
     secrets:
       dockerhub-user: ${{ secrets.DOCKERHUB_USERNAME }}
       registry-token: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
       operation: 'push'
+      registry: 'docker.io'
+      version: ${{ needs.compute-version.outputs.rc_version }}
+      enable-sbom: true
+      enable-signing: true
+      health-check-port: '8000'
+      health-check-path: '/health'
+
+  ghcr-rc:
+    name: Staging Release to GHCR
+    uses: ./.github/workflows/rw_docker_operations.yaml
+    needs: [compute-version, build_git-tag_and_create_github-release]
+    with:
+      operation: 'push'
+      registry: 'ghcr.io'
       version: ${{ needs.compute-version.outputs.rc_version }}
       enable-sbom: true
       enable-signing: true

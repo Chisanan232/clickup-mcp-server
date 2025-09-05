@@ -238,14 +238,18 @@ jobs:
           echo "Bumping version with: uv version $BUMP_FLAG"
           uv version $BUMP_FLAG
           
+          # Update lock file to sync with new version
+          echo "Updating uv.lock file to sync with new version"
+          uv lock
+          
           # Get the new version
           NEW_VERSION=$(uv version --short)
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "New version: $NEW_VERSION"
           
-          # Commit the version bump
-          git add pyproject.toml
-          git commit -m "⬆️ chore: bump version to $NEW_VERSION [skip ci]"
+          # Commit the version bump and updated lock file
+          git add pyproject.toml uv.lock
+          git commit -m "⬆️ chore: bump version to $NEW_VERSION and sync uv.lock [skip ci]"
           git push origin HEAD:${{ github.ref_name }}
 
   build_git-tag_and_create_github-release:
@@ -266,7 +270,8 @@ jobs:
       version: ${{ needs.bump_version.outputs.version }}
       artifact-name: 'python-package-production'
 
-  release_docker:
+  release_docker_hub:
+    name: Release to DockerHub
     uses: ./.github/workflows/rw_docker_operations.yaml
     needs: [intent, bump_version, build_git-tag_and_create_github-release]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docker != 'skip'
@@ -275,6 +280,19 @@ jobs:
       registry-token: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
       operation: 'push'
+      registry: 'docker.io'
+      version: ${{ needs.bump_version.outputs.version }}
+      enable-sbom: true
+      enable-signing: true
+
+  release_docker_ghcr:
+    name: Release to GHCR
+    uses: ./.github/workflows/rw_docker_operations.yaml
+    needs: [intent, bump_version, build_git-tag_and_create_github-release]
+    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docker != 'skip'
+    with:
+      operation: 'push'
+      registry: 'ghcr.io'
       version: ${{ needs.bump_version.outputs.version }}
       enable-sbom: true
       enable-signing: true
