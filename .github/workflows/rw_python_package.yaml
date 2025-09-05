@@ -49,6 +49,9 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          # Only use ref for push events to master to get latest commit after version bump
+          # In PR events, github.ref_name gives merge refs like "109/merge" which breaks checkout
+          ref: ${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '' }}
 
       - name: Setup Python with UV
         uses: ./.github/actions/setup-python-uv
