@@ -126,8 +126,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ inputs.registry }}
-          username: ${{ secrets.dockerhub-user }}
-          password: ${{ secrets.registry-token }}
+          username: ${{ inputs.registry == 'ghcr.io' && github.actor || secrets.dockerhub-user }}
+          password: ${{ inputs.registry == 'ghcr.io' && secrets.GITHUB_TOKEN || secrets.registry-token }}
 
       - name: Extract metadata
         id: meta
