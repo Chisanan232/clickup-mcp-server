@@ -275,6 +275,7 @@ jobs:
       registry-token: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
       operation: 'push'
+      registry: 'docker.io'  # Explicitly specify DockerHub registry
       version: ${{ needs.bump_version.outputs.version }}
       enable-sbom: true
       enable-signing: true
