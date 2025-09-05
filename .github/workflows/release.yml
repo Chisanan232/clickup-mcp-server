@@ -266,7 +266,8 @@ jobs:
       version: ${{ needs.bump_version.outputs.version }}
       artifact-name: 'python-package-production'
 
-  release_docker:
+  release_docker_hub:
+    name: Release to DockerHub
     uses: ./.github/workflows/rw_docker_operations.yaml
     needs: [intent, bump_version, build_git-tag_and_create_github-release]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docker != 'skip'
@@ -275,7 +276,19 @@ jobs:
       registry-token: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
       operation: 'push'
-      registry: 'docker.io'  # Explicitly specify DockerHub registry
+      registry: 'docker.io'
+      version: ${{ needs.bump_version.outputs.version }}
+      enable-sbom: true
+      enable-signing: true
+
+  release_docker_ghcr:
+    name: Release to GHCR
+    uses: ./.github/workflows/rw_docker_operations.yaml
+    needs: [intent, bump_version, build_git-tag_and_create_github-release]
+    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docker != 'skip'
+    with:
+      operation: 'push'
+      registry: 'ghcr.io'
       version: ${{ needs.bump_version.outputs.version }}
       enable-sbom: true
       enable-signing: true
