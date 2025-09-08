@@ -200,6 +200,7 @@ jobs:
     if: needs.intent.outputs.do_release == 'true'
     outputs:
       version: ${{ steps.bump.outputs.version }}
+      new_sha: ${{ steps.bump.outputs.new_sha }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -255,12 +256,19 @@ jobs:
           git commit -m "⬆️ chore: bump version to $NEW_VERSION and sync uv.lock [skip ci]"
           # Only push to ref_name for push events to master, use HEAD for PR events
           git push origin HEAD:${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || github.head_ref || github.ref_name }}
+          
+          # Capture the new commit SHA after push for downstream jobs
+          # This ensures downstream jobs use the post-version-bump code
+          NEW_SHA=$(git rev-parse HEAD)
+          echo "new_sha=$NEW_SHA" >> $GITHUB_OUTPUT
+          echo "New commit SHA (post-version-bump): $NEW_SHA"
 
   build_git-tag_and_create_github-release:
     uses: ./.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml
     needs: bump_version
     with:
       version: ${{ needs.bump_version.outputs.version }}
+      checkout_sha: ${{ needs.bump_version.outputs.new_sha }}
       debug_mode: false
     secrets:
       github_auth_token: ${{ secrets.GITHUB_TOKEN }}
@@ -272,6 +280,7 @@ jobs:
     with:
       operation: 'publish-pypi'
       version: ${{ needs.bump_version.outputs.version }}
+      checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
       artifact-name: 'python-package-production'
 
   release_docker_hub:
@@ -286,6 +295,7 @@ jobs:
       operation: 'push'
       registry: 'docker.io'
       version: ${{ needs.bump_version.outputs.version }}
+      checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
       enable-sbom: true
       enable-signing: true
 
@@ -298,6 +308,7 @@ jobs:
       operation: 'push'
       registry: 'ghcr.io'
       version: ${{ needs.bump_version.outputs.version }}
+      checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
       enable-sbom: true
       enable-signing: true
 
@@ -308,6 +319,7 @@ jobs:
     with:
       operation: 'version'
       version: ${{ needs.bump_version.outputs.version }}
+      checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
       sections: ${{ needs.prepare_docs_matrix.outputs.sections_to_version }}
       strategy: ${{ needs.prepare_docs_matrix.outputs.strategy }}
       changed-sections: ${{ needs.prepare_docs_matrix.outputs.sections_to_version }}

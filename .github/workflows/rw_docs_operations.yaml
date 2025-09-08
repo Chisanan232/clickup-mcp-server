@@ -43,6 +43,11 @@ on:
         required: false
         default: 'docs'
         type: string
+      checkout-sha:
+        description: 'Specific commit SHA to checkout (for post-version-bump code)'
+        required: false
+        default: ''
+        type: string
       commit-changes:
         description: 'Whether to commit version changes'
         required: false
@@ -124,9 +129,8 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          # Only use ref for push events to master to get latest commit after version bump
-          # In PR events, github.ref_name gives merge refs like "109/merge" which breaks checkout
-          ref: ${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '' }}
+          # Use specific SHA if provided (for post-version-bump code), otherwise use conditional ref logic
+          ref: ${{ inputs.checkout-sha != '' && inputs.checkout-sha || (github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '') }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -197,9 +201,8 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          # Only use ref for push events to master to get latest commit after version bump
-          # In PR events, github.ref_name gives merge refs like "109/merge" which breaks checkout
-          ref: ${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '' }}
+          # Use specific SHA if provided (for post-version-bump code), otherwise use conditional ref logic
+          ref: ${{ inputs.checkout-sha != '' && inputs.checkout-sha || (github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '') }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

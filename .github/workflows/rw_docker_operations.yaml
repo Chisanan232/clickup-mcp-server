@@ -53,6 +53,11 @@ on:
         required: false
         default: true
         type: boolean
+      checkout-sha:
+        description: 'Specific commit SHA to checkout (for post-version-bump code)'
+        required: false
+        default: ''
+        type: string
 
     secrets:
       dockerhub-user:
@@ -93,9 +98,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
-          # Only use ref for push events to master to get latest commit after version bump
-          # In PR events, github.ref_name gives merge refs like "109/merge" which breaks checkout
-          ref: ${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '' }}
+          # Use specific SHA if provided (for post-version-bump code), otherwise use conditional ref logic
+          ref: ${{ inputs.checkout-sha != '' && inputs.checkout-sha || (github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '') }}
 
       - name: Initial Docker image tag name
         id: initial-docker-tag-meta
