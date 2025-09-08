@@ -46,11 +46,6 @@ on:
           - auto
           - force
           - skip
-      notes:
-        description: 'Release notes'
-        required: false
-        default: ''
-        type: string
 
 permissions:
   contents: write
