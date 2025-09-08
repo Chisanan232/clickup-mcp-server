@@ -104,7 +104,7 @@ jobs:
       - name: Initial Docker image tag name
         id: initial-docker-tag-meta
         run: |
-          image_name=$(echo "${{ inputs.registry }}/${{ inputs.image-name }}" | cut -d/ -f1 | tr '[:upper:]' '[:lower:]')
+          image_name=$(echo "${{ inputs.registry }}/${{ inputs.image-name }}" | tr '[:upper:]' '[:lower:]')
           echo "🐳 Docker image name: $image_name"
           echo "image_name=$image_name" >> "$GITHUB_OUTPUT"
 
