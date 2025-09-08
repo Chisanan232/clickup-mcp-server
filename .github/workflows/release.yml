@@ -263,7 +263,7 @@ jobs:
     needs: bump_version
     with:
       version: ${{ needs.bump_version.outputs.version }}
-      checkout_sha: ${{ needs.bump_version.outputs.new_sha }}
+      checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
       debug_mode: false
     secrets:
       github_auth_token: ${{ secrets.GITHUB_TOKEN }}
