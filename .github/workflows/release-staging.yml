@@ -82,6 +82,7 @@ jobs:
     needs: compute-version
     with:
       version: ${{ needs.compute-version.outputs.rc_version }}
+      checkout-sha: ${{ github.sha }}
       debug_mode: true
     secrets:
       github_auth_token: ${{ secrets.GITHUB_TOKEN }}
@@ -92,6 +93,7 @@ jobs:
     with:
       operation: 'publish-testpypi'
       version: ${{ needs.compute-version.outputs.version }}
+      checkout-sha: ${{ github.sha }}
       artifact-name: 'staging-python-package'
 
   dockerhub-rc:
@@ -105,6 +107,7 @@ jobs:
       operation: 'push'
       registry: 'docker.io'
       version: ${{ needs.compute-version.outputs.rc_version }}
+      checkout-sha: ${{ github.sha }}
       enable-sbom: true
       enable-signing: true
       health-check-port: '8000'
@@ -118,6 +121,7 @@ jobs:
       operation: 'push'
       registry: 'ghcr.io'
       version: ${{ needs.compute-version.outputs.rc_version }}
+      checkout-sha: ${{ github.sha }}
       enable-sbom: true
       enable-signing: true
       health-check-port: '8000'
@@ -129,6 +133,7 @@ jobs:
     with:
       operation: 'deploy-preview'
       version: ${{ needs.compute-version.outputs.rc_version }}
+      checkout-sha: ${{ github.sha }}
       preview-branch: 'docs-preview'
       upload-artifacts: true
 
