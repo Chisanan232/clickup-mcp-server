@@ -1,0 +1,10 @@
+{
+  "dev": [
+    "development",
+    "requirements",
+    "workflow",
+    "coding-style",
+    "architecture",
+    "ci-cd"
+  ]
+}
