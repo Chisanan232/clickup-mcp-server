@@ -190,7 +190,7 @@ jobs:
             echo "ℹ️ No documentation changes to commit"
           else
             # Create a single commit for all sections to avoid race conditions
-            git commit -m "📚 docs: version ${{ inputs.version }} for sections ${{ needs.prepare_matrix.outputs.sections_to_version }} [skip ci]"
+            git commit -m "📚 docs: version ${{ inputs.version }} for sections ${{ needs.prepare_matrix.outputs.sections_to_version }}"
             # Only push to ref_name for push events to master, use HEAD for PR events
             git push origin HEAD:${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || github.head_ref || github.ref_name }}
             echo "✅ All version changes committed successfully"
@@ -314,7 +314,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "ℹ️ No documentation changes to commit"
           else
-            git commit -m "📚 docs: version ${{ inputs.version }} [skip ci]"
+            git commit -m "📚 docs: version ${{ inputs.version }}"
             echo "✅ Version changes committed"
           fi
 
@@ -350,7 +350,7 @@ jobs:
           # Commit and push documentation changes if any
           git add ${{ inputs.working-directory }}/
           if ! git diff --staged --quiet; then
-            git commit -m "📚 docs: production deployment ${{ inputs.version }} [skip ci]"
+            git commit -m "📚 docs: production deployment ${{ inputs.version }}"
             # Only push to ref_name for push events to master, use HEAD for PR events
             git push origin HEAD:${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || github.head_ref || github.ref_name }}
             echo "✅ Documentation changes pushed to production"
