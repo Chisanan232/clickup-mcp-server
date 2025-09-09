@@ -23,6 +23,10 @@ on:
       - "docs/**/*.js"
       - "docs/**/*.jsx"
       - "docs/**/*.css"
+#     Doc - versioning (Docusaurus versioned content)
+      - "docs/*_versions.json"
+      - "docs/*_versioned_docs/**"
+      - "docs/*_versioned_sidebars/**"
 
 permissions:
   contents: write
