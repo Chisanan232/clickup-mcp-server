@@ -31,6 +31,11 @@ on:
         type: boolean
         required: false
         default: false
+      checkout_sha:
+        description: "Specific commit SHA to checkout (for post-version-bump code)"
+        type: string
+        required: false
+        default: ''
 
     secrets:
       github_auth_token:
@@ -52,6 +57,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # Use specific SHA if provided (for post-version-bump code), otherwise use conditional ref logic
+          ref: ${{ inputs.checkout_sha != '' && inputs.checkout_sha || (github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '') }}
 
       # This flow for the project type is Python project
       - name: Build git tag and create GitHub release for Python project

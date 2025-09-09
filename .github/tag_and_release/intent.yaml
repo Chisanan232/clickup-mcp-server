@@ -15,7 +15,7 @@ artifacts:
       - docs            # Main documentation section
       - dev             # Development/contributor documentation  
 #      - api             # API reference documentation
-    strategy: changed   # changed | always - When to version sections
+    strategy: always   # changed | always - When to version sections
     
   # Legacy format (still supported for backward compatibility):
   # docs: auto    # auto | force | skip

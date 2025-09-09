@@ -18,6 +18,11 @@ on:
         required: false
         default: ''
         type: string
+      checkout-sha:
+        description: 'Specific commit SHA to checkout (for post-version-bump code)'
+        required: false
+        default: ''
+        type: string
       upload-artifacts:
         description: 'Whether to upload build artifacts'
         required: false
@@ -49,6 +54,8 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          # Use specific SHA if provided (for post-version-bump code), otherwise use conditional ref logic
+          ref: ${{ inputs.checkout-sha != '' && inputs.checkout-sha || (github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '') }}
 
       - name: Setup Python with UV
         uses: ./.github/actions/setup-python-uv

@@ -200,11 +200,15 @@ jobs:
     if: needs.intent.outputs.do_release == 'true'
     outputs:
       version: ${{ steps.bump.outputs.version }}
+      new_sha: ${{ steps.bump.outputs.new_sha }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          # Only use ref for push events to master to get latest commit after version bump
+          # In PR events, github.ref_name gives merge refs like "109/merge" which breaks checkout
+          ref: ${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '' }}
 
       - name: Setup Python with UV
         uses: ./.github/actions/setup-python-uv
@@ -238,21 +242,33 @@ jobs:
           echo "Bumping version with: uv version $BUMP_FLAG"
           uv version $BUMP_FLAG
           
+          # Update lock file to sync with new version
+          echo "Updating uv.lock file to sync with new version"
+          uv lock
+          
           # Get the new version
           NEW_VERSION=$(uv version --short)
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "New version: $NEW_VERSION"
           
-          # Commit the version bump
-          git add pyproject.toml
-          git commit -m "⬆️ chore: bump version to $NEW_VERSION [skip ci]"
-          git push origin HEAD:${{ github.ref_name }}
+          # Commit the version bump and updated lock file
+          git add pyproject.toml uv.lock
+          git commit -m "⬆️ chore: bump version to $NEW_VERSION and sync uv.lock [skip ci]"
+          # Only push to ref_name for push events to master, use HEAD for PR events
+          git push origin HEAD:${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || github.head_ref || github.ref_name }}
+          
+          # Capture the new commit SHA after push for downstream jobs
+          # This ensures downstream jobs use the post-version-bump code
+          NEW_SHA=$(git rev-parse HEAD)
+          echo "new_sha=$NEW_SHA" >> $GITHUB_OUTPUT
+          echo "New commit SHA (post-version-bump): $NEW_SHA"
 
   build_git-tag_and_create_github-release:
     uses: ./.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml
     needs: bump_version
     with:
       version: ${{ needs.bump_version.outputs.version }}
+      checkout_sha: ${{ needs.bump_version.outputs.new_sha }}
       debug_mode: false
     secrets:
       github_auth_token: ${{ secrets.GITHUB_TOKEN }}
@@ -264,9 +280,11 @@ jobs:
     with:
       operation: 'publish-pypi'
       version: ${{ needs.bump_version.outputs.version }}
+      checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
       artifact-name: 'python-package-production'
 
-  release_docker:
+  release_docker_hub:
+    name: Release to DockerHub
     uses: ./.github/workflows/rw_docker_operations.yaml
     needs: [intent, bump_version, build_git-tag_and_create_github-release]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docker != 'skip'
@@ -275,7 +293,22 @@ jobs:
       registry-token: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
       operation: 'push'
+      registry: 'docker.io'
       version: ${{ needs.bump_version.outputs.version }}
+      checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
+      enable-sbom: true
+      enable-signing: true
+
+  release_docker_ghcr:
+    name: Release to GHCR
+    uses: ./.github/workflows/rw_docker_operations.yaml
+    needs: [intent, bump_version, build_git-tag_and_create_github-release]
+    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docker != 'skip'
+    with:
+      operation: 'push'
+      registry: 'ghcr.io'
+      version: ${{ needs.bump_version.outputs.version }}
+      checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
       enable-sbom: true
       enable-signing: true
 
@@ -286,6 +319,7 @@ jobs:
     with:
       operation: 'version'
       version: ${{ needs.bump_version.outputs.version }}
+      checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
       sections: ${{ needs.prepare_docs_matrix.outputs.sections_to_version }}
       strategy: ${{ needs.prepare_docs_matrix.outputs.strategy }}
       changed-sections: ${{ needs.prepare_docs_matrix.outputs.sections_to_version }}

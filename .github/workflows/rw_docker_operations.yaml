@@ -53,6 +53,11 @@ on:
         required: false
         default: true
         type: boolean
+      checkout-sha:
+        description: 'Specific commit SHA to checkout (for post-version-bump code)'
+        required: false
+        default: ''
+        type: string
 
     secrets:
       dockerhub-user:
@@ -92,11 +97,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          # Use specific SHA if provided (for post-version-bump code), otherwise use conditional ref logic
+          ref: ${{ inputs.checkout-sha != '' && inputs.checkout-sha || (github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '') }}
 
       - name: Initial Docker image tag name
         id: initial-docker-tag-meta
         run: |
-          image_name=$(echo "${{ inputs.registry }}/${{ inputs.image-name }}" | cut -d/ -f1 | tr '[:upper:]' '[:lower:]')
+          image_name=$(echo "${{ inputs.registry }}/${{ inputs.image-name }}" | tr '[:upper:]' '[:lower:]')
           echo "🐳 Docker image name: $image_name"
           echo "image_name=$image_name" >> "$GITHUB_OUTPUT"
 

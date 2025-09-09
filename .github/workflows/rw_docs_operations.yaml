@@ -43,6 +43,11 @@ on:
         required: false
         default: 'docs'
         type: string
+      checkout-sha:
+        description: 'Specific commit SHA to checkout (for post-version-bump code)'
+        required: false
+        default: ''
+        type: string
       commit-changes:
         description: 'Whether to commit version changes'
         required: false
@@ -124,9 +129,11 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          # Use specific SHA if provided (for post-version-bump code), otherwise use conditional ref logic
+          ref: ${{ inputs.checkout-sha != '' && inputs.checkout-sha || (github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '') }}
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ inputs.node-version }}
 
@@ -157,13 +164,8 @@ jobs:
           echo "🏷️ Versioning docs section '${{ matrix.section }}' to ${{ inputs.version }}..."
           
           # Check if this is the default docs section or a plugin-specific section
-          if [ "${{ matrix.section }}" = "docs" ]; then
-            # Default docs section
-            pnpm exec docusaurus docs:version "${{ inputs.version }}"
-          else
-            # Plugin-specific section (e.g., dev, api)
-            pnpm exec docusaurus docs:version:${{ matrix.section }} "${{ inputs.version }}"
-          fi
+          # Plugin-specific section (e.g., docs, dev)
+          pnpm exec docusaurus docs:version:${{ matrix.section }} "${{ inputs.version }}"
           
           echo "✅ Section '${{ matrix.section }}' versioned successfully"
 
@@ -182,7 +184,8 @@ jobs:
             echo "ℹ️ No documentation changes to commit for section '${{ matrix.section }}'"
           else
             git commit -m "📚 docs(${{ matrix.section }}): version ${{ inputs.version }} [skip ci]"
-            git push origin HEAD:${{ github.ref_name }}
+            # Only push to ref_name for push events to master, use HEAD for PR events
+            git push origin HEAD:${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || github.head_ref || github.ref_name }}
             echo "✅ Version changes committed for section '${{ matrix.section }}'"
           fi
 
@@ -198,9 +201,11 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          # Use specific SHA if provided (for post-version-bump code), otherwise use conditional ref logic
+          ref: ${{ inputs.checkout-sha != '' && inputs.checkout-sha || (github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '') }}
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ inputs.node-version }}
 
@@ -339,7 +344,8 @@ jobs:
           git add ${{ inputs.working-directory }}/
           if ! git diff --staged --quiet; then
             git commit -m "📚 docs: production deployment ${{ inputs.version }} [skip ci]"
-            git push origin HEAD:${{ github.ref_name }}
+            # Only push to ref_name for push events to master, use HEAD for PR events
+            git push origin HEAD:${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || github.head_ref || github.ref_name }}
             echo "✅ Documentation changes pushed to production"
           else
             echo "ℹ️ No documentation changes to deploy"
