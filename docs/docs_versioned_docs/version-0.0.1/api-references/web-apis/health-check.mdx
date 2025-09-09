@@ -1,0 +1,51 @@
+---
+id: web-api-health-check
+title: Health Check
+sidebar_position: 2
+---
+
+# Health Check
+
+```
+GET /health
+```
+
+Returns the current health status of the server.
+
+## Response
+
+```json
+{
+  "status": "ok",
+  "server": "ClickUp MCP Server"
+}
+```
+
+| Field  | Type   | Description                                             |
+|--------|--------|---------------------------------------------------------|
+| status | string | Current status of the server (always "ok" when healthy) |
+| server | string | Name of the server instance                             |
+
+# Error Handling
+
+If the server encounters an error, it will respond with an appropriate HTTP status code and a JSON response containing error details.
+
+## Common Status Codes
+
+| Status Code | Description                                                             |
+|-------------|-------------------------------------------------------------------------|
+| 200         | Success - The request was processed successfully                        |
+| 400         | Bad Request - The request was malformed or contained invalid parameters |
+| 404         | Not Found - The requested resource was not found                        |
+| 500         | Internal Server Error - An unexpected error occurred on the server      |
+
+## Error Response Format
+
+```json
+{
+  "error": {
+    "message": "Description of the error",
+    "code": "ERROR_CODE"
+  }
+}
+```
