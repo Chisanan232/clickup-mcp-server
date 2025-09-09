@@ -1,0 +1,53 @@
+---
+id: team-mcp-api
+title: Team
+sidebar_position: 1
+---
+
+# Team MCP API
+
+The Team MCP API allows you to interact with ClickUp teams (workspaces) using the Model Context Protocol interface. For more information about MCP, see the [official documentation](https://modelcontextprotocol.io/docs/getting-started/intro).
+
+## Available Functions
+
+### get_authorized_teams
+
+* **Function name**: `get_authorized_teams`
+* **Function parameters**: `{}`
+* **Function description**: Retrieve all teams/workspaces that the authenticated user has access to. This function returns a list of team domain models with full details including team members if available.
+
+#### Response Example
+
+```json
+[
+  {
+    "team_id": "123456",
+    "name": "My Workspace",
+    "color": "#3498db",
+    "avatar": "https://example.com/avatar.png",
+    "members": [
+      {
+        "user_id": "789012",
+        "username": "john.doe",
+        "email": "john.doe@example.com",
+        "color": "#ff0000"
+      }
+    ]
+  }
+]
+```
+
+#### Error Handling
+
+This function may raise errors in the following situations:
+- Missing or invalid API token
+- Network connectivity issues
+- API rate limiting
+- Server-side errors
+
+Error responses will include a descriptive message:
+```json
+{
+  "error": "Error retrieving teams: Unauthorized. Please check your API token."
+}
+```
