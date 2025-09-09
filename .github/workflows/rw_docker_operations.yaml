@@ -375,7 +375,7 @@ jobs:
         if: inputs.enable-sbom && inputs.operation != 'security-scan'
         run: |
           echo "🔍 Generating SBOM..."
-          IMAGE_TAG="(echo '${{ steps.initial-docker-tag-meta.outputs.image_name }}:${{ inputs.version }}' | tr '[:upper:]' '[:lower:]')"
+          IMAGE_TAG=$(echo '${{ steps.initial-docker-tag-meta.outputs.image_name }}:${{ inputs.version }}' | tr '[:upper:]' '[:lower:]')
           syft $IMAGE_TAG --output spdx-json=sbom.spdx.json
           echo "✅ SBOM generated"
 
