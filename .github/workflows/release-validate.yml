@@ -7,6 +7,12 @@ on:
     paths:
       - .github/tag_and_release/**
       - pyproject.toml
+      - .github/workflows/release.yml
+      - .github/workflows/release**.yml
+      - .github/workflows/rw**.yaml
+      - "!.github/workflows/rw_build_and_test.yaml"
+      - "!.github/workflows/rw_run_all_test_and_record.yaml"
+      - "!.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml"
   workflow_dispatch:
     inputs:
       level:
