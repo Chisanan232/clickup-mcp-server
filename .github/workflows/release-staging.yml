@@ -12,11 +12,6 @@ on:
           - patch
           - minor
           - major
-      notes:
-        description: 'Staging release notes'
-        required: false
-        default: 'Staging release for testing'
-        type: string
 
 permissions:
   contents: write
@@ -68,7 +63,7 @@ jobs:
           esac
           
           echo "Computing staging version with: uv version --dry-run $BUMP_FLAG"
-          BASE_VERSION=$(uv version --dry-run $BUMP_FLAG)
+          BASE_VERSION=$(uv version --short --dry-run $BUMP_FLAG)
           RC_VERSION="${BASE_VERSION}-rc.0"
           
           echo "version=$BASE_VERSION" >> $GITHUB_OUTPUT
@@ -175,7 +170,6 @@ jobs:
             echo ""
             echo "3. Review documentation preview in docs-preview branch"
             echo ""
-            echo "📝 Release Notes: ${{ inputs.notes }}"
           else
             echo "❌ Some staging deployment steps failed. Check the logs above."
             exit 1
