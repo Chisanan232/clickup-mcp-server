@@ -66,6 +66,7 @@ jobs:
       version: 'validation-test'
       health-check-port: '8000'
       health-check-path: '/health'
+      enable-signing: true
 
   docker-build-ghcr:
     name: Validate GHCR Build
@@ -78,6 +79,7 @@ jobs:
       version: 'validation-test'
       health-check-port: '8000'
       health-check-path: '/health'
+      enable-signing: true
 
   docs-build:
     uses: ./.github/workflows/rw_docs_operations.yaml
@@ -96,6 +98,7 @@ jobs:
       image-name: ${{ github.repository }}
       version: 'validation-test'
       enable-sbom: true
+      enable-signing: true
 
   validation-summary:
     name: Validation Summary
