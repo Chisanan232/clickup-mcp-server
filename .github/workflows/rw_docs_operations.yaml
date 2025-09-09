@@ -62,7 +62,7 @@ on:
     outputs:
       build-success:
         description: 'Whether build was successful'
-        value: ${{ jobs.docs_operations.outputs.build_success || jobs.version_docs_matrix.result == 'success' }}
+        value: ${{ jobs.docs_operations.outputs.build_success || jobs.version_docs_sequential.result == 'success' }}
       deploy-url:
         description: 'Deployment URL (for preview deployments)'
         value: ${{ jobs.docs_operations.outputs.deploy_url }}
@@ -115,15 +115,11 @@ jobs:
             echo "sections_to_version=$SECTIONS_TO_VERSION" >> $GITHUB_OUTPUT
           fi
 
-  version_docs_matrix:
-    name: Version docs (${{ matrix.section }})
+  version_docs_sequential:
+    name: Version documentation sections
     if: inputs.operation == 'version' && needs.prepare_matrix.outputs.has_sections == 'true'
     needs: prepare_matrix
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        section: ${{ fromJSON(needs.prepare_matrix.outputs.sections_to_version) }}
-      fail-fast: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -158,16 +154,26 @@ jobs:
           pnpm install --frozen-lockfile
           echo "✅ Dependencies installed successfully"
 
-      - name: Version documentation section
+      - name: Version documentation sections sequentially
         working-directory: ${{ inputs.working-directory }}
         run: |
-          echo "🏷️ Versioning docs section '${{ matrix.section }}' to ${{ inputs.version }}..."
+          echo "🏷️ Versioning documentation sections sequentially to prevent git conflicts..."
           
-          # Check if this is the default docs section or a plugin-specific section
-          # Plugin-specific section (e.g., docs, dev)
-          pnpm exec docusaurus docs:version:${{ matrix.section }} "${{ inputs.version }}"
+          # Parse sections array and version each one sequentially
+          SECTIONS='${{ needs.prepare_matrix.outputs.sections_to_version }}'
+          echo "Sections to version: $SECTIONS"
           
-          echo "✅ Section '${{ matrix.section }}' versioned successfully"
+          # Convert JSON array to bash array and process sequentially
+          echo "$SECTIONS" | jq -r '.[]' | while read -r section; do
+            echo "🔄 Versioning section: $section"
+            
+            # Version this specific section
+            pnpm exec docusaurus docs:version:$section "${{ inputs.version }}"
+            
+            echo "✅ Section '$section' versioned successfully"
+          done
+          
+          echo "🎉 All sections versioned successfully"
 
       - name: Configure git for commits
         if: inputs.commit-changes
@@ -175,18 +181,19 @@ jobs:
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
 
-      - name: Commit version changes
+      - name: Commit all version changes
         if: inputs.commit-changes
         run: |
-          echo "💾 Committing version changes for section '${{ matrix.section }}'..."
+          echo "💾 Committing all documentation version changes..."
           git add ${{ inputs.working-directory }}/
           if git diff --staged --quiet; then
-            echo "ℹ️ No documentation changes to commit for section '${{ matrix.section }}'"
+            echo "ℹ️ No documentation changes to commit"
           else
-            git commit -m "📚 docs(${{ matrix.section }}): version ${{ inputs.version }} [skip ci]"
+            # Create a single commit for all sections to avoid race conditions
+            git commit -m "📚 docs: version ${{ inputs.version }} for sections ${{ needs.prepare_matrix.outputs.sections_to_version }} [skip ci]"
             # Only push to ref_name for push events to master, use HEAD for PR events
             git push origin HEAD:${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || github.head_ref || github.ref_name }}
-            echo "✅ Version changes committed for section '${{ matrix.section }}'"
+            echo "✅ All version changes committed successfully"
           fi
 
   docs_operations:
@@ -230,7 +237,7 @@ jobs:
           pnpm install --frozen-lockfile
           echo "✅ Dependencies installed successfully"
 
-      # Note: Versioning is now handled by the version_docs_matrix job
+      # Note: Versioning is now handled by the version_docs_sequential job
 
       - name: Sync changelog
         if: contains(fromJSON('["version", "build", "deploy-production"]'), inputs.operation)
