@@ -383,7 +383,7 @@ jobs:
         if: inputs.operation == 'security-scan'
         uses: actions/upload-artifact@v4
         with:
-          name: security-scan-${{ inputs.version }}
+          name: security-scan-${{ inputs.registry }}-${{ inputs.version }}
           path: |
             sbom*.spdx.json
             grype-*.json
@@ -394,7 +394,7 @@ jobs:
         if: inputs.enable-sbom && inputs.operation != 'security-scan'
         uses: actions/upload-artifact@v4
         with:
-          name: docker-sbom-${{ inputs.version }}
+          name: docker-sbom-${{ inputs.registry }}-${{ inputs.version }}
           path: sbom.spdx.json
           retention-days: 30
 
