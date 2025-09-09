@@ -246,9 +246,65 @@ jobs:
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "New version: $NEW_VERSION"
           
-          # Commit the version bump and updated lock file
+          # Update documentation files that reference the version
+          echo "Updating version references in documentation..."
+          DOCS_UPDATED=false
+          
+          # Update main CI/CD documentation if it exists
+          if [ -f "docs/contents/development/ci-cd.mdx" ]; then
+            # Update any version references in installation examples, if they exist
+            if grep -q "clickup-mcp-server" "docs/contents/development/ci-cd.mdx"; then
+              # This is just a placeholder - adjust pattern as needed for actual version references
+              echo "Found version references in ci-cd.mdx to update"
+              DOCS_UPDATED=true
+            fi
+          fi
+          
+          # Update package installation docs if they exist
+          if [ -f "docs/contents/document/installation.md" ]; then
+            if grep -q "pip install.*clickup-mcp-server" "docs/contents/document/installation.md"; then
+              sed -i.bak "s/clickup-mcp-server==[0-9]\+\.[0-9]\+\.[0-9]\+/clickup-mcp-server==$NEW_VERSION/g" "docs/contents/document/installation.md"
+              rm -f "docs/contents/document/installation.md.bak" 2>/dev/null || true
+              echo "Updated installation documentation with new version"
+              DOCS_UPDATED=true
+            fi
+          fi
+          
+          # Update README if it has version references
+          if [ -f "docs/contents/document/README.md" ]; then
+            if grep -q "clickup-mcp-server" "docs/contents/document/README.md"; then
+              # Update version references in README examples
+              sed -i.bak "s/clickup-mcp-server==[0-9]\+\.[0-9]\+\.[0-9]\+/clickup-mcp-server==$NEW_VERSION/g" "docs/contents/document/README.md"
+              rm -f "docs/contents/document/README.md.bak" 2>/dev/null || true
+              echo "Updated README documentation with new version"
+              DOCS_UPDATED=true
+            fi
+          fi
+          
+          # Prepare files to commit
+          FILES_TO_COMMIT="pyproject.toml uv.lock"
+          COMMIT_MESSAGE="⬆️ chore: bump version to $NEW_VERSION and sync uv.lock"
+          
+          # Add documentation files if they were updated
+          if [ "$DOCS_UPDATED" = true ]; then
+            # Add any updated documentation files
+            if [ -f "docs/contents/document/installation.md" ]; then
+              git add "docs/contents/document/installation.md"
+              FILES_TO_COMMIT="$FILES_TO_COMMIT docs/contents/document/installation.md"
+            fi
+            if [ -f "docs/contents/document/README.md" ]; then
+              git add "docs/contents/document/README.md"  
+              FILES_TO_COMMIT="$FILES_TO_COMMIT docs/contents/document/README.md"
+            fi
+            COMMIT_MESSAGE="⬆️ chore: bump version to $NEW_VERSION, sync uv.lock, and update docs"
+            echo "Documentation files updated and will trigger documentation workflow"
+          else
+            echo "No documentation files needed updating"
+          fi
+          
+          # Commit all changes
           git add pyproject.toml uv.lock
-          git commit -m "⬆️ chore: bump version to $NEW_VERSION and sync uv.lock [skip ci]"
+          git commit -m "$COMMIT_MESSAGE [skip ci]"
           # Only push to ref_name for push events to master, use HEAD for PR events
           git push origin HEAD:${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || github.head_ref || github.ref_name }}
           
