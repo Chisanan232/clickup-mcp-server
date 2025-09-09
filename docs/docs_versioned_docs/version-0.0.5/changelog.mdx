@@ -1,0 +1,48 @@
+---
+id: changelog
+title: Change Log
+sidebar_position: 5
+---
+
+# Change Log
+
+This document provides a chronological record of all notable changes to ClickUp MCP Server.
+
+## [0.1.0] - 2025-09-04
+
+### 🎉 New feature
+
+- Newborn of ClickUp MCP server project.
+    ```shell
+    >>> clickup-mcp-server --help
+    usage: clickup-mcp-server [-h] [--host HOST] [--port PORT] [--log-level {debug,info,warning,error,critical}] [--reload] [--env ENV_FILE] [--token TOKEN]
+                              [--transport {sse,http-streaming}]
+    
+    Run the ClickUp MCP FastAPI server
+    
+    options:
+      -h, --help            show this help message and exit
+      --host HOST           Host to bind the server to
+      --port PORT           Port to bind the server to
+      --log-level {debug,info,warning,error,critical}
+                            Logging level
+      --reload              Enable auto-reload for development
+      --env ENV_FILE        Path to the .env file for environment variables
+      --token TOKEN         ClickUp API token (overrides token from .env file if provided)
+      --transport {sse,http-streaming}
+                            Transport protocol to use for MCP (sse or http-streaming)
+    ```
+
+#### 👨‍💻 For development
+
+- Provide the [development details] in [documentation].
+
+[development details]: https://chisanan232.github.io/clickup-mcp-server/dev/next
+
+### 📑 Docs
+
+- Provide the [details] in [documentation].
+
+[details]: https://chisanan232.github.io/clickup-mcp-server/docs/next/introduction
+[documentation]: https://chisanan232.github.io/clickup-mcp-server/
+
