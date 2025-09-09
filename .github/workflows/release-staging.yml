@@ -63,7 +63,7 @@ jobs:
           esac
           
           echo "Computing staging version with: uv version --dry-run $BUMP_FLAG"
-          BASE_VERSION=$(uv version --dry-run $BUMP_FLAG)
+          BASE_VERSION=$(uv version --short --dry-run $BUMP_FLAG)
           RC_VERSION="${BASE_VERSION}-rc.0"
           
           echo "version=$BASE_VERSION" >> $GITHUB_OUTPUT
