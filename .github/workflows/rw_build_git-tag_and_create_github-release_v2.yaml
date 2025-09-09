@@ -8,6 +8,11 @@ on:
         description: 'Version to tag and release'
         required: true
         type: string
+      checkout-sha:
+        description: 'Specific commit SHA to checkout (for post-version-bump code)'
+        required: false
+        default: ''
+        type: string
       debug_mode:
         description: 'Run in debug mode without creating actual release'
         type: boolean
@@ -40,6 +45,8 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          # Use specific SHA if provided (for post-version-bump code), otherwise use conditional ref logic
+          ref: ${{ inputs.checkout-sha != '' && inputs.checkout-sha || (github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '') }}
 
       - name: Check if release files exist
         id: check_files
