@@ -313,6 +313,24 @@ jobs:
           NEW_SHA=$(git rev-parse HEAD)
           echo "new_sha=$NEW_SHA" >> $GITHUB_OUTPUT
           echo "New commit SHA (post-version-bump): $NEW_SHA"
+          
+          # Output DOCS_UPDATED flag for documentation workflow trigger
+          echo "docs_updated=$DOCS_UPDATED" >> $GITHUB_OUTPUT
+          echo "Documentation updated: $DOCS_UPDATED"
+
+      - name: Emit docs update flag for documentation workflow trigger
+        if: github.ref_name == 'master'
+        run: |
+          set -euo pipefail
+          echo "Documentation updated: ${{ steps.bump.outputs.docs_updated }}"
+          echo "${{ steps.bump.outputs.docs_updated }}" > docs_updated.txt
+
+      - name: Upload docs update flag for downstream documentation workflow
+        if: github.ref_name == 'master'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-docs-flag
+          path: docs_updated.txt
 
   build_git-tag_and_create_github-release:
     uses: ./.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml

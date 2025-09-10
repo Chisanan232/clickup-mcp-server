@@ -27,6 +27,10 @@ on:
       - "docs/*_versions.json"
       - "docs/*_versioned_docs/**"
       - "docs/*_versioned_sidebars/**"
+  workflow_run:
+    workflows: ["release"]
+    types: [completed]
+    branches: ["master"]
 
 permissions:
   contents: write
@@ -39,8 +43,53 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Guard job: Check if documentation files changed and if release workflow succeeded
+  check_docs_changes:
+    runs-on: ubuntu-latest
+    # Only run for workflow_run events (not direct push events)
+    if: github.event_name == 'workflow_run'
+    outputs:
+      should_deploy: ${{ steps.check_changes.outputs.should_deploy }}
+    steps:
+      - name: Download docs update flag from release workflow
+        uses: actions/download-artifact@v4
+        with:
+          name: release-docs-flag
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Check release workflow success and docs update flag
+        id: check_changes
+        run: |
+          set -euo pipefail
+          
+          # Verify release workflow succeeded
+          if [[ "${{ github.event.workflow_run.conclusion }}" != "success" ]]; then
+            echo "Release workflow failed, skipping documentation deployment"
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Read docs update flag from artifact
+          DOCS_UPDATED=$(cat docs_updated.txt)
+          
+          echo "Documentation updated flag: $DOCS_UPDATED"
+          
+          if [[ "$DOCS_UPDATED" == "true" ]]; then
+            echo "Documentation was updated during release, proceeding with deployment"
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "No documentation files were updated, skipping deployment"
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+          fi
+
   deploy_documentation:
     runs-on: ubuntu-latest
+    # Run for direct push OR workflow_run with docs changes
+    if: |
+      github.event_name == 'push' || 
+      (github.event_name == 'workflow_run' && needs.check_docs_changes.outputs.should_deploy == 'true')
+    needs: [check_docs_changes]
     steps:
       - name: Checkout
         uses: actions/checkout@v5
