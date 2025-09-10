@@ -194,10 +194,15 @@ notes: "Release description"
    - **Fixed**: Uses correct version tags from git sync fix
 
 3. **Documentation** (`Docusaurus`):
-   - Multi-section versioning support
-   - Change detection for selective updates
-   - Matrix-based concurrent processing
-   - **Fixed**: Versions using correct bumped version
+   - **Intelligent Documentation Triggering**: Uses `DOCS_UPDATED` flag to automatically trigger documentation deployment
+   - **Version Reference Updates**: Automatically updates documentation files that reference the package version
+   - **Workflow Run Pattern**: Triggers documentation workflow via `workflow_run` to overcome `GITHUB_TOKEN` limitations
+   - **Multi-section versioning support**: Independent versioning for `docs`, `dev`, and `api` sections
+   - **Change detection**: Selective updates based on actual file changes
+   - **Matrix-based concurrent processing**: Efficient parallel versioning
+   - **Fixed**: Versions using correct bumped version from git sync fix
+   
+   📖 **For detailed documentation deployment architecture, see [Documentation Deployment](#documentation-deployment)**
 
 ### 2. Release Validation Workflow (`release-validate.yml`)
 
@@ -835,29 +840,170 @@ The legacy CD workflow is triggered by changes to `__pkg_info__.py` files and in
 
 [![documentation](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/documentation.yaml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/documentation.yaml)
 
-The documentation workflow (`documentation.yaml`) handles building and deploying project documentation:
+The documentation workflow (`documentation.yaml`) handles building and deploying project documentation using **dual trigger mechanisms** to ensure reliable deployment after releases.
 
-### Documentation Workflow Triggers
+### Advanced Trigger Architecture
 
-- Changes to documentation files in `docs/` directory
-- Changes to MkDocs configuration
-- Changes to package version information
+The documentation workflow uses a **sophisticated dual-trigger system** to solve the GitHub Actions limitation where `GITHUB_TOKEN` commits don't trigger other workflows:
+
+#### 1. Direct Push Trigger (Traditional)
+```yaml
+on:
+  push:
+    branches: ["master"]
+    paths: ["docs/**"]  # Direct documentation changes
+```
+
+#### 2. Workflow Run Trigger (Release Integration)
+```yaml
+on:
+  workflow_run:
+    workflows: ["release"]
+    types: [completed]
+    branches: ["master"]
+```
+
+### Workflow Run Pattern Implementation
+
+**Problem Solved:** GitHub Actions doesn't trigger workflows on commits made by `GITHUB_TOKEN` (used in release workflows) to prevent infinite loops. This caused documentation workflow to never trigger after release workflow commits that updated documentation files.
+
+**Solution Architecture:**
+
+```mermaid
+graph TD
+    A[Release Workflow] --> B[Bump Version & Update Docs]
+    B --> C[Set DOCS_UPDATED Flag]
+    C --> D[Upload Flag Artifact]
+    D --> E[Documentation Workflow Triggered]
+    E --> F[Guard Job: Check Flag]
+    F --> G{Docs Updated?}
+    G -->|Yes| H[Deploy Documentation]
+    G -->|No| I[Skip Deployment]
+    
+    J[Direct Doc Push] --> H
+```
+
+#### Guard Job Logic
+
+The documentation workflow includes an intelligent **guard job** that:
+
+1. **Downloads Release Artifacts**: Retrieves the `DOCS_UPDATED` flag from the completed release workflow
+2. **Verifies Release Success**: Ensures the release workflow completed successfully
+3. **Evaluates Update Flag**: Checks if documentation files were actually updated during the release
+4. **Controls Deployment**: Only proceeds with documentation deployment if docs were updated
+
+```yaml
+# Guard job implementation
+check_docs_changes:
+  if: github.event_name == 'workflow_run'
+  steps:
+    - name: Download docs update flag from release workflow
+      uses: actions/download-artifact@v4
+      with:
+        name: release-docs-flag
+        run-id: ${{ github.event.workflow_run.id }}
+    
+    - name: Check release workflow success and docs update flag
+      run: |
+        # Verify release workflow succeeded
+        if [[ "${{ github.event.workflow_run.conclusion }}" != "success" ]]; then
+          echo "should_deploy=false" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+        
+        # Read docs update flag from artifact  
+        DOCS_UPDATED=$(cat docs_updated.txt)
+        if [[ "$DOCS_UPDATED" == "true" ]]; then
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+        else
+          echo "should_deploy=false" >> $GITHUB_OUTPUT
+        fi
+```
+
+#### Conditional Deployment Logic
+
+The main deployment job runs conditionally based on the trigger type:
+
+```yaml
+deploy_documentation:
+  # Run for direct push OR workflow_run with docs changes
+  if: |
+    github.event_name == 'push' || 
+    (github.event_name == 'workflow_run' && needs.check_docs_changes.outputs.should_deploy == 'true')
+  needs: [check_docs_changes]
+```
+
+### Release Workflow Integration
+
+The **release workflow** (`release.yml`) has been enhanced to support this pattern:
+
+#### DOCS_UPDATED Flag Generation
+
+During the version bump process, the release workflow:
+
+1. **Tracks Documentation Updates**: Uses existing `DOCS_UPDATED` flag from bump step logic
+2. **Updates Version References**: Automatically updates documentation files that reference the package version:
+   - `docs/contents/development/ci-cd.mdx`
+   - `docs/contents/document/installation.md`
+   - `docs/contents/document/README.md`
+
+3. **Sets Output Flag**: Outputs the `DOCS_UPDATED` flag for downstream use
+```bash
+# Output DOCS_UPDATED flag for documentation workflow trigger
+echo "docs_updated=$DOCS_UPDATED" >> $GITHUB_OUTPUT
+```
+
+4. **Emits Artifact**: Uploads the flag as an artifact for the documentation workflow
+```yaml
+- name: Upload docs update flag for downstream documentation workflow
+  uses: actions/upload-artifact@v4
+  with:
+    name: release-docs-flag
+    path: docs_updated.txt
+```
 
 ### Documentation Deployment Steps
 
-1. **Latest Documentation Deployment**:
-   - Checks out the repository
-   - Sets up Python 3.13
-   - Installs dependencies with Poetry
-   - Builds versioned documentation using `mike`
-   
-2. **Version State Checking**:
-   - Determines if this is a version update
-   
-3. **Stable Documentation Deployment**:
-   - For official releases only
-   - Builds and deploys the stable version of documentation
-   - Updates version aliases
+#### For Docusaurus-Based Documentation:
+
+1. **Environment Setup**:
+   - Uses `pnpm` for Node.js package management
+   - Sets up Node.js 22 with pnpm caching
+   - Installs dependencies with `pnpm install`
+
+2. **Build Process**:
+   - Builds static documentation with `pnpm build`
+   - Generates optimized production assets
+
+3. **GitHub Pages Deployment**:
+   - Configures GitHub Pages environment
+   - Uploads built documentation as Pages artifact
+   - Deploys to GitHub Pages automatically
+
+### Key Benefits
+
+✅ **Reliable Triggering**: Documentation deploys automatically after releases that update docs  
+✅ **No Infinite Loops**: Guard job prevents unnecessary deployments  
+✅ **Efficient**: Only deploys when documentation actually changes  
+✅ **Backward Compatible**: Direct push functionality remains unchanged  
+✅ **Intelligent**: Uses existing business logic to determine if docs need updating  
+
+### Troubleshooting Documentation Deployment
+
+**Documentation Not Deploying After Release:**
+- Check that the release workflow completed successfully
+- Verify that documentation files were actually updated (check `DOCS_UPDATED` flag)
+- Review the guard job output in the documentation workflow
+
+**Guard Job Failing:**
+- Ensure release workflow uploaded the `release-docs-flag` artifact
+- Check that artifact download permissions are correct
+- Verify workflow run ID is accessible
+
+**Deployment Timing:**
+- Workflow run triggers happen after the triggering workflow completes
+- Documentation deployment will occur ~1-2 minutes after release completion
+- Monitor both workflows to track the complete process
 
 ## Additional CI Workflows
 
