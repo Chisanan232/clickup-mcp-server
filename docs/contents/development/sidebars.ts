@@ -10,7 +10,20 @@ const sidebars: SidebarsConfig = {
     'workflow',
     'coding-style',
     'architecture',
-    'ci-cd',
+    {
+      type: 'category',
+      label: 'CI/CD Workflows',
+      collapsed: false,
+      items: [
+        'ci-cd/index',
+        'ci-cd/continuous-integration',
+        'ci-cd/release-system',
+        'ci-cd/documentation-deployment',
+        'ci-cd/reusable-workflows',
+        'ci-cd/additional-ci-workflows',
+        'ci-cd/developer-guide',
+      ],
+    },
   ],
 };
 
