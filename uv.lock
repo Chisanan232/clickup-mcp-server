@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.13"
 
 [[package]]
@@ -157,6 +157,10 @@ pre-commit-ci = [
     { name = "pre-commit" },
     { name = "pylint" },
 ]
+release-ci = [
+    { name = "jsonschema" },
+    { name = "pyyaml" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -184,6 +188,10 @@ pre-commit-ci = [
     { name = "mypy", specifier = ">=1.16.1,<2" },
     { name = "pre-commit", specifier = ">=4.2.0,<5" },
     { name = "pylint", specifier = ">=3.3.7,<4" },
+]
+release-ci = [
+    { name = "jsonschema", specifier = ">=4.17.0,<5" },
+    { name = "pyyaml", specifier = ">=6.0.1,<7" },
 ]
 
 [[package]]
