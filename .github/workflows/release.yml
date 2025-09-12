@@ -58,7 +58,7 @@ concurrency:
 
 jobs:
   intent:
-    uses: ./.github/workflows/rw_parse_release_intent.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_parse_release_intent.yaml@master
     with:
       level: ${{ inputs.level }}
       python: ${{ inputs.python }}
@@ -206,7 +206,7 @@ jobs:
           ref: ${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '' }}
 
       - name: Setup Python with UV
-        uses: ./.github/actions/setup-python-uv
+        uses: Chisanan232/Template-Python-UV-Project/.github/actions/setup-python-uv@master
         with:
           install-dependencies: 'true'
           dependency-groups: 'release-ci'
@@ -333,7 +333,7 @@ jobs:
           path: docs_updated.txt
 
   build_git-tag_and_create_github-release:
-    uses: ./.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml@master
     needs: bump_version
     with:
       version: ${{ needs.bump_version.outputs.version }}
@@ -343,7 +343,7 @@ jobs:
       github_auth_token: ${{ secrets.GITHUB_TOKEN }}
 
   release_python:
-    uses: ./.github/workflows/rw_python_package.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_python_package.yaml@master
     needs: [intent, bump_version, build_git-tag_and_create_github-release]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.python != 'skip'
     with:
@@ -354,7 +354,7 @@ jobs:
 
   release_docker_hub:
     name: Release to DockerHub
-    uses: ./.github/workflows/rw_docker_operations.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docker_operations.yaml@master
     needs: [intent, bump_version, build_git-tag_and_create_github-release]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docker != 'skip'
     secrets:
@@ -370,7 +370,7 @@ jobs:
 
   release_docker_ghcr:
     name: Release to GHCR
-    uses: ./.github/workflows/rw_docker_operations.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docker_operations.yaml@master
     needs: [intent, bump_version, build_git-tag_and_create_github-release]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docker != 'skip'
     with:
@@ -382,7 +382,7 @@ jobs:
       enable-signing: true
 
   release_docs:
-    uses: ./.github/workflows/rw_docs_operations.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docs_operations.yaml@master
     needs: [intent, prepare_docs_matrix, bump_version, build_git-tag_and_create_github-release]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docs != 'skip' && needs.prepare_docs_matrix.outputs.has_sections == 'true'
     with:

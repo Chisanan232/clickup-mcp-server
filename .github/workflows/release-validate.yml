@@ -37,7 +37,7 @@ concurrency:
 
 jobs:
   intent-parse:
-    uses: ./.github/workflows/rw_parse_release_intent.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_parse_release_intent.yaml@master
     with:
       level: ${{ inputs.level || 'auto' }}
       python: 'auto'
@@ -46,7 +46,7 @@ jobs:
       notes: 'Validation test run'
 
   build_git-tag_and_create_github-release:
-    uses: ./.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml@master
     needs: intent-parse
     with:
       version: "1.0.0-validation"  # Test version for validation
@@ -55,7 +55,7 @@ jobs:
       github_auth_token: ${{ secrets.GITHUB_TOKEN }}
 
   python-build-check:
-    uses: ./.github/workflows/rw_python_package.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_python_package.yaml@master
     needs: build_git-tag_and_create_github-release
     with:
       operation: 'test'
@@ -63,7 +63,7 @@ jobs:
 
   docker-build-dockerhub:
     name: Validate DockerHub Build
-    uses: ./.github/workflows/rw_docker_operations.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docker_operations.yaml@master
     needs: build_git-tag_and_create_github-release
     with:
       operation: 'test'
@@ -76,7 +76,7 @@ jobs:
 
   docker-build-ghcr:
     name: Validate GHCR Build
-    uses: ./.github/workflows/rw_docker_operations.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docker_operations.yaml@master
     needs: build_git-tag_and_create_github-release
     with:
       operation: 'test'
@@ -88,7 +88,7 @@ jobs:
       enable-signing: true
 
   docs-build:
-    uses: ./.github/workflows/rw_docs_operations.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docs_operations.yaml@master
     needs: intent-parse
     with:
       operation: 'test'
@@ -96,7 +96,7 @@ jobs:
 
   supply-chain-loopback:
     name: Security Scan (Supply Chain)
-    uses: ./.github/workflows/rw_docker_operations.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docker_operations.yaml@master
     needs: [docker-build-dockerhub, docker-build-ghcr]
     with:
       operation: 'security-scan'
