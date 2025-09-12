@@ -64,10 +64,6 @@ pre-commit-ci = [
     "pylint>=3.3.7,<4",
     "mypy>=1.16.1,<2",
 ]
-release-ci = [
-    "pyyaml>=6.0.1,<7",
-    "jsonschema>=4.17.0,<5",
-]
 
 [tool.uv]
 default-groups = [
