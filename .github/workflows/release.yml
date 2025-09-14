@@ -343,7 +343,7 @@ jobs:
       github_auth_token: ${{ secrets.GITHUB_TOKEN }}
 
   release_python:
-    uses: .github/workflows/rw_python_package.yaml
+    uses: ./.github/workflows/rw_python_package.yaml
     needs: [intent, bump_version, build_git-tag_and_create_github-release]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.python != 'skip'
     with:
