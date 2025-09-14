@@ -55,7 +55,7 @@ jobs:
       github_auth_token: ${{ secrets.GITHUB_TOKEN }}
 
   python-build-check:
-    uses: .github/workflows/rw_python_package.yaml
+    uses: ./.github/workflows/rw_python_package.yaml
     needs: build_git-tag_and_create_github-release
     with:
       operation: 'test'
