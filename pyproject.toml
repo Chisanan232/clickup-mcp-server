@@ -50,7 +50,7 @@ release-intent = "scripts.ci.release_intent:main"
 [dependency-groups]
 dev = [
     "pytest>=8.4.1,<9",
-    "pytest-cov>=6.2.1,<7",
+    "pytest-cov>=6.2.1,<8",
     "coverage>=7.9.2,<8",
     "pytest-rerunfailures>=15.1,<17",
     "aiohttp>=3.12.13,<4",
