@@ -39,7 +39,7 @@ jobs:
           ref: ${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '' }}
 
       - name: Setup Python with UV
-        uses: ./.github/actions/setup-python-uv
+        uses: Chisanan232/Template-Python-UV-Project/.github/actions/setup-python-uv@master
         with:
           install-dependencies: 'true'
           dependency-groups: 'release-ci'
@@ -73,7 +73,7 @@ jobs:
           echo "RC version: $RC_VERSION"
 
   build_git-tag_and_create_github-release:
-    uses: ./.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml@master
     needs: compute-version
     with:
       version: ${{ needs.compute-version.outputs.rc_version }}
@@ -83,7 +83,7 @@ jobs:
       github_auth_token: ${{ secrets.GITHUB_TOKEN }}
 
   pypi-test:
-    uses: ./.github/workflows/rw_python_package.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_python_package.yaml@master
     needs: [compute-version, build_git-tag_and_create_github-release]
     with:
       operation: 'publish-testpypi'
@@ -93,7 +93,7 @@ jobs:
 
   dockerhub-rc:
     name: Staging Release to DockerHub
-    uses: ./.github/workflows/rw_docker_operations.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docker_operations.yaml@master
     needs: [compute-version, build_git-tag_and_create_github-release]
     secrets:
       dockerhub-user: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -110,7 +110,7 @@ jobs:
 
   ghcr-rc:
     name: Staging Release to GHCR
-    uses: ./.github/workflows/rw_docker_operations.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docker_operations.yaml@master
     needs: [compute-version, build_git-tag_and_create_github-release]
     with:
       operation: 'push'
@@ -123,7 +123,7 @@ jobs:
       health-check-path: '/health'
 
   docs-preview:
-    uses: ./.github/workflows/rw_docs_operations.yaml
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docs_operations.yaml@master
     needs: compute-version
     with:
       operation: 'deploy-preview'
