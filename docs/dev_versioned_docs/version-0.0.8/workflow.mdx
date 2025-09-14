@@ -1,0 +1,228 @@
+---
+id: workflow
+title: Development Workflow
+sidebar_position: 3
+---
+
+```mdx-code-block
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+```
+
+# Development Workflow
+
+This guide outlines the recommended workflow for contributing to the ClickUp MCP Server project.
+
+## Setting Up Your Environment
+
+Before you start development, make sure you have completed all the steps in the [Requirements](./requirements.mdx) guide.
+
+## Development Process
+
+### 1. Pick or Create an Issue
+
+- Browse existing [GitHub Issues](https://github.com/Chisanan232/clickup-mcp-server/issues) to find something to work on
+- If you have a new idea, create a new issue describing the change you want to make
+- Comment on the issue to let others know you're working on it
+
+### 2. Create a Branch
+
+#### Fork the Repository
+
+First, fork the project to your own GitHub account:
+
+1. Go to the [ClickUp MCP Server repository](https://github.com/Chisanan232/clickup-mcp-server)
+2. Click the "Fork" button in the top right
+3. Wait for GitHub to create your fork
+4. Clone your forked repository to your local machine:
+
+```bash
+# Clone your fork
+git clone https://github.com/YOUR_USERNAME/clickup-mcp-server.git
+cd clickup-mcp-server
+```
+
+#### Set Up the Upstream Remote
+
+Add the original repository as an "upstream" remote to keep your fork in sync:
+
+```bash
+# Add the upstream remote
+git remote add upstream https://github.com/Chisanan232/clickup-mcp-server.git
+
+# Verify your remotes
+git remote -v
+```
+
+#### Sync with Upstream
+
+Before creating a new branch, sync your fork with the upstream repository:
+
+```bash
+# Fetch upstream changes
+git fetch upstream
+
+# Checkout your fork's master branch
+git checkout master
+
+# Merge upstream changes
+git merge upstream/master
+
+# Push the changes to your fork
+git push origin master
+```
+
+#### Create a New Branch
+
+Create a new branch from the updated `master` branch with a descriptive name:
+
+```bash
+# Create a new branch
+git checkout -b feature/your-feature-name
+```
+
+Use prefixes like `feature/`, `bugfix/`, `docs/`, or `refactor/` to indicate the type of change.
+
+### 3. Make Your Changes
+
+- Follow the [Coding Style and Rules](./coding-style.mdx)
+- Keep your changes focused on the issue you're addressing
+- Write tests for your changes
+- Update documentation as necessary
+
+### 4. Run Tests Locally
+
+Before submitting your changes, make sure all tests pass:
+   
+<Tabs>
+  <TabItem value="pip" label="pip" default>
+    ```bash
+    # Run all tests
+    pytest
+    
+    # Run with coverage report
+    pytest --cov=clickup_mcp_server
+    
+    # Run specific tests
+    pytest test/path/to/test_file.py
+    ```
+
+  </TabItem>
+  <TabItem value="poetry" label="poetry">
+    ```bash
+    # Run all tests
+    poetry run pytest
+    
+    # Run with coverage report
+    poetry run pytest --cov=clickup_mcp_server
+    
+    # Run specific tests
+    poetry run pytest test/path/to/test_file.py
+    ```
+
+  </TabItem>
+  <TabItem value="uv" label="uv">
+    ```bash
+    # Run all tests
+    uv run pytest
+    
+    # Run with coverage report
+    uv run pytest --cov=clickup_mcp_server
+    
+    # Run specific tests
+    uv run pytest test/path/to/test_file.py
+    ```
+
+  </TabItem>
+</Tabs>
+
+### 5. Run Pre-commit Hooks
+
+Ensure code quality by running pre-commit hooks:
+   
+<Tabs>
+  <TabItem value="pip" label="pip" default>
+    ```bash
+    pre-commit run --all-files
+    ```
+
+  </TabItem>
+  <TabItem value="poetry" label="poetry">
+    ```bash
+    poetry run pre-commit run --all-files
+    ```
+
+  </TabItem>
+  <TabItem value="uv" label="uv">
+    ```bash
+    uv run pre-commit run --all-files
+    ```
+
+  </TabItem>
+</Tabs>
+
+### 6. Commit Your Changes
+
+Write clear, descriptive commit messages:
+
+```bash
+git add .
+git commit -m "feat: add websocket transport support"
+```
+
+Follow the [Conventional Commits](https://www.conventionalcommits.org/) format:
+- `feat:` for new features
+- `fix:` for bug fixes
+- `docs:` for documentation changes
+- `refactor:` for code refactoring
+- `test:` for adding or modifying tests
+- `chore:` for maintenance tasks
+
+### 7. Push Your Branch
+
+```bash
+git push origin feature/your-feature-name
+```
+
+### 8. Create a Pull Request
+
+- Go to the GitHub repository and create a new pull request
+- Provide a clear description of the changes
+- Reference the issue number (e.g., "Fixes #123")
+- Complete the pull request template
+
+### 9. Code Review
+
+- Address any feedback from reviewers
+- Make additional commits as needed
+- Push updates to your branch
+
+### 10. Merge
+
+Once your pull request is approved:
+- It will be merged into the main branch
+- The CI/CD pipeline will run automatically
+
+## Continuous Integration
+
+All pull requests are automatically checked with our [CI/CD pipeline](./ci-cd/index.mdx), which:
+- Runs all tests
+- Checks code style and quality
+- Generates coverage reports
+- Builds documentation
+
+## Release Process
+
+New releases are created by the core maintainers following this process:
+
+1. Update version number in relevant files
+2. Update the changelog
+3. Create a new release branch
+4. Create a GitHub release with release notes
+5. Publish to PyPI
+
+## Need Help?
+
+If you need assistance at any point in the development process:
+- Ask questions in the [GitHub Discussions](https://github.com/Chisanan232/clickup-mcp-server/discussions)
+- Reach out to the maintainers via the contact information in the README
