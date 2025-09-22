@@ -47,9 +47,8 @@ docker:
     port: 8000                     # Port for container health checks
     path: "/health"                # Health check endpoint path
   
-  application:
-    env_var_name: "CLICKUP_API_TOKEN"      # Environment variable name for application
-    env_var_value: "test_token"    # Environment variable value for testing
+  # Flexible Docker run options - supports multiple env vars, volumes, networks, etc.
+  run_options: "-e CLICKUP_API_TOKEN=test_token -e DEBUG=true"  # Custom Docker run options for testing
 
 # === VALIDATION CONFIGURATION ===
 validation:
@@ -83,9 +82,13 @@ docs:
 #      health_check:
 #        port: 3000
 #        path: "/api/health"
-#      application:
-#        env_var_name: "CUSTOM_TOKEN"
-#        env_var_value: "custom_test_value"
+#      # Flexible Docker run options - supports any Docker run parameters
+#      run_options: "-e CUSTOM_TOKEN=custom_test_value -e NODE_ENV=production"
+#
+# 4. Advanced Docker configuration examples:
+#    docker:
+#      run_options: "-e API_KEY=test123 -e DB_HOST=localhost -v /tmp:/app/tmp --network mynet"
+#      # Multiple environment variables, volume mounts, custom networks, etc.
 #
 # 4. Documentation versioning examples:
 #    # Legacy format (backward compatible):

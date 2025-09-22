@@ -113,8 +113,7 @@ jobs:
       enable-signing: true
       health-check-port: ${{ needs.config.outputs.docker_health_check_port }}
       health-check-path: ${{ needs.config.outputs.docker_health_check_path }}
-      app-env-var-name: ${{ needs.config.outputs.docker_app_env_var_name }}
-      app-env-var-value: ${{ needs.config.outputs.docker_app_env_var_value }}
+      docker-run-options: ${{ needs.config.outputs.docker_run_options }}
 
   ghcr-rc:
     name: Staging Release to GHCR
@@ -129,8 +128,7 @@ jobs:
       enable-signing: true
       health-check-port: ${{ needs.config.outputs.docker_health_check_port }}
       health-check-path: ${{ needs.config.outputs.docker_health_check_path }}
-      app-env-var-name: ${{ needs.config.outputs.docker_app_env_var_name }}
-      app-env-var-value: ${{ needs.config.outputs.docker_app_env_var_value }}
+      docker-run-options: ${{ needs.config.outputs.docker_run_options }}
 
   docs-preview:
     uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docs_operations.yaml@master

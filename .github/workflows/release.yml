@@ -378,8 +378,7 @@ jobs:
       checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
       enable-sbom: true
       enable-signing: true
-      app-env-var-name: ${{ needs.config.outputs.docker_app_env_var_name }}
-      app-env-var-value: ${{ needs.config.outputs.docker_app_env_var_value }}
+      docker-run-options: ${{ needs.config.outputs.docker_run_options }}
 
   release_docker_ghcr:
     name: Release to GHCR
@@ -393,8 +392,7 @@ jobs:
       checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
       enable-sbom: true
       enable-signing: true
-      app-env-var-name: ${{ needs.config.outputs.docker_app_env_var_name }}
-      app-env-var-value: ${{ needs.config.outputs.docker_app_env_var_value }}
+      docker-run-options: ${{ needs.config.outputs.docker_run_options }}
 
   release_docs:
     uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docs_operations.yaml@master
