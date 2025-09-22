@@ -4,7 +4,7 @@ name: release
 on:
   push:
     branches:
-      - master
+      - <your_base_branch>  # Replace with your main branch (e.g., master, main)
     paths:
       - .github/tag_and_release/release-**
   workflow_dispatch:
@@ -57,14 +57,20 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Parse project configuration from intent.yaml
+  config:
+    name: Parse Configuration
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_parse_project_config.yaml@master
+
   intent:
     uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_parse_release_intent.yaml@master
+    needs: config
     with:
-      level: ${{ inputs.level }}
-      python: ${{ inputs.python }}
-      docker: ${{ inputs.docker }}
-      docs: ${{ inputs.docs }}
-      notes: ${{ inputs.notes }}
+      level: ${{ inputs.level || needs.config.outputs.level }}
+      python: ${{ inputs.python || needs.config.outputs.python }}
+      docker: ${{ inputs.docker || needs.config.outputs.docker }}
+      docs: ${{ inputs.docs || needs.config.outputs.docs }}
+      notes: ${{ inputs.notes || needs.config.outputs.notes }}
 
   detect_changes:
     name: Detect Changes
@@ -97,7 +103,7 @@ jobs:
   prepare_docs_matrix:
     name: Prepare Docs Matrix
     runs-on: ubuntu-latest
-    needs: [intent, detect_changes]
+    needs: [config, intent, detect_changes]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docs != 'skip'
     outputs:
       sections_to_version: ${{ steps.matrix.outputs.sections_to_version }}
@@ -191,7 +197,7 @@ jobs:
   bump_version:
     name: Bump Version and Commit
     runs-on: ubuntu-latest
-    needs: intent
+    needs: [config, intent]
     if: needs.intent.outputs.do_release == 'true'
     outputs:
       version: ${{ steps.bump.outputs.version }}
@@ -213,8 +219,8 @@ jobs:
 
       - name: Configure git
         run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
+          git config --global user.email "${{ needs.config.outputs.git_commit_email }}"
+          git config --global user.name "${{ needs.config.outputs.git_commit_name }}"
 
       - name: Bump version with uv
         id: bump
@@ -251,9 +257,10 @@ jobs:
           DOCS_UPDATED=false
           
           # Update main CI/CD documentation if it exists
-          if [ -f "docs/contents/development/ci-cd.mdx" ]; then
+          CI_CD_PATH="${{ needs.config.outputs.docs_ci_cd_path }}"
+          if [ -f "$CI_CD_PATH" ]; then
             # Update any version references in installation examples, if they exist
-            if grep -q "clickup-mcp-server" "docs/contents/development/ci-cd.mdx"; then
+            if grep -q "${{ needs.config.outputs.project_name }}" "$CI_CD_PATH"; then
               # This is just a placeholder - adjust pattern as needed for actual version references
               echo "Found version references in ci-cd.mdx to update"
               DOCS_UPDATED=true
@@ -261,21 +268,23 @@ jobs:
           fi
           
           # Update package installation docs if they exist
-          if [ -f "docs/contents/document/installation.md" ]; then
-            if grep -q "pip install.*clickup-mcp-server" "docs/contents/document/installation.md"; then
-              sed -i.bak "s/clickup-mcp-server==[0-9]\+\.[0-9]\+\.[0-9]\+/clickup-mcp-server==$NEW_VERSION/g" "docs/contents/document/installation.md"
-              rm -f "docs/contents/document/installation.md.bak" 2>/dev/null || true
+          INSTALLATION_PATH="${{ needs.config.outputs.docs_installation_path }}"
+          if [ -f "$INSTALLATION_PATH" ]; then
+            if grep -q "pip install.*${{ needs.config.outputs.project_name }}" "$INSTALLATION_PATH"; then
+              sed -i.bak "s/${{ needs.config.outputs.project_name }}==[0-9]\+\.[0-9]\+\.[0-9]\+/${{ needs.config.outputs.project_name }}==$NEW_VERSION/g" "$INSTALLATION_PATH"
+              rm -f "$INSTALLATION_PATH.bak" 2>/dev/null || true
               echo "Updated installation documentation with new version"
               DOCS_UPDATED=true
             fi
           fi
           
           # Update README if it has version references
-          if [ -f "docs/contents/document/README.md" ]; then
-            if grep -q "clickup-mcp-server" "docs/contents/document/README.md"; then
+          README_PATH="${{ needs.config.outputs.docs_readme_path }}"
+          if [ -f "$README_PATH" ]; then
+            if grep -q "${{ needs.config.outputs.project_name }}" "$README_PATH"; then
               # Update version references in README examples
-              sed -i.bak "s/clickup-mcp-server==[0-9]\+\.[0-9]\+\.[0-9]\+/clickup-mcp-server==$NEW_VERSION/g" "docs/contents/document/README.md"
-              rm -f "docs/contents/document/README.md.bak" 2>/dev/null || true
+              sed -i.bak "s/${{ needs.config.outputs.project_name }}==[0-9]\+\.[0-9]\+\.[0-9]\+/${{ needs.config.outputs.project_name }}==$NEW_VERSION/g" "$README_PATH"
+              rm -f "$README_PATH.bak" 2>/dev/null || true
               echo "Updated README documentation with new version"
               DOCS_UPDATED=true
             fi
@@ -288,13 +297,15 @@ jobs:
           # Add documentation files if they were updated
           if [ "$DOCS_UPDATED" = true ]; then
             # Add any updated documentation files
-            if [ -f "docs/contents/document/installation.md" ]; then
-              git add "docs/contents/document/installation.md"
-              FILES_TO_COMMIT="$FILES_TO_COMMIT docs/contents/document/installation.md"
+            INSTALLATION_PATH="${{ needs.config.outputs.docs_installation_path }}"
+            README_PATH="${{ needs.config.outputs.docs_readme_path }}"
+            if [ -f "$INSTALLATION_PATH" ]; then
+              git add "$INSTALLATION_PATH"
+              FILES_TO_COMMIT="$FILES_TO_COMMIT $INSTALLATION_PATH"
             fi
-            if [ -f "docs/contents/document/README.md" ]; then
-              git add "docs/contents/document/README.md"  
-              FILES_TO_COMMIT="$FILES_TO_COMMIT docs/contents/document/README.md"
+            if [ -f "$README_PATH" ]; then
+              git add "$README_PATH"  
+              FILES_TO_COMMIT="$FILES_TO_COMMIT $README_PATH"
             fi
             COMMIT_MESSAGE="⬆️ chore: bump version to $NEW_VERSION, sync uv.lock, and update docs"
             echo "Documentation files updated and will trigger documentation workflow"
@@ -334,7 +345,7 @@ jobs:
 
   build_git-tag_and_create_github-release:
     uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml@master
-    needs: bump_version
+    needs: [config, bump_version]
     with:
       version: ${{ needs.bump_version.outputs.version }}
       checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
@@ -344,7 +355,7 @@ jobs:
 
   release_python:
     uses: ./.github/workflows/rw_python_package.yaml
-    needs: [intent, bump_version, build_git-tag_and_create_github-release]
+    needs: [config, intent, bump_version, build_git-tag_and_create_github-release]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.python != 'skip'
     with:
       operation: 'publish-pypi'
@@ -355,35 +366,39 @@ jobs:
   release_docker_hub:
     name: Release to DockerHub
     uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docker_operations.yaml@master
-    needs: [intent, bump_version, build_git-tag_and_create_github-release]
+    needs: [config, intent, bump_version, build_git-tag_and_create_github-release]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docker != 'skip'
     secrets:
       dockerhub-user: ${{ secrets.DOCKERHUB_USERNAME }}
       registry-token: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
       operation: 'push'
-      registry: 'docker.io'
+      registry: ${{ needs.config.outputs.docker_registry_dockerhub }}
       version: ${{ needs.bump_version.outputs.version }}
       checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
       enable-sbom: true
       enable-signing: true
+      app-env-var-name: ${{ needs.config.outputs.docker_app_env_var_name }}
+      app-env-var-value: ${{ needs.config.outputs.docker_app_env_var_value }}
 
   release_docker_ghcr:
     name: Release to GHCR
     uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docker_operations.yaml@master
-    needs: [intent, bump_version, build_git-tag_and_create_github-release]
+    needs: [config, intent, bump_version, build_git-tag_and_create_github-release]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docker != 'skip'
     with:
       operation: 'push'
-      registry: 'ghcr.io'
+      registry: ${{ needs.config.outputs.docker_registry_ghcr }}
       version: ${{ needs.bump_version.outputs.version }}
       checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
       enable-sbom: true
       enable-signing: true
+      app-env-var-name: ${{ needs.config.outputs.docker_app_env_var_name }}
+      app-env-var-value: ${{ needs.config.outputs.docker_app_env_var_value }}
 
   release_docs:
     uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docs_operations.yaml@master
-    needs: [intent, prepare_docs_matrix, bump_version, build_git-tag_and_create_github-release]
+    needs: [config, intent, prepare_docs_matrix, bump_version, build_git-tag_and_create_github-release]
     if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docs != 'skip' && needs.prepare_docs_matrix.outputs.has_sections == 'true'
     with:
       operation: 'version'
