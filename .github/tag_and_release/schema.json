@@ -1,9 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/release-intent.schema.json",
-  "title": "Release Intent",
+  "title": "Release Intent and Project Configuration",
+  "description": "Validates release intent core properties while allowing additional project configuration sections (project, git, docker, validation, docs) for enhanced workflows",
   "type": "object",
-  "additionalProperties": false,
+  "additionalProperties": true,
   "properties": {
     "release": {
       "type": "boolean",
