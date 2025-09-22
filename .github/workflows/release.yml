@@ -1,4 +1,5 @@
 # Production Release
+# This workflow calls the centralized release process from the template project
 name: release
 
 on:
@@ -57,352 +58,57 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Parse project configuration from intent.yaml
-  config:
-    name: Parse Configuration
-    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_parse_project_config.yaml@master
-
-  intent:
-    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_parse_release_intent.yaml@master
-    needs: config
+  # Call the centralized complete release workflow
+  release:
+    name: Complete Release Process
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_release_complete.yaml@master
     with:
-      level: ${{ inputs.level || needs.config.outputs.level }}
-      python: ${{ inputs.python || needs.config.outputs.python }}
-      docker: ${{ inputs.docker || needs.config.outputs.docker }}
-      docs: ${{ inputs.docs || needs.config.outputs.docs }}
-      notes: ${{ inputs.notes || needs.config.outputs.notes }}
-
-  detect_changes:
-    name: Detect Changes
-    runs-on: ubuntu-latest
-    outputs:
-      docs_changed: ${{ steps.changes.outputs.docs }}
-      dev_changed: ${{ steps.changes.outputs.dev }}
-      any_docs_changed: ${{ steps.changes.outputs.docs == 'true' || steps.changes.outputs.dev == 'true' }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Detect docs section changes
-        uses: dorny/paths-filter@v3
-        id: changes
-        with:
-          filters: |
-            docs:
-              - 'docs/src/**'
-              - 'docs/contents/document/**'
-              - 'docs/static/**'
-              - 'docs/docusaurus.config.*'
-              - 'docs/package.json'
-              - 'docs/pnpm-lock.yaml'
-            dev:
-              - 'docs/contents/development/**'
-
-  prepare_docs_matrix:
-    name: Prepare Docs Matrix
-    runs-on: ubuntu-latest
-    needs: [config, intent, detect_changes]
-    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docs != 'skip'
-    outputs:
-      sections_to_version: ${{ steps.matrix.outputs.sections_to_version }}
-      has_sections: ${{ steps.matrix.outputs.has_sections }}
-      strategy: ${{ steps.matrix.outputs.strategy }}
-    steps:
-      - name: Prepare sections matrix
-        id: matrix
-        run: |
-          echo "🔍 Preparing docs versioning matrix..."
-          
-          # Get outputs from intent parsing
-          DOCS_MODE="${{ needs.intent.outputs.docs_mode }}"
-          DOCS_SECTIONS='${{ needs.intent.outputs.docs_sections }}'
-          DOCS_STRATEGY="${{ needs.intent.outputs.docs_strategy }}"
-          
-          echo "Docs mode: $DOCS_MODE"
-          echo "Docs sections: $DOCS_SECTIONS"
-          echo "Docs strategy: $DOCS_STRATEGY"
-          
-          # Get changed sections from change detection
-          DOCS_CHANGED="${{ needs.detect_changes.outputs.docs_changed }}"
-          DEV_CHANGED="${{ needs.detect_changes.outputs.dev_changed }}"
-          
-          echo "Docs changed: $DOCS_CHANGED"
-          echo "Dev changed: $DEV_CHANGED"
-          
-          # Build array of changed sections dynamically based on what was detected
-          # Use Python to build the changed sections array more reliably
-          python3 -c "
-          import json
-          
-          # Get requested sections from intent
-          requested_sections = json.loads('$DOCS_SECTIONS')
-          print(f'Requested sections: {requested_sections}')
-          
-          # Build changed sections based on change detection results
-          changed_sections = []
-          
-          if '$DOCS_CHANGED' == 'true' and 'docs' in requested_sections:
-              changed_sections.append('docs')
-          if '$DEV_CHANGED' == 'true' and 'dev' in requested_sections:
-              changed_sections.append('dev')
-          
-          print(f'Changed sections: {changed_sections}')
-          print(json.dumps(changed_sections))
-          " > changed_sections_result.txt
-          
-          # Extract the changed sections JSON from the last line
-          CHANGED_SECTIONS=$(tail -n 1 changed_sections_result.txt)
-          cat changed_sections_result.txt
-          rm changed_sections_result.txt
-          
-          echo "Final changed sections: $CHANGED_SECTIONS"
-          
-          # Determine sections to version based on strategy
-          if [ "$DOCS_STRATEGY" = "changed" ]; then
-            # Only version sections that have changes
-            echo "Using changed sections strategy"
-            
-            if [ "$CHANGED_SECTIONS" != "[]" ] && [ "$CHANGED_SECTIONS" != "" ]; then
-              # Use the changed sections we already calculated
-              SECTIONS_TO_VERSION="$CHANGED_SECTIONS"
-              echo "Versioning changed sections: $SECTIONS_TO_VERSION"
-            else
-              # No changes detected, don't version anything
-              SECTIONS_TO_VERSION="[]"
-              echo "No changes detected, skipping versioning"
-            fi
-          else
-            # Version all requested sections (strategy: always)
-            echo "Using all sections strategy"
-            SECTIONS_TO_VERSION="$DOCS_SECTIONS"
-            echo "Versioning all requested sections: $SECTIONS_TO_VERSION"
-          fi
-          
-          echo "Sections to version: $SECTIONS_TO_VERSION"
-          
-          # Check if we have any sections to version
-          if [ "$SECTIONS_TO_VERSION" = "[]" ] || [ "$SECTIONS_TO_VERSION" = "" ]; then
-            echo "No sections to version"
-            echo "has_sections=false" >> $GITHUB_OUTPUT
-            echo "sections_to_version=[]" >> $GITHUB_OUTPUT
-          else
-            echo "has_sections=true" >> $GITHUB_OUTPUT
-            echo "sections_to_version=$SECTIONS_TO_VERSION" >> $GITHUB_OUTPUT
-          fi
-          
-          echo "strategy=$DOCS_STRATEGY" >> $GITHUB_OUTPUT
-
-  bump_version:
-    name: Bump Version and Commit
-    runs-on: ubuntu-latest
-    needs: [config, intent]
-    if: needs.intent.outputs.do_release == 'true'
-    outputs:
-      version: ${{ steps.bump.outputs.version }}
-      new_sha: ${{ steps.bump.outputs.new_sha }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          # Only use ref for push events to master to get latest commit after version bump
-          # In PR events, github.ref_name gives merge refs like "109/merge" which breaks checkout
-          ref: ${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '' }}
-
-      - name: Setup Python with UV
-        uses: Chisanan232/Template-Python-UV-Project/.github/actions/setup-python-uv@master
-        with:
-          install-dependencies: 'true'
-          dependency-groups: 'release-ci'
-
-      - name: Configure git
-        run: |
-          git config --global user.email "${{ needs.config.outputs.git_commit_email }}"
-          git config --global user.name "${{ needs.config.outputs.git_commit_name }}"
-
-      - name: Bump version with uv
-        id: bump
-        run: |
-          case "${{ needs.intent.outputs.level }}" in
-            "patch")
-              BUMP_FLAG="--bump patch"
-              ;;
-            "minor")
-              BUMP_FLAG="--bump minor"
-              ;;
-            "major")
-              BUMP_FLAG="--bump major"
-              ;;
-            *)
-              BUMP_FLAG="--bump patch"  # Default to patch for auto
-              ;;
-          esac
-          
-          echo "Bumping version with: uv version $BUMP_FLAG"
-          uv version $BUMP_FLAG
-          
-          # Update lock file to sync with new version
-          echo "Updating uv.lock file to sync with new version"
-          uv lock
-          
-          # Get the new version
-          NEW_VERSION=$(uv version --short)
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "New version: $NEW_VERSION"
-          
-          # Update documentation files that reference the version
-          echo "Updating version references in documentation..."
-          DOCS_UPDATED=false
-          
-          # Update main CI/CD documentation if it exists
-          CI_CD_PATH="${{ needs.config.outputs.docs_ci_cd_path }}"
-          if [ -f "$CI_CD_PATH" ]; then
-            # Update any version references in installation examples, if they exist
-            if grep -q "${{ needs.config.outputs.project_name }}" "$CI_CD_PATH"; then
-              # This is just a placeholder - adjust pattern as needed for actual version references
-              echo "Found version references in ci-cd.mdx to update"
-              DOCS_UPDATED=true
-            fi
-          fi
-          
-          # Update package installation docs if they exist
-          INSTALLATION_PATH="${{ needs.config.outputs.docs_installation_path }}"
-          if [ -f "$INSTALLATION_PATH" ]; then
-            if grep -q "pip install.*${{ needs.config.outputs.project_name }}" "$INSTALLATION_PATH"; then
-              sed -i.bak "s/${{ needs.config.outputs.project_name }}==[0-9]\+\.[0-9]\+\.[0-9]\+/${{ needs.config.outputs.project_name }}==$NEW_VERSION/g" "$INSTALLATION_PATH"
-              rm -f "$INSTALLATION_PATH.bak" 2>/dev/null || true
-              echo "Updated installation documentation with new version"
-              DOCS_UPDATED=true
-            fi
-          fi
-          
-          # Update README if it has version references
-          README_PATH="${{ needs.config.outputs.docs_readme_path }}"
-          if [ -f "$README_PATH" ]; then
-            if grep -q "${{ needs.config.outputs.project_name }}" "$README_PATH"; then
-              # Update version references in README examples
-              sed -i.bak "s/${{ needs.config.outputs.project_name }}==[0-9]\+\.[0-9]\+\.[0-9]\+/${{ needs.config.outputs.project_name }}==$NEW_VERSION/g" "$README_PATH"
-              rm -f "$README_PATH.bak" 2>/dev/null || true
-              echo "Updated README documentation with new version"
-              DOCS_UPDATED=true
-            fi
-          fi
-          
-          # Prepare files to commit
-          FILES_TO_COMMIT="pyproject.toml uv.lock"
-          COMMIT_MESSAGE="⬆️ chore: bump version to $NEW_VERSION and sync uv.lock"
-          
-          # Add documentation files if they were updated
-          if [ "$DOCS_UPDATED" = true ]; then
-            # Add any updated documentation files
-            INSTALLATION_PATH="${{ needs.config.outputs.docs_installation_path }}"
-            README_PATH="${{ needs.config.outputs.docs_readme_path }}"
-            if [ -f "$INSTALLATION_PATH" ]; then
-              git add "$INSTALLATION_PATH"
-              FILES_TO_COMMIT="$FILES_TO_COMMIT $INSTALLATION_PATH"
-            fi
-            if [ -f "$README_PATH" ]; then
-              git add "$README_PATH"  
-              FILES_TO_COMMIT="$FILES_TO_COMMIT $README_PATH"
-            fi
-            COMMIT_MESSAGE="⬆️ chore: bump version to $NEW_VERSION, sync uv.lock, and update docs"
-            echo "Documentation files updated and will trigger documentation workflow"
-          else
-            echo "No documentation files needed updating"
-          fi
-          
-          # Commit all changes
-          git add pyproject.toml uv.lock
-          git commit -m "$COMMIT_MESSAGE [skip ci]"
-          # Only push to ref_name for push events to master, use HEAD for PR events
-          git push origin HEAD:${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || github.head_ref || github.ref_name }}
-          
-          # Capture the new commit SHA after push for downstream jobs
-          # This ensures downstream jobs use the post-version-bump code
-          NEW_SHA=$(git rev-parse HEAD)
-          echo "new_sha=$NEW_SHA" >> $GITHUB_OUTPUT
-          echo "New commit SHA (post-version-bump): $NEW_SHA"
-          
-          # Output DOCS_UPDATED flag for documentation workflow trigger
-          echo "docs_updated=$DOCS_UPDATED" >> $GITHUB_OUTPUT
-          echo "Documentation updated: $DOCS_UPDATED"
-
-      - name: Emit docs update flag for documentation workflow trigger
-        if: github.ref_name == 'master'
-        run: |
-          set -euo pipefail
-          echo "Documentation updated: ${{ steps.bump.outputs.docs_updated }}"
-          echo "${{ steps.bump.outputs.docs_updated }}" > docs_updated.txt
-
-      - name: Upload docs update flag for downstream documentation workflow
-        if: github.ref_name == 'master'
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-docs-flag
-          path: docs_updated.txt
-
-  build_git-tag_and_create_github-release:
-    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml@master
-    needs: [config, bump_version]
-    with:
-      version: ${{ needs.bump_version.outputs.version }}
-      checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
-      debug_mode: false
+      level: ${{ inputs.level }}
+      python: ${{ inputs.python }}
+      docker: ${{ inputs.docker }}
+      docs: ${{ inputs.docs }}
+      notes: ${{ inputs.notes }}
     secrets:
-      github_auth_token: ${{ secrets.GITHUB_TOKEN }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  release_python:
-    uses: ./.github/workflows/rw_python_package.yaml
-    needs: [config, intent, bump_version, build_git-tag_and_create_github-release]
-    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.python != 'skip'
-    with:
-      operation: 'publish-pypi'
-      version: ${{ needs.bump_version.outputs.version }}
-      checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
-      artifact-name: 'python-package-production'
-
-  release_docker_hub:
-    name: Release to DockerHub
-    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docker_operations.yaml@master
-    needs: [config, intent, bump_version, build_git-tag_and_create_github-release]
-    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docker != 'skip'
-    secrets:
-      dockerhub-user: ${{ secrets.DOCKERHUB_USERNAME }}
-      registry-token: ${{ secrets.DOCKERHUB_TOKEN }}
-    with:
-      operation: 'push'
-      registry: ${{ needs.config.outputs.docker_registry_dockerhub }}
-      version: ${{ needs.bump_version.outputs.version }}
-      checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
-      enable-sbom: true
-      enable-signing: true
-      docker-run-options: ${{ needs.config.outputs.docker_run_options }}
-
-  release_docker_ghcr:
-    name: Release to GHCR
-    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docker_operations.yaml@master
-    needs: [config, intent, bump_version, build_git-tag_and_create_github-release]
-    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docker != 'skip'
-    with:
-      operation: 'push'
-      registry: ${{ needs.config.outputs.docker_registry_ghcr }}
-      version: ${{ needs.bump_version.outputs.version }}
-      checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
-      enable-sbom: true
-      enable-signing: true
-      docker-run-options: ${{ needs.config.outputs.docker_run_options }}
-
-  release_docs:
-    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docs_operations.yaml@master
-    needs: [config, intent, prepare_docs_matrix, bump_version, build_git-tag_and_create_github-release]
-    if: needs.intent.outputs.do_release == 'true' && needs.intent.outputs.docs != 'skip' && needs.prepare_docs_matrix.outputs.has_sections == 'true'
-    with:
-      operation: 'version'
-      version: ${{ needs.bump_version.outputs.version }}
-      checkout-sha: ${{ needs.bump_version.outputs.new_sha }}
-      sections: ${{ needs.prepare_docs_matrix.outputs.sections_to_version }}
-      strategy: ${{ needs.prepare_docs_matrix.outputs.strategy }}
-      changed-sections: ${{ needs.prepare_docs_matrix.outputs.sections_to_version }}
-      commit-changes: true
+  # Summary job to report results
+  release-summary:
+    name: Release Summary
+    runs-on: ubuntu-latest
+    needs: release
+    if: always()
+    steps:
+      - name: Report release results
+        run: |
+          echo "=== Production Release Summary ==="
+          echo ""
+          echo "Release Status: ${{ needs.release.result }}"
+          echo "Version Released: ${{ needs.release.outputs.version }}"
+          echo "Release Performed: ${{ needs.release.outputs.release_performed }}"
+          echo "Python Released: ${{ needs.release.outputs.python_released }}"
+          echo "Docker Released: ${{ needs.release.outputs.docker_released }}"
+          echo "Docs Released: ${{ needs.release.outputs.docs_released }}"
+          echo ""
+          
+          if [[ "${{ needs.release.result }}" == "success" && "${{ needs.release.outputs.release_performed }}" == "true" ]]; then
+            echo "🎉 Production release completed successfully!"
+            echo ""
+            echo "📦 Released Artifacts:"
+            if [[ "${{ needs.release.outputs.python_released }}" == "true" ]]; then
+              echo "- Python Package: https://pypi.org/project/${{ github.repository_owner }}/${{ needs.release.outputs.version }}/"
+            fi
+            if [[ "${{ needs.release.outputs.docker_released }}" == "true" ]]; then
+              echo "- Docker Images:"
+              echo "  - DockerHub: docker.io/${{ github.repository }}:${{ needs.release.outputs.version }}"
+              echo "  - GHCR: ghcr.io/${{ github.repository }}:${{ needs.release.outputs.version }}"
+            fi
+            if [[ "${{ needs.release.outputs.docs_released }}" == "true" ]]; then
+              echo "- Documentation: Versioned documentation deployed"
+            fi
+          elif [[ "${{ needs.release.outputs.release_performed }}" == "false" ]]; then
+            echo "ℹ️ No release was performed (intent evaluation determined no release needed)"
+          else
+            echo "❌ Release process failed. Check the workflow logs above."
+            exit 1
+          fi

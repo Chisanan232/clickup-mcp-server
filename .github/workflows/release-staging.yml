@@ -1,4 +1,5 @@
 name: Staging Release
+# This workflow calls the centralized staging release process from the template project
 
 on:
   workflow_dispatch:
@@ -23,162 +24,54 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Parse project configuration from intent.yaml
-  config:
-    name: Parse Configuration
-    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_parse_project_config.yaml@master
-
-  compute-version:
-    name: Compute Staging Version
-    runs-on: ubuntu-latest
-    needs: config
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-      rc_version: ${{ steps.version.outputs.rc_version }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          # Only use ref for push events to master to get latest commit after version bump
-          # In PR events, github.ref_name gives merge refs like "109/merge" which breaks checkout
-          ref: ${{ github.event_name == 'push' && github.ref_name == 'master' && github.ref_name || '' }}
-
-      - name: Setup Python with UV
-        uses: Chisanan232/Template-Python-UV-Project/.github/actions/setup-python-uv@master
-        with:
-          install-dependencies: 'true'
-          dependency-groups: 'release-ci'
-
-      - name: Compute staging version
-        id: version
-        run: |
-          case "${{ inputs.level }}" in
-            "patch")
-              BUMP_FLAG="--bump patch"
-              ;;
-            "minor")
-              BUMP_FLAG="--bump minor"
-              ;;
-            "major")
-              BUMP_FLAG="--bump major"
-              ;;
-            *)
-              BUMP_FLAG="--bump patch"
-              ;;
-          esac
-          
-          echo "Computing staging version with: uv version --dry-run $BUMP_FLAG"
-          BASE_VERSION=$(uv version --short --dry-run $BUMP_FLAG)
-          RC_VERSION="${BASE_VERSION}-rc.0"
-          
-          echo "version=$BASE_VERSION" >> $GITHUB_OUTPUT
-          echo "rc_version=$RC_VERSION" >> $GITHUB_OUTPUT
-          
-          echo "Base version: $BASE_VERSION"
-          echo "RC version: $RC_VERSION"
-
-  build_git-tag_and_create_github-release:
-    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_build_git-tag_and_create_github-release_v2.yaml@master
-    needs: [config, compute-version]
+  # Call the centralized complete staging release workflow
+  staging:
+    name: Complete Staging Release Process
+    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_release_staging_complete.yaml@master
     with:
-      version: ${{ needs.compute-version.outputs.rc_version }}
-      checkout-sha: ${{ github.sha }}
-      debug_mode: true
+      level: ${{ inputs.level }}
     secrets:
-      github_auth_token: ${{ secrets.GITHUB_TOKEN }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  pypi-test:
-    uses: ./.github/workflows/rw_python_package.yaml
-    needs: [config, compute-version, build_git-tag_and_create_github-release]
-    with:
-      operation: 'publish-testpypi'
-      version: ${{ needs.compute-version.outputs.version }}
-      checkout-sha: ${{ github.sha }}
-      artifact-name: 'staging-python-package'
-
-  dockerhub-rc:
-    name: Staging Release to DockerHub
-    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docker_operations.yaml@master
-    needs: [config, compute-version, build_git-tag_and_create_github-release]
-    secrets:
-      dockerhub-user: ${{ secrets.DOCKERHUB_USERNAME }}
-      registry-token: ${{ secrets.DOCKERHUB_TOKEN }}
-    with:
-      operation: 'push'
-      registry: ${{ needs.config.outputs.docker_registry_dockerhub }}
-      version: ${{ needs.compute-version.outputs.rc_version }}
-      checkout-sha: ${{ github.sha }}
-      enable-sbom: true
-      enable-signing: true
-      health-check-port: ${{ needs.config.outputs.docker_health_check_port }}
-      health-check-path: ${{ needs.config.outputs.docker_health_check_path }}
-      docker-run-options: ${{ needs.config.outputs.docker_run_options }}
-
-  ghcr-rc:
-    name: Staging Release to GHCR
-    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docker_operations.yaml@master
-    needs: [config, compute-version, build_git-tag_and_create_github-release]
-    with:
-      operation: 'push'
-      registry: ${{ needs.config.outputs.docker_registry_ghcr }}
-      version: ${{ needs.compute-version.outputs.rc_version }}
-      checkout-sha: ${{ github.sha }}
-      enable-sbom: true
-      enable-signing: true
-      health-check-port: ${{ needs.config.outputs.docker_health_check_port }}
-      health-check-path: ${{ needs.config.outputs.docker_health_check_path }}
-      docker-run-options: ${{ needs.config.outputs.docker_run_options }}
-
-  docs-preview:
-    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_docs_operations.yaml@master
-    needs: [config, compute-version]
-    with:
-      operation: 'deploy-preview'
-      version: ${{ needs.compute-version.outputs.rc_version }}
-      checkout-sha: ${{ github.sha }}
-      preview-branch: ${{ needs.config.outputs.docs_preview_branch }}
-      upload-artifacts: true
-
+  # Summary job to report results
   staging-summary:
     name: Staging Release Summary
     runs-on: ubuntu-latest
-    needs: [config, compute-version, pypi-test, ghcr-rc, docs-preview]
+    needs: staging
     if: always()
     steps:
-      - name: Generate staging release summary
+      - name: Report staging results
         run: |
           echo "=== Staging Release Summary ==="
           echo ""
-          echo "Version Computation: ${{ needs.compute-version.result }}"
-          echo "TestPyPI Upload: ${{ needs.pypi-test.result }}"
-          echo "GHCR RC Image: ${{ needs.ghcr-rc.result }}"
-          echo "Docs Preview: ${{ needs.docs-preview.result }}"
-          echo ""
-          echo "📦 Staging Artifacts:"
-          echo "- Base Version: ${{ needs.compute-version.outputs.version }}"
-          echo "- RC Version: ${{ needs.compute-version.outputs.rc_version }}"
-          echo "- TestPyPI: https://test.pypi.org/project/${{ needs.config.outputs.project_name }}/${{ needs.compute-version.outputs.version }}/"
-          echo "- GHCR RC Image: ghcr.io/${{ github.repository }}:${{ needs.compute-version.outputs.rc_version }}"
-          echo "- Docs Preview: docs-preview branch"
+          echo "Staging Status: ${{ needs.staging.result }}"
+          echo "Base Version: ${{ needs.staging.outputs.version }}"
+          echo "RC Version: ${{ needs.staging.outputs.rc_version }}"
+          echo "Staging Completed: ${{ needs.staging.outputs.staging_completed }}"
           echo ""
           
-          if [[ "${{ needs.compute-version.result }}" == "success" && \
-                "${{ needs.pypi-test.result }}" == "success" && \
-                "${{ needs.ghcr-rc.result }}" == "success" && \
-                "${{ needs.docs-preview.result }}" == "success" ]]; then
-            echo "✅ Staging release completed successfully!"
+          if [[ "${{ needs.staging.result }}" == "success" && "${{ needs.staging.outputs.staging_completed }}" == "true" ]]; then
+            echo "🎉 Staging release completed successfully!"
+            echo ""
+            echo "📦 Staging Artifacts:"
+            echo "- Base Version: ${{ needs.staging.outputs.version }}"
+            echo "- RC Version: ${{ needs.staging.outputs.rc_version }}"
+            echo "- TestPyPI: https://test.pypi.org/project/${{ github.repository_owner }}/${{ needs.staging.outputs.version }}/"
+            echo "- GHCR RC Image: ghcr.io/${{ github.repository }}:${{ needs.staging.outputs.rc_version }}"
+            echo "- DockerHub RC Image: docker.io/${{ github.repository }}:${{ needs.staging.outputs.rc_version }}"
+            echo "- Docs Preview: docs-preview branch"
             echo ""
             echo "🧪 Testing Instructions:"
             echo "1. Install from TestPyPI:"
-            echo "   pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ ${{ needs.config.outputs.project_name }}==${{ needs.compute-version.outputs.version }}"
+            echo "   pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ ${{ github.repository_owner }}==${{ needs.staging.outputs.version }}"
             echo ""
             echo "2. Test RC Docker image:"
-            echo "   docker run -p ${{ needs.config.outputs.docker_health_check_port }}:${{ needs.config.outputs.docker_health_check_port }} -e ${{ needs.config.outputs.docker_app_env_var_name }}=${{ needs.config.outputs.docker_app_env_var_value }} ghcr.io/${{ github.repository }}:${{ needs.compute-version.outputs.rc_version }}"
+            echo "   docker run -p 8000:8000 ghcr.io/${{ github.repository }}:${{ needs.staging.outputs.rc_version }}"
             echo ""
             echo "3. Review documentation preview in docs-preview branch"
             echo ""
           else
-            echo "❌ Some staging deployment steps failed. Check the logs above."
+            echo "❌ Staging process failed. Check the workflow logs above."
             exit 1
           fi
