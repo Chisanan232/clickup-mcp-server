@@ -30,7 +30,7 @@ repos:
           - --in-place
 
   - repo: https://github.com/psf/black
-    rev: 25.1.0
+    rev: 25.9.0
     hooks:
       - id: black
         args: # arguments to configure black
@@ -48,7 +48,7 @@ repos:
             dist"""
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.18.1
+    rev: v1.18.2
     hooks:
       - id: mypy
         package: clickup_mcp,test
@@ -60,6 +60,6 @@ repos:
 
   - repo: https://github.com/astral-sh/uv-pre-commit
     # uv version.
-    rev: 0.8.17
+    rev: 0.8.19
     hooks:
       - id: uv-lock
