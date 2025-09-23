@@ -1,0 +1,23 @@
+{
+  "dev": [
+    "development",
+    "requirements",
+    "workflow",
+    "coding-style",
+    "architecture",
+    {
+      "type": "category",
+      "label": "CI/CD Workflows",
+      "collapsed": false,
+      "items": [
+        "ci-cd/index",
+        "ci-cd/continuous-integration",
+        "ci-cd/release-system",
+        "ci-cd/documentation-deployment",
+        "ci-cd/reusable-workflows",
+        "ci-cd/additional-ci-workflows",
+        "ci-cd/developer-guide"
+      ]
+    }
+  ]
+}

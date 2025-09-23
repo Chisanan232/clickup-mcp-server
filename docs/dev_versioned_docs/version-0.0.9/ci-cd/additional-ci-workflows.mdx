@@ -1,0 +1,128 @@
+---
+title: Additional CI Workflows
+sidebar_position: 6
+---
+
+# Additional CI Workflows
+
+This document covers the specialized CI workflows that support specific aspects of the ClickUp MCP Server project beyond the main continuous integration and release processes.
+
+## Overview
+
+The project includes several specialized CI workflows that handle specific operational tasks:
+
+- **🔍 API Specification Checking** - Automated monitoring of ClickUp API changes
+- **🐳 Docker CI** - Container image building and testing
+- **📋 DockerHub README CI** - Repository description synchronization
+- **🤖 Documentation Auto-Approve & Auto-Merge** - Streamlined docs updates
+
+---
+
+## API Specification Checking
+
+[![Check ClickUp API Specification Changes](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/check-clickup-api-spec.yaml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/check-clickup-api-spec.yaml)
+
+The `check-clickup-api-spec.yaml` workflow verifies the ClickUp API specification against the implementation.
+
+**Triggers:**
+- **Daily schedule**: Runs at 00:00 UTC to check for API changes
+- **Manual dispatch**: Can be triggered manually for testing
+
+**Purpose**: Ensures our MCP server implementation stays in sync with ClickUp's API changes.
+
+**Key Features:**
+- Automated daily monitoring of ClickUp API specification changes
+- Proactive detection of breaking changes or new features
+- Integration with project maintenance workflow
+
+---
+
+## Docker CI
+
+[![docker-ci](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/docker-ci.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/docker-ci.yml)
+
+The `docker-ci.yml` workflow tests Docker image building and functionality.
+
+**Triggers:**
+- **Push to master**: When Docker-related files change
+  - GitHub Actions workflow files
+  - Python source code (`clickup_mcp/**/*.py`)
+  - Dockerfile and Docker scripts
+
+**Purpose**: Validates Docker image builds and containerized application functionality.
+
+**Key Features:**
+- Validates Docker image build process
+- Tests containerized application functionality
+- Ensures Docker configuration correctness
+- Separate from the main release Docker builds
+
+---
+
+## DockerHub README CI
+
+[![dockerhub-readme-ci](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/dockerhub-readme-ci.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/dockerhub-readme-ci.yml)
+
+The `dockerhub-readme-ci.yml` workflow updates the Docker Hub repository description.
+
+**Triggers:**
+- **Push to master**: When `README_DOCKERHUB.md` is modified
+- **Workflow file changes**: When the DockerHub README workflow itself is updated
+
+**Purpose**: Keeps Docker Hub repository description synchronized with the documentation.
+
+**Key Features:**
+- Automatic synchronization of Docker Hub repository description
+- Triggered by changes to Docker-specific documentation
+- Maintains consistency between repository and registry documentation
+
+---
+
+## Documentation Auto-Approve & Auto-Merge
+
+[![Docs-only auto-approve & automerge](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/docs-automerge.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/docs-automerge.yml)
+
+The `docs-automerge.yml` workflow automatically approves and merges pull requests that only contain documentation changes. This streamlines the process for documentation updates.
+
+**Triggers:**
+- **Pull requests to master**: For PRs containing only documentation changes
+- **PR events**: `opened`, `reopened`, `synchronize`, `ready_for_review`
+
+**Purpose**: Accelerates documentation updates by automating approval and merge for docs-only changes.
+
+**Key Features:**
+- Intelligent detection of documentation-only changes
+- Automated approval and merge for qualifying PRs
+- Safety checks to ensure only documentation files are modified
+- Streamlined workflow for maintaining up-to-date documentation
+
+**Safety Mechanisms:**
+- Validates that PR contains only documentation file changes
+- Requires all status checks to pass before auto-merge
+- Maintains audit trail of automated actions
+
+---
+
+## Workflow Integration
+
+These additional CI workflows integrate with the main CI/CD system:
+
+### **Integration Points:**
+- **API Spec Checking** → Feeds into development planning and feature updates
+- **Docker CI** → Validates containers before release workflows 
+- **DockerHub README** → Ensures registry documentation stays current
+- **Docs Auto-merge** → Accelerates documentation maintenance
+
+### **Monitoring and Maintenance:**
+- All workflows include status badges for easy monitoring
+- Failed workflows trigger notifications for immediate attention
+- Regular review ensures workflows stay aligned with project needs
+
+---
+
+## Navigation
+
+- **🏠 [CI/CD Overview](./index)** - Return to main CI/CD hub
+- **📋 [Continuous Integration](./continuous-integration)** - Main CI workflows and testing
+- **🔄 [Release System](./release-system)** - Production releases and deployment
+- **🛠️ [Developer Guide](./developer-guide)** - Configuration and troubleshooting
