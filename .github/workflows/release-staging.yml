@@ -30,6 +30,7 @@ jobs:
     uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_release_staging_complete.yaml@master
     with:
       level: ${{ inputs.level }}
+      python-package-workflow: './.github/workflows/rw_python_package.yaml'
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}

@@ -73,6 +73,7 @@ jobs:
       python: ${{ inputs.python }}
       docker: ${{ inputs.docker }}
       docs: ${{ inputs.docs }}
+      python-package-workflow: './.github/workflows/rw_python_package.yaml'
 
   # Summary job to report results
   validation-summary:
