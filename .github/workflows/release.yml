@@ -68,7 +68,6 @@ jobs:
       docker: ${{ inputs.docker }}
       docs: ${{ inputs.docs }}
       notes: ${{ inputs.notes }}
-      python-package-workflow: './.github/workflows/rw_python_package.yaml'
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
