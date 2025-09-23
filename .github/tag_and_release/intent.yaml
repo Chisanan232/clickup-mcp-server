@@ -1,9 +1,12 @@
-# Example release intent configuration
-# This file controls whether and how to release the project
+# Enhanced Release Configuration
+# This file controls release behavior and all project-specific settings
 # If this file doesn't exist, defaults will be used
 
+# === RELEASE CONTROL ===
 release: true
 level: patch  # auto | patch | minor | major
+
+# === RELEASE ARTIFACTS ===
 artifacts:
   python: auto  # auto | force | skip
   docker: auto  # auto | force | skip
@@ -22,25 +25,90 @@ artifacts:
 
 notes: "Automatic release based on semantic versioning and enhanced release with multi-section docs versioning"
 
-# Configuration Examples:
+# === PROJECT CONFIGURATION ===
+project:
+  name: ~                           # Defaults to repository name if not set
+  package_name: ~                   # Defaults to repository name if not set
+  base_branch: master               # Main/default branch for the project
+
+# === GIT CONFIGURATION ===
+git:
+  commit:
+    name: "GitHub Actions Bot"      # Git commit author name
+    email: "actions@github.com"     # Git commit author email
+
+# === DOCKER CONFIGURATION ===
+docker:
+  registries:
+    dockerhub: docker.io           # DockerHub registry URL
+    ghcr: ghcr.io                  # GitHub Container Registry URL
+  
+  health_check:
+    port: 8000                     # Port for container health checks
+    path: "/health"                # Health check endpoint path
+  
+  # Flexible Docker run options - supports multiple env vars, volumes, networks, etc.
+  run_options: "-e CLICKUP_API_TOKEN=test_token -e DEBUG=true"  # Custom Docker run options for testing
+
+# === VALIDATION CONFIGURATION ===
+validation:
+  version: "1.0.0-validation"      # Version tag for validation runs
+  test_version: "validation-test"  # Version tag for validation testing
+
+# === DOCUMENTATION CONFIGURATION ===
+docs:
+  paths:
+    ci_cd: "docs/CI_CD.md"         # CI/CD documentation path
+    installation: "docs/INSTALLATION.md"  # Installation guide path
+    readme: "README.md"            # Main README file path
+  
+  preview:
+    branch: "docs-preview"         # Branch for documentation previews
+
+# === CONFIGURATION EXAMPLES ===
 #
-# 1. Legacy format (backward compatible):
-#    docs: auto
+# 1. Minimal configuration (uses defaults):
+#    release: true
+#    level: auto
 #
-# 2. Version all sections always:
-#    docs:
-#      mode: force
-#      sections: ["docs", "dev", "api"]
-#      strategy: always
+# 2. Custom project settings:
+#    project:
+#      name: "My Custom Project"
+#      package_name: "my_custom_package"
+#      base_branch: "main"
 #
-# 3. Only version changed sections (recommended):
-#    docs:
-#      mode: auto
-#      sections: ["docs", "dev"]  
-#      strategy: changed
+# 3. Custom Docker configuration:
+#    docker:
+#      health_check:
+#        port: 3000
+#        path: "/api/health"
+#      # Flexible Docker run options - supports any Docker run parameters
+#      run_options: "-e CUSTOM_TOKEN=custom_test_value -e NODE_ENV=production"
 #
-# 4. Skip docs versioning entirely:
-#    docs: skip
-#    # or
-#    docs:
-#      mode: skip
+# 4. Advanced Docker configuration examples:
+#    docker:
+#      run_options: "-e API_KEY=test123 -e DB_HOST=localhost -v /tmp:/app/tmp --network mynet"
+#      # Multiple environment variables, volume mounts, custom networks, etc.
+#
+# 4. Documentation versioning examples:
+#    # Legacy format (backward compatible):
+#    artifacts:
+#      docs: auto
+#    
+#    # Enhanced format - version all sections:
+#    artifacts:
+#      docs:
+#        mode: force
+#        sections: ["docs", "dev", "api"]
+#        strategy: always
+#    
+#    # Only version changed sections (recommended):
+#    artifacts:
+#      docs:
+#        mode: auto
+#        sections: ["docs", "dev"]
+#        strategy: changed
+#    
+#    # Skip docs versioning entirely:
+#    artifacts:
+#      docs: skip
