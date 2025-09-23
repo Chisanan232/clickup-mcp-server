@@ -1090,7 +1090,7 @@ PREVIEW_BRANCH: ${{ needs.config.outputs.docs_preview_branch }}
 #### 3. Python Package Configuration
 
 **`artifacts.python`** (string, default: `"auto"`)
-Controls Python package publishing to PyPI:
+Controls Python package publishing to PyPI with **dual authentication support**:
 
 - `"auto"`: Publish if package files changed
 - `"force"`: Always publish regardless of changes
@@ -1107,6 +1107,209 @@ artifacts:
   # Skip publishing
   python: skip
 ```
+
+##### PyPI Authentication Methods
+
+![OIDC Auth](https://img.shields.io/badge/Auth-OIDC%20Trusted%20Publisher-brightgreen?style=for-the-badge)
+![Token Auth](https://img.shields.io/badge/Auth-API%20Token-blue?style=for-the-badge)
+
+The template now supports **dual authentication methods** for PyPI package uploads, providing both modern security and backward compatibility:
+
+**Authentication Configuration:**
+```yaml
+# Enhanced project configuration (New)
+python:
+  auth_method: "oidc"  # or "token"
+```
+
+###### OIDC Authentication (Recommended) 🔒
+
+**Benefits:**
+- ✅ **Keyless Authentication**: No API tokens to manage or rotate
+- ✅ **Enhanced Security**: Uses GitHub's OIDC identity tokens
+- ✅ **Zero Secrets**: No repository secrets needed
+- ✅ **PyPI Recommended**: Official PyPI recommendation for CI/CD
+
+**Setup Requirements:**
+1. **Configure Trusted Publisher on PyPI**:
+   - Go to PyPI → Account Settings → Publishing
+   - Add GitHub as trusted publisher
+   - Repository: `your-org/your-repo`
+   - Workflow: `release.yml` (or your release workflow name)
+   - Environment: `production` (optional)
+
+2. **Set Authentication Method**:
+```yaml
+# In .github/tag_and_release/intent.yaml
+python:
+  auth_method: "oidc"  # Default, recommended
+```
+
+3. **No Additional Setup**: OIDC works automatically! ✨
+
+**How OIDC Works:**
+```mermaid
+graph LR
+    A[GitHub Actions] --> B[Request OIDC Token]
+    B --> C[GitHub Issues Token]
+    C --> D[PyPI Validates Token]
+    D --> E[Package Published]
+    
+    style A fill:#4CAF50
+    style E fill:#4CAF50
+```
+
+###### Token Authentication (Legacy) 🔑
+
+**Benefits:**
+- ✅ **Backward Compatible**: Works with existing PyPI token setups
+- ✅ **Universal Support**: Works with all PyPI-compatible repositories
+- ✅ **Simple Migration**: Easy transition from existing token-based workflows
+
+**Setup Requirements:**
+1. **Generate API Tokens**:
+   - **Production**: [PyPI Account Settings](https://pypi.org/manage/account/token/) → Create new token
+   - **Staging**: [TestPyPI Account Settings](https://test.pypi.org/manage/account/token/) → Create new token
+
+2. **Add Repository Secrets**:
+   - `PYPI_API_TOKEN`: Your production PyPI API token
+   - `TEST_PYPI_API_TOKEN`: Your TestPyPI API token
+
+3. **Configure Authentication Method**:
+```yaml
+# In .github/tag_and_release/intent.yaml
+python:
+  auth_method: "token"
+```
+
+**Security Considerations:**
+- 🔄 **Token Rotation**: Regularly rotate API tokens
+- 🔒 **Secret Management**: Store tokens securely in GitHub repository secrets
+- 🎯 **Scope Limitation**: Use project-scoped tokens when possible
+
+##### Authentication Configuration Examples
+
+**Example 1: OIDC Authentication (Recommended)**
+```yaml
+# Modern, secure, keyless authentication
+python:
+  auth_method: "oidc"
+
+artifacts:
+  python: "auto"
+
+# No secrets needed - uses GitHub OIDC identity
+```
+
+**Example 2: Token Authentication (Legacy)**
+```yaml
+# Traditional API token authentication
+python:
+  auth_method: "token"
+
+artifacts:
+  python: "auto"
+
+# Requires repository secrets:
+# - PYPI_API_TOKEN
+# - TEST_PYPI_API_TOKEN
+```
+
+**Example 3: Mixed Environment Strategy**
+```yaml
+# Development projects can use OIDC for simplicity
+# Production projects might prefer token control
+python:
+  auth_method: "oidc"  # Easy setup for development
+
+artifacts:
+  python: "auto"
+```
+
+##### Authentication Method Comparison
+
+| Feature                    | OIDC Authentication                          | Token Authentication                   |
+|----------------------------|----------------------------------------------|----------------------------------------|
+| **Security**               | 🟢 Keyless, identity-based                   | 🟡 Token-based, requires rotation      |
+| **Setup Complexity**       | 🟢 Simple (just configure trusted publisher) | 🟡 Moderate (generate + store tokens)  |
+| **Maintenance**            | 🟢 Zero maintenance                          | 🟡 Regular token rotation needed       |
+| **PyPI Support**           | 🟢 Official recommendation                   | 🟢 Universal support                   |
+| **Secrets Required**       | 🟢 None                                      | 🔴 2 secrets (PYPI + TEST_PYPI tokens) |
+| **Backward Compatibility** | 🟡 Modern PyPI feature                       | 🟢 Works everywhere                    |
+| **Troubleshooting**        | 🟢 Clear OIDC validation errors              | 🟡 Token validation complexity         |
+
+##### Authentication Workflow Architecture
+
+The dual authentication system seamlessly integrates with the existing release architecture:
+
+```mermaid
+graph TD
+    A[Release Workflow] --> B[Parse Project Config]
+    B --> C[Read python.auth_method]
+    
+    C --> D{Authentication Method}
+    D -->|oidc| E[OIDC Authentication]
+    D -->|token| F[Token Authentication]
+    
+    E --> G[GitHub OIDC Token]
+    F --> H[Repository Secrets]
+    
+    G --> I[PyPI Trusted Publisher]
+    H --> J[PyPI API Validation]
+    
+    I --> K[Package Published]
+    J --> K
+    
+    style E fill:#4CAF50
+    style F fill:#2196F3
+    style K fill:#FF9800
+```
+
+**Implementation Details:**
+- **Centralized Configuration**: Authentication method specified once in `intent.yaml`
+- **Secret Forwarding**: Proper secret passing from calling workflows to reusable workflows
+- **Conditional Logic**: Workflows automatically select authentication method
+- **Error Handling**: Clear validation and error messages for missing tokens
+- **Operation Summary**: Workflow reports which authentication method was used
+
+##### Migration Guide
+
+**From Token to OIDC (Recommended)**:
+1. Set up PyPI Trusted Publisher for your repository
+2. Update `intent.yaml`:
+   ```yaml
+   python:
+     auth_method: "oidc"  # Change from "token"
+   ```
+3. Test with staging release workflow
+4. Optionally remove PyPI token secrets (but keep for rollback)
+
+**From OIDC to Token** (if needed):
+1. Generate PyPI API tokens
+2. Add `PYPI_API_TOKEN` and `TEST_PYPI_API_TOKEN` to repository secrets
+3. Update `intent.yaml`:
+   ```yaml
+   python:
+     auth_method: "token"  # Change from "oidc"
+   ```
+4. Test with staging release workflow
+
+##### Troubleshooting Authentication
+
+**OIDC Authentication Issues:**
+- **Error**: `OIDC token validation failed`
+- **Solution**: Verify PyPI Trusted Publisher configuration matches your repository and workflow
+- **Check**: Repository name, workflow filename, and optional environment name
+
+**Token Authentication Issues:**
+- **Error**: `PyPI API token not found in secrets`
+- **Solution**: Verify `PYPI_API_TOKEN` and `TEST_PYPI_API_TOKEN` are added to repository secrets
+- **Check**: Token scope and expiration date
+
+**General Authentication Debugging:**
+- **Workflow Logs**: Check the Python package workflow step for detailed authentication logs
+- **Operation Summary**: Each workflow reports which authentication method was used
+- **Validation Workflow**: Test authentication setup with `release-validate.yml`
 
 #### 4. Docker Image Configuration
 
