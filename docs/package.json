@@ -33,7 +33,7 @@
     "@docusaurus/types": "3.9.1",
     "remark-mdx-code-meta": "^2.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.3"
   },
   "browserslist": {
     "production": [
