@@ -59,3 +59,11 @@ jobs:
             -d "{\"description\":\"${SHORT_NEW}\", \"full_description\": ${NEW} }" \
             "https://hub.docker.com/v2/repositories/${REPO}/")
           echo "PATCH full_description -> $CODE"
+          
+          # Check if the response code is 200 (success)
+          if [ "$CODE" != "200" ]; then
+            echo "❌ Failed to update Docker Hub README. HTTP status code: $CODE"
+            exit 1
+          fi
+          
+          echo "✅ Successfully updated Docker Hub README"
