@@ -11,14 +11,14 @@ on:
       - "README_DOCKERHUB.md"
 
   # For debug and test only
-#  pull_request:
-#    branches:
-#      - "master"
-#    paths:
-##     For GitHub Action
-#      - ".github/workflows/dockerhub-readme-ci.yml"
-##     For the README file for the Docker Hub
-#      - "README_DOCKERHUB.md"
+  pull_request:
+    branches:
+      - "master"
+    paths:
+#     For GitHub Action
+      - ".github/workflows/dockerhub-readme-ci.yml"
+#     For the README file for the Docker Hub
+      - "README_DOCKERHUB.md"
 
 jobs:
   update-readme:
