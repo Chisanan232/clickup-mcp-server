@@ -6,7 +6,7 @@ on:
       - "master"
     paths:
 #     For GitHub Action
-      - ".github/workflows/docker-update-readme.yml"
+      - ".github/workflows/dockerhub-readme-ci.yml"
 #     For the README file for the Docker Hub
       - "README_DOCKERHUB.md"
 
@@ -16,45 +16,46 @@ on:
 #      - "master"
 #    paths:
 ##     For GitHub Action
-#      - ".github/workflows/docker-update-readme.yml"
+#      - ".github/workflows/dockerhub-readme-ci.yml"
 ##     For the README file for the Docker Hub
 #      - "README_DOCKERHUB.md"
-
-env:
-  TEST_TAG: user/clickup-mcp-server:test
-  DOCKER_HUB_SHORT_DESCRIPTION: 🦾 A strong MCP server for ClickUp.
 
 jobs:
   update-readme:
     runs-on: ubuntu-latest
     steps:
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      # Change token
+      - name: Get Docker Hub JWT
+        env:
+          U: chisanan232
+          P: ${{ secrets.DOCKERHUB_README_UPDATE_TOKEN }}
+        run: |
+          set -euo pipefail
+          JWT=$(curl -s -H 'Content-Type: application/json' \
+            -d "{\"username\":\"${U}\",\"password\":\"${P}\"}" \
+            https://hub.docker.com/v2/users/login/ | jq -r .token)
+          test -n "$JWT" -a "$JWT" != null || (echo "JWT empty"; exit 1)
+          echo "JWT=$JWT" >> $GITHUB_ENV
+          echo "✅ Got JWT for user: $U"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          buildkitd-flags: --debug
+      - name: Update the Docker Hub short description and overview
+        env:
+          REPO: ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPOSITORY }}
+          JWT:  ${{ env.JWT }}
+        run: |
+          set -euo pipefail
+          ORIG=$(curl -s -H "Authorization: JWT $JWT" \
+            "https://hub.docker.com/v2/repositories/${REPO}/" | jq -r .full_description)
+          README_FILE="README_DOCKERHUB.md"
+          # Read README and encode as a JSON string (preserves newlines/special chars)
+          NEW=$(jq -Rs . < "$README_FILE")
+          SHORT_NEW="${{ vars.DOCKER_HUB_SHORT_DESCRIPTION }}"
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          push: true
-          tags: ${{ env.TEST_TAG }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Update repo description in Docker Hub
-        uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5.0.0
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${{ env.GITHUB_REPOSITORY }}
-          short-description: ${{ env.DOCKER_HUB_SHORT_DESCRIPTION }}
-          readme-filepath: ./README_DOCKERHUB.md
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' -X PATCH \
+            -H "Authorization: JWT $JWT" -H "Content-Type: application/json" \
+            -d "{\"description\":\"${SHORT_NEW}\", \"full_description\": ${NEW} }" \
+            "https://hub.docker.com/v2/repositories/${REPO}/")
+          echo "PATCH full_description -> $CODE"
