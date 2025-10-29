@@ -27,7 +27,7 @@ jobs:
   # Call the centralized complete staging release workflow
   staging:
     name: Complete Staging Release Process
-    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_release_staging_complete.yaml@master
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_release_staging_complete.yaml@master
     with:
       level: ${{ inputs.level }}
     secrets:
