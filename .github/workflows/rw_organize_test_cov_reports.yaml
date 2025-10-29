@@ -67,7 +67,7 @@ jobs:
           bash ./scripts/ci/combine_coverage_reports.sh ${{ inputs.test_type }} .coverage.
 
       - name: Upload testing coverage report (.coverage)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.test_type }}_coverage_data_file
           path: ${{ inputs.test_working_directory }}.coverage
@@ -75,7 +75,7 @@ jobs:
           include-hidden-files: true
 
       - name: Upload testing coverage report (.xml)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.test_type }}_coverage_xml_report
           path: ${{ inputs.test_working_directory }}coverage**xml
