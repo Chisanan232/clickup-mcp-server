@@ -9,6 +9,8 @@ tags: [clickup, mcp, python]
 
 On June 16, 2025, I began development on the ClickUp MCP Server project. This project was born out of a specific need I encountered while working with ClickUp and the Model Context Protocol (MCP).
 
+<!-- truncate -->
+
 ## The Need for a Stronger MCP Server
 
 The existing MCP server implementations for ClickUp were not robust enough for my requirements. They lacked some critical features and performance characteristics that I needed for my specific use cases.
