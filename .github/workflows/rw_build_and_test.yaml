@@ -16,7 +16,7 @@ on:
 jobs:
   run_unit-test:
 #    name: Run all unit test items
-    uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_uv_run_test.yaml@master
     with:
       test_type: unit-test
       test_folder: './test/unit_test'
@@ -24,7 +24,7 @@ jobs:
 
   run_integration-test:
 #    name: Run all integration test items
-    uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_uv_run_test.yaml@master
     with:
       test_type: integration-test
       test_folder: './test/integration_test'
@@ -33,7 +33,7 @@ jobs:
   run_e2e-test:
 #    name: Run all end-to-end test items
     if: ${{ inputs.run_e2e == true }}
-    uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_uv_run_test.yaml@master
     with:
       test_type: e2e-test
       test_folder: './test/e2e_test'
@@ -44,7 +44,7 @@ jobs:
 
   run_contract-test:
 #    name: Run all contract test items
-    uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_uv_run_test.yaml@master
     with:
       test_type: contract-test
       test_folder: './test/contract_test'
@@ -52,7 +52,7 @@ jobs:
 
   run_script-test:
 #    name: Run all contract test items
-    uses: ./.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_uv_run_test.yaml@master
     with:
       test_type: ci-script-test
       test_folder: './test/ci_script_test'
@@ -65,7 +65,7 @@ jobs:
         (github.event_name == 'push' && github.ref_name == 'master')
       }}
     needs: run_unit-test
-    uses: ./.github/workflows/rw_organize_test_cov_reports.yaml
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_organize_test_cov_reports.yaml@master
     with:
       test_type: unit-test
 
@@ -76,7 +76,7 @@ jobs:
         (github.event_name == 'push' && github.ref_name == 'master')
       }}
     needs: run_integration-test
-    uses: ./.github/workflows/rw_organize_test_cov_reports.yaml
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_organize_test_cov_reports.yaml@master
     with:
       test_type: integration-test
 
@@ -87,7 +87,7 @@ jobs:
         (github.event_name == 'push' && github.ref_name == 'master')
       }}
     needs: run_e2e-test
-    uses: ./.github/workflows/rw_organize_test_cov_reports.yaml
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_organize_test_cov_reports.yaml@master
     with:
       test_type: e2e-test
 
@@ -98,7 +98,7 @@ jobs:
         (github.event_name == 'push' && github.ref_name == 'master')
       }}
     needs: run_contract-test
-    uses: ./.github/workflows/rw_organize_test_cov_reports.yaml
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_organize_test_cov_reports.yaml@master
     with:
       test_type: contract-test
 
@@ -113,7 +113,7 @@ jobs:
       }}
 #    needs: [run_unit-test, run_integration-test, run_contract-test]
     needs: [run_unit-test, run_integration-test, run_contract-test]
-    uses: ./.github/workflows/rw_organize_test_cov_reports.yaml
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_organize_test_cov_reports.yaml@master
     with:
       test_type: all-test
 
@@ -128,6 +128,6 @@ jobs:
       }}
 #    needs: [run_unit-test, run_integration-test, run_contract-test, run_e2e-test]
     needs: [run_unit-test, run_integration-test, run_contract-test, run_e2e-test]
-    uses: ./.github/workflows/rw_organize_test_cov_reports.yaml
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_organize_test_cov_reports.yaml@master
     with:
       test_type: all-test
