@@ -183,7 +183,7 @@ dev = [
 pre-commit-ci = [
     { name = "mypy", specifier = ">=1.16.1,<2" },
     { name = "pre-commit", specifier = ">=4.2.0,<5" },
-    { name = "pylint", specifier = ">=3.3.7,<4" },
+    { name = "pylint", specifier = ">=3.3.7,<5" },
 ]
 
 [[package]]
