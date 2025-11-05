@@ -46,13 +46,19 @@ jobs:
   # Guard job: Check if documentation files changed and if release workflow succeeded
   check_docs_changes:
     runs-on: ubuntu-latest
-    # Only run for workflow_run events (not direct push events)
-    if: github.event_name == 'workflow_run'
     outputs:
-      should_deploy: ${{ steps.check_changes.outputs.should_deploy }}
+      should_deploy: ${{ steps.check_changes.outputs.should_deploy || steps.set_push_deploy.outputs.should_deploy }}
     steps:
+      - name: Set deployment flag for push events
+        id: set_push_deploy
+        if: github.event_name == 'push'
+        run: |
+          echo "Direct push event detected, proceeding with deployment"
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+
       - name: Download docs update flag from release workflow
-        uses: actions/download-artifact@v5
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v6
         with:
           name: release-docs-flag
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -60,6 +66,7 @@ jobs:
 
       - name: Check release workflow success and docs update flag
         id: check_changes
+        if: github.event_name == 'workflow_run'
         run: |
           set -euo pipefail
           
@@ -83,53 +90,43 @@ jobs:
             echo "should_deploy=false" >> $GITHUB_OUTPUT
           fi
 
-  deploy_documentation:
-    runs-on: ubuntu-latest
-    # Run for direct push OR workflow_run with docs changes
-    if: |
-      github.event_name == 'push' || 
-      (github.event_name == 'workflow_run' && needs.check_docs_changes.outputs.should_deploy == 'true')
+  build_documentation:
+    name: Build Documentation
+    if: needs.check_docs_changes.outputs.should_deploy == 'true'
     needs: [check_docs_changes]
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_docusaurus_operations.yaml@master
+    with:
+      operation: build
+      node-version: '22'
+      working-directory: docs
+      upload-artifacts: true
+
+  deploy_to_github_pages:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    if: needs.check_docs_changes.outputs.should_deploy == 'true'
+    needs: [check_docs_changes, build_documentation]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - name: Download build artifacts
+        uses: actions/download-artifact@v6
         with:
-          fetch-depth: 0
+          name: documentation-build
+          path: ./docs/build
 
-      # Setup pnpm first
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-          run_install: false
-
-      # Then setup Node.js with pnpm cache
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-          cache-dependency-path: docs/pnpm-lock.yaml
-
-      - name: Install dependencies
-        working-directory: docs
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Build website
-        working-directory: docs
-        run: pnpm build
-
-      # Setup Pages
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      # Upload artifact
-      - name: Upload artifact
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
           path: ./docs/build
 
-      # Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Deployment summary
+        run: |
+          echo "## 📚 Documentation Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Successfully deployed to GitHub Pages" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 **URL**: ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY

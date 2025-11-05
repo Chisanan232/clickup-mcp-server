@@ -10,10 +10,6 @@ on:
       - pyproject.toml
       - .github/workflows/release.yml
       - .github/workflows/release**.yml
-      - .github/workflows/rw**.yaml
-      - "!.github/workflows/rw_build_and_test.yaml"
-      - "!.github/workflows/rw_run_all_test_and_record.yaml"
-      - "!.github/workflows/rw_uv_run_test_with_multi_py_versions.yaml"
   workflow_dispatch:
     inputs:
       level:
@@ -67,7 +63,7 @@ jobs:
   # Call the centralized complete validation workflow
   validation:
     name: Complete Release Validation Process
-    uses: Chisanan232/Template-Python-UV-Project/.github/workflows/rw_release_validation_complete.yaml@master
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_release_validation_complete.yaml@master
     with:
       level: ${{ inputs.level }}
       python: ${{ inputs.python }}
