@@ -18,7 +18,6 @@ const config: Config = {
   trailingSlash: false,
 
   onBrokenLinks: 'warn',
-  onBrokenMarkdownLinks: 'warn',
   onDuplicateRoutes: 'warn',
 
   // Even if you don't use internationalization, you can use this field to set
@@ -32,6 +31,9 @@ const config: Config = {
   markdown: {
     mermaid: true,
     format: 'detect',
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
     mdx1Compat: {
       comments: true,
       admonitions: true,

@@ -43,7 +43,7 @@ jobs:
     uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_docusaurus_operations.yaml@master
     with:
       operation: test
-      node-version: '22'
+      node-version: '23'
       working-directory: docs
       upload-artifacts: true
 
