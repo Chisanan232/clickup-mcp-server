@@ -70,9 +70,7 @@ class TestSpaceFolderListCRUDE2E:
 
         # If creation is not permitted (e.g., 403 due to insufficient permissions), skip this test gracefully
         if created_space is None:
-            pytest.skip(
-                "Space creation not permitted with the provided token/team (likely insufficient permissions)."
-            )
+            pytest.skip("Space creation not permitted with the provided token/team (likely insufficient permissions).")
 
         assert created_space.name == "[TEST] Space CRUD Test"
         space_id = created_space.id

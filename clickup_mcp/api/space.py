@@ -7,7 +7,6 @@ It follows the Resource Manager pattern described in the project documentation.
 
 from typing import TYPE_CHECKING, Optional
 
-from clickup_mcp.models.domain.space import ClickUpSpace
 from clickup_mcp.models.dto.space import SpaceCreate, SpaceResp, SpaceUpdate
 
 if TYPE_CHECKING:
