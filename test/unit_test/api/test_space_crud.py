@@ -44,7 +44,9 @@ def sample_space_data() -> dict:
 
 # create
 @pytest.mark.asyncio
-async def test_create_space_success_200(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient, sample_space_data: dict):
+async def test_create_space_success_200(
+    space_api: SpaceAPI, mock_api_client: ClickUpAPIClient, sample_space_data: dict
+):
     mock_api_client.post.return_value = APIResponse(success=True, status_code=200, data=sample_space_data, headers={})
     dto = SpaceCreate(name="Test Space", multiple_assignees=True)
 
@@ -56,7 +58,9 @@ async def test_create_space_success_200(space_api: SpaceAPI, mock_api_client: Cl
 
 
 @pytest.mark.asyncio
-async def test_create_space_success_201(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient, sample_space_data: dict):
+async def test_create_space_success_201(
+    space_api: SpaceAPI, mock_api_client: ClickUpAPIClient, sample_space_data: dict
+):
     mock_api_client.post.return_value = APIResponse(success=True, status_code=201, data=sample_space_data, headers={})
     dto = SpaceCreate(name="Created", multiple_assignees=False)
 
