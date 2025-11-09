@@ -9,7 +9,7 @@ import pytest
 
 from clickup_mcp.api.space import SpaceAPI
 from clickup_mcp.client import APIResponse, ClickUpAPIClient
-from clickup_mcp.models.domain.space import ClickUpSpace
+from clickup_mcp.models.dto.space import SpaceResp
 
 
 class TestSpaceAPI(BaseAPIClientTestSuite):
@@ -56,8 +56,8 @@ class TestSpaceAPI(BaseAPIClientTestSuite):
 
         # Assert
         mock_api_client.get.assert_called_once_with(f"/space/{space_id}")
-        assert isinstance(result, ClickUpSpace)
-        assert result.space_id == space_id
+        assert isinstance(result, SpaceResp)
+        assert result.id == space_id
         assert result.name == "Test Space"
         assert result.private is False
         assert len(result.statuses) == 2
