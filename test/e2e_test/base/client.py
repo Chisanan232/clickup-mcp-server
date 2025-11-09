@@ -5,7 +5,6 @@ This module provides client classes for both SSE and HTTP streaming
 communication with the MCP server endpoints.
 """
 
-import asyncio
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -85,23 +84,14 @@ class SSEClient(EndpointClient):
         """
         Connect to the MCP server using SSE transport.
         """
-        # Manage the sse_client and session in a background task so that __aexit__
-        # runs in the same task and avoids anyio cancel scope issues.
-        self._sse_ready: asyncio.Event = asyncio.Event()
-        self._sse_stop: asyncio.Event = asyncio.Event()
+        # Create SSE client and extract read/write streams
+        self._cm = sse_client(self.url)
+        self.read_stream, self.write_stream = await self._cm.__aenter__()
 
-        async def _manager() -> None:
-            async with sse_client(self.url) as (read_stream, write_stream):
-                async with ClientSession(read_stream, write_stream) as session:
-                    self.read_stream = read_stream
-                    self.write_stream = write_stream
-                    self.session = session
-                    await self.session.initialize()
-                    self._sse_ready.set()
-                    await self._sse_stop.wait()
-
-        self._sse_task = asyncio.create_task(_manager())
-        await self._sse_ready.wait()
+        # Create session using the streams
+        self.session = ClientSession(self.read_stream, self.write_stream)
+        await self.session.__aenter__()
+        await self.session.initialize()
 
     async def call_function(self, payload: FunctionPayloadDto) -> Any:
         """
@@ -137,13 +127,11 @@ class SSEClient(EndpointClient):
         """
         Close the SSE connection and clean up resources.
         """
-        if hasattr(self, "_sse_stop"):
-            self._sse_stop.set()
-        if hasattr(self, "_sse_task") and self._sse_task:
-            try:
-                await self._sse_task
-            except Exception:
-                pass
+        if self.session:
+            await self.session.__aexit__(None, None, None)
+
+        if hasattr(self, "_cm"):
+            await self._cm.__aexit__(None, None, None)
 
         # Clean up references
         self.read_stream = None
@@ -163,28 +151,14 @@ class StreamingHTTPClient(EndpointClient):
         """
         Connect to the MCP server using HTTP streaming transport.
         """
-        # Manage the streamable_http context in a dedicated background task so that
-        # it can exit in the same task it was entered, avoiding anyio cancel scope errors.
-        self._streams_ready: asyncio.Event = asyncio.Event()
-        self._stop_event: asyncio.Event = asyncio.Event()
+        # Create HTTP streaming client and extract read/write streams
+        self._cm = streamablehttp_client(self.url)
+        self.read_stream, self.write_stream, self._close_fn = await self._cm.__aenter__()
 
-        async def _manager() -> None:
-            async with streamablehttp_client(self.url) as (read_stream, write_stream, _session_id):
-                # Create session inside the same task that manages the context
-                async with ClientSession(read_stream, write_stream) as session:
-                    self.read_stream = read_stream
-                    self.write_stream = write_stream
-                    self.session = session
-                    await self.session.initialize()
-                    self._streams_ready.set()
-                    # Wait until asked to stop (teardown)
-                    await self._stop_event.wait()
-
-        self._manager_task: asyncio.Task | None = asyncio.create_task(_manager())
-        # Wait until streams are ready before creating the session
-        await self._streams_ready.wait()
-
-        # Session is already created and initialized inside manager
+        # Create session using the streams
+        self.session = ClientSession(self.read_stream, self.write_stream)
+        await self.session.__aenter__()
+        await self.session.initialize()
 
     async def call_function(self, payload: FunctionPayloadDto) -> Any:
         """
@@ -220,20 +194,18 @@ class StreamingHTTPClient(EndpointClient):
         """
         Close the HTTP streaming connection and clean up resources.
         """
-        # Signal the background manager to exit the session and stream context
-        # in its own task (must exit in the same task it was created).
-        if hasattr(self, "_stop_event"):
-            self._stop_event.set()
-        if hasattr(self, "_manager_task") and self._manager_task:
-            try:
-                await self._manager_task
-            except Exception:
-                # Ensure teardown continues even if background task raises
-                pass
+        if self.session:
+            await self.session.__aexit__(None, None, None)
+
+        # Call the explicit close function if available
+        if self._close_fn:
+            await self._close_fn()
+
+        if hasattr(self, "_cm"):
+            await self._cm.__aexit__(None, None, None)
 
         # Clean up references
         self.read_stream = None
         self.write_stream = None
         self.session = None
         self._close_fn = None
-        self._manager_task = None
