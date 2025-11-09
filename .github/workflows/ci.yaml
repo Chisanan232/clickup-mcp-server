@@ -63,6 +63,8 @@ jobs:
   build-and-test_all:
 #    name: Run all tests and organize all test reports
     uses: ./.github/workflows/rw_run_all_test_and_record.yaml
+    with:
+      with-environment-variables: 'CLICKUP_TEST_TEAM_ID="${{ vars.CLICKUP_TEST_TEAM_ID }}"'
     secrets:
       codecov_token: ${{ secrets.CODECOV_TOKEN }}
       sonar_token: ${{ secrets.SONAR_TOKEN }}

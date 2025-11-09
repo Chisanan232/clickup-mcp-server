@@ -8,6 +8,11 @@ on:
         type: boolean
         required: false
         default: false
+      with-environment-variables:
+        description: "Set the specific environment for the environment variables."
+        type: string
+        required: false
+        default: ''
     secrets:
       e2e_test_api_token:
         description: "Set the Slack bot token for end-to-end test."
@@ -30,6 +35,22 @@ jobs:
       test_folder: './test/integration_test'
       install_dependency_with_group: 'dev'
 
+  run_one_e2e-test:
+#    name: Run all end-to-end test items under one case
+    if: ${{ inputs.run_e2e != true }}
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_uv_run_test.yaml@master
+    with:
+      test_type: e2e-test
+      test_folder: './test/e2e_test'
+      install_dependency_with_group: 'dev'
+      max-parallel: 1
+      python-versions: '["3.13"]'
+      operating-systems: '["ubuntu-latest"]'
+#      pre_test_script: 'curl -s https://slack.com/api/auth.test -H "Authorization: Bearer $CLICKUP_API_TOKEN"'
+      with-environment-variables: ${{ inputs.with-environment-variables }}
+    secrets:
+      e2e_test_api_token: ${{ secrets.e2e_test_api_token }}
+
   run_e2e-test:
 #    name: Run all end-to-end test items
     if: ${{ inputs.run_e2e == true }}
@@ -39,6 +60,7 @@ jobs:
       test_folder: './test/e2e_test'
       install_dependency_with_group: 'dev'
       max-parallel: 1
+      with-environment-variables: ${{ inputs.with-environment-variables }}
     secrets:
       e2e_test_api_token: ${{ secrets.e2e_test_api_token }}
 
@@ -79,6 +101,17 @@ jobs:
     uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_organize_test_cov_reports.yaml@master
     with:
       test_type: integration-test
+
+  one_e2e-test_codecov:
+#    name: For end-to-end test, organize and generate the testing report and upload it to Codecov
+    if: ${{
+        contains(fromJSON('["pull_request","workflow_dispatch","schedule"]'), github.event_name) ||
+        (github.event_name == 'push' && github.ref_name == 'master')
+      }}
+    needs: run_one_e2e-test
+    uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_organize_test_cov_reports.yaml@master
+    with:
+      test_type: e2e-test
 
   e2e-test_codecov:
 #    name: For end-to-end test, organize and generate the testing report and upload it to Codecov
