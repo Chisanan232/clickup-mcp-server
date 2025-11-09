@@ -8,6 +8,7 @@ It follows the Resource Manager pattern described in the project documentation.
 from typing import TYPE_CHECKING, List
 
 from clickup_mcp.models.domain.team import ClickUpTeam
+from clickup_mcp.models.dto.space import SpaceResp
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
@@ -51,3 +52,29 @@ class TeamAPI:
 
         # Create a list of ClickUpTeam instances
         return [ClickUpTeam(**team_data) for team_data in teams_data]
+
+    async def get_spaces(self, team_id: str) -> list[SpaceResp]:
+        """Get all spaces in a team/workspace.
+
+        GET /team/{team_id}/space
+        https://developer.clickup.com/reference/getspaces
+
+        Args:
+            team_id: The ID of the team/workspace
+
+        Returns:
+            List of SpaceResp DTOs representing spaces in the team.
+        """
+        response = await self._client.get(f"/team/{team_id}/space")
+
+        if not response.success or response.status_code != 200:
+            return []
+
+        if response.data is None or not isinstance(response.data, dict):
+            return []
+
+        spaces_data = response.data.get("spaces", [])
+        if not isinstance(spaces_data, list):
+            return []
+
+        return [SpaceResp(**space_data) for space_data in spaces_data]

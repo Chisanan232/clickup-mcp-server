@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 
 from clickup_mcp.client import ClickUpAPIClient
 from clickup_mcp.models.domain import ClickUpTeam
+from clickup_mcp.models.dto.space import SpaceResp
 
 
 class TestTeamAPIE2E:
@@ -100,3 +101,33 @@ class TestTeamAPIE2E:
                     assert member.user is not None
                     if member.user.user_id:
                         assert member.user.id == member.user.user_id  # Test backward compatibility
+
+    @pytest.mark.asyncio
+    async def test_get_spaces_for_team(self, api_client: ClickUpAPIClient) -> None:
+        """Test getting spaces for a specific team with a real API call."""
+        team_id = os.environ.get("CLICKUP_TEST_TEAM_ID")
+
+        if not team_id:
+            pytest.skip("CLICKUP_TEST_TEAM_ID environment variable is required for this test")
+
+        assert team_id
+        spaces = await api_client.team.get_spaces(team_id)
+
+        # Basic validation
+        assert spaces is not None
+        assert isinstance(spaces, list)
+
+        if not spaces:
+            pytest.skip("No spaces found for the given team ID")
+
+        # Validate space data structure is mapped to SpaceResp DTO
+        for space in spaces:
+            assert isinstance(space, SpaceResp)
+            assert isinstance(space.id, str) and space.id != ""
+            assert isinstance(space.name, str) and space.name != ""
+            assert isinstance(space.private, bool)
+            # Optional fields may or may not exist depending on workspace config
+            if space.statuses is not None:
+                assert isinstance(space.statuses, list)
+            if space.features is not None:
+                assert isinstance(space.features, dict)
