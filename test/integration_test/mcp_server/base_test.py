@@ -65,7 +65,7 @@ class BaseMCPServerTest(metaclass=ABCMeta):
     def temp_env_file(self) -> Generator[str, Any, None]:
         """Create a temporary .env file with test API token."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as temp_file:
-            temp_file.write("E2E_TEST_API_TOKEN=test_token_e2e_tests\n")
+            temp_file.write("CLICKUP_API_TOKEN=test_token_e2e_tests\n")
             temp_file_path = temp_file.name
 
         yield temp_file_path
