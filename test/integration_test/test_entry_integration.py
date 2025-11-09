@@ -99,7 +99,7 @@ class TestEntryIntegration:
         config: ServerConfig = ServerConfig(host="127.0.0.1", port=port, log_level=LogLevel.INFO, reload=False)
 
         # Mock uvicorn.run and set required environment variables
-        with patch("uvicorn.run") as mock_run, patch.dict(os.environ, {"E2E_TEST_API_TOKEN": "test_token_for_thread"}):
+        with patch("uvicorn.run") as mock_run, patch.dict(os.environ, {"CLICKUP_API_TOKEN": "test_token_for_thread"}):
 
             # Run server in a separate thread to avoid blocking the test
             thread: threading.Thread = threading.Thread(target=run_server, args=(config,))
