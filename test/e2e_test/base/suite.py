@@ -134,12 +134,12 @@ class MCPServerFixture:
         Yields:
             Path to the temporary .env file
 
-        Skips the test if the CLICKUP_API_TOKEN environment variable is not set.
+        Skips the test if the E2E_TEST_API_TOKEN environment variable is not set.
         """
         # Get API token from environment
-        api_token = os.environ.get("CLICKUP_API_TOKEN")
+        api_token = os.environ.get("E2E_TEST_API_TOKEN")
         if not api_token:
-            pytest.skip("CLICKUP_API_TOKEN environment variable is required for this test")
+            pytest.skip("E2E_TEST_API_TOKEN environment variable is required for this test")
 
         # Create a temporary file with the token
         with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as temp_file:

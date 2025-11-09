@@ -344,7 +344,7 @@ class TestWebServerLifespan:
         # Verify the error message mentions MCPServerFactory.create()
         assert "MCPServerFactory.create()" in str(excinfo.value)
 
-    def test_lifespan_parameter_in_create_app_function(self):
+    def test_lifespan_parameter_in_create_app_function(self, monkeypatch):
         """Test that the create_app function properly passes the lifespan parameter."""
         from clickup_mcp.models.cli import ServerConfig
         from clickup_mcp.web_server.app import create_app
@@ -369,6 +369,9 @@ class TestWebServerLifespan:
 
                 # Create minimal server config
                 server_config = ServerConfig(host="localhost", port=8000)
+
+                # Ensure API token is available via environment for unit test isolation
+                monkeypatch.setenv("CLICKUP_API_TOKEN", "unit_test_token")
 
                 # Create the app
                 app = create_app(server_config=server_config)
