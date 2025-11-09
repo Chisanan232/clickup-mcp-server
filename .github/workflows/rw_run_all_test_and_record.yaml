@@ -8,6 +8,11 @@ on:
         type: boolean
         required: false
         default: false
+      with-environment-variables:
+        description: "Set the specific environment for the environment variables."
+        type: string
+        required: false
+        default: ''
     secrets:
       e2e_test_api_token:
         description: "Set the Slack bot token for end-to-end test."
@@ -25,6 +30,7 @@ jobs:
     uses: ./.github/workflows/rw_build_and_test.yaml
     with:
       run_e2e: ${{ inputs.run_e2e }}
+      with-environment-variables: ${{ inputs.with-environment-variables }}
     secrets:
       e2e_test_api_token: ${{ secrets.e2e_test_api_token }}
 

@@ -8,6 +8,11 @@ on:
         type: boolean
         required: false
         default: false
+      with-environment-variables:
+        description: "Set the specific environment for the environment variables."
+        type: string
+        required: false
+        default: ''
     secrets:
       e2e_test_api_token:
         description: "Set the Slack bot token for end-to-end test."
@@ -39,6 +44,7 @@ jobs:
       test_folder: './test/e2e_test'
       install_dependency_with_group: 'dev'
       max-parallel: 1
+      with-environment-variables: ${{ inputs.with-environment-variables }}
     secrets:
       e2e_test_api_token: ${{ secrets.e2e_test_api_token }}
 
