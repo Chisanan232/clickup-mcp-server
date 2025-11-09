@@ -9,6 +9,7 @@ from typing import Any
 
 from pydantic import ConfigDict, Field, model_validator
 
+from clickup_mcp.models.dto.space import PROPERTY_NAME_DESCRIPTION
 from .base import BaseDomainModel
 
 
@@ -20,7 +21,7 @@ class ClickUpSpace(BaseDomainModel):
     """
 
     space_id: str = Field(alias="id", description="The unique identifier for the space")
-    name: str = Field(description="The name of the space")
+    name: str = Field(description=PROPERTY_NAME_DESCRIPTION)
     private: bool = Field(default=False, description="Whether the space is private")
     statuses: list[dict[str, Any]] = Field(default_factory=list, description="The statuses defined for this space")
     multiple_assignees: bool = Field(default=False, description="Whether multiple assignees are allowed for tasks")

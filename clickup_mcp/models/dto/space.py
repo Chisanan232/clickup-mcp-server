@@ -12,6 +12,10 @@ from pydantic import Field
 from .base import BaseRequestDTO, BaseResponseDTO
 
 
+PROPERTY_NAME_DESCRIPTION: str = "The name of the space"
+PROPERTY_MULTIPLE_ASSIGNEES_DESCRIPTION: str = "Whether multiple assignees are allowed"
+
+
 class SpaceCreate(BaseRequestDTO):
     """DTO for creating a new space.
 
@@ -19,8 +23,8 @@ class SpaceCreate(BaseRequestDTO):
     https://developer.clickup.com/reference/createspace
     """
 
-    name: str = Field(description="The name of the space")
-    multiple_assignees: bool = Field(default=False, description="Whether multiple assignees are allowed")
+    name: str = Field(description=PROPERTY_NAME_DESCRIPTION)
+    multiple_assignees: bool = Field(default=False, description=PROPERTY_MULTIPLE_ASSIGNEES_DESCRIPTION)
     features: Dict[str, Any] | None = Field(default=None, description="Features to enable for this space")
 
 
@@ -30,9 +34,9 @@ class SpaceUpdate(BaseRequestDTO):
     PUT /space/{space_id}
     """
 
-    name: str | None = Field(default=None, description="The name of the space")
+    name: str | None = Field(default=None, description=PROPERTY_NAME_DESCRIPTION)
     private: bool | None = Field(default=None, description="Whether the space is private")
-    multiple_assignees: bool | None = Field(default=None, description="Whether multiple assignees are allowed")
+    multiple_assignees: bool | None = Field(default=None, description=PROPERTY_MULTIPLE_ASSIGNEES_DESCRIPTION)
 
 
 class SpaceResp(BaseResponseDTO):
@@ -42,9 +46,9 @@ class SpaceResp(BaseResponseDTO):
     """
 
     id: str = Field(description="The unique identifier for the space")
-    name: str = Field(description="The name of the space")
+    name: str = Field(description=PROPERTY_NAME_DESCRIPTION)
     private: bool = Field(default=False, description="Whether the space is private")
     statuses: List[Dict[str, Any]] = Field(default_factory=list, description="The statuses defined for this space")
-    multiple_assignees: bool = Field(default=False, description="Whether multiple assignees are allowed")
+    multiple_assignees: bool = Field(default=False, description=PROPERTY_MULTIPLE_ASSIGNEES_DESCRIPTION)
     features: Dict[str, Any] | None = Field(default=None, description="Features enabled for this space")
     team_id: str | None = Field(default=None, description="The team ID this space belongs to")
