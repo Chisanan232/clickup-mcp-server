@@ -238,7 +238,7 @@ class TestCliOptionToken:
         """Test that token is loaded from .env file when no CLI token is provided."""
         # Create .env file with a token
         env_file = tmp_path / ".env"
-        env_file.write_text("CLICKUP_API_TOKEN=env-file-token")
+        env_file.write_text("E2E_TEST_API_TOKEN=env-file-token")
 
         # Set up CLI args with env file but no token
         test_args = ["--env", str(env_file)]
