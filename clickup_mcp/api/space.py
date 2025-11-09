@@ -45,7 +45,8 @@ class SpaceAPI:
         """
         response = await self._client.post(f"/team/{team_id}/space", data=space_create.serialize())
 
-        if not response.success or response.status_code != 200:
+        # Some APIs may return 201 Created on success
+        if not response.success or response.status_code not in (200, 201):
             return None
 
         if response.data is None or not isinstance(response.data, dict):
