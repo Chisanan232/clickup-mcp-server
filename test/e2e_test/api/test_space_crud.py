@@ -48,7 +48,7 @@ class TestSpaceFolderListCRUDE2E:
     @pytest.fixture
     async def api_client(self, env_setup) -> AsyncGenerator[ClickUpAPIClient, None]:
         """Create a real ClickUpAPIClient using the API token from environment variables."""
-        api_token = os.environ.get("E2E_TEST_API_TOKEN")
+        api_token = os.environ.get("E2E_TEST_API_TOKEN", "")
 
         if not api_token:
             pytest.skip("E2E_TEST_API_TOKEN environment variable is required for this test")
@@ -59,7 +59,7 @@ class TestSpaceFolderListCRUDE2E:
     @pytest.mark.asyncio
     async def test_space_crud_operations(self, api_client: ClickUpAPIClient) -> None:
         """Test Space CRUD operations: Create, Read, Update, Delete."""
-        team_id = os.environ.get("CLICKUP_TEST_TEAM_ID")
+        team_id = os.environ.get("CLICKUP_TEST_TEAM_ID", "")
         if not team_id:
             pytest.skip("CLICKUP_TEST_TEAM_ID environment variable is required for this test")
 
@@ -72,6 +72,7 @@ class TestSpaceFolderListCRUDE2E:
         if created_space is None:
             pytest.skip("Space creation not permitted with the provided token/team (likely insufficient permissions).")
 
+        assert created_space is not None
         assert created_space.name == "[TEST] Space CRUD Test"
         space_id = created_space.id
 
@@ -97,7 +98,7 @@ class TestSpaceFolderListCRUDE2E:
     @pytest.mark.asyncio
     async def test_get_all_spaces(self, api_client: ClickUpAPIClient) -> None:
         """Test getting all spaces in a team."""
-        team_id = os.environ.get("CLICKUP_TEST_TEAM_ID")
+        team_id = os.environ.get("CLICKUP_TEST_TEAM_ID", "")
         if not team_id:
             pytest.skip("CLICKUP_TEST_TEAM_ID environment variable is required")
 
