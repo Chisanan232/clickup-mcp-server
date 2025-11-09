@@ -22,7 +22,7 @@ class TestEnvLoading:
     def test_get_api_token(self, monkeypatch: MonkeyPatch) -> None:
         """Test getting API token from environment."""
         # Set up environment variable
-        monkeypatch.setenv("CLICKUP_API_TOKEN", "test_token_from_env")
+        monkeypatch.setenv("E2E_TEST_API_TOKEN", "test_token_from_env")
 
         # Test getting token from environment
         token = get_api_token()
@@ -31,7 +31,7 @@ class TestEnvLoading:
     def test_get_api_token_with_config(self, monkeypatch: MonkeyPatch) -> None:
         """Test getting API token from ServerConfig."""
         # Set up environment variable (should be ignored when config has token)
-        monkeypatch.setenv("CLICKUP_API_TOKEN", "test_token_from_env")
+        monkeypatch.setenv("E2E_TEST_API_TOKEN", "test_token_from_env")
 
         # Create config with token
         from clickup_mcp.models.cli import ServerConfig
@@ -45,7 +45,7 @@ class TestEnvLoading:
     def test_get_api_token_missing(self, monkeypatch: MonkeyPatch) -> None:
         """Test error when API token is missing from environment."""
         # Ensure environment is clean
-        monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
+        monkeypatch.delenv("E2E_TEST_API_TOKEN", raising=False)
 
         # Test that ValueError is raised when token is missing
         with pytest.raises(ValueError, match="ClickUp API token not found"):
@@ -74,7 +74,7 @@ class TestEnvLoading:
         """Test environment loading at entry point."""
         # Create a temp file with test token
         with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as temp_file:
-            temp_file.write("CLICKUP_API_TOKEN=test_token_from_entry_point\n")
+            temp_file.write("E2E_TEST_API_TOKEN=test_token_from_entry_point\n")
 
         try:
             # Reset all singletons before test
@@ -86,7 +86,7 @@ class TestEnvLoading:
             ClickUpAPIClientFactory.reset()
 
             # Ensure environment is clean
-            monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
+            monkeypatch.delenv("E2E_TEST_API_TOKEN", raising=False)
 
             # Create MCP server first, then web server (important for dependency order)
             MCPServerFactory.create()
@@ -126,7 +126,7 @@ class TestEnvLoading:
                 mock_create_app.assert_called_once_with(server_config=config)
 
                 # Check that environment was loaded correctly by our mock implementation
-                assert os.environ.get("CLICKUP_API_TOKEN") == "test_token_from_entry_point"
+                assert os.environ.get("E2E_TEST_API_TOKEN") == "test_token_from_entry_point"
         finally:
             # Clean up
             Path(temp_file.name).unlink(missing_ok=True)

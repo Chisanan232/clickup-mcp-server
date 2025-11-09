@@ -57,13 +57,13 @@ class TestTeamAPIE2E:
         """
         Create a real ClickUpAPIClient using the API token from environment variables.
 
-        This fixture requires that CLICKUP_API_TOKEN is set in the environment.
+        This fixture requires that E2E_TEST_API_TOKEN is set in the environment.
         """
-        api_token = os.environ.get("CLICKUP_API_TOKEN")
+        api_token = os.environ.get("E2E_TEST_API_TOKEN")
 
         # Skip tests if no API token is available
         if not api_token:
-            pytest.skip("CLICKUP_API_TOKEN environment variable is required for this test")
+            pytest.skip("E2E_TEST_API_TOKEN environment variable is required for this test")
 
         assert api_token
         async with ClickUpAPIClient(api_token=api_token) as client:

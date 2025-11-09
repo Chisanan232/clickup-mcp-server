@@ -213,7 +213,7 @@ class TestMCPServerMounting:
             ClickUpAPIClientFactory.reset()
 
             # Use patch.dict to set the environment variable directly
-            with patch.dict(os.environ, {"CLICKUP_API_TOKEN": "test_token_for_mount"}):
+            with patch.dict(os.environ, {"E2E_TEST_API_TOKEN": "test_token_for_mount"}):
                 # Create MCP server first (important for proper initialization order)
                 MCPServerFactory.create()
                 WebServerFactory.create()
