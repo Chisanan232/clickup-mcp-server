@@ -110,6 +110,7 @@ class TestTeamAPIE2E:
         if not team_id:
             pytest.skip("CLICKUP_TEST_TEAM_ID environment variable is required for this test")
 
+        assert team_id
         spaces = await api_client.team.get_spaces(team_id)
 
         # Basic validation
