@@ -12,13 +12,13 @@ from clickup_mcp.models.dto.space import SpaceCreate, SpaceResp, SpaceUpdate
 
 
 @pytest.fixture
-def mock_api_client() -> ClickUpAPIClient:
+def mock_api_client() -> Mock:
     client = Mock(spec=ClickUpAPIClient)
     client.get = AsyncMock()
     client.post = AsyncMock()
     client.put = AsyncMock()
     client.delete = AsyncMock()
-    return client  # type: ignore[return-value]
+    return client
 
 
 @pytest.fixture
@@ -44,9 +44,7 @@ def sample_space_data() -> dict:
 
 # create
 @pytest.mark.asyncio
-async def test_create_space_success_200(
-    space_api: SpaceAPI, mock_api_client: ClickUpAPIClient, sample_space_data: dict
-):
+async def test_create_space_success_200(space_api: SpaceAPI, mock_api_client: Mock, sample_space_data: dict):
     mock_api_client.post.return_value = APIResponse(success=True, status_code=200, data=sample_space_data, headers={})
     dto = SpaceCreate(name="Test Space", multiple_assignees=True)
 
@@ -58,9 +56,7 @@ async def test_create_space_success_200(
 
 
 @pytest.mark.asyncio
-async def test_create_space_success_201(
-    space_api: SpaceAPI, mock_api_client: ClickUpAPIClient, sample_space_data: dict
-):
+async def test_create_space_success_201(space_api: SpaceAPI, mock_api_client: Mock, sample_space_data: dict):
     mock_api_client.post.return_value = APIResponse(success=True, status_code=201, data=sample_space_data, headers={})
     dto = SpaceCreate(name="Created", multiple_assignees=False)
 
@@ -70,7 +66,7 @@ async def test_create_space_success_201(
 
 
 @pytest.mark.asyncio
-async def test_create_space_failure_status(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient):
+async def test_create_space_failure_status(space_api: SpaceAPI, mock_api_client: Mock):
     mock_api_client.post.return_value = APIResponse(success=False, status_code=400, data={"err": "bad"}, headers={})
     dto = SpaceCreate(name="x", multiple_assignees=False)
 
@@ -80,7 +76,7 @@ async def test_create_space_failure_status(space_api: SpaceAPI, mock_api_client:
 
 
 @pytest.mark.asyncio
-async def test_create_space_malformed_data_none(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient):
+async def test_create_space_malformed_data_none(space_api: SpaceAPI, mock_api_client: Mock):
     mock_api_client.post.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
     dto = SpaceCreate(name="x", multiple_assignees=False)
 
@@ -90,7 +86,7 @@ async def test_create_space_malformed_data_none(space_api: SpaceAPI, mock_api_cl
 
 
 @pytest.mark.asyncio
-async def test_create_space_invalid_dict_raises(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient):
+async def test_create_space_invalid_dict_raises(space_api: SpaceAPI, mock_api_client: Mock):
     from pydantic import ValidationError
 
     # data is a dict (to satisfy APIResponse) but missing required fields for SpaceResp
@@ -103,7 +99,7 @@ async def test_create_space_invalid_dict_raises(space_api: SpaceAPI, mock_api_cl
 
 # get_all
 @pytest.mark.asyncio
-async def test_get_all_spaces_success(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient, sample_space_data: dict):
+async def test_get_all_spaces_success(space_api: SpaceAPI, mock_api_client: Mock, sample_space_data: dict):
     mock_api_client.get.return_value = APIResponse(
         success=True,
         status_code=200,
@@ -120,14 +116,14 @@ async def test_get_all_spaces_success(space_api: SpaceAPI, mock_api_client: Clic
 
 
 @pytest.mark.asyncio
-async def test_get_all_spaces_missing_key(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient):
+async def test_get_all_spaces_missing_key(space_api: SpaceAPI, mock_api_client: Mock):
     mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data={}, headers={})
     result = await space_api.get_all("team-1")
     assert result == []
 
 
 @pytest.mark.asyncio
-async def test_get_all_spaces_spaces_not_list(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient):
+async def test_get_all_spaces_spaces_not_list(space_api: SpaceAPI, mock_api_client: Mock):
     # data is a dict, but "spaces" key is not a list -> should return []
     mock_api_client.get.return_value = APIResponse(
         success=True, status_code=200, data={"spaces": "not-a-list"}, headers={}
@@ -137,7 +133,7 @@ async def test_get_all_spaces_spaces_not_list(space_api: SpaceAPI, mock_api_clie
 
 
 @pytest.mark.asyncio
-async def test_get_all_spaces_failure(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient):
+async def test_get_all_spaces_failure(space_api: SpaceAPI, mock_api_client: Mock):
     mock_api_client.get.return_value = APIResponse(success=False, status_code=500, data={"err": "oops"}, headers={})
     result = await space_api.get_all("team-1")
     assert result == []
@@ -145,14 +141,14 @@ async def test_get_all_spaces_failure(space_api: SpaceAPI, mock_api_client: Clic
 
 # get
 @pytest.mark.asyncio
-async def test_get_space_non_404_error(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient):
+async def test_get_space_non_404_error(space_api: SpaceAPI, mock_api_client: Mock):
     mock_api_client.get.return_value = APIResponse(success=False, status_code=500, data={"err": "oops"}, headers={})
     result = await space_api.get("space-1")
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_get_space_data_none(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient):
+async def test_get_space_data_none(space_api: SpaceAPI, mock_api_client: Mock):
     mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
     result = await space_api.get("space-1")
     assert result is None
@@ -160,7 +156,7 @@ async def test_get_space_data_none(space_api: SpaceAPI, mock_api_client: ClickUp
 
 # update
 @pytest.mark.asyncio
-async def test_update_space_success(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient, sample_space_data: dict):
+async def test_update_space_success(space_api: SpaceAPI, mock_api_client: Mock, sample_space_data: dict):
     mock_api_client.put.return_value = APIResponse(success=True, status_code=200, data=sample_space_data, headers={})
     dto = SpaceUpdate(name="Updated")
 
@@ -171,7 +167,7 @@ async def test_update_space_success(space_api: SpaceAPI, mock_api_client: ClickU
 
 
 @pytest.mark.asyncio
-async def test_update_space_failure(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient):
+async def test_update_space_failure(space_api: SpaceAPI, mock_api_client: Mock):
     mock_api_client.put.return_value = APIResponse(success=False, status_code=400, data={"err": "bad"}, headers={})
     dto = SpaceUpdate(name="Updated")
 
@@ -181,7 +177,7 @@ async def test_update_space_failure(space_api: SpaceAPI, mock_api_client: ClickU
 
 
 @pytest.mark.asyncio
-async def test_update_space_data_none(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient):
+async def test_update_space_data_none(space_api: SpaceAPI, mock_api_client: Mock):
     mock_api_client.put.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
     dto = SpaceUpdate(name="Updated")
 
@@ -192,7 +188,7 @@ async def test_update_space_data_none(space_api: SpaceAPI, mock_api_client: Clic
 
 # delete
 @pytest.mark.asyncio
-async def test_delete_space_success_200(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient):
+async def test_delete_space_success_200(space_api: SpaceAPI, mock_api_client: Mock):
     mock_api_client.delete.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
 
     result = await space_api.delete("space-1")
@@ -202,7 +198,7 @@ async def test_delete_space_success_200(space_api: SpaceAPI, mock_api_client: Cl
 
 
 @pytest.mark.asyncio
-async def test_delete_space_success_204(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient):
+async def test_delete_space_success_204(space_api: SpaceAPI, mock_api_client: Mock):
     mock_api_client.delete.return_value = APIResponse(success=True, status_code=204, data=None, headers={})
 
     result = await space_api.delete("space-1")
@@ -211,7 +207,7 @@ async def test_delete_space_success_204(space_api: SpaceAPI, mock_api_client: Cl
 
 
 @pytest.mark.asyncio
-async def test_delete_space_failure(space_api: SpaceAPI, mock_api_client: ClickUpAPIClient):
+async def test_delete_space_failure(space_api: SpaceAPI, mock_api_client: Mock):
     mock_api_client.delete.return_value = APIResponse(success=False, status_code=404, data=None, headers={})
 
     result = await space_api.delete("space-1")
