@@ -180,7 +180,7 @@ class StreamingHTTPClient(EndpointClient):
                     # Wait until asked to stop (teardown)
                     await self._stop_event.wait()
 
-        self._manager_task = asyncio.create_task(_manager())
+        self._manager_task: asyncio.Task | None = asyncio.create_task(_manager())
         # Wait until streams are ready before creating the session
         await self._streams_ready.wait()
 
