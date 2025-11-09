@@ -389,12 +389,12 @@ def get_api_token(config=None) -> str:
         return config.token
 
     # Otherwise get token from environment (env file should be loaded at entry point)
-    token = os.environ.get("E2E_TEST_API_TOKEN")
+    token = os.environ.get("CLICKUP_API_TOKEN")
 
     # Raise error if we don't have a token
     if not token:
         raise ValueError(
-            "ClickUp API token not found. Please set the E2E_TEST_API_TOKEN environment variable "
+            "ClickUp API token not found. Please set the CLICKUP_API_TOKEN environment variable "
             "in your .env file, or provide it using the --token command line option."
         )
 
