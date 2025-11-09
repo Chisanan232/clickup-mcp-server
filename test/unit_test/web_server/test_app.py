@@ -30,7 +30,7 @@ class TestWebServer:
         self.original_mcp_instance = clickup_mcp.mcp_server.app._MCP_SERVER_INSTANCE
 
         # Set up environment for tests
-        monkeypatch.setenv("E2E_TEST_API_TOKEN", "test_token_for_web_server")
+        monkeypatch.setenv("CLICKUP_API_TOKEN", "test_token_for_web_server")
 
         # Reset factories before test
         WebServerFactory.reset()

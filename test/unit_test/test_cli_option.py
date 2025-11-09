@@ -159,7 +159,7 @@ class TestCliOptionTransport:
         mock_web = MagicMock()
 
         # Set up API token in environment
-        monkeypatch.setenv("E2E_TEST_API_TOKEN", "test_token_for_transport_type")
+        monkeypatch.setenv("CLICKUP_API_TOKEN", "test_token_for_transport_type")
 
         # Create a ServerConfig with SSE transport protocol
         config = ServerConfig(transport=MCPTransportType.SSE)
@@ -217,7 +217,7 @@ class TestCliOptionToken:
         """Test that token from CLI takes precedence over token from .env file."""
         # Create .env file with a token
         env_file = tmp_path / ".env"
-        env_file.write_text("E2E_TEST_API_TOKEN=env-file-token")
+        env_file.write_text("CLICKUP_API_TOKEN=env-file-token")
 
         # Set up CLI args with both token and env file
         test_args = ["--token", "cli-token", "--env", str(env_file)]
@@ -252,7 +252,7 @@ class TestCliOptionToken:
         assert config.env_file == str(env_file)
 
         # Ensure env file token is used
-        monkeypatch.setenv("E2E_TEST_API_TOKEN", "env-file-token")
+        monkeypatch.setenv("CLICKUP_API_TOKEN", "env-file-token")
         token = get_api_token(config)
         assert token == "env-file-token"
 
