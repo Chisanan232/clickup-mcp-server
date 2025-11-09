@@ -10,6 +10,7 @@ from typing import Any
 from pydantic import ConfigDict, Field, model_validator
 
 from clickup_mcp.models.dto.space import PROPERTY_NAME_DESCRIPTION
+
 from .base import BaseDomainModel
 
 

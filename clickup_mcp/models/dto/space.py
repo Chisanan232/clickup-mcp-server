@@ -11,7 +11,6 @@ from pydantic import Field
 
 from .base import BaseRequestDTO, BaseResponseDTO
 
-
 PROPERTY_NAME_DESCRIPTION: str = "The name of the space"
 PROPERTY_MULTIPLE_ASSIGNEES_DESCRIPTION: str = "Whether multiple assignees are allowed"
 
