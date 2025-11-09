@@ -143,7 +143,7 @@ class MCPServerFixture:
 
         # Create a temporary file with the token
         with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as temp_file:
-            temp_file.write(f"E2E_TEST_API_TOKEN={api_token}\n")
+            temp_file.write(f"CLICKUP_API_TOKEN={api_token}\n")
             temp_file_path = temp_file.name
 
         yield temp_file_path
