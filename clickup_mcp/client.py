@@ -309,6 +309,16 @@ class ClickUpAPIClient:
                         error_data = {}
                     error_message = error_data.get("err", f"HTTP {response.status_code} error")
 
+                    # Log error details for visibility into API failures
+                    logger.error(
+                        "API error %s %s -> %s: %s; response=%s",
+                        method,
+                        url,
+                        response.status_code,
+                        error_message,
+                        error_data,
+                    )
+
                     return APIResponse(
                         status_code=response.status_code,
                         data=error_data,
@@ -331,7 +341,14 @@ class ClickUpAPIClient:
                     await asyncio.sleep(self.retry_delay * (2**attempt))  # Exponential backoff
                 continue
 
-        # If we've exhausted all retries
+        # If we've exhausted all retries, log at error level then raise
+        logger.error(
+            "Request failed after %s attempts for %s %s: %s",
+            self.max_retries + 1,
+            method,
+            url,
+            last_exception,
+        )
         raise ClickUpAPIError(f"Request failed after {self.max_retries + 1} attempts: {last_exception}")
 
     async def get(
