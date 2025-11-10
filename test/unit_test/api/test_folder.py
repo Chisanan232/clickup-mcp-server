@@ -153,9 +153,7 @@ class TestFolderAPI(BaseAPIClientTestSuite):
         folder_update = FolderUpdate(name="Updated Folder")
         updated_data = sample_folder_data.copy()
         updated_data["name"] = "Updated Folder"
-        mock_api_client.put.return_value = APIResponse(
-            success=True, status_code=200, data=updated_data, headers={}
-        )
+        mock_api_client.put.return_value = APIResponse(success=True, status_code=200, data=updated_data, headers={})
 
         # Act
         result = await folder_api.update(folder_id, folder_update)

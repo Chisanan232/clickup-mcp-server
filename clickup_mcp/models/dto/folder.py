@@ -5,7 +5,7 @@ These DTOs handle serialization/deserialization of Folder data
 for API interactions.
 """
 
-from typing import Any, List, Dict
+from typing import Any, Dict, List
 
 from pydantic import Field
 
