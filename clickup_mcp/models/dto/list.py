@@ -5,7 +5,7 @@ These DTOs handle serialization/deserialization of List data
 for API interactions.
 """
 
-from typing import Any, List, Dict
+from typing import Any, Dict
 
 from pydantic import Field
 

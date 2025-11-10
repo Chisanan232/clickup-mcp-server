@@ -8,7 +8,7 @@ import pytest
 
 from clickup_mcp.api.list import ListAPI
 from clickup_mcp.client import APIResponse, ClickUpAPIClient
-from clickup_mcp.models.dto.list import ListCreate, ListResp, ListUpdate
+from clickup_mcp.models.dto.list import ListCreate, ListUpdate
 
 
 @pytest.fixture

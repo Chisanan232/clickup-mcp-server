@@ -104,9 +104,7 @@ class TestListAPI(BaseAPIClientTestSuite):
         """Test getting a list by ID."""
         # Arrange
         list_id = "list_123"
-        mock_api_client.get.return_value = APIResponse(
-            success=True, status_code=200, data=sample_list_data, headers={}
-        )
+        mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data=sample_list_data, headers={})
 
         # Act
         result = await list_api.get(list_id)
@@ -139,9 +137,7 @@ class TestListAPI(BaseAPIClientTestSuite):
         list_update = ListUpdate(name="Updated List")
         updated_data = sample_list_data.copy()
         updated_data["name"] = "Updated List"
-        mock_api_client.put.return_value = APIResponse(
-            success=True, status_code=200, data=updated_data, headers={}
-        )
+        mock_api_client.put.return_value = APIResponse(success=True, status_code=200, data=updated_data, headers={})
 
         # Act
         result = await list_api.update(list_id, list_update)
