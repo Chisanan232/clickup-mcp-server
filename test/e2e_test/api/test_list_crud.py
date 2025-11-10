@@ -48,7 +48,7 @@ class TestListCRUDE2E:
     @pytest.fixture
     async def api_client(self, env_setup) -> AsyncGenerator[ClickUpAPIClient, None]:
         """Create a real ClickUpAPIClient using the API token from environment variables."""
-        api_token = os.environ.get("E2E_TEST_API_TOKEN")
+        api_token = os.environ.get("E2E_TEST_API_TOKEN", "")
 
         if not api_token:
             pytest.skip("E2E_TEST_API_TOKEN environment variable is required for this test")
@@ -59,9 +59,9 @@ class TestListCRUDE2E:
     @pytest.mark.asyncio
     async def test_list_crud_operations(self, api_client: ClickUpAPIClient) -> None:
         """Test List CRUD operations: Create, Read, Update, Delete."""
-        team_id = os.environ.get("CLICKUP_TEST_TEAM_ID")
-        space_id = os.environ.get("CLICKUP_TEST_SPACE_ID")
-        folder_id = os.environ.get("CLICKUP_TEST_FOLDER_ID")
+        team_id = os.environ.get("CLICKUP_TEST_TEAM_ID", "")
+        space_id = os.environ.get("CLICKUP_TEST_SPACE_ID", "")
+        folder_id = os.environ.get("CLICKUP_TEST_FOLDER_ID", "")
 
         if not team_id or not space_id or not folder_id:
             pytest.skip("Test environment variables are required")
@@ -94,7 +94,7 @@ class TestListCRUDE2E:
     @pytest.mark.asyncio
     async def test_get_all_lists_in_folder(self, api_client: ClickUpAPIClient) -> None:
         """Test getting all lists in a folder."""
-        folder_id = os.environ.get("CLICKUP_TEST_FOLDER_ID")
+        folder_id = os.environ.get("CLICKUP_TEST_FOLDER_ID", "")
         if not folder_id:
             pytest.skip("CLICKUP_TEST_FOLDER_ID environment variable is required")
 
@@ -106,7 +106,7 @@ class TestListCRUDE2E:
     @pytest.mark.asyncio
     async def test_get_all_folderless_lists(self, api_client: ClickUpAPIClient) -> None:
         """Test getting all folderless lists in a space."""
-        space_id = os.environ.get("CLICKUP_TEST_SPACE_ID")
+        space_id = os.environ.get("CLICKUP_TEST_SPACE_ID", "")
         if not space_id:
             pytest.skip("CLICKUP_TEST_SPACE_ID environment variable is required")
 
