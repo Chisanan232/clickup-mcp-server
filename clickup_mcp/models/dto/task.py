@@ -11,7 +11,6 @@ from pydantic import Field
 
 from .base import BaseRequestDTO, BaseResponseDTO
 
-
 PROPERTY_NAME_DESCRIPTION: str = "The name of the task"
 PROPERTY_TASK_DESCRIPTION_DESCRIPTION: str = "Task description"
 PROPERTY_STATUS_DESCRIPTION: str = "Task status"
