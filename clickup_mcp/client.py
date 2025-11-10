@@ -22,6 +22,7 @@ from ._base import BaseServerFactory
 from .api.folder import FolderAPI
 from .api.list import ListAPI
 from .api.space import SpaceAPI
+from .api.task import TaskAPI
 from .api.team import TeamAPI
 from .exceptions import (
     AuthenticationError,
@@ -199,6 +200,7 @@ class ClickUpAPIClient:
         self.team = TeamAPI(self)
         self.folder = FolderAPI(self)
         self.list = ListAPI(self)
+        self.task = TaskAPI(self)
 
     async def __aenter__(self) -> "ClickUpAPIClient":
         """Async context manager entry."""
