@@ -11,11 +11,10 @@ from pydantic import Field
 
 from .base import BaseRequestDTO, BaseResponseDTO
 
-
-PROPERTY_NAME_DESCRIPTION :str = "The name of the list"
-PROPERTY_DUE_DATE_DESCRIPTION :str = "Due date in milliseconds"
-PROPERTY_DUE_DATE_TIME_DESCRIPTION :str = "Whether due date includes time"
-PROPERTY_STATUS_DESCRIPTION :str = "Status of the list"
+PROPERTY_NAME_DESCRIPTION: str = "The name of the list"
+PROPERTY_DUE_DATE_DESCRIPTION: str = "Due date in milliseconds"
+PROPERTY_DUE_DATE_TIME_DESCRIPTION: str = "Whether due date includes time"
+PROPERTY_STATUS_DESCRIPTION: str = "Status of the list"
 
 
 class ListCreate(BaseRequestDTO):
