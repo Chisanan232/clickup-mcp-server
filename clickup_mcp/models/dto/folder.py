@@ -11,7 +11,6 @@ from pydantic import Field
 
 from .base import BaseRequestDTO, BaseResponseDTO
 
-
 PROPERTY_NAME_DESCRIPTION: str = "The name of the folder"
 
 
