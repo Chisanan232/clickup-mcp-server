@@ -146,6 +146,7 @@ class TestTaskCFDependencyTIMLe2e:
             await api_client.task.delete(task1_id)
             await api_client.task.delete(task2_id)
 
+    @pytest.mark.skip(reason="My plan is limited to usages of feature.")
     @pytest.mark.asyncio
     async def test_add_task_to_multiple_lists_timl(self, api_client: ClickUpAPIClient) -> None:
         """Test adding a task to multiple lists (TIML)."""
