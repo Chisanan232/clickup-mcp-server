@@ -53,6 +53,7 @@ class TestTaskCRUDE2E:
         if not api_token:
             pytest.skip("E2E_TEST_API_TOKEN environment variable is required for this test")
 
+        assert api_token
         async with ClickUpAPIClient(api_token=api_token) as client:
             yield client
 
@@ -62,6 +63,7 @@ class TestTaskCRUDE2E:
         list_id = os.environ.get("CLICKUP_TEST_LIST_ID")
         if not list_id:
             pytest.skip("CLICKUP_TEST_LIST_ID environment variable is required")
+        assert list_id
 
         # Create a task
         task_create = TaskCreate(
@@ -100,6 +102,7 @@ class TestTaskCRUDE2E:
         list_id = os.environ.get("CLICKUP_TEST_LIST_ID")
         if not list_id:
             pytest.skip("CLICKUP_TEST_LIST_ID environment variable is required")
+        assert list_id
 
         # Create a parent task
         parent_task_create = TaskCreate(name="[TEST] Parent Task")
@@ -129,6 +132,7 @@ class TestTaskCRUDE2E:
         list_id = os.environ.get("CLICKUP_TEST_LIST_ID")
         if not list_id:
             pytest.skip("CLICKUP_TEST_LIST_ID environment variable is required")
+        assert list_id
 
         query = TaskListQuery(page=0, limit=10, include_closed=False)
         tasks = await api_client.task.list_in_list(list_id, query)
@@ -142,6 +146,7 @@ class TestTaskCRUDE2E:
         list_id = os.environ.get("CLICKUP_TEST_LIST_ID")
         if not list_id:
             pytest.skip("CLICKUP_TEST_LIST_ID environment variable is required")
+        assert list_id
 
         query = TaskListQuery(page=0, limit=10, include_timl=True)
         tasks = await api_client.task.list_in_list(list_id, query)
@@ -155,6 +160,7 @@ class TestTaskCRUDE2E:
         list_id = os.environ.get("CLICKUP_TEST_LIST_ID")
         if not list_id:
             pytest.skip("CLICKUP_TEST_LIST_ID environment variable is required")
+        assert list_id
 
         # Create a task
         task_create = TaskCreate(name="[TEST] Task with Subtasks")
@@ -177,6 +183,7 @@ class TestTaskCRUDE2E:
         list_id = os.environ.get("CLICKUP_TEST_LIST_ID")
         if not list_id:
             pytest.skip("CLICKUP_TEST_LIST_ID environment variable is required")
+        assert list_id
 
         # Create a task with due date and time estimate
         import time
