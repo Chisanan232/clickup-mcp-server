@@ -206,9 +206,7 @@ class TaskAPI:
         response = await self._client.delete(f"/task/{task_id}/field/{field_id}")
         return response.success and response.status_code in (200, 204)
 
-    async def add_dependency(
-        self, task_id: str, depends_on: str, dependency_type: str = "waiting_on"
-    ) -> bool:
+    async def add_dependency(self, task_id: str, depends_on: str, dependency_type: str = "waiting_on") -> bool:
         """Add a dependency to a task.
 
         POST /task/{task_id}/dependency

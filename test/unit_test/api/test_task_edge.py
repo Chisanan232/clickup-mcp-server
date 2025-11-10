@@ -8,7 +8,7 @@ import pytest
 
 from clickup_mcp.api.task import TaskAPI
 from clickup_mcp.client import APIResponse, ClickUpAPIClient
-from clickup_mcp.models.dto.task import TaskCreate, TaskListQuery, TaskResp, TaskUpdate
+from clickup_mcp.models.dto.task import TaskCreate, TaskListQuery, TaskUpdate
 
 
 @pytest.fixture

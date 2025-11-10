@@ -11,8 +11,8 @@ Environment variables required:
 - CLICKUP_TEST_LIST_ID_2: Secondary list ID for TIML testing (optional)
 """
 
-import os
 import asyncio
+import os
 from pathlib import Path
 from typing import AsyncGenerator, Generator
 

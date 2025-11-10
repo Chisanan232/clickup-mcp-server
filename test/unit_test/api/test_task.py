@@ -90,9 +90,7 @@ class TestTaskAPI(BaseAPIClientTestSuite):
         """Test getting a task by ID."""
         # Arrange
         task_id = "task_123"
-        mock_api_client.get.return_value = APIResponse(
-            success=True, status_code=200, data=sample_task_data, headers={}
-        )
+        mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data=sample_task_data, headers={})
 
         # Act
         result = await task_api.get(task_id)
@@ -107,9 +105,7 @@ class TestTaskAPI(BaseAPIClientTestSuite):
         """Test getting a task with subtasks."""
         # Arrange
         task_id = "task_123"
-        mock_api_client.get.return_value = APIResponse(
-            success=True, status_code=200, data=sample_task_data, headers={}
-        )
+        mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data=sample_task_data, headers={})
 
         # Act
         result = await task_api.get(task_id, subtasks=True)
@@ -125,9 +121,7 @@ class TestTaskAPI(BaseAPIClientTestSuite):
         # Arrange
         task_id = "custom_task_id"
         team_id = "team_123"
-        mock_api_client.get.return_value = APIResponse(
-            success=True, status_code=200, data=sample_task_data, headers={}
-        )
+        mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data=sample_task_data, headers={})
 
         # Act
         result = await task_api.get(task_id, custom_task_ids=True, team_id=team_id)
@@ -219,9 +213,7 @@ class TestTaskAPI(BaseAPIClientTestSuite):
         task_update = TaskUpdate(name="Updated Task", status="In Progress")
         updated_data = sample_task_data.copy()
         updated_data["name"] = "Updated Task"
-        mock_api_client.put.return_value = APIResponse(
-            success=True, status_code=200, data=updated_data, headers={}
-        )
+        mock_api_client.put.return_value = APIResponse(success=True, status_code=200, data=updated_data, headers={})
 
         # Act
         result = await task_api.update(task_id, task_update)
