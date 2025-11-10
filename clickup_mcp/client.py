@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 from clickup_mcp.models.dto.base import BaseResponseDTO
 
 from ._base import BaseServerFactory
+from .api.folder import FolderAPI
 from .api.space import SpaceAPI
 from .api.team import TeamAPI
 from .exceptions import (
@@ -195,6 +196,7 @@ class ClickUpAPIClient:
         # Initialize API resource managers
         self.space = SpaceAPI(self)
         self.team = TeamAPI(self)
+        self.folder = FolderAPI(self)
 
     async def __aenter__(self) -> "ClickUpAPIClient":
         """Async context manager entry."""
