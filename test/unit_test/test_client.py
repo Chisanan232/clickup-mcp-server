@@ -228,6 +228,41 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert "Request failed after" in str(exc_info.value)
 
     @pytest.mark.asyncio
+    async def test_logs_error_on_client_error_response(self, api_client: ClickUpAPIClient, caplog: pytest.LogCaptureFixture) -> None:
+        """Test that a 4xx error logs an error-level message with details."""
+        mock_response = Mock()
+        mock_response.status_code = 400
+        mock_response.content = b'{"err": "Bad request"}'
+        mock_response.json.return_value = {"err": "Bad request"}
+        mock_response.headers = {"Content-Type": "application/json"}
+
+        with patch.object(api_client._client, "request", return_value=mock_response):
+            # Capture error logs
+            with caplog.at_level("ERROR"):
+                response = await api_client._make_request("GET", "/test")
+
+        assert response.status_code == 400
+        assert response.success is False
+        # Ensure an error log was produced with expected content
+        messages = "\n".join(rec.getMessage() for rec in caplog.records)
+        assert "API error GET /test -> 400" in messages
+        assert "Bad request" in messages
+
+    @pytest.mark.asyncio
+    async def test_logs_error_when_retries_exhausted(self, api_client: ClickUpAPIClient, caplog: pytest.LogCaptureFixture) -> None:
+        """Test that exhausting retries logs a final error-level message before raising."""
+        with patch.object(api_client._client, "request", side_effect=httpx.HTTPError("Connection failed")):
+            with caplog.at_level("ERROR"):
+                with pytest.raises(ClickUpAPIError):
+                    await api_client._make_request("GET", "/test")
+
+        # Ensure final error log mentions attempts, method, and endpoint
+        messages = "\n".join(rec.getMessage() for rec in caplog.records)
+        assert "Request failed after" in messages
+        assert "GET" in messages
+        assert "/test" in messages
+
+    @pytest.mark.asyncio
     async def test_get_request(self, api_client: ClickUpAPIClient) -> None:
         """Test GET request convenience method."""
         mock_response = Mock()
