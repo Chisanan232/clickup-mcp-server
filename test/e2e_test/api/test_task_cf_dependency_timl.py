@@ -191,8 +191,7 @@ class TestTaskCFDependencyTIMLe2e:
 
         finally:
             # Clean up
-            # await api_client.task.delete(task_id)
-            print("Task deleted")
+            await api_client.task.delete(task_id)
 
     @pytest.mark.asyncio
     async def test_create_task_with_custom_fields(self, api_client: ClickUpAPIClient) -> None:
