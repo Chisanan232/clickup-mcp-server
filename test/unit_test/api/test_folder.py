@@ -172,7 +172,6 @@ class TestFolderAPI(BaseAPIClientTestSuite):
 
         # Act
         result = await folder_api.delete(folder_id)
-
         # Assert
         mock_api_client.delete.assert_called_once_with(f"/folder/{folder_id}")
         assert result is True
@@ -191,3 +190,111 @@ class TestFolderAPI(BaseAPIClientTestSuite):
 
         # Assert
         assert result is False
+
+    @pytest.mark.asyncio
+    async def test_create_folder_returns_none_on_data_none(self, folder_api, mock_api_client):
+        """Test creating a folder returns None when API returns data=None."""
+        space_id = "space_123"
+        folder_create = FolderCreate(name="Test Folder")
+        mock_api_client.post.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
+
+        result = await folder_api.create(space_id, folder_create)
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_create_folder_invalid_dict_raises(self, folder_api, mock_api_client):
+        """Test creating a folder raises ValidationError when data dict is invalid for DTO."""
+        from pydantic import ValidationError
+
+        space_id = "space_123"
+        folder_create = FolderCreate(name="Test Folder")
+        # data is a dict but missing required fields for FolderResp
+        mock_api_client.post.return_value = APIResponse(success=True, status_code=200, data={"foo": "bar"}, headers={})
+
+        with pytest.raises(ValidationError):
+            await folder_api.create(space_id, folder_create)
+
+    @pytest.mark.asyncio
+    async def test_get_all_folders_missing_key_returns_empty(self, folder_api, mock_api_client):
+        """Test get_all returns empty list when 'folders' key is missing."""
+        space_id = "space_123"
+        mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data={}, headers={})
+
+        result = await folder_api.get_all(space_id)
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_get_all_folders_folders_not_list_returns_empty(self, folder_api, mock_api_client):
+        """Test get_all returns empty list when 'folders' is not a list."""
+        space_id = "space_123"
+        mock_api_client.get.return_value = APIResponse(
+            success=True, status_code=200, data={"folders": "not-a-list"}, headers={}
+        )
+
+        result = await folder_api.get_all(space_id)
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_get_all_folders_data_none_returns_empty(self, folder_api, mock_api_client):
+        """Test get_all returns empty list when data=None."""
+        space_id = "space_123"
+        mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
+
+        result = await folder_api.get_all(space_id)
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_get_folder_non_404_error_returns_none(self, folder_api, mock_api_client):
+        """Test get returns None on non-404 error (e.g., 500)."""
+        folder_id = "folder_123"
+        mock_api_client.get.return_value = APIResponse(success=False, status_code=500, data={"err": "oops"}, headers={})
+
+        result = await folder_api.get(folder_id)
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_get_folder_data_none_returns_none(self, folder_api, mock_api_client):
+        """Test get returns None when data=None."""
+        folder_id = "folder_123"
+        mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
+
+        result = await folder_api.get(folder_id)
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_update_folder_returns_none_on_failure(self, folder_api, mock_api_client):
+        """Test updating a folder returns None when API indicates failure."""
+        folder_id = "folder_123"
+        folder_update = FolderUpdate(name="Updated Folder")
+        mock_api_client.put.return_value = APIResponse(success=False, status_code=400, data={"err": "bad"}, headers={})
+
+        result = await folder_api.update(folder_id, folder_update)
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_update_folder_data_none_returns_none(self, folder_api, mock_api_client):
+        """Test updating a folder returns None when data=None."""
+        folder_id = "folder_123"
+        folder_update = FolderUpdate(name="Updated Folder")
+        mock_api_client.put.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
+
+        result = await folder_api.update(folder_id, folder_update)
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_delete_folder_success_200(self, folder_api, mock_api_client):
+        """Test deleting a folder returns True for 200 status."""
+        folder_id = "folder_123"
+        mock_api_client.delete.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
+
+        result = await folder_api.delete(folder_id)
+
+        assert result is True
