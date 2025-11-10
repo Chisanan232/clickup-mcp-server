@@ -12,6 +12,9 @@ from pydantic import Field
 from .base import BaseRequestDTO, BaseResponseDTO
 
 
+PROPERTY_NAME_DESCRIPTION: str = "The name of the folder"
+
+
 class FolderCreate(BaseRequestDTO):
     """DTO for creating a new folder.
 
@@ -19,7 +22,7 @@ class FolderCreate(BaseRequestDTO):
     https://developer.clickup.com/reference/createfolder
     """
 
-    name: str = Field(description="The name of the folder")
+    name: str = Field(description=PROPERTY_NAME_DESCRIPTION)
 
 
 class FolderUpdate(BaseRequestDTO):
@@ -28,7 +31,7 @@ class FolderUpdate(BaseRequestDTO):
     PUT /folder/{folder_id}
     """
 
-    name: str | None = Field(default=None, description="The name of the folder")
+    name: str | None = Field(default=None, description=PROPERTY_NAME_DESCRIPTION)
 
 
 class FolderResp(BaseResponseDTO):
@@ -38,7 +41,7 @@ class FolderResp(BaseResponseDTO):
     """
 
     id: str = Field(description="The unique identifier for the folder")
-    name: str = Field(description="The name of the folder")
+    name: str = Field(description=PROPERTY_NAME_DESCRIPTION)
     orderindex: int | None = Field(default=None, description="The order index of the folder")
     override_statuses: bool = Field(default=False, description="Whether this folder overrides statuses")
     hidden: bool = Field(default=False, description="Whether the folder is hidden")
