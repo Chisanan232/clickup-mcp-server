@@ -228,7 +228,9 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
             assert "Request failed after" in str(exc_info.value)
 
     @pytest.mark.asyncio
-    async def test_logs_error_on_client_error_response(self, api_client: ClickUpAPIClient, caplog: pytest.LogCaptureFixture) -> None:
+    async def test_logs_error_on_client_error_response(
+        self, api_client: ClickUpAPIClient, caplog: pytest.LogCaptureFixture
+    ) -> None:
         """Test that a 4xx error logs an error-level message with details."""
         mock_response = Mock()
         mock_response.status_code = 400
@@ -249,7 +251,9 @@ class TestClickUpAPIClient(BaseAPIClientTestSuite):
         assert "Bad request" in messages
 
     @pytest.mark.asyncio
-    async def test_logs_error_when_retries_exhausted(self, api_client: ClickUpAPIClient, caplog: pytest.LogCaptureFixture) -> None:
+    async def test_logs_error_when_retries_exhausted(
+        self, api_client: ClickUpAPIClient, caplog: pytest.LogCaptureFixture
+    ) -> None:
         """Test that exhausting retries logs a final error-level message before raising."""
         with patch.object(api_client._client, "request", side_effect=httpx.HTTPError("Connection failed")):
             with caplog.at_level("ERROR"):
