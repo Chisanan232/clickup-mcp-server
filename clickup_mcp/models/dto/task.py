@@ -12,6 +12,14 @@ from pydantic import Field
 from .base import BaseRequestDTO, BaseResponseDTO
 
 
+PROPERTY_NAME_DESCRIPTION: str = "The name of the task"
+PROPERTY_TASK_DESCRIPTION_DESCRIPTION: str = "Task description"
+PROPERTY_STATUS_DESCRIPTION: str = "Task status"
+PROPERTY_DUE_DATE_DESCRIPTION: str = "Due date in milliseconds"
+PROPERTY_DUE_DATE_TIME_DESCRIPTION: str = "Whether due date includes time"
+PROPERTY_TIME_ESTIMATE_DESCRIPTION: str = "Time estimate in milliseconds"
+
+
 class TaskCreate(BaseRequestDTO):
     """DTO for creating a new task.
 
@@ -21,14 +29,14 @@ class TaskCreate(BaseRequestDTO):
     Supports creating subtasks by specifying parent task ID.
     """
 
-    name: str = Field(description="The name of the task")
-    description: str | None = Field(default=None, description="Task description")
-    status: str | None = Field(default=None, description="Task status")
+    name: str = Field(description=PROPERTY_NAME_DESCRIPTION)
+    description: str | None = Field(default=None, description=PROPERTY_TASK_DESCRIPTION_DESCRIPTION)
+    status: str | None = Field(default=None, description=PROPERTY_STATUS_DESCRIPTION)
     priority: int | None = Field(default=None, description="Priority level (1-5)")
     assignees: List[int] = Field(default_factory=list, description="List of user IDs to assign")
-    due_date: int | None = Field(default=None, description="Due date in milliseconds")
-    due_date_time: bool | None = Field(default=None, description="Whether due date includes time")
-    time_estimate: int | None = Field(default=None, description="Time estimate in milliseconds")
+    due_date: int | None = Field(default=None, description=PROPERTY_DUE_DATE_DESCRIPTION)
+    due_date_time: bool | None = Field(default=None, description=PROPERTY_DUE_DATE_TIME_DESCRIPTION)
+    time_estimate: int | None = Field(default=None, description=PROPERTY_TIME_ESTIMATE_DESCRIPTION)
     parent: str | None = Field(default=None, description="Parent task ID for subtasks")
     custom_fields: List[Dict[str, Any]] = Field(default_factory=list, description="Custom field values")
 
@@ -43,14 +51,14 @@ class TaskUpdate(BaseRequestDTO):
     Use set_custom_field() instead.
     """
 
-    name: str | None = Field(default=None, description="The name of the task")
-    description: str | None = Field(default=None, description="Task description")
-    status: str | None = Field(default=None, description="Task status")
+    name: str | None = Field(default=None, description=PROPERTY_NAME_DESCRIPTION)
+    description: str | None = Field(default=None, description=PROPERTY_TASK_DESCRIPTION_DESCRIPTION)
+    status: str | None = Field(default=None, description=PROPERTY_STATUS_DESCRIPTION)
     priority: int | None = Field(default=None, description="Priority level (1-5)")
     assignees: List[int] | None = Field(default=None, description="List of user IDs to assign")
-    due_date: int | None = Field(default=None, description="Due date in milliseconds")
-    due_date_time: bool | None = Field(default=None, description="Whether due date includes time")
-    time_estimate: int | None = Field(default=None, description="Time estimate in milliseconds")
+    due_date: int | None = Field(default=None, description=PROPERTY_DUE_DATE_DESCRIPTION)
+    due_date_time: bool | None = Field(default=None, description=PROPERTY_DUE_DATE_TIME_DESCRIPTION)
+    time_estimate: int | None = Field(default=None, description=PROPERTY_TIME_ESTIMATE_DESCRIPTION)
 
 
 class TaskListQuery(BaseRequestDTO):
@@ -97,17 +105,17 @@ class TaskResp(BaseResponseDTO):
 
     id: str = Field(description="The unique identifier for the task")
     custom_id: str | None = Field(default=None, description="Custom task ID")
-    name: str = Field(description="The name of the task")
-    text_content: str | None = Field(default=None, description="Task description")
+    name: str = Field(description=PROPERTY_NAME_DESCRIPTION)
+    text_content: str | None = Field(default=None, description=PROPERTY_TASK_DESCRIPTION_DESCRIPTION)
     description: str | None = Field(default=None, description="Task description (alternate field)")
-    status: Dict[str, Any] | None = Field(default=None, description="Task status")
+    status: Dict[str, Any] | None = Field(default=None, description=PROPERTY_STATUS_DESCRIPTION)
     orderindex: str | None = Field(default=None, description="Order index")
     date_created: str | None = Field(default=None, description="Creation timestamp")
     date_updated: str | None = Field(default=None, description="Last update timestamp")
     date_closed: str | None = Field(default=None, description="Closure timestamp")
-    due_date: int | None = Field(default=None, description="Due date in milliseconds")
-    due_date_time: bool | None = Field(default=None, description="Whether due date includes time")
-    time_estimate: int | None = Field(default=None, description="Time estimate in milliseconds")
+    due_date: int | None = Field(default=None, description=PROPERTY_DUE_DATE_DESCRIPTION)
+    due_date_time: bool | None = Field(default=None, description=PROPERTY_DUE_DATE_TIME_DESCRIPTION)
+    time_estimate: int | None = Field(default=None, description=PROPERTY_TIME_ESTIMATE_DESCRIPTION)
     time_spent: int | None = Field(default=None, description="Time spent in milliseconds")
     priority: Dict[str, Any] | None = Field(default=None, description="Priority information")
     points: int | None = Field(default=None, description="Story points")
