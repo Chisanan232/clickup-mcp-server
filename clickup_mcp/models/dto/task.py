@@ -197,7 +197,11 @@ class TaskResp(BaseResponseDTO):
         task_id: str | None = Field(default=None)
         depends_on: str | None = Field(default=None)
         dependency_type: str | None = Field(default=None)
-        type: str | None = Field(default=None)
+        type: int | None = Field(default=None)
+        date_created: EpochMs | None = Field(default=None)
+        userid: str | None = Field(default=None)
+        workspace_id: str | None = Field(default=None)
+        chain_id: str | None = Field(default=None)
 
     class SubtaskSummary(BaseResponseDTO):
         id: str | None = Field(default=None)
