@@ -60,7 +60,15 @@ class SprintsFeature(FeatureToggle):
 
 
 class SpaceFeatures(BaseRequestDTO):
-    """Typed container for Space feature configuration."""
+    """Typed container for Space feature configuration.
+
+    Notes:
+    - All JSON keys are serialized in snake_case to match the ClickUp OpenAPI spec.
+    - Unknown feature blobs can be provided via ``extra_features`` and are merged
+      into the top-level payload produced by ``to_payload()``.
+    - This object can act like a mapping for backward-compat tests via
+      ``_as_legacy_dict()``, ``__contains__``, and ``__getitem__``.
+    """
 
     due_dates: Optional[DueDatesFeature] = None
     time_tracking: Optional[TimeTrackingFeature] = None
@@ -74,6 +82,13 @@ class SpaceFeatures(BaseRequestDTO):
     extra_features: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
 
     def to_payload(self) -> dict[str, Any]:
+        """Serialize features to a request payload.
+
+        Behavior:
+        - Uses snake_case keys and excludes ``None`` values.
+        - Merges ``extra_features`` into the top-level dict to match ClickUp's
+          expected payload shape for feature toggles.
+        """
         # Dump with snake_case keys
         payload: dict[str, Any] = self.model_dump(exclude_none=True)
         # Remove extra_features key and merge its contents into the top-level features object
@@ -84,6 +99,12 @@ class SpaceFeatures(BaseRequestDTO):
 
     # Back-compat: Behave like a mapping for tests expecting dict semantics
     def _as_legacy_dict(self) -> dict[str, Any]:
+        """Return a dict view used by legacy tests/consumers.
+
+        Produces a best-effort mapping combining typed feature toggles, any
+        unknown attributes attached to this instance, and the "extra_features"
+        blob, all as snake_case keys.
+        """
         result: dict[str, Any] = {}
         typed_keys = [
             "due_dates",
@@ -112,12 +133,15 @@ class SpaceFeatures(BaseRequestDTO):
         return result
 
     def __contains__(self, key: str) -> bool:  # support 'in' checks in tests
+        """Support ``in`` checks against the legacy dict view."""
         return key in self._as_legacy_dict()
 
     def __getitem__(self, key: str) -> Any:  # support indexing like a dict
+        """Support ``[]`` access via the legacy dict view."""
         return self._as_legacy_dict()[key]
 
     def keys(self):  # optional helper for iteration
+        """Return keys of the legacy dict view (for iteration/testing)."""
         return self._as_legacy_dict().keys()
 
 
@@ -134,6 +158,11 @@ class SpaceCreate(BaseRequestDTO):
     features: SpaceFeatures | None = Field(default=None, description="Features to enable for this space")
 
     def to_payload(self) -> dict[str, Any]:
+        """Serialize to request payload using snake_case keys.
+
+        If ``features`` is provided, its structured payload from
+        ``SpaceFeatures.to_payload()`` is included under the ``features`` key.
+        """
         payload = super().to_payload()
         # Inject typed features payload
         if self.features is not None:
@@ -154,6 +183,11 @@ class SpaceUpdate(BaseRequestDTO):
     features: SpaceFeatures | None = Field(default=None, description="Updated features configuration")
 
     def to_payload(self) -> dict[str, Any]:
+        """Serialize only provided fields (exclude ``None``) using snake_case keys.
+
+        If ``features`` is provided, its structured payload from
+        ``SpaceFeatures.to_payload()`` is included under the ``features`` key.
+        """
         payload = super().to_payload()
         if self.features is not None:
             payload["features"] = self.features.to_payload()
