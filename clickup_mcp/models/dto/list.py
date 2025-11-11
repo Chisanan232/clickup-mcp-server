@@ -5,8 +5,6 @@ These DTOs handle serialization/deserialization of List data
 for API interactions.
 """
 
-from typing import Any, Dict
-
 from pydantic import Field
 
 from .base import BaseRequestDTO, BaseResponseDTO
@@ -59,13 +57,27 @@ class ListResp(BaseResponseDTO):
     orderindex: int | None = Field(default=None, description="The order index of the list")
     status: str | None = Field(default=None, description=PROPERTY_STATUS_DESCRIPTION)
     priority: int | None = Field(default=None, description="Priority level")
-    assignee: Dict[str, Any] | None = Field(default=None, description="Assigned user")
+
+    # Lightweight typed refs
+    class UserRef(BaseResponseDTO):
+        id: int | str | None = Field(default=None)
+        username: str | None = Field(default=None)
+
+    class FolderRef(BaseResponseDTO):
+        id: str | None = Field(default=None)
+        name: str | None = Field(default=None)
+
+    class SpaceRef(BaseResponseDTO):
+        id: str | None = Field(default=None)
+        name: str | None = Field(default=None)
+
+    assignee: UserRef | None = Field(default=None, description="Assigned user")
     task_count: int | None = Field(default=None, description="Number of tasks in the list")
     due_date: int | None = Field(default=None, description=PROPERTY_DUE_DATE_DESCRIPTION)
     due_date_time: bool | None = Field(default=None, description=PROPERTY_DUE_DATE_TIME_DESCRIPTION)
     start_date: int | None = Field(default=None, description="Start date in milliseconds")
     start_date_time: bool | None = Field(default=None, description="Whether start date includes time")
-    folder: Dict[str, Any] | None = Field(default=None, description="The folder this list belongs to")
-    space: Dict[str, Any] | None = Field(default=None, description="The space this list belongs to")
+    folder: FolderRef | None = Field(default=None, description="The folder this list belongs to")
+    space: SpaceRef | None = Field(default=None, description="The space this list belongs to")
     content: str | None = Field(default=None, description="Description of the list")
     archived: bool = Field(default=False, description="Whether the list is archived")

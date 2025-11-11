@@ -5,7 +5,7 @@ These DTOs handle serialization/deserialization of Folder data
 for API interactions.
 """
 
-from typing import Any, Dict, List
+from typing import List
 
 from pydantic import Field
 
@@ -44,6 +44,17 @@ class FolderResp(BaseResponseDTO):
     orderindex: int | None = Field(default=None, description="The order index of the folder")
     override_statuses: bool = Field(default=False, description="Whether this folder overrides statuses")
     hidden: bool = Field(default=False, description="Whether the folder is hidden")
-    space: Dict[str, Any] | None = Field(default=None, description="The space this folder belongs to")
+
+    # Lightweight typed refs for clarity
+    class SpaceRef(BaseResponseDTO):
+        id: str | None = Field(default=None)
+        name: str | None = Field(default=None)
+
+    class ListSummary(BaseResponseDTO):
+        id: str | None = Field(default=None)
+        name: str | None = Field(default=None)
+        orderindex: int | None = Field(default=None)
+
+    space: SpaceRef | None = Field(default=None, description="The space this folder belongs to")
     task_count: int | None = Field(default=None, description="The number of tasks in this folder")
-    lists: List[Dict[str, Any]] | None = Field(default=None, description="Lists in this folder")
+    lists: List[ListSummary] | None = Field(default=None, description="Lists in this folder")
