@@ -1,8 +1,8 @@
 """Unit tests for TaskMapper DTO ↔ Domain conversions."""
 
-from clickup_mcp.models.mapping.task_mapper import TaskMapper
 from clickup_mcp.models.domain.task import ClickUpTask
 from clickup_mcp.models.dto.task import TaskResp
+from clickup_mcp.models.mapping.task_mapper import TaskMapper
 
 
 def test_to_domain_from_resp_minimal() -> None:

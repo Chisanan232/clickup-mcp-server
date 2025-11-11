@@ -5,7 +5,6 @@ Translate between Space transport DTOs and the ClickUpSpace domain entity.
 
 from __future__ import annotations
 
-from typing import Any
 
 from clickup_mcp.models.domain.space import ClickUpSpace
 from clickup_mcp.models.dto.space import SpaceCreate, SpaceResp, SpaceUpdate

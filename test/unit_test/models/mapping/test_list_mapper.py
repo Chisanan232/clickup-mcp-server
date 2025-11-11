@@ -1,8 +1,8 @@
 """Unit tests for ListMapper DTO ↔ Domain conversions."""
 
-from clickup_mcp.models.mapping.list_mapper import ListMapper
 from clickup_mcp.models.domain.list import ClickUpList
 from clickup_mcp.models.dto.list import ListResp
+from clickup_mcp.models.mapping.list_mapper import ListMapper
 
 
 def test_to_domain_from_resp_minimal() -> None:

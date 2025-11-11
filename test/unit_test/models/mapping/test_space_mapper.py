@@ -1,8 +1,8 @@
 """Unit tests for SpaceMapper DTO ↔ Domain conversions."""
 
-from clickup_mcp.models.mapping.space_mapper import SpaceMapper
 from clickup_mcp.models.domain.space import ClickUpSpace
-from clickup_mcp.models.dto.space import SpaceResp, SpaceFeatures, DueDatesFeature
+from clickup_mcp.models.dto.space import DueDatesFeature, SpaceFeatures, SpaceResp
+from clickup_mcp.models.mapping.space_mapper import SpaceMapper
 
 
 def test_to_domain_from_resp_minimal() -> None:

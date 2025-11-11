@@ -6,7 +6,6 @@ Task domain entity. Keeps DTO shapes out of the domain.
 
 from __future__ import annotations
 
-from typing import Any
 
 from clickup_mcp.models.domain.task import ClickUpTask
 from clickup_mcp.models.dto.task import TaskCreate, TaskResp, TaskUpdate
@@ -34,11 +33,7 @@ class TaskMapper:
         list_id = resp.list.id if resp.list and resp.list.id else None
         space_id = resp.space.id if resp.space and resp.space.id else None
 
-        cf = [
-            {"id": c.id, "value": c.value}
-            for c in resp.custom_fields
-            if c.id is not None
-        ]
+        cf = [{"id": c.id, "value": c.value} for c in resp.custom_fields if c.id is not None]
 
         return ClickUpTask(
             id=resp.id,

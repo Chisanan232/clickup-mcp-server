@@ -1,8 +1,8 @@
 """Unit tests for FolderMapper DTO ↔ Domain conversions."""
 
-from clickup_mcp.models.mapping.folder_mapper import FolderMapper
 from clickup_mcp.models.domain.folder import ClickUpFolder
 from clickup_mcp.models.dto.folder import FolderResp
+from clickup_mcp.models.mapping.folder_mapper import FolderMapper
 
 
 def test_to_domain_from_resp_minimal() -> None:
