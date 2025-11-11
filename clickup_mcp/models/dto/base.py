@@ -33,6 +33,10 @@ class BaseRequestDTO(BaseDTO):
         """Create a DTO from a dictionary."""
         return cls(**data)
 
+    def to_payload(self) -> dict[str, Any]:
+        """Default payload serialization with snake_case keys and no None values."""
+        return self.model_dump(exclude_none=True)
+
 
 class BaseResponseDTO(BaseDTO):
     """Base class for response DTOs."""
