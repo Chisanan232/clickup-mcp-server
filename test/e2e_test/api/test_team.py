@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 from clickup_mcp.client import ClickUpAPIClient
 from clickup_mcp.models.domain import ClickUpTeam
-from clickup_mcp.models.dto.space import SpaceResp
+from clickup_mcp.models.dto.space import SpaceResp, SpaceFeatures
 
 
 class TestTeamAPIE2E:
@@ -130,4 +130,4 @@ class TestTeamAPIE2E:
             if space.statuses is not None:
                 assert isinstance(space.statuses, list)
             if space.features is not None:
-                assert isinstance(space.features, dict)
+                assert isinstance(space.features, SpaceFeatures)
