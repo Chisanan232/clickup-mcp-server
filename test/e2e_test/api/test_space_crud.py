@@ -21,7 +21,7 @@ from clickup_mcp.client import ClickUpAPIClient
 from clickup_mcp.models.dto.space import SpaceCreate, SpaceUpdate
 
 
-class TestSpaceFolderListCRUDE2E:
+class TestSpaceCRUDE2E:
     """End-to-end tests for Space, Folder, and List CRUD operations."""
 
     @pytest.fixture
