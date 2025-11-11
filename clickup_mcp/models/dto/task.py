@@ -6,6 +6,7 @@ for API interactions.
 """
 
 from typing import Any, Dict, List
+import builtins
 
 from pydantic import Field
 
@@ -168,7 +169,7 @@ class TaskResp(BaseResponseDTO):
         tag_fg: str | None = Field(default=None)
         tag_bg: str | None = Field(default=None)
 
-    tags: List[TaskTag] = Field(default_factory=list, description="Tags")
+    tags: List[TaskTag] = Field(default_factory=builtins.list, description="Tags")
     parent: str | None = Field(default=None, description="Parent task ID")
     priority_id: str | None = Field(default=None, description="Priority ID")
 
@@ -176,15 +177,15 @@ class TaskResp(BaseResponseDTO):
         id: int | str | None = Field(default=None)
         username: str | None = Field(default=None)
 
-    watchers: List[UserRef] = Field(default_factory=list, description="Watchers")
-    assignees: List[UserRef] = Field(default_factory=list, description="Assigned users")
+    watchers: List[UserRef] = Field(default_factory=builtins.list, description="Watchers")
+    assignees: List[UserRef] = Field(default_factory=builtins.list, description="Assigned users")
 
     class ChecklistSummary(BaseResponseDTO):
         id: str | None = Field(default=None)
         name: str | None = Field(default=None)
         resolved: bool | None = Field(default=None)
 
-    checklists: List[ChecklistSummary] = Field(default_factory=list, description="Checklists")
+    checklists: List[ChecklistSummary] = Field(default_factory=builtins.list, description="Checklists")
 
     # More descriptive shapes for remaining collections while allowing extras
     class CustomFieldValueResp(BaseResponseDTO):
@@ -207,6 +208,6 @@ class TaskResp(BaseResponseDTO):
         id: str | None = Field(default=None)
         name: str | None = Field(default=None)
 
-    custom_fields: List[CustomFieldValueResp] = Field(default_factory=list, description="Custom field values")
+    custom_fields: List[CustomFieldValueResp] = Field(default_factory=builtins.list, description="Custom field values")
     dependencies: List[TaskDependency] | None = Field(default=None, description="Task dependencies")
     subtasks: List[SubtaskSummary] | None = Field(default=None, description="Subtasks")
