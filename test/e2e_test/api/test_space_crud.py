@@ -1,9 +1,9 @@
 """
-End-to-end tests for Space, Folder, and List CRUD operations.
+End-to-end tests for Space CRUD operations.
 
 This module contains tests that make real API calls to the ClickUp API
-using the Space, Folder, and List API clients. These tests require a valid
-ClickUp API token and a test team ID.
+using the Space API client. These tests require a valid ClickUp API token
+and a test team ID. Folder/List interactions are not covered here.
 
 Environment variables required:
 - E2E_TEST_API_TOKEN: Valid ClickUp API token
