@@ -1,3 +1,9 @@
+"""Unit tests for Task DTO behaviors.
+
+This module verifies TaskCreate.to_payload() maps custom_fields correctly when
+using a mix of typed CustomField DTOs and legacy {id, value} dicts.
+"""
+
 from clickup_mcp.models.dto.custom_fields import CFText
 from clickup_mcp.models.dto.task import TaskCreate
 
