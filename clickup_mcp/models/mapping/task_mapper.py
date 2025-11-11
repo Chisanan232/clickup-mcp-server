@@ -6,7 +6,6 @@ Task domain entity. Keeps DTO shapes out of the domain.
 
 from __future__ import annotations
 
-
 from clickup_mcp.models.domain.task import ClickUpTask
 from clickup_mcp.models.dto.task import TaskCreate, TaskResp, TaskUpdate
 
