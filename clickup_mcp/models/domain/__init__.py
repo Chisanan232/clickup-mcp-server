@@ -9,6 +9,7 @@ from .space import ClickUpSpace, Space
 from .team import ClickUpTeam, ClickUpTeamMember, ClickUpUser, Team
 from .folder import ClickUpFolder, Folder
 from .list import ClickUpList, List
+from .task import ClickUpTask, Task
 
 __all__ = [
     # Space models
@@ -20,6 +21,9 @@ __all__ = [
     # List models
     "ClickUpList",
     "List",  # Backwards compatibility alias
+    # Task models
+    "ClickUpTask",
+    "Task",  # Backwards compatibility alias
     # Team models
     "ClickUpTeam",
     "ClickUpTeamMember",
