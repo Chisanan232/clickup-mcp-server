@@ -5,6 +5,7 @@ This module provides a resource manager for interacting with ClickUp Teams/Works
 It follows the Resource Manager pattern described in the project documentation.
 """
 
+import logging
 from typing import TYPE_CHECKING, List
 
 from clickup_mcp.models.domain.team import ClickUpTeam
@@ -12,6 +13,8 @@ from clickup_mcp.models.dto.space import SpaceResp
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
+
+logger = logging.getLogger(__name__)
 
 
 class TeamAPI:
@@ -50,6 +53,7 @@ class TeamAPI:
         if not isinstance(teams_data, list):
             return []
 
+        logger.debug(f"Authorized teams: {teams_data}")
         # Create a list of ClickUpTeam instances
         return [ClickUpTeam(**team_data) for team_data in teams_data]
 
@@ -77,4 +81,5 @@ class TeamAPI:
         if not isinstance(spaces_data, list):
             return []
 
+        logger.debug(f"All spaces: {spaces_data}")
         return [SpaceResp(**space_data) for space_data in spaces_data]

@@ -5,12 +5,15 @@ This module provides a resource manager for interacting with ClickUp Folders.
 It follows the Resource Manager pattern described in the project documentation.
 """
 
+import logging
 from typing import TYPE_CHECKING, Optional
 
 from clickup_mcp.models.dto.folder import FolderCreate, FolderResp, FolderUpdate
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
+
+logger = logging.getLogger(__name__)
 
 
 class FolderAPI:
@@ -72,6 +75,7 @@ class FolderAPI:
             return []
 
         folders_data = response.data.get("folders", [])
+        logger.debug(f"All folders: {folders_data}")
         if not isinstance(folders_data, list):
             return []
 
@@ -96,6 +100,7 @@ class FolderAPI:
         if response.data is None or not isinstance(response.data, dict):
             return None
 
+        logger.debug(f"Folder API response: {response.data}")
         return FolderResp(**response.data)
 
     async def update(self, folder_id: str, folder_update: FolderUpdate) -> Optional[FolderResp]:

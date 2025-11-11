@@ -5,12 +5,15 @@ This module provides a resource manager for interacting with ClickUp Lists.
 It follows the Resource Manager pattern described in the project documentation.
 """
 
+import logging
 from typing import TYPE_CHECKING, Optional
 
 from clickup_mcp.models.dto.list import ListCreate, ListResp, ListUpdate
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
+
+logger = logging.getLogger(__name__)
 
 
 class ListAPI:
@@ -75,6 +78,7 @@ class ListAPI:
         if not isinstance(lists_data, list):
             return []
 
+        logger.debug(f"All lists: {lists_data}")
         return [ListResp(**list_data) for list_data in lists_data]
 
     async def get_all_folderless(self, space_id: str) -> list[ListResp]:
@@ -100,6 +104,7 @@ class ListAPI:
         if not isinstance(lists_data, list):
             return []
 
+        logger.debug(f"All folderless lists: {lists_data}")
         return [ListResp(**list_data) for list_data in lists_data]
 
     async def get(self, list_id: str) -> Optional[ListResp]:
@@ -122,6 +127,7 @@ class ListAPI:
         if response.data is None or not isinstance(response.data, dict):
             return None
 
+        logger.debug(f"List API response: {response.data}")
         return ListResp(**response.data)
 
     async def update(self, list_id: str, list_update: ListUpdate) -> Optional[ListResp]:

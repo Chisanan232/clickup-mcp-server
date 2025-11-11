@@ -5,12 +5,15 @@ This module provides a resource manager for interacting with ClickUp Tasks.
 It follows the Resource Manager pattern described in the project documentation.
 """
 
+import logging
 from typing import TYPE_CHECKING, Any, Optional
 
 from clickup_mcp.models.dto.task import TaskCreate, TaskListQuery, TaskResp, TaskUpdate
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
+
+logger = logging.getLogger(__name__)
 
 
 class TaskAPI:
@@ -89,6 +92,7 @@ class TaskAPI:
         if response.data is None or not isinstance(response.data, dict):
             return None
 
+        logger.debug(f"Task API response: {response.data}")
         return TaskResp(**response.data)
 
     async def list_in_list(self, list_id: str, query: TaskListQuery) -> list[TaskResp]:
@@ -133,6 +137,7 @@ class TaskAPI:
             if not isinstance(tasks_data, list) or len(tasks_data) == 0:
                 break
 
+            logger.debug(f"List task API response: {response.data}")
             # Convert to TaskResp DTOs
             for task_data in tasks_data:
                 all_tasks.append(TaskResp(**task_data))
