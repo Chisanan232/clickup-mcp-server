@@ -1,3 +1,13 @@
+"""Typed representations of ClickUp custom field values.
+
+This module defines discriminated-union DTOs for common ClickUp custom field
+types and small helpers to serialize them into request payloads.
+
+Notes:
+- These DTOs are intended for use inside request models (e.g., TaskCreate).
+- Serialization helpers output snake_case keys to match the OpenAPI spec.
+"""
+
 from __future__ import annotations
 
 from typing import Annotated, Literal, Union
@@ -64,8 +74,18 @@ CustomField = Annotated[
 
 
 def cf_to_create_payload(cf: CustomField) -> dict:
+    """Convert a typed custom field DTO to the create-task payload shape.
+
+    Returns a minimal dict with keys ``id`` and ``value`` suitable for
+    ClickUp's task creation endpoint.
+    """
     return {"id": cf.id, "value": cf.value}
 
 
 def cf_to_update_value(cf: CustomField) -> dict:
+    """Convert a typed custom field DTO to the update value shape.
+
+    Returns a dict with key ``value`` as expected by ClickUp's
+    set-custom-field endpoint.
+    """
     return {"value": cf.value}

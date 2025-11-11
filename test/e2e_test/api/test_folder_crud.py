@@ -1,13 +1,14 @@
 """
-End-to-end tests for Space, Folder, and List CRUD operations.
+End-to-end tests for Folder CRUD operations.
 
 This module contains tests that make real API calls to the ClickUp API
-using the Space, Folder, and List API clients. These tests require a valid
-ClickUp API token and a test team ID.
+using the Folder API client. These tests require a valid ClickUp API token,
+team ID, and space ID. Space/List interactions are not covered here.
 
 Environment variables required:
 - E2E_TEST_API_TOKEN: Valid ClickUp API token
 - CLICKUP_TEST_TEAM_ID: Team ID for testing
+- CLICKUP_TEST_SPACE_ID: Space ID where folders will be created
 """
 
 import os
@@ -22,7 +23,7 @@ from clickup_mcp.models.dto.folder import FolderCreate, FolderUpdate
 
 
 class TestFolderCRUDE2E:
-    """End-to-end tests for Space, Folder, and List CRUD operations."""
+    """End-to-end tests for Folder CRUD operations."""
 
     @pytest.fixture
     def env_setup(self) -> Generator[None, None, None]:
