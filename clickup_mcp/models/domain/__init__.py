@@ -8,6 +8,7 @@ in the ClickUp MCP application.
 from .space import ClickUpSpace, Space
 from .team import ClickUpTeam, ClickUpTeamMember, ClickUpUser, Team
 from .folder import ClickUpFolder, Folder
+from .list import ClickUpList, List
 
 __all__ = [
     # Space models
@@ -16,6 +17,9 @@ __all__ = [
     # Folder models
     "ClickUpFolder",
     "Folder",  # Backwards compatibility alias
+    # List models
+    "ClickUpList",
+    "List",  # Backwards compatibility alias
     # Team models
     "ClickUpTeam",
     "ClickUpTeamMember",
