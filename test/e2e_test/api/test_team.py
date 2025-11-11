@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 from clickup_mcp.client import ClickUpAPIClient
 from clickup_mcp.models.domain import ClickUpTeam
-from clickup_mcp.models.dto.space import SpaceResp, SpaceFeatures
+from clickup_mcp.models.dto.space import SpaceFeatures, SpaceResp
 
 
 class TestTeamAPIE2E:

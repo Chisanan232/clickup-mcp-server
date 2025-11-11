@@ -169,7 +169,7 @@ class SpaceResp(BaseResponseDTO):
     id: str = Field(description="The unique identifier for the space")
     name: str = Field(description=PROPERTY_NAME_DESCRIPTION)
     private: bool = Field(default=False, description="Whether the space is private")
-    
+
     # Typed status entries for clarity while allowing extra fields
     class SpaceStatus(BaseResponseDTO):
         id: str | None = Field(default=None)

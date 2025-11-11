@@ -185,7 +185,7 @@ class TaskResp(BaseResponseDTO):
         resolved: bool | None = Field(default=None)
 
     checklists: List[ChecklistSummary] = Field(default_factory=list, description="Checklists")
-    
+
     # More descriptive shapes for remaining collections while allowing extras
     class CustomFieldValueResp(BaseResponseDTO):
         id: str | None = Field(default=None)

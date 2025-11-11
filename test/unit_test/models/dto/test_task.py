@@ -1,7 +1,5 @@
-import pytest
-
-from clickup_mcp.models.dto.task import TaskCreate
 from clickup_mcp.models.dto.custom_fields import CFText
+from clickup_mcp.models.dto.task import TaskCreate
 
 
 def test_task_create_to_payload_custom_fields_union_and_dict() -> None:

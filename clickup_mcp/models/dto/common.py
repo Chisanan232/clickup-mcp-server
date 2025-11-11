@@ -1,6 +1,7 @@
-from typing import NewType, Annotated
+from enum import Enum, IntEnum
+from typing import Annotated, NewType
+
 from pydantic import AfterValidator
-from enum import IntEnum, Enum
 
 # Strong ID aliases
 TeamId = NewType("TeamId", str)
