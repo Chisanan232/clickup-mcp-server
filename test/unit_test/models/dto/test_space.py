@@ -1,3 +1,12 @@
+"""Unit tests for Space DTO to_payload behavior.
+
+This module verifies that:
+- SpaceFeatures.to_payload() merges extra_features into the top-level and uses
+  snake_case keys while excluding None values.
+- SpaceCreate/SpaceUpdate.to_payload() include a structured features block when
+  provided.
+"""
+
 from clickup_mcp.models.dto.space import (
     DueDatesFeature,
     SpaceCreate,
