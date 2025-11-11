@@ -6,7 +6,6 @@ It follows the Resource Manager pattern described in the project documentation.
 """
 
 import logging
-
 from typing import TYPE_CHECKING, List
 
 from clickup_mcp.models.domain.team import ClickUpTeam

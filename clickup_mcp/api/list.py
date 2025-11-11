@@ -6,7 +6,6 @@ It follows the Resource Manager pattern described in the project documentation.
 """
 
 import logging
-
 from typing import TYPE_CHECKING, Optional
 
 from clickup_mcp.models.dto.list import ListCreate, ListResp, ListUpdate
