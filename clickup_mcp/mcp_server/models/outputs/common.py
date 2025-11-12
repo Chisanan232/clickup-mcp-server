@@ -8,9 +8,7 @@ class OperationResult(BaseModel):
 
     ok: bool = Field(..., description="True if the operation succeeded")
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"ok": True}]}
-    }
+    model_config = {"json_schema_extra": {"examples": [{"ok": True}]}}
 
 
 class DeletionResult(BaseModel):
@@ -18,6 +16,4 @@ class DeletionResult(BaseModel):
 
     deleted: bool = Field(..., description="True if the resource was deleted")
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"deleted": True}]}
-    }
+    model_config = {"json_schema_extra": {"examples": [{"deleted": True}]}}
