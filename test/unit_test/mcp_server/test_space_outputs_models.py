@@ -1,9 +1,22 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from clickup_mcp.mcp_server.space import space_get, space_list, space_create, space_update, space_delete
-from clickup_mcp.mcp_server.models.outputs.space import SpaceResult, SpaceListResult
-from clickup_mcp.mcp_server.models.inputs.space import SpaceGetInput, SpaceListInput, SpaceCreateInput, SpaceUpdateInput, SpaceDeleteInput
+import pytest
+
+from clickup_mcp.mcp_server.models.inputs.space import (
+    SpaceCreateInput,
+    SpaceDeleteInput,
+    SpaceGetInput,
+    SpaceListInput,
+    SpaceUpdateInput,
+)
+from clickup_mcp.mcp_server.models.outputs.space import SpaceListResult, SpaceResult
+from clickup_mcp.mcp_server.space import (
+    space_create,
+    space_delete,
+    space_get,
+    space_list,
+    space_update,
+)
 
 
 @pytest.mark.asyncio
@@ -60,12 +73,28 @@ async def test_space_create_update_delete_return_result_models(mock_get_client: 
     created = type(
         "SpaceDTO",
         (),
-        {"id": "s1", "name": "Eng", "private": False, "team_id": "t1", "statuses": [], "multiple_assignees": False, "features": None},
+        {
+            "id": "s1",
+            "name": "Eng",
+            "private": False,
+            "team_id": "t1",
+            "statuses": [],
+            "multiple_assignees": False,
+            "features": None,
+        },
     )()
     updated = type(
         "SpaceDTO",
         (),
-        {"id": "s1", "name": "Eng2", "private": True, "team_id": "t1", "statuses": [], "multiple_assignees": True, "features": None},
+        {
+            "id": "s1",
+            "name": "Eng2",
+            "private": True,
+            "team_id": "t1",
+            "statuses": [],
+            "multiple_assignees": True,
+            "features": None,
+        },
     )()
     mock_client.space.create = AsyncMock(return_value=created)
     mock_client.space.update = AsyncMock(return_value=updated)

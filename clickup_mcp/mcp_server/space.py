@@ -6,17 +6,7 @@ This module exposes space tools following the scope.operation naming:
 It keeps backward-compatibility with an existing "get_space" tool used by tests.
 """
 
-from typing import Any, Dict, List, Optional
-
 from clickup_mcp.client import ClickUpAPIClientFactory
-from clickup_mcp.models.domain.space import ClickUpSpace
-from clickup_mcp.models.mapping.space_mapper import SpaceMapper
-from clickup_mcp.mcp_server.models.outputs.space import (
-    SpaceListItem,
-    SpaceListResult,
-    SpaceResult,
-)
-from clickup_mcp.mcp_server.models.outputs.common import DeletionResult
 from clickup_mcp.mcp_server.models.inputs.space import (
     SpaceCreateInput,
     SpaceDeleteInput,
@@ -24,6 +14,14 @@ from clickup_mcp.mcp_server.models.inputs.space import (
     SpaceListInput,
     SpaceUpdateInput,
 )
+from clickup_mcp.mcp_server.models.outputs.common import DeletionResult
+from clickup_mcp.mcp_server.models.outputs.space import (
+    SpaceListItem,
+    SpaceListResult,
+    SpaceResult,
+)
+from clickup_mcp.models.domain.space import ClickUpSpace
+from clickup_mcp.models.mapping.space_mapper import SpaceMapper
 
 from .app import mcp
 
@@ -31,9 +29,7 @@ from .app import mcp
 @mcp.tool(
     name="get_space",
     title="Get ClickUp Space",
-    description=(
-        "Get a ClickUp space by its ID. Use for backward-compat tests. HTTP: GET /space/{space_id}."
-    ),
+    description=("Get a ClickUp space by its ID. Use for backward-compat tests. HTTP: GET /space/{space_id}."),
 )
 async def get_space(space_id: str = "") -> dict[str, object] | None:
     """
@@ -121,7 +117,12 @@ async def space_create(input: SpaceCreateInput) -> SpaceResult | None:
 async def space_update(input: SpaceUpdateInput) -> SpaceResult | None:
     client = ClickUpAPIClientFactory.get()
     # Build a domain model carrying fields to update; name/multiple_assignees/private may be None
-    domain = ClickUpSpace(id=input.space_id, name=input.name or "", private=bool(input.private) if input.private is not None else False, multiple_assignees=bool(input.multiple_assignees) if input.multiple_assignees is not None else False)
+    domain = ClickUpSpace(
+        id=input.space_id,
+        name=input.name or "",
+        private=bool(input.private) if input.private is not None else False,
+        multiple_assignees=bool(input.multiple_assignees) if input.multiple_assignees is not None else False,
+    )
     dto = SpaceMapper.to_update_dto(domain)
     async with client:
         resp = await client.space.update(input.space_id, dto)
