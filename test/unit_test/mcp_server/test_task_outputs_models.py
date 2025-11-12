@@ -1,27 +1,28 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from clickup_mcp.mcp_server.task import (
-    task_create,
-    task_get,
-    task_list_in_list,
-    task_update,
-    task_set_custom_field,
-    task_clear_custom_field,
-    task_add_dependency,
-    task_delete,
-)
+import pytest
+
 from clickup_mcp.mcp_server.models.inputs.task import (
+    TaskAddDependencyInput,
+    TaskClearCustomFieldInput,
     TaskCreateInput,
     TaskGetInput,
     TaskListInListInput,
-    TaskUpdateInput,
     TaskSetCustomFieldInput,
-    TaskClearCustomFieldInput,
-    TaskAddDependencyInput,
+    TaskUpdateInput,
 )
-from clickup_mcp.mcp_server.models.outputs.task import TaskResult, TaskListResult
-from clickup_mcp.mcp_server.models.outputs.common import OperationResult, DeletionResult
+from clickup_mcp.mcp_server.models.outputs.common import DeletionResult, OperationResult
+from clickup_mcp.mcp_server.models.outputs.task import TaskListResult, TaskResult
+from clickup_mcp.mcp_server.task import (
+    task_add_dependency,
+    task_clear_custom_field,
+    task_create,
+    task_delete,
+    task_get,
+    task_list_in_list,
+    task_set_custom_field,
+    task_update,
+)
 
 
 def _fake_task_resp(**overrides):
@@ -71,11 +72,13 @@ async def test_task_list_in_list_truncates_and_forwards_timl(mock_get_client: Ma
     mock_client.__aexit__ = AsyncMock(return_value=None)
     # Return more than limit to exercise truncation
     tasks = [_fake_task_resp(id=f"t{i}") for i in range(105)]
+
     async def _list_in_list(list_id, query):
         # Assert include_timl flag is forwarded as set
         assert query.include_timl is True
         assert query.limit <= 100
         return tasks
+
     mock_client.task.list_in_list = AsyncMock(side_effect=_list_in_list)
     mock_get_client.return_value = mock_client
 

@@ -3,11 +3,15 @@ from typing import Any
 import pytest
 from pydantic import TypeAdapter
 
-from clickup_mcp.mcp_server.models.inputs.task import TaskCreateInput, TaskListInListInput
+from clickup_mcp.mcp_server.models.inputs.task import (
+    TaskCreateInput,
+    TaskListInListInput,
+)
 from clickup_mcp.mcp_server.models.outputs.folder import FolderListResult, FolderResult
 from clickup_mcp.mcp_server.models.outputs.list import ListListResult, ListResult
-from clickup_mcp.mcp_server.models.outputs.task import TaskResult, TaskListResult as TaskListOut
 from clickup_mcp.mcp_server.models.outputs.space import SpaceListResult, SpaceResult
+from clickup_mcp.mcp_server.models.outputs.task import TaskListResult as TaskListOut
+from clickup_mcp.mcp_server.models.outputs.task import TaskResult
 from clickup_mcp.mcp_server.models.outputs.workspace import WorkspaceListResult
 
 

@@ -7,19 +7,7 @@ Tools:
 - task.add_dependency
 """
 
-from typing import Any, Dict, List
-
-from .app import mcp
 from clickup_mcp.client import ClickUpAPIClientFactory
-from clickup_mcp.models.domain.task import ClickUpTask
-from clickup_mcp.models.mapping.task_mapper import TaskMapper
-from clickup_mcp.models.dto.task import TaskListQuery, TaskResp
-from clickup_mcp.mcp_server.models.outputs.task import (
-    TaskResult,
-    TaskListItem,
-    TaskListResult,
-)
-from clickup_mcp.mcp_server.models.outputs.common import OperationResult, DeletionResult
 from clickup_mcp.mcp_server.models.inputs.task import (
     TaskAddDependencyInput,
     TaskClearCustomFieldInput,
@@ -29,6 +17,17 @@ from clickup_mcp.mcp_server.models.inputs.task import (
     TaskSetCustomFieldInput,
     TaskUpdateInput,
 )
+from clickup_mcp.mcp_server.models.outputs.common import DeletionResult, OperationResult
+from clickup_mcp.mcp_server.models.outputs.task import (
+    TaskListItem,
+    TaskListResult,
+    TaskResult,
+)
+from clickup_mcp.models.domain.task import ClickUpTask
+from clickup_mcp.models.dto.task import TaskListQuery, TaskResp
+from clickup_mcp.models.mapping.task_mapper import TaskMapper
+
+from .app import mcp
 
 
 @mcp.tool(
@@ -139,7 +138,7 @@ async def task_update(input: TaskUpdateInput) -> TaskResult | None:
 @mcp.tool(
     name="task.set_custom_field",
     description=(
-        "Set a single custom field value on a task. Body is always {\"value\": ...}. "
+        'Set a single custom field value on a task. Body is always {"value": ...}. '
         "HTTP: POST /task/{task_id}/field/{field_id}."
     ),
 )
@@ -152,9 +151,7 @@ async def task_set_custom_field(input: TaskSetCustomFieldInput) -> OperationResu
 
 @mcp.tool(
     name="task.clear_custom_field",
-    description=(
-        "Clear a custom field value from a task. HTTP: DELETE /task/{task_id}/field/{field_id}."
-    ),
+    description=("Clear a custom field value from a task. HTTP: DELETE /task/{task_id}/field/{field_id}."),
 )
 async def task_clear_custom_field(input: TaskClearCustomFieldInput) -> OperationResult:
     client = ClickUpAPIClientFactory.get()
@@ -165,9 +162,7 @@ async def task_clear_custom_field(input: TaskClearCustomFieldInput) -> Operation
 
 @mcp.tool(
     name="task.add_dependency",
-    description=(
-        "Add a dependency between tasks (e.g., waiting_on/blocking). HTTP: POST /task/{task_id}/dependency."
-    ),
+    description=("Add a dependency between tasks (e.g., waiting_on/blocking). HTTP: POST /task/{task_id}/dependency."),
 )
 async def task_add_dependency(input: TaskAddDependencyInput) -> OperationResult:
     client = ClickUpAPIClientFactory.get()
@@ -178,9 +173,7 @@ async def task_add_dependency(input: TaskAddDependencyInput) -> OperationResult:
 
 @mcp.tool(
     name="task.delete",
-    description=(
-        "Delete a task by ID. Irreversible and permission-scoped. HTTP: DELETE /task/{task_id}."
-    ),
+    description=("Delete a task by ID. Irreversible and permission-scoped. HTTP: DELETE /task/{task_id}."),
 )
 async def task_delete(task_id: str) -> DeletionResult:
     if not task_id:

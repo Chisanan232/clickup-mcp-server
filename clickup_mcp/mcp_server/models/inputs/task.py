@@ -155,13 +155,7 @@ class TaskClearCustomFieldInput(BaseModel):
     When to use: Remove a custom field value from a task.
     """
 
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {"task_id": "task_123", "field_id": "cf_priority"}
-            ]
-        }
-    }
+    model_config = {"json_schema_extra": {"examples": [{"task_id": "task_123", "field_id": "cf_priority"}]}}
 
     task_id: str = Field(..., min_length=1, description="Task ID.")
     field_id: str = Field(..., min_length=1, description="Custom field ID.")
@@ -175,9 +169,7 @@ class TaskAddDependencyInput(BaseModel):
 
     model_config = {
         "json_schema_extra": {
-            "examples": [
-                {"task_id": "task_123", "depends_on": "task_456", "dependency_type": "waiting_on"}
-            ]
+            "examples": [{"task_id": "task_123", "depends_on": "task_456", "dependency_type": "waiting_on"}]
         }
     }
 
