@@ -69,18 +69,3 @@ class TaskListResult(BaseModel):
             ]
         }
     }
-
-
-class ToolIssue(BaseModel):
-    code: str = Field(..., description="PERMISSION_DENIED | RATE_LIMIT | NOT_FOUND | VALIDATION_ERROR")
-    message: str = Field(..., description="Human-readable error message")
-    hint: Optional[str] = Field(None, description="Optional remediation hint")
-
-
-T = TypeVar("T", bound=BaseModel)
-
-
-class ToolResponse(GenericModel, Generic[T]):
-    ok: bool = Field(..., description="True if the operation succeeded")
-    result: Optional[T] = Field(None, description="Result payload when ok=true")
-    issues: List[ToolIssue] = Field(default_factory=list, description="Business-level issues")
