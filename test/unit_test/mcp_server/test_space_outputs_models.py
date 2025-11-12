@@ -42,9 +42,10 @@ async def test_space_get_returns_result_model(mock_get_client: MagicMock) -> Non
     mock_client.space.get = AsyncMock(return_value=dto)
     mock_get_client.return_value = mock_client
 
-    res = await space_get(SpaceGetInput(space_id="s1"))
-    assert isinstance(res, SpaceResult)
-    assert res.id == "s1" and res.name == "Engineering" and res.team_id == "t1"
+    envelope = await space_get(SpaceGetInput(space_id="s1"))
+    assert envelope.ok is True
+    assert isinstance(envelope.result, SpaceResult)
+    assert envelope.result.id == "s1" and envelope.result.name == "Engineering" and envelope.result.team_id == "t1"
 
 
 @pytest.mark.asyncio
@@ -59,9 +60,10 @@ async def test_space_list_returns_result_list(mock_get_client: MagicMock) -> Non
     mock_client.team.get_spaces = AsyncMock(return_value=[dto1, dto2])
     mock_get_client.return_value = mock_client
 
-    res = await space_list(SpaceListInput(team_id="t1"))
-    assert isinstance(res, SpaceListResult)
-    assert [i.id for i in res.items] == ["s1", "s2"]
+    envelope = await space_list(SpaceListInput(team_id="t1"))
+    assert envelope.ok is True
+    assert isinstance(envelope.result, SpaceListResult)
+    assert [i.id for i in envelope.result.items] == ["s1", "s2"]
 
 
 @pytest.mark.asyncio
@@ -101,9 +103,9 @@ async def test_space_create_update_delete_return_result_models(mock_get_client: 
     mock_client.space.delete = AsyncMock(return_value=True)
     mock_get_client.return_value = mock_client
 
-    c = await space_create(SpaceCreateInput(team_id="t1", name="Eng"))
-    assert isinstance(c, SpaceResult)
-    u = await space_update(SpaceUpdateInput(space_id="s1", name="Eng2", private=True))
-    assert isinstance(u, SpaceResult)
-    d = await space_delete(SpaceDeleteInput(space_id="s1"))
-    assert d.deleted is True
+    c_env = await space_create(SpaceCreateInput(team_id="t1", name="Eng"))
+    assert c_env.ok is True and isinstance(c_env.result, SpaceResult)
+    u_env = await space_update(SpaceUpdateInput(space_id="s1", name="Eng2", private=True))
+    assert u_env.ok is True and isinstance(u_env.result, SpaceResult)
+    d_env = await space_delete(SpaceDeleteInput(space_id="s1"))
+    assert d_env.ok is True and d_env.result.deleted is True
