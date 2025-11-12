@@ -1,10 +1,20 @@
+"""ClickUp MCP functions package.
+
+Import submodules so FastMCP tool decorators run at import time.
 """
-ClickUp MCP functions.
 
-This module exports all MCP functions provided by the clickup-mcp-server.
-"""
+# Ensure app is created before importing tool modules
+from .app import mcp  # noqa: F401
 
-from .space import get_space
-from .team import get_authorized_teams
+# Import tool modules to register tools
+from . import workspace  # noqa: F401
+from . import space  # noqa: F401
+from . import team  # noqa: F401
+from . import folder  # noqa: F401
+from . import list  # noqa: F401
+from . import task  # noqa: F401
 
-__all__ = ["get_space", "get_authorized_teams"]
+__all__ = [
+    # legacy
+    "mcp",
+]
