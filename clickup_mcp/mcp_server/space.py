@@ -7,6 +7,8 @@ It keeps backward-compatibility with an existing "get_space" tool used by tests.
 """
 
 from clickup_mcp.client import ClickUpAPIClientFactory
+from clickup_mcp.exceptions import ClickUpAPIError, ResourceNotFoundError
+from clickup_mcp.mcp_server.errors import handle_tool_errors
 from clickup_mcp.mcp_server.models.inputs.space import (
     SpaceCreateInput,
     SpaceDeleteInput,
@@ -39,15 +41,12 @@ async def get_space(space_id: str = "") -> dict[str, object] | None:
         raise ValueError("Space ID is required")
 
     client = ClickUpAPIClientFactory.get()
-    try:
-        async with client:
-            resp = await client.space.get(space_id)
-        if not resp:
-            return None
-        domain = SpaceMapper.to_domain(resp)
-        return domain.model_dump()
-    except Exception as e:
-        raise ValueError(f"Error retrieving space: {e}")
+    async with client:
+        resp = await client.space.get(space_id)
+    if not resp:
+        return None
+    domain = SpaceMapper.to_domain(resp)
+    return domain.model_dump()
 
 
 @mcp.tool(
@@ -57,6 +56,7 @@ async def get_space(space_id: str = "") -> dict[str, object] | None:
         "HTTP: GET /space/{space_id}."
     ),
 )
+@handle_tool_errors
 async def space_get(input: SpaceGetInput) -> SpaceResult | None:
     if not input.space_id:
         raise ValueError("Space ID is required")
@@ -64,7 +64,7 @@ async def space_get(input: SpaceGetInput) -> SpaceResult | None:
     async with client:
         resp = await client.space.get(input.space_id)
     if not resp:
-        return None
+        raise ResourceNotFoundError("Space not found")
     d = SpaceMapper.to_domain(resp)
     return SpaceResult(id=d.id, name=d.name, private=d.private, team_id=d.team_id)
 
@@ -76,6 +76,7 @@ async def space_get(input: SpaceGetInput) -> SpaceResult | None:
         "HTTP: GET /team/{team_id}/space."
     ),
 )
+@handle_tool_errors
 async def space_list(input: SpaceListInput) -> SpaceListResult:
     client = ClickUpAPIClientFactory.get()
     async with client:
@@ -94,6 +95,7 @@ async def space_list(input: SpaceListInput) -> SpaceListResult:
         "HTTP: POST /team/{team_id}/space."
     ),
 )
+@handle_tool_errors
 async def space_create(input: SpaceCreateInput) -> SpaceResult | None:
     client = ClickUpAPIClientFactory.get()
     # Input -> Domain -> DTO
@@ -102,7 +104,7 @@ async def space_create(input: SpaceCreateInput) -> SpaceResult | None:
     async with client:
         resp = await client.space.create(input.team_id, dto)
     if not resp:
-        return None
+        raise ClickUpAPIError("Create space failed")
     d = SpaceMapper.to_domain(resp)
     return SpaceResult(id=d.id, name=d.name, private=d.private, team_id=d.team_id)
 
@@ -114,6 +116,7 @@ async def space_create(input: SpaceCreateInput) -> SpaceResult | None:
         "If you don't know `space_id`, call `space.list` first. HTTP: PUT /space/{space_id}."
     ),
 )
+@handle_tool_errors
 async def space_update(input: SpaceUpdateInput) -> SpaceResult | None:
     client = ClickUpAPIClientFactory.get()
     # Build a domain model carrying fields to update; name/multiple_assignees/private may be None
@@ -127,7 +130,7 @@ async def space_update(input: SpaceUpdateInput) -> SpaceResult | None:
     async with client:
         resp = await client.space.update(input.space_id, dto)
     if not resp:
-        return None
+        raise ResourceNotFoundError("Space not found")
     d = SpaceMapper.to_domain(resp)
     return SpaceResult(id=d.id, name=d.name, private=d.private, team_id=d.team_id)
 
@@ -139,6 +142,7 @@ async def space_update(input: SpaceUpdateInput) -> SpaceResult | None:
         "HTTP: DELETE /space/{space_id}."
     ),
 )
+@handle_tool_errors
 async def space_delete(input: SpaceDeleteInput) -> DeletionResult:
     client = ClickUpAPIClientFactory.get()
     async with client:

@@ -22,9 +22,9 @@ async def test_workspace_list_returns_result_models(mock_get_client: MagicMock) 
     mock_client.team.get_authorized_teams = AsyncMock(return_value=[team1, team2])
     mock_get_client.return_value = mock_client
 
-    result = await workspace_list()
-
-    assert isinstance(result, WorkspaceListResult)
-    assert len(result.items) == 2
-    assert result.items[0] == WorkspaceListItem(team_id="t1", name="Eng")
-    assert result.items[1] == WorkspaceListItem(team_id="t2", name="Ops")
+    envelope = await workspace_list()
+    assert envelope.ok is True
+    assert isinstance(envelope.result, WorkspaceListResult)
+    assert len(envelope.result.items) == 2
+    assert envelope.result.items[0] == WorkspaceListItem(team_id="t1", name="Eng")
+    assert envelope.result.items[1] == WorkspaceListItem(team_id="t2", name="Ops")

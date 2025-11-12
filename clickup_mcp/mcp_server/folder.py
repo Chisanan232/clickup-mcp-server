@@ -8,6 +8,8 @@ Tools:
 from typing import List
 
 from clickup_mcp.client import ClickUpAPIClientFactory
+from clickup_mcp.exceptions import ClickUpAPIError, ResourceNotFoundError
+from clickup_mcp.mcp_server.errors import handle_tool_errors
 from clickup_mcp.mcp_server.models.inputs.folder import (
     FolderCreateInput,
     FolderDeleteInput,
@@ -34,6 +36,7 @@ from .app import mcp
         "HTTP: POST /space/{space_id}/folder."
     ),
 )
+@handle_tool_errors
 async def folder_create(input: FolderCreateInput) -> FolderResult | None:
     client = ClickUpAPIClientFactory.get()
     domain = ClickUpFolder(id="temp", name=input.name, space_id=input.space_id)
@@ -41,7 +44,7 @@ async def folder_create(input: FolderCreateInput) -> FolderResult | None:
     async with client:
         resp = await client.folder.create(input.space_id, dto)
     if not resp:
-        return None
+        raise ClickUpAPIError("Create folder failed")
     d = FolderMapper.to_domain(resp)
     return FolderResult(id=d.id, name=d.name, space_id=d.space_id)
 
@@ -52,12 +55,13 @@ async def folder_create(input: FolderCreateInput) -> FolderResult | None:
         "Get a folder by ID. If unknown, list folders via `folder.list_in_space`. HTTP: GET /folder/{folder_id}."
     ),
 )
+@handle_tool_errors
 async def folder_get(input: FolderGetInput) -> FolderResult | None:
     client = ClickUpAPIClientFactory.get()
     async with client:
         resp = await client.folder.get(input.folder_id)
     if not resp:
-        return None
+        raise ResourceNotFoundError("Folder not found")
     d = FolderMapper.to_domain(resp)
     return FolderResult(id=d.id, name=d.name, space_id=d.space_id)
 
@@ -66,6 +70,7 @@ async def folder_get(input: FolderGetInput) -> FolderResult | None:
     name="folder.update",
     description=("Rename a folder. Only name updates supported here. HTTP: PUT /folder/{folder_id}."),
 )
+@handle_tool_errors
 async def folder_update(input: FolderUpdateInput) -> FolderResult | None:
     client = ClickUpAPIClientFactory.get()
     domain = ClickUpFolder(id=input.folder_id, name=input.name or "")
@@ -73,7 +78,7 @@ async def folder_update(input: FolderUpdateInput) -> FolderResult | None:
     async with client:
         resp = await client.folder.update(input.folder_id, dto)
     if not resp:
-        return None
+        raise ResourceNotFoundError("Folder not found")
     d = FolderMapper.to_domain(resp)
     return FolderResult(id=d.id, name=d.name, space_id=d.space_id)
 
@@ -82,6 +87,7 @@ async def folder_update(input: FolderUpdateInput) -> FolderResult | None:
     name="folder.delete",
     description=("Delete a folder by ID (irreversible; permission-scoped). HTTP: DELETE /folder/{folder_id}."),
 )
+@handle_tool_errors
 async def folder_delete(input: FolderDeleteInput) -> DeletionResult:
     client = ClickUpAPIClientFactory.get()
     async with client:
@@ -93,6 +99,7 @@ async def folder_delete(input: FolderDeleteInput) -> DeletionResult:
     name="folder.list_in_space",
     description=("List folders in a space to discover container IDs for lists. HTTP: GET /space/{space_id}/folder."),
 )
+@handle_tool_errors
 async def folder_list_in_space(input: FolderListInSpaceInput) -> FolderListResult:
     client = ClickUpAPIClientFactory.get()
     async with client:

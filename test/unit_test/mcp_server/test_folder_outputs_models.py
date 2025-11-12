@@ -57,18 +57,18 @@ async def test_folder_crud_and_list_return_result_models(mock_get_client: MagicM
     mock_client.folder.get_all = AsyncMock(return_value=[created, updated])
     mock_get_client.return_value = mock_client
 
-    c = await folder_create(FolderCreateInput(space_id="s1", name="Planning"))
-    assert isinstance(c, FolderResult) and c.id == "f1"
+    c_env = await folder_create(FolderCreateInput(space_id="s1", name="Planning"))
+    assert c_env.ok is True and isinstance(c_env.result, FolderResult) and c_env.result.id == "f1"
 
-    g = await folder_get(FolderGetInput(folder_id="f1"))
-    assert isinstance(g, FolderResult) and g.name == "Planning"
+    g_env = await folder_get(FolderGetInput(folder_id="f1"))
+    assert g_env.ok is True and isinstance(g_env.result, FolderResult) and g_env.result.name == "Planning"
 
-    u = await folder_update(FolderUpdateInput(folder_id="f1", name="Plan 2"))
-    assert isinstance(u, FolderResult) and u.name == "Plan 2"
+    u_env = await folder_update(FolderUpdateInput(folder_id="f1", name="Plan 2"))
+    assert u_env.ok is True and isinstance(u_env.result, FolderResult) and u_env.result.name == "Plan 2"
 
-    d = await folder_delete(FolderDeleteInput(folder_id="f1"))
-    assert isinstance(d, DeletionResult) and d.deleted is True
+    d_env = await folder_delete(FolderDeleteInput(folder_id="f1"))
+    assert d_env.ok is True and isinstance(d_env.result, DeletionResult) and d_env.result.deleted is True
 
-    l = await folder_list_in_space(FolderListInSpaceInput(space_id="s1"))
-    assert isinstance(l, FolderListResult)
-    assert [i.id for i in l.items] == ["f1", "f1"]
+    l_env = await folder_list_in_space(FolderListInSpaceInput(space_id="s1"))
+    assert l_env.ok is True and isinstance(l_env.result, FolderListResult)
+    assert [i.id for i in l_env.result.items] == ["f1", "f1"]

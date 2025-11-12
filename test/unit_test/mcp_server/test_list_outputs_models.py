@@ -82,25 +82,33 @@ async def test_list_crud_and_listing_return_result_models(mock_get_client: Magic
 
     mock_get_client.return_value = mock_client
 
-    c = await list_create(ListCreateInput(folder_id="f1", name="Sprint 12"))
-    assert isinstance(c, ListResult) and c.id == "L1"
+    c_env = await list_create(ListCreateInput(folder_id="f1", name="Sprint 12"))
+    assert c_env.ok is True and isinstance(c_env.result, ListResult) and c_env.result.id == "L1"
 
-    g = await list_get(ListGetInput(list_id="L1"))
-    assert isinstance(g, ListResult) and g.name == "Sprint 12"
+    g_env = await list_get(ListGetInput(list_id="L1"))
+    assert g_env.ok is True and isinstance(g_env.result, ListResult) and g_env.result.name == "Sprint 12"
 
-    u = await list_update(ListUpdateInput(list_id="L1", name="Sprint 13"))
-    assert isinstance(u, ListResult) and u.name == "Sprint 13"
+    u_env = await list_update(ListUpdateInput(list_id="L1", name="Sprint 13"))
+    assert u_env.ok is True and isinstance(u_env.result, ListResult) and u_env.result.name == "Sprint 13"
 
-    d = await list_delete(ListDeleteInput(list_id="L1"))
-    assert isinstance(d, DeletionResult) and d.deleted is True
+    d_env = await list_delete(ListDeleteInput(list_id="L1"))
+    assert d_env.ok is True and isinstance(d_env.result, DeletionResult) and d_env.result.deleted is True
 
-    lf = await list_list_in_folder(ListListInFolderInput(folder_id="f1"))
-    assert isinstance(lf, ListListResult) and [i.id for i in lf.items] == ["L1"]
+    lf_env = await list_list_in_folder(ListListInFolderInput(folder_id="f1"))
+    assert (
+        lf_env.ok is True
+        and isinstance(lf_env.result, ListListResult)
+        and [i.id for i in lf_env.result.items] == ["L1"]
+    )
 
-    ls = await list_list_in_space_folderless(ListListInSpaceFolderlessInput(space_id="s1"))
-    assert isinstance(ls, ListListResult) and [i.id for i in ls.items] == ["L1"]
+    ls_env = await list_list_in_space_folderless(ListListInSpaceFolderlessInput(space_id="s1"))
+    assert (
+        ls_env.ok is True
+        and isinstance(ls_env.result, ListListResult)
+        and [i.id for i in ls_env.result.items] == ["L1"]
+    )
 
-    add = await list_add_task(ListAddTaskInput(list_id="L1", task_id="t1"))
-    assert isinstance(add, OperationResult) and add.ok is True
-    rem = await list_remove_task(ListRemoveTaskInput(list_id="L1", task_id="t1"))
-    assert isinstance(rem, OperationResult) and rem.ok is True
+    add_env = await list_add_task(ListAddTaskInput(list_id="L1", task_id="t1"))
+    assert add_env.ok is True and isinstance(add_env.result, OperationResult) and add_env.result.ok is True
+    rem_env = await list_remove_task(ListRemoveTaskInput(list_id="L1", task_id="t1"))
+    assert rem_env.ok is True and isinstance(rem_env.result, OperationResult) and rem_env.result.ok is True
