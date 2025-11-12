@@ -3,12 +3,15 @@ from typing import Any
 import pytest
 from pydantic import TypeAdapter
 
+from clickup_mcp.mcp_server.models.outputs.space import SpaceResult, SpaceListResult
 from clickup_mcp.mcp_server.models.outputs.workspace import WorkspaceListResult
 
 
 @pytest.mark.parametrize(
     "model",
     [
+        SpaceResult,
+        SpaceListResult,
         WorkspaceListResult,
     ],
 )
