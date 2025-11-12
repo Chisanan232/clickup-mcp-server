@@ -16,11 +16,7 @@ class SpaceCreateInput(BaseModel):
     """
 
     model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {"team_id": "team_1", "name": "[TEST] Eng", "multiple_assignees": True}
-            ]
-        }
+        "json_schema_extra": {"examples": [{"team_id": "team_1", "name": "[TEST] Eng", "multiple_assignees": True}]}
     }
 
     team_id: str = Field(..., min_length=1, description="Target workspace (team) ID.")
@@ -34,9 +30,7 @@ class SpaceGetInput(BaseModel):
     When to use: Retrieve details for a single space by ID.
     """
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"space_id": "space_1"}]}
-    }
+    model_config = {"json_schema_extra": {"examples": [{"space_id": "space_1"}]}}
 
     space_id: str = Field(..., min_length=1, description="Space ID.")
 
@@ -68,9 +62,7 @@ class SpaceDeleteInput(BaseModel):
     When to use: Permanently remove a space. Ensure no critical data is lost.
     """
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"space_id": "space_1"}]}
-    }
+    model_config = {"json_schema_extra": {"examples": [{"space_id": "space_1"}]}}
 
     space_id: str = Field(..., min_length=1, description="Space ID.")
 
@@ -81,8 +73,6 @@ class SpaceListInput(BaseModel):
     When to use: Discover spaces within a specific workspace (team).
     """
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"team_id": "team_1"}]}
-    }
+    model_config = {"json_schema_extra": {"examples": [{"team_id": "team_1"}]}}
 
     team_id: str = Field(..., min_length=1, description="Workspace (team) ID.")
