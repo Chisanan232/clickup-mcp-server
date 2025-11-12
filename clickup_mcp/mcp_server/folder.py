@@ -5,18 +5,9 @@ Tools:
 - folder.list_in_space
 """
 
-from typing import Any, Dict, List
+from typing import List
 
-from .app import mcp
 from clickup_mcp.client import ClickUpAPIClientFactory
-from clickup_mcp.models.domain.folder import ClickUpFolder
-from clickup_mcp.models.mapping.folder_mapper import FolderMapper
-from clickup_mcp.mcp_server.models.outputs.folder import (
-    FolderListItem,
-    FolderListResult,
-    FolderResult,
-)
-from clickup_mcp.mcp_server.models.outputs.common import DeletionResult
 from clickup_mcp.mcp_server.models.inputs.folder import (
     FolderCreateInput,
     FolderDeleteInput,
@@ -24,6 +15,16 @@ from clickup_mcp.mcp_server.models.inputs.folder import (
     FolderListInSpaceInput,
     FolderUpdateInput,
 )
+from clickup_mcp.mcp_server.models.outputs.common import DeletionResult
+from clickup_mcp.mcp_server.models.outputs.folder import (
+    FolderListItem,
+    FolderListResult,
+    FolderResult,
+)
+from clickup_mcp.models.domain.folder import ClickUpFolder
+from clickup_mcp.models.mapping.folder_mapper import FolderMapper
+
+from .app import mcp
 
 
 @mcp.tool(
@@ -63,9 +64,7 @@ async def folder_get(input: FolderGetInput) -> FolderResult | None:
 
 @mcp.tool(
     name="folder.update",
-    description=(
-        "Rename a folder. Only name updates supported here. HTTP: PUT /folder/{folder_id}."
-    ),
+    description=("Rename a folder. Only name updates supported here. HTTP: PUT /folder/{folder_id}."),
 )
 async def folder_update(input: FolderUpdateInput) -> FolderResult | None:
     client = ClickUpAPIClientFactory.get()
@@ -81,9 +80,7 @@ async def folder_update(input: FolderUpdateInput) -> FolderResult | None:
 
 @mcp.tool(
     name="folder.delete",
-    description=(
-        "Delete a folder by ID (irreversible; permission-scoped). HTTP: DELETE /folder/{folder_id}."
-    ),
+    description=("Delete a folder by ID (irreversible; permission-scoped). HTTP: DELETE /folder/{folder_id}."),
 )
 async def folder_delete(input: FolderDeleteInput) -> DeletionResult:
     client = ClickUpAPIClientFactory.get()
@@ -94,9 +91,7 @@ async def folder_delete(input: FolderDeleteInput) -> DeletionResult:
 
 @mcp.tool(
     name="folder.list_in_space",
-    description=(
-        "List folders in a space to discover container IDs for lists. HTTP: GET /space/{space_id}/folder."
-    ),
+    description=("List folders in a space to discover container IDs for lists. HTTP: GET /space/{space_id}/folder."),
 )
 async def folder_list_in_space(input: FolderListInSpaceInput) -> FolderListResult:
     client = ClickUpAPIClientFactory.get()

@@ -15,13 +15,7 @@ class FolderCreateInput(BaseModel):
     If you don’t know `space_id`, call `workspace.list` → `space.list` first.
     """
 
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {"space_id": "space_1", "name": "[TEST] Planning"}
-            ]
-        }
-    }
+    model_config = {"json_schema_extra": {"examples": [{"space_id": "space_1", "name": "[TEST] Planning"}]}}
 
     space_id: str = Field(..., min_length=1, description="Parent space ID.")
     name: str = Field(..., min_length=1, description="Folder name.")
@@ -33,9 +27,7 @@ class FolderGetInput(BaseModel):
     When to use: Retrieve folder details by ID.
     """
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"folder_id": "folder_1"}]}
-    }
+    model_config = {"json_schema_extra": {"examples": [{"folder_id": "folder_1"}]}}
 
     folder_id: str = Field(..., min_length=1, description="Folder ID.")
 
@@ -46,13 +38,7 @@ class FolderUpdateInput(BaseModel):
     When to use: Rename a folder. Only name updates are supported here.
     """
 
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {"folder_id": "folder_1", "name": "Roadmap"}
-            ]
-        }
-    }
+    model_config = {"json_schema_extra": {"examples": [{"folder_id": "folder_1", "name": "Roadmap"}]}}
 
     folder_id: str = Field(..., min_length=1, description="Folder ID.")
     name: Optional[str] = Field(None, min_length=1, description="New folder name.")
@@ -64,9 +50,7 @@ class FolderDeleteInput(BaseModel):
     When to use: Permanently remove a folder and its lists/tasks associations (per permissions).
     """
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"folder_id": "folder_1"}]}
-    }
+    model_config = {"json_schema_extra": {"examples": [{"folder_id": "folder_1"}]}}
 
     folder_id: str = Field(..., min_length=1, description="Folder ID.")
 
@@ -77,8 +61,6 @@ class FolderListInSpaceInput(BaseModel):
     When to use: Discover folders within a given space.
     """
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"space_id": "space_1"}]}
-    }
+    model_config = {"json_schema_extra": {"examples": [{"space_id": "space_1"}]}}
 
     space_id: str = Field(..., min_length=1, description="Space ID.")

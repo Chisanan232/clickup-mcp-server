@@ -1,16 +1,23 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from clickup_mcp.mcp_server.folder import folder_create, folder_get, folder_update, folder_delete, folder_list_in_space
+import pytest
+
+from clickup_mcp.mcp_server.folder import (
+    folder_create,
+    folder_delete,
+    folder_get,
+    folder_list_in_space,
+    folder_update,
+)
 from clickup_mcp.mcp_server.models.inputs.folder import (
     FolderCreateInput,
-    FolderGetInput,
-    FolderUpdateInput,
     FolderDeleteInput,
+    FolderGetInput,
     FolderListInSpaceInput,
+    FolderUpdateInput,
 )
-from clickup_mcp.mcp_server.models.outputs.folder import FolderResult, FolderListResult
 from clickup_mcp.mcp_server.models.outputs.common import DeletionResult
+from clickup_mcp.mcp_server.models.outputs.folder import FolderListResult, FolderResult
 
 
 @pytest.mark.asyncio
