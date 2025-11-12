@@ -18,9 +18,7 @@ class ListCreateInput(BaseModel):
 
     model_config = {
         "json_schema_extra": {
-            "examples": [
-                {"folder_id": "folder_1", "name": "Sprint Backlog", "status": "Open", "priority": 2}
-            ]
+            "examples": [{"folder_id": "folder_1", "name": "Sprint Backlog", "status": "Open", "priority": 2}]
         }
     }
 
@@ -40,9 +38,7 @@ class ListGetInput(BaseModel):
     When to use: Retrieve list details by ID.
     """
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"list_id": "list_1"}]}
-    }
+    model_config = {"json_schema_extra": {"examples": [{"list_id": "list_1"}]}}
 
     list_id: str = Field(..., min_length=1, description="List ID.")
 
@@ -55,9 +51,7 @@ class ListUpdateInput(BaseModel):
 
     model_config = {
         "json_schema_extra": {
-            "examples": [
-                {"list_id": "list_1", "name": "Sprint 12", "status": "In progress", "priority": 3}
-            ]
+            "examples": [{"list_id": "list_1", "name": "Sprint 12", "status": "In progress", "priority": 3}]
         }
     }
 
@@ -77,9 +71,7 @@ class ListDeleteInput(BaseModel):
     When to use: Permanently remove a list (and associated tasks per permissions).
     """
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"list_id": "list_1"}]}
-    }
+    model_config = {"json_schema_extra": {"examples": [{"list_id": "list_1"}]}}
 
     list_id: str = Field(..., min_length=1, description="List ID.")
 
@@ -90,9 +82,7 @@ class ListListInFolderInput(BaseModel):
     When to use: Discover lists within a given folder.
     """
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"folder_id": "folder_1"}]}
-    }
+    model_config = {"json_schema_extra": {"examples": [{"folder_id": "folder_1"}]}}
 
     folder_id: str = Field(..., min_length=1, description="Folder ID.")
 
@@ -103,9 +93,7 @@ class ListListInSpaceFolderlessInput(BaseModel):
     When to use: Discover lists that exist directly under a space (not in folders).
     """
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"space_id": "space_1"}]}
-    }
+    model_config = {"json_schema_extra": {"examples": [{"space_id": "space_1"}]}}
 
     space_id: str = Field(..., min_length=1, description="Space ID.")
 
@@ -116,9 +104,7 @@ class ListAddTaskInput(BaseModel):
     When to use: TIML is enabled and you want to add an existing task to another list.
     """
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"list_id": "list_2", "task_id": "task_123"}]}
-    }
+    model_config = {"json_schema_extra": {"examples": [{"list_id": "list_2", "task_id": "task_123"}]}}
 
     list_id: str = Field(..., min_length=1, description="Target list ID.")
     task_id: str = Field(..., min_length=1, description="Existing task ID.")
@@ -130,10 +116,7 @@ class ListRemoveTaskInput(BaseModel):
     When to use: TIML is enabled and you want to remove a task from a secondary list.
     """
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"list_id": "list_2", "task_id": "task_123"}]}
-    }
+    model_config = {"json_schema_extra": {"examples": [{"list_id": "list_2", "task_id": "task_123"}]}}
 
     list_id: str = Field(..., min_length=1, description="Target list ID.")
     task_id: str = Field(..., min_length=1, description="Existing task ID.")
-

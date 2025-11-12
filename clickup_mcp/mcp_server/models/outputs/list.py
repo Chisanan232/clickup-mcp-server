@@ -16,9 +16,7 @@ class ListResult(BaseModel):
 
     model_config = {
         "json_schema_extra": {
-            "examples": [
-                {"id": "list_1", "name": "Sprint 12", "status": "Open", "folder_id": "folder_1"}
-            ]
+            "examples": [{"id": "list_1", "name": "Sprint 12", "status": "Open", "folder_id": "folder_1"}]
         }
     }
 
@@ -31,10 +29,4 @@ class ListListItem(BaseModel):
 class ListListResult(BaseModel):
     items: List[ListListItem] = Field(default_factory=list, description="Lists in a folder/space")
 
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {"items": [{"id": "list_1", "name": "Sprint Backlog"}]}
-            ]
-        }
-    }
+    model_config = {"json_schema_extra": {"examples": [{"items": [{"id": "list_1", "name": "Sprint Backlog"}]}]}}

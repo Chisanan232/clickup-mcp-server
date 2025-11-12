@@ -1,28 +1,29 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from clickup_mcp.mcp_server.list import (
+    list_add_task,
     list_create,
-    list_get,
-    list_update,
     list_delete,
+    list_get,
     list_list_in_folder,
     list_list_in_space_folderless,
-    list_add_task,
     list_remove_task,
+    list_update,
 )
 from clickup_mcp.mcp_server.models.inputs.list_ import (
+    ListAddTaskInput,
     ListCreateInput,
-    ListGetInput,
-    ListUpdateInput,
     ListDeleteInput,
+    ListGetInput,
     ListListInFolderInput,
     ListListInSpaceFolderlessInput,
-    ListAddTaskInput,
     ListRemoveTaskInput,
+    ListUpdateInput,
 )
-from clickup_mcp.mcp_server.models.outputs.list import ListResult, ListListResult
 from clickup_mcp.mcp_server.models.outputs.common import DeletionResult, OperationResult
+from clickup_mcp.mcp_server.models.outputs.list import ListListResult, ListResult
 
 
 @pytest.mark.asyncio
@@ -36,9 +37,39 @@ async def test_list_crud_and_listing_return_result_models(mock_get_client: Magic
     folder_ref = type("FolderRef", (), {"id": "f1"})()
     space_ref = type("SpaceRef", (), {"id": "s1"})()
     user_ref = type("UserRef", (), {"id": 123})()
-    created = type("ListDTO", (), {"id": "L1", "name": "Sprint 12", "status": "Open", "folder": folder_ref, "space": space_ref, "assignee": user_ref, "content": None, "priority": None, "due_date": None, "due_date_time": None})()
+    created = type(
+        "ListDTO",
+        (),
+        {
+            "id": "L1",
+            "name": "Sprint 12",
+            "status": "Open",
+            "folder": folder_ref,
+            "space": space_ref,
+            "assignee": user_ref,
+            "content": None,
+            "priority": None,
+            "due_date": None,
+            "due_date_time": None,
+        },
+    )()
     got = created
-    updated = type("ListDTO", (), {"id": "L1", "name": "Sprint 13", "status": "Open", "folder": folder_ref, "space": space_ref, "assignee": user_ref, "content": None, "priority": None, "due_date": None, "due_date_time": None})()
+    updated = type(
+        "ListDTO",
+        (),
+        {
+            "id": "L1",
+            "name": "Sprint 13",
+            "status": "Open",
+            "folder": folder_ref,
+            "space": space_ref,
+            "assignee": user_ref,
+            "content": None,
+            "priority": None,
+            "due_date": None,
+            "due_date_time": None,
+        },
+    )()
 
     mock_client.list.create = AsyncMock(return_value=created)
     mock_client.list.get = AsyncMock(return_value=got)

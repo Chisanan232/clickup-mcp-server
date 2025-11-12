@@ -7,18 +7,9 @@ Tools:
 - list.add_task / list.remove_task (TIML)
 """
 
-from typing import Any, Dict, List
+from typing import List
 
-from .app import mcp
 from clickup_mcp.client import ClickUpAPIClientFactory
-from clickup_mcp.models.domain.list import ClickUpList
-from clickup_mcp.models.mapping.list_mapper import ListMapper
-from clickup_mcp.mcp_server.models.outputs.list import (
-    ListListItem,
-    ListListResult,
-    ListResult,
-)
-from clickup_mcp.mcp_server.models.outputs.common import DeletionResult, OperationResult
 from clickup_mcp.mcp_server.models.inputs.list_ import (
     ListAddTaskInput,
     ListCreateInput,
@@ -29,6 +20,16 @@ from clickup_mcp.mcp_server.models.inputs.list_ import (
     ListRemoveTaskInput,
     ListUpdateInput,
 )
+from clickup_mcp.mcp_server.models.outputs.common import DeletionResult, OperationResult
+from clickup_mcp.mcp_server.models.outputs.list import (
+    ListListItem,
+    ListListResult,
+    ListResult,
+)
+from clickup_mcp.models.domain.list import ClickUpList
+from clickup_mcp.models.mapping.list_mapper import ListMapper
+
+from .app import mcp
 
 
 @mcp.tool(
@@ -79,9 +80,7 @@ async def list_get(input: ListGetInput) -> ListResult | None:
 
 @mcp.tool(
     name="list.update",
-    description=(
-        "Update list metadata (name/content/status/priority/assignee/due fields). HTTP: PUT /list/{list_id}."
-    ),
+    description=("Update list metadata (name/content/status/priority/assignee/due fields). HTTP: PUT /list/{list_id}."),
 )
 async def list_update(input: ListUpdateInput) -> ListResult | None:
     client = ClickUpAPIClientFactory.get()
@@ -106,9 +105,7 @@ async def list_update(input: ListUpdateInput) -> ListResult | None:
 
 @mcp.tool(
     name="list.delete",
-    description=(
-        "Delete a list by ID (irreversible; permission-scoped). HTTP: DELETE /list/{list_id}."
-    ),
+    description=("Delete a list by ID (irreversible; permission-scoped). HTTP: DELETE /list/{list_id}."),
 )
 async def list_delete(input: ListDeleteInput) -> DeletionResult:
     client = ClickUpAPIClientFactory.get()
@@ -119,9 +116,7 @@ async def list_delete(input: ListDeleteInput) -> DeletionResult:
 
 @mcp.tool(
     name="list.list_in_folder",
-    description=(
-        "List lists in a folder to discover list IDs. HTTP: GET /folder/{folder_id}/list."
-    ),
+    description=("List lists in a folder to discover list IDs. HTTP: GET /folder/{folder_id}/list."),
 )
 async def list_list_in_folder(input: ListListInFolderInput) -> ListListResult:
     client = ClickUpAPIClientFactory.get()
@@ -136,9 +131,7 @@ async def list_list_in_folder(input: ListListInFolderInput) -> ListListResult:
 
 @mcp.tool(
     name="list.list_in_space_folderless",
-    description=(
-        "List folderless lists in a space to discover list IDs. HTTP: GET /space/{space_id}/list."
-    ),
+    description=("List folderless lists in a space to discover list IDs. HTTP: GET /space/{space_id}/list."),
 )
 async def list_list_in_space_folderless(input: ListListInSpaceFolderlessInput) -> ListListResult:
     client = ClickUpAPIClientFactory.get()
@@ -153,9 +146,7 @@ async def list_list_in_space_folderless(input: ListListInSpaceFolderlessInput) -
 
 @mcp.tool(
     name="list.add_task",
-    description=(
-        "Add an existing task to a list (TIML must be enabled). HTTP: POST /list/{list_id}/task/{task_id}."
-    ),
+    description=("Add an existing task to a list (TIML must be enabled). HTTP: POST /list/{list_id}/task/{task_id}."),
 )
 async def list_add_task(input: ListAddTaskInput) -> OperationResult:
     client = ClickUpAPIClientFactory.get()
@@ -166,9 +157,7 @@ async def list_add_task(input: ListAddTaskInput) -> OperationResult:
 
 @mcp.tool(
     name="list.remove_task",
-    description=(
-        "Remove a task from a secondary list (TIML). HTTP: DELETE /list/{list_id}/task/{task_id}."
-    ),
+    description=("Remove a task from a secondary list (TIML). HTTP: DELETE /list/{list_id}/task/{task_id}."),
 )
 async def list_remove_task(input: ListRemoveTaskInput) -> OperationResult:
     client = ClickUpAPIClientFactory.get()
