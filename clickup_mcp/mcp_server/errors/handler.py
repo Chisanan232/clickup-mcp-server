@@ -8,7 +8,15 @@ from __future__ import annotations
 
 import asyncio
 from functools import wraps
-from typing import Any, Awaitable, Callable, ParamSpec, TypeVar, get_type_hints, overload
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    ParamSpec,
+    TypeVar,
+    get_type_hints,
+    overload,
+)
 
 from pydantic import BaseModel
 
