@@ -2,6 +2,7 @@
 
 Currently a placeholder to centralize logging decisions later.
 """
+
 from __future__ import annotations
 
 import logging

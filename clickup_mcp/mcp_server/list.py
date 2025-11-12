@@ -10,7 +10,7 @@ Tools:
 from typing import List
 
 from clickup_mcp.client import ClickUpAPIClientFactory
-from clickup_mcp.exceptions import ClickUpAPIError, ResourceNotFoundError
+from clickup_mcp.exceptions import ClickUpAPIError
 from clickup_mcp.mcp_server.errors import handle_tool_errors
 from clickup_mcp.mcp_server.models.inputs.list_ import (
     ListAddTaskInput,

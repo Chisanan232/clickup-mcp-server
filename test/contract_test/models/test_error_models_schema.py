@@ -1,6 +1,5 @@
 from typing import Any, Dict, List
 
-import pytest
 from pydantic import TypeAdapter
 
 from clickup_mcp.mcp_server.errors.codes import IssueCode
@@ -51,7 +50,9 @@ def test_tool_response_schema_contract_for_list_payload() -> None:
     props = schema.get("properties", {})
     result_schema = props["result"]
     any_of = result_schema.get("anyOf") or []
-    has_array = any(s.get("type") == "array" for s in any_of if isinstance(s, dict)) or result_schema.get("type") == "array"
+    has_array = (
+        any(s.get("type") == "array" for s in any_of if isinstance(s, dict)) or result_schema.get("type") == "array"
+    )
     assert has_array
 
 

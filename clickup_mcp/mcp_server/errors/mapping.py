@@ -1,11 +1,11 @@
 """Central exception → ToolIssue mapping."""
+
 from __future__ import annotations
 
-import httpx
 from typing import Optional
 
-from .codes import IssueCode
-from .models import ToolIssue
+import httpx
+
 from clickup_mcp.exceptions import (
     AuthenticationError,
     AuthorizationError,
@@ -15,6 +15,9 @@ from clickup_mcp.exceptions import (
     ResourceNotFoundError,
     ValidationError,
 )
+
+from .codes import IssueCode
+from .models import ToolIssue
 
 
 def _retry_after_ms_from_headers(response: Optional[httpx.Response]) -> Optional[int]:
@@ -65,7 +68,9 @@ def map_exception(exc: Exception) -> ToolIssue:
     # ClickUp domain exceptions
     if isinstance(exc, RateLimitError):
         ms = int(float(exc.retry_after) * 1000) if getattr(exc, "retry_after", None) else None
-        return ToolIssue(code=IssueCode.RATE_LIMIT, message="Rate limit exceeded", hint="Back off and retry", retry_after_ms=ms)
+        return ToolIssue(
+            code=IssueCode.RATE_LIMIT, message="Rate limit exceeded", hint="Back off and retry", retry_after_ms=ms
+        )
     if isinstance(exc, (AuthenticationError, AuthorizationError)):
         return ToolIssue(code=IssueCode.PERMISSION_DENIED, message="Insufficient permissions or invalid token")
     if isinstance(exc, ResourceNotFoundError):

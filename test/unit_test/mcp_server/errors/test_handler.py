@@ -1,15 +1,12 @@
-import asyncio
 from typing import Any, Dict, List
 
-import httpx
 import pytest
 from pydantic import BaseModel
 
+from clickup_mcp.exceptions import AuthorizationError, ValidationError
 from clickup_mcp.mcp_server.errors.codes import IssueCode
 from clickup_mcp.mcp_server.errors.handler import handle_tool_errors
-from clickup_mcp.mcp_server.errors.mapping import map_exception
-from clickup_mcp.mcp_server.errors.models import ToolIssue, ToolResponse
-from clickup_mcp.exceptions import AuthorizationError, ValidationError
+from clickup_mcp.mcp_server.errors.models import ToolResponse
 
 
 class DemoModel(BaseModel):

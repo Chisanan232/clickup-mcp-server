@@ -5,8 +5,8 @@ This module provides client classes for both SSE and HTTP streaming
 communication with the MCP server endpoints.
 """
 
-import logging
 import asyncio
+import logging
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -171,8 +171,10 @@ class SSEClient(EndpointClient):
                     return norm
                 return payload
             # Also support returning envelope at top level
-            if isinstance(result_dict, dict) and "ok" in result_dict and (
-                "result" in result_dict or "issues" in result_dict
+            if (
+                isinstance(result_dict, dict)
+                and "ok" in result_dict
+                and ("result" in result_dict or "issues" in result_dict)
             ):
                 value = result_dict["result"] if result_dict.get("ok") else []
                 if isinstance(value, list):
@@ -296,8 +298,10 @@ class StreamingHTTPClient(EndpointClient):
                     return [i for i in payload if i is not None]
                 return payload
             # Also support returning envelope at top level
-            if isinstance(result_dict, dict) and "ok" in result_dict and (
-                "result" in result_dict or "issues" in result_dict
+            if (
+                isinstance(result_dict, dict)
+                and "ok" in result_dict
+                and ("result" in result_dict or "issues" in result_dict)
             ):
                 value = result_dict["result"] if result_dict.get("ok") else []
                 if isinstance(value, list):

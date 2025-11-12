@@ -3,10 +3,9 @@
 Concise shapes for LLM planning; no raw ClickUp payloads leak.
 """
 
-from typing import Generic, List, Optional, TypeVar
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
-from pydantic.generics import GenericModel
 
 
 class TaskResult(BaseModel):

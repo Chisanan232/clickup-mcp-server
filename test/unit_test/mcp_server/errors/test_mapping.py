@@ -1,9 +1,6 @@
 import httpx
 import pytest
 
-from clickup_mcp.mcp_server.errors.codes import IssueCode
-from clickup_mcp.mcp_server.errors.mapping import map_exception
-from clickup_mcp.mcp_server.errors.models import ToolIssue
 from clickup_mcp.exceptions import (
     AuthenticationError,
     AuthorizationError,
@@ -13,6 +10,9 @@ from clickup_mcp.exceptions import (
     ResourceNotFoundError,
     ValidationError,
 )
+from clickup_mcp.mcp_server.errors.codes import IssueCode
+from clickup_mcp.mcp_server.errors.mapping import map_exception
+from clickup_mcp.mcp_server.errors.models import ToolIssue
 
 
 def _http_status_error(status: int, headers: dict | None = None) -> httpx.HTTPStatusError:

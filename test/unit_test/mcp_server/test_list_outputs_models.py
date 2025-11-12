@@ -95,10 +95,18 @@ async def test_list_crud_and_listing_return_result_models(mock_get_client: Magic
     assert d_env.ok is True and isinstance(d_env.result, DeletionResult) and d_env.result.deleted is True
 
     lf_env = await list_list_in_folder(ListListInFolderInput(folder_id="f1"))
-    assert lf_env.ok is True and isinstance(lf_env.result, ListListResult) and [i.id for i in lf_env.result.items] == ["L1"]
+    assert (
+        lf_env.ok is True
+        and isinstance(lf_env.result, ListListResult)
+        and [i.id for i in lf_env.result.items] == ["L1"]
+    )
 
     ls_env = await list_list_in_space_folderless(ListListInSpaceFolderlessInput(space_id="s1"))
-    assert ls_env.ok is True and isinstance(ls_env.result, ListListResult) and [i.id for i in ls_env.result.items] == ["L1"]
+    assert (
+        ls_env.ok is True
+        and isinstance(ls_env.result, ListListResult)
+        and [i.id for i in ls_env.result.items] == ["L1"]
+    )
 
     add_env = await list_add_task(ListAddTaskInput(list_id="L1", task_id="t1"))
     assert add_env.ok is True and isinstance(add_env.result, OperationResult) and add_env.result.ok is True

@@ -1,4 +1,5 @@
 """Envelope and issue models for MCP tool responses (Pydantic v2)."""
+
 from __future__ import annotations
 
 from typing import Generic, List, Optional, TypeVar

@@ -3,16 +3,17 @@
 MyPy-safe: preserves function signatures with ParamSpec overloads.
 Supports both sync and async functions.
 """
+
 from __future__ import annotations
 
 import asyncio
 from functools import wraps
-from typing import Any, Awaitable, Callable, Optional, ParamSpec, TypeVar, overload
+from typing import Any, Awaitable, Callable, ParamSpec, TypeVar, overload
 
 from pydantic import BaseModel
 
-from .models import ToolResponse
 from .mapping import map_exception
+from .models import ToolResponse
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -27,11 +28,15 @@ def _wrap_result(value: Any) -> ToolResponse[Any]:
 
 
 @overload
-def handle_tool_errors(func: Callable[P, TModel | ToolResponse[TModel] | None]) -> Callable[P, ToolResponse[TModel]]: ...
+def handle_tool_errors(
+    func: Callable[P, TModel | ToolResponse[TModel] | None],
+) -> Callable[P, ToolResponse[TModel]]: ...
 
 
 @overload
-def handle_tool_errors(func: Callable[P, Awaitable[TModel | ToolResponse[TModel] | None]]) -> Callable[P, Awaitable[ToolResponse[TModel]]]: ...
+def handle_tool_errors(
+    func: Callable[P, Awaitable[TModel | ToolResponse[TModel] | None]],
+) -> Callable[P, Awaitable[ToolResponse[TModel]]]: ...
 
 
 def handle_tool_errors(

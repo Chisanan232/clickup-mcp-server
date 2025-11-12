@@ -2,6 +2,7 @@
 
 Serialized as string enum values in JSON Schema and responses.
 """
+
 from __future__ import annotations
 
 from enum import Enum

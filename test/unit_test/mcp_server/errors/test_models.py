@@ -1,8 +1,7 @@
-import pytest
 from pydantic import TypeAdapter
 
-from clickup_mcp.mcp_server.errors.models import ToolIssue, ToolResponse
 from clickup_mcp.mcp_server.errors.codes import IssueCode
+from clickup_mcp.mcp_server.errors.models import ToolIssue, ToolResponse
 
 
 def test_tool_issue_minimal_and_optional_fields() -> None:
