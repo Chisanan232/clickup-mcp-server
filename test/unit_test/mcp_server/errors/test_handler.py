@@ -24,17 +24,17 @@ async def async_ok_model() -> DemoModel:
 
 
 @handle_tool_errors
-async def async_ok_none() -> None:  # type: ignore[explicit-override]
+async def async_ok_none() -> None:
     return None
 
 
 @handle_tool_errors
-async def async_pass_through(resp: ToolResponse[List[int]]) -> ToolResponse[List[int]]:  # type: ignore[override]
+async def async_pass_through(resp: ToolResponse[List[int]]) -> ToolResponse[List[int]]:
     return resp
 
 
 @handle_tool_errors
-async def async_raise_perm() -> List[int]:  # type: ignore[override]
+async def async_raise_perm() -> List[int]:
     raise AuthorizationError("denied")
 
 

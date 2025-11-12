@@ -52,23 +52,23 @@ def handle_tool_errors(
     if asyncio.iscoroutinefunction(func):
 
         @wraps(func)
-        async def async_wrapper(*args: P.args, **kwargs: P.kwargs):  # type: ignore[misc]
+        async def async_wrapper(*args: P.args, **kwargs: P.kwargs):
             try:
-                value = await func(*args, **kwargs)  # type: ignore[misc]
+                value = await func(*args, **kwargs)
                 return _wrap_result(value)
             except Exception as exc:  # noqa: BLE001
                 issue = map_exception(exc)
                 return ToolResponse(ok=False, issues=[issue])
 
-        return async_wrapper  # type: ignore[return-value]
+        return async_wrapper
 
     @wraps(func)
-    def sync_wrapper(*args: P.args, **kwargs: P.kwargs):  # type: ignore[misc]
+    def sync_wrapper(*args: P.args, **kwargs: P.kwargs):
         try:
-            value = func(*args, **kwargs)  # type: ignore[misc]
+            value = func(*args, **kwargs)
             return _wrap_result(value)
         except Exception as exc:  # noqa: BLE001
             issue = map_exception(exc)
             return ToolResponse(ok=False, issues=[issue])
 
-    return sync_wrapper  # type: ignore[return-value]
+    return sync_wrapper
