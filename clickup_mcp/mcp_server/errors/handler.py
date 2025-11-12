@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import wraps
-from typing import Any, Awaitable, Callable, ParamSpec, TypeVar, overload
+from typing import Any, Awaitable, Callable, ParamSpec, TypeVar, get_type_hints, overload
 
 from pydantic import BaseModel
 
@@ -48,6 +48,35 @@ def handle_tool_errors(  # type: ignore[misc]
     - If it returns a bare result (pydantic model), it's wrapped with ok=True.
     - If it raises, it's converted to ok=False with mapped issues.
     """
+
+    # Important: bridge bare-return annotations to envelope schemas.
+    #
+    # Many frameworks (including our @mcp.tool integration) build response schemas
+    # from a function's return annotation. We want authors to keep readable, bare
+    # payload annotations (e.g., `List[Dict[str, Any]]`) while this decorator
+    # always returns a ToolResponse[...] envelope at runtime.
+    #
+    # To align schema/validation with the actual returned envelope, we patch the
+    # ORIGINAL function object's runtime __annotations__['return'] to
+    # ToolResponse[OriginalReturn]. This keeps source code readable, but ensures
+    # any annotation introspection (even via func.__wrapped__) sees the envelope.
+    #
+    # Notes:
+    # - We only patch when the original annotation isn't already ToolResponse[...].
+    # - We use include_extras=True so typing extras (e.g., Annotated) are retained.
+    # - On failure, we silently skip (schema may be less specific, but remains valid).
+    try:
+        hints = get_type_hints(func, globalns=getattr(func, "__globals__", {}), include_extras=True)
+    except Exception:
+        hints = {}
+    orig_ret_for_func = hints.get("return", Any)
+    try:
+        if "ToolResponse" not in str(orig_ret_for_func):
+            func_ann = dict(getattr(func, "__annotations__", {}))
+            func_ann["return"] = ToolResponse[orig_ret_for_func]  # type: ignore[valid-type]
+            func.__annotations__ = func_ann
+    except Exception:
+        pass
 
     if asyncio.iscoroutinefunction(func):
 

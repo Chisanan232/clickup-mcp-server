@@ -8,7 +8,7 @@ These functions follow the FastMCP pattern for easy integration into MCP servers
 from typing import Any, Dict, List
 
 from clickup_mcp.client import ClickUpAPIClientFactory
-from clickup_mcp.mcp_server.errors import ToolResponse, handle_tool_errors
+from clickup_mcp.mcp_server.errors import handle_tool_errors
 
 from .app import mcp
 
@@ -19,7 +19,7 @@ from .app import mcp
     description="Retrieve all teams/workspaces that the authenticated user has access to.",
 )
 @handle_tool_errors
-async def get_authorized_teams() -> ToolResponse[List[Dict[str, Any]]]:
+async def get_authorized_teams() -> List[Dict[str, Any]]:
     """
     Get all teams/workspaces available to the authenticated user.
 
