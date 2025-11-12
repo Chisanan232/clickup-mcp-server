@@ -3,14 +3,15 @@
 Tool: workspace.list -> List workspaces available to the token.
 """
 
-from typing import Any, Dict, List
+from typing import List
 
-from .app import mcp
 from clickup_mcp.client import ClickUpAPIClientFactory
 from clickup_mcp.mcp_server.models.outputs.workspace import (
     WorkspaceListItem,
     WorkspaceListResult,
 )
+
+from .app import mcp
 
 
 @mcp.tool(

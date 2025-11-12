@@ -1,8 +1,12 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
+from clickup_mcp.mcp_server.models.outputs.workspace import (
+    WorkspaceListItem,
+    WorkspaceListResult,
+)
 from clickup_mcp.mcp_server.workspace import workspace_list
-from clickup_mcp.mcp_server.models.outputs.workspace import WorkspaceListResult, WorkspaceListItem
 
 
 @pytest.mark.asyncio

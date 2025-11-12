@@ -3,7 +3,7 @@
 These are concise, high-signal shapes returned by MCP tools.
 """
 
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel, Field
 
@@ -20,10 +20,4 @@ class WorkspaceListResult(BaseModel):
 
     items: List[WorkspaceListItem] = Field(default_factory=list, description="List of workspaces")
 
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {"items": [{"team_id": "team_1", "name": "Engineering"}]}
-            ]
-        }
-    }
+    model_config = {"json_schema_extra": {"examples": [{"items": [{"team_id": "team_1", "name": "Engineering"}]}]}}
