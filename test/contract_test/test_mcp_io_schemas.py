@@ -4,6 +4,7 @@ import pytest
 from pydantic import TypeAdapter
 
 from clickup_mcp.mcp_server.models.outputs.folder import FolderListResult, FolderResult
+from clickup_mcp.mcp_server.models.outputs.list import ListListResult, ListResult
 from clickup_mcp.mcp_server.models.outputs.space import SpaceListResult, SpaceResult
 from clickup_mcp.mcp_server.models.outputs.workspace import WorkspaceListResult
 
@@ -15,6 +16,8 @@ from clickup_mcp.mcp_server.models.outputs.workspace import WorkspaceListResult
         SpaceListResult,
         FolderResult,
         FolderListResult,
+        ListResult,
+        ListListResult,
         WorkspaceListResult,
     ],
 )
