@@ -8,6 +8,8 @@ Tools:
 """
 
 from clickup_mcp.client import ClickUpAPIClientFactory
+from clickup_mcp.exceptions import ClickUpAPIError, ResourceNotFoundError
+from clickup_mcp.mcp_server.errors import handle_tool_errors
 from clickup_mcp.mcp_server.models.inputs.task import (
     TaskAddDependencyInput,
     TaskClearCustomFieldInput,
@@ -39,6 +41,7 @@ from .app import mcp
         "Note: Custom fields are set via `task.set_custom_field`, not `task.update`."
     ),
 )
+@handle_tool_errors
 async def task_create(input: TaskCreateInput) -> TaskResult | None:
     client = ClickUpAPIClientFactory.get()
     # Input -> Domain -> DTO
@@ -56,7 +59,7 @@ async def task_create(input: TaskCreateInput) -> TaskResult | None:
     async with client:
         resp = await client.task.create(input.list_id, dto)
     if not resp:
-        return None
+        raise ClickUpAPIError("Create task failed")
     return _taskresp_to_result(resp)
 
 
@@ -67,6 +70,7 @@ async def task_create(input: TaskCreateInput) -> TaskResult | None:
         "HTTP: GET /task/{task_id}."
     ),
 )
+@handle_tool_errors
 async def task_get(input: TaskGetInput) -> TaskResult | None:
     client = ClickUpAPIClientFactory.get()
     async with client:
@@ -77,7 +81,7 @@ async def task_get(input: TaskGetInput) -> TaskResult | None:
             team_id=input.team_id,
         )
     if not resp:
-        return None
+        raise ResourceNotFoundError("Task not found")
     return _taskresp_to_result(resp)
 
 
@@ -89,6 +93,7 @@ async def task_get(input: TaskGetInput) -> TaskResult | None:
         "HTTP: GET /list/{list_id}/task."
     ),
 )
+@handle_tool_errors
 async def task_list_in_list(input: TaskListInListInput) -> TaskListResult:
     client = ClickUpAPIClientFactory.get()
     query = TaskListQuery(
@@ -116,6 +121,7 @@ async def task_list_in_list(input: TaskListInListInput) -> TaskListResult:
         "Does not modify custom fields—use `task.set_custom_field`. HTTP: PUT /task/{task_id}."
     ),
 )
+@handle_tool_errors
 async def task_update(input: TaskUpdateInput) -> TaskResult | None:
     client = ClickUpAPIClientFactory.get()
     domain = ClickUpTask(
@@ -142,6 +148,7 @@ async def task_update(input: TaskUpdateInput) -> TaskResult | None:
         "HTTP: POST /task/{task_id}/field/{field_id}."
     ),
 )
+@handle_tool_errors
 async def task_set_custom_field(input: TaskSetCustomFieldInput) -> OperationResult:
     client = ClickUpAPIClientFactory.get()
     async with client:
@@ -153,6 +160,7 @@ async def task_set_custom_field(input: TaskSetCustomFieldInput) -> OperationResu
     name="task.clear_custom_field",
     description=("Clear a custom field value from a task. HTTP: DELETE /task/{task_id}/field/{field_id}."),
 )
+@handle_tool_errors
 async def task_clear_custom_field(input: TaskClearCustomFieldInput) -> OperationResult:
     client = ClickUpAPIClientFactory.get()
     async with client:
@@ -164,6 +172,7 @@ async def task_clear_custom_field(input: TaskClearCustomFieldInput) -> Operation
     name="task.add_dependency",
     description=("Add a dependency between tasks (e.g., waiting_on/blocking). HTTP: POST /task/{task_id}/dependency."),
 )
+@handle_tool_errors
 async def task_add_dependency(input: TaskAddDependencyInput) -> OperationResult:
     client = ClickUpAPIClientFactory.get()
     async with client:
@@ -175,6 +184,7 @@ async def task_add_dependency(input: TaskAddDependencyInput) -> OperationResult:
     name="task.delete",
     description=("Delete a task by ID. Irreversible and permission-scoped. HTTP: DELETE /task/{task_id}."),
 )
+@handle_tool_errors
 async def task_delete(task_id: str) -> DeletionResult:
     if not task_id:
         raise ValueError("Task ID is required")

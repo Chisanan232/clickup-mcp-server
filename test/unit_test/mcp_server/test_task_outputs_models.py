@@ -57,13 +57,13 @@ async def test_task_create_and_get_return_taskresult(mock_get_client: MagicMock)
     mock_client.task.get = AsyncMock(return_value=_fake_task_resp(id="t1", name="Ship"))
     mock_get_client.return_value = mock_client
 
-    create_res = await task_create(TaskCreateInput(list_id="L1", name="Ship"))
-    assert isinstance(create_res, TaskResult)
-    assert create_res.id == "t1" and create_res.name == "Ship"
+    create_env = await task_create(TaskCreateInput(list_id="L1", name="Ship"))
+    assert create_env.ok is True and isinstance(create_env.result, TaskResult)
+    assert create_env.result.id == "t1" and create_env.result.name == "Ship"
 
-    get_res = await task_get(TaskGetInput(task_id="t1"))
-    assert isinstance(get_res, TaskResult)
-    assert get_res.id == "t1"
+    get_env = await task_get(TaskGetInput(task_id="t1"))
+    assert get_env.ok is True and isinstance(get_env.result, TaskResult)
+    assert get_env.result.id == "t1"
 
 
 @pytest.mark.asyncio
@@ -84,12 +84,12 @@ async def test_task_list_in_list_truncates_and_forwards_timl(mock_get_client: Ma
     mock_client.task.list_in_list = AsyncMock(side_effect=_list_in_list)
     mock_get_client.return_value = mock_client
 
-    res = await task_list_in_list(TaskListInListInput(list_id="L1", limit=50, include_timl=True))
-    assert isinstance(res, TaskListResult)
-    assert len(res.items) == 50
-    assert res.truncated is True
+    env = await task_list_in_list(TaskListInListInput(list_id="L1", limit=50, include_timl=True))
+    assert env.ok is True and isinstance(env.result, TaskListResult)
+    assert len(env.result.items) == 50
+    assert env.result.truncated is True
     # We do not fabricate next_cursor in current implementation
-    assert res.next_cursor is None
+    assert env.result.next_cursor is None
 
 
 @pytest.mark.asyncio
@@ -105,13 +105,13 @@ async def test_task_update_and_misc_ops(mock_get_client: MagicMock) -> None:
     mock_client.task.delete = AsyncMock(return_value=True)
     mock_get_client.return_value = mock_client
 
-    upd = await task_update(TaskUpdateInput(task_id="t1", name="Edited"))
-    assert isinstance(upd, TaskResult)
-    ok = await task_set_custom_field(TaskSetCustomFieldInput(task_id="t1", field_id="f1", value="v"))
-    assert isinstance(ok, OperationResult) and ok.ok is True
-    ok2 = await task_clear_custom_field(TaskClearCustomFieldInput(task_id="t1", field_id="f1"))
-    assert isinstance(ok2, OperationResult) and ok2.ok is True
-    ok3 = await task_add_dependency(TaskAddDependencyInput(task_id="t1", depends_on="t2"))
-    assert isinstance(ok3, OperationResult) and ok3.ok is True
-    delres = await task_delete("t1")
-    assert isinstance(delres, DeletionResult) and delres.deleted is True
+    upd_env = await task_update(TaskUpdateInput(task_id="t1", name="Edited"))
+    assert upd_env.ok is True and isinstance(upd_env.result, TaskResult)
+    ok_env = await task_set_custom_field(TaskSetCustomFieldInput(task_id="t1", field_id="f1", value="v"))
+    assert ok_env.ok is True and isinstance(ok_env.result, OperationResult) and ok_env.result.ok is True
+    ok2_env = await task_clear_custom_field(TaskClearCustomFieldInput(task_id="t1", field_id="f1"))
+    assert ok2_env.ok is True and isinstance(ok2_env.result, OperationResult) and ok2_env.result.ok is True
+    ok3_env = await task_add_dependency(TaskAddDependencyInput(task_id="t1", depends_on="t2"))
+    assert ok3_env.ok is True and isinstance(ok3_env.result, OperationResult) and ok3_env.result.ok is True
+    del_env = await task_delete("t1")
+    assert del_env.ok is True and isinstance(del_env.result, DeletionResult) and del_env.result.deleted is True
