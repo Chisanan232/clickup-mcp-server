@@ -5,6 +5,7 @@ This module provides client classes for both SSE and HTTP streaming
 communication with the MCP server endpoints.
 """
 
+import logging
 import asyncio
 from abc import ABC, abstractmethod
 from typing import Any
@@ -16,6 +17,8 @@ from mcp.client.streamable_http import GetSessionIdCallback, streamablehttp_clie
 from mcp.shared.message import SessionMessage
 
 from .dto import FunctionPayloadDto
+
+logger = logging.getLogger(__name__)
 
 
 class EndpointClient(ABC):
@@ -118,17 +121,92 @@ class SSEClient(EndpointClient):
         result = await self.session.call_tool(name=payload.function, **payload.arguments)
 
         # The result is already a structured object, extract it if needed
+        logger.debug(f"[SSE] result: {result}")
         if hasattr(result, "model_dump"):
             result_dict = result.model_dump()
+            logger.debug(f"[SSE] result_dict: {result_dict}")
             # Check if response has the new structured format
             if (
                 isinstance(result_dict, dict)
                 and "structuredContent" in result_dict
                 and "result" in result_dict["structuredContent"]
             ):
-                return result_dict["structuredContent"]["result"]
+                payload = result_dict["structuredContent"]["result"]
+                logger.debug(f"[SSE] structured payload: {payload}")
+                if payload is None:
+                    return []
+                # Unwrap ToolResponse envelope if present
+                if isinstance(payload, dict) and "ok" in payload and ("result" in payload or "issues" in payload):
+                    value = payload["result"] if payload.get("ok") else []
+                    # Normalize list payloads: drop None, convert models to dicts
+                    if isinstance(value, list):
+                        norm = []
+                        for i in value:
+                            if i is None:
+                                continue
+                            if hasattr(i, "model_dump"):
+                                try:
+                                    norm.append(i.model_dump())
+                                except Exception:
+                                    norm.append(i)
+                            else:
+                                norm.append(i)
+                        print(f"[DEBUG][SSE] normalized envelope list: {norm}")
+                        return norm
+                    return value
+                # Not an envelope
+                if isinstance(payload, list):
+                    norm = []
+                    for i in payload:
+                        if i is None:
+                            continue
+                        if hasattr(i, "model_dump"):
+                            try:
+                                norm.append(i.model_dump())
+                            except Exception:
+                                norm.append(i)
+                        else:
+                            norm.append(i)
+                    print(f"[DEBUG][SSE] normalized list: {norm}")
+                    return norm
+                return payload
+            # Also support returning envelope at top level
+            if isinstance(result_dict, dict) and "ok" in result_dict and (
+                "result" in result_dict or "issues" in result_dict
+            ):
+                value = result_dict["result"] if result_dict.get("ok") else []
+                if isinstance(value, list):
+                    norm = []
+                    for i in value:
+                        if i is None:
+                            continue
+                        if hasattr(i, "model_dump"):
+                            try:
+                                norm.append(i.model_dump())
+                            except Exception:
+                                norm.append(i)
+                        else:
+                            norm.append(i)
+                    print(f"[DEBUG][SSE] normalized top-level list: {norm}")
+                    return norm
+                return value
             return result_dict
 
+        # Fallback: if the raw result is a list, filter out None items
+        if isinstance(result, list):
+            norm = []
+            for i in result:
+                if i is None:
+                    continue
+                if hasattr(i, "model_dump"):
+                    try:
+                        norm.append(i.model_dump())
+                    except Exception:
+                        norm.append(i)
+                else:
+                    norm.append(i)
+            print(f"[DEBUG][SSE] fallback normalized list: {norm}")
+            return norm
         return result
 
     async def close(self) -> None:
@@ -194,17 +272,42 @@ class StreamingHTTPClient(EndpointClient):
         result = await self.session.call_tool(name=payload.function, **payload.arguments)
 
         # The result is already a structured object, extract it if needed
+        print(f"[DEBUG] result: {result}")
         if hasattr(result, "model_dump"):
             result_dict = result.model_dump()
+            print(f"[DEBUG] result_dict: {result_dict}")
             # Check if response has the new structured format
             if (
                 isinstance(result_dict, dict)
                 and "structuredContent" in result_dict
                 and "result" in result_dict["structuredContent"]
             ):
-                return result_dict["structuredContent"]["result"]
+                payload = result_dict["structuredContent"]["result"]
+                if payload is None:
+                    return []
+                # Unwrap ToolResponse envelope if present
+                if isinstance(payload, dict) and "ok" in payload and ("result" in payload or "issues" in payload):
+                    value = payload["result"] if payload.get("ok") else []
+                    if isinstance(value, list):
+                        return [i for i in value if i is not None]
+                    return value
+                # Not an envelope
+                if isinstance(payload, list):
+                    return [i for i in payload if i is not None]
+                return payload
+            # Also support returning envelope at top level
+            if isinstance(result_dict, dict) and "ok" in result_dict and (
+                "result" in result_dict or "issues" in result_dict
+            ):
+                value = result_dict["result"] if result_dict.get("ok") else []
+                if isinstance(value, list):
+                    return [i for i in value if i is not None]
+                return value
             return result_dict
 
+        # Fallback: if the raw result is a list, filter out None items
+        if isinstance(result, list):
+            return [i for i in result if i is not None]
         return result
 
     async def close(self) -> None:
