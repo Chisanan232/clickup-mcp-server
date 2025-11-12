@@ -62,7 +62,7 @@ def test_rate_limit_retry_after_ms_from_http_headers() -> None:
 
 
 def test_rate_limit_retry_after_ms_from_domain_error() -> None:
-    exc = RateLimitError(retry_after=1.5)
+    exc: RateLimitError = RateLimitError(retry_after=1.5)
     issue = map_exception(exc)
     assert issue.code == IssueCode.RATE_LIMIT
     # 1.5s -> 1500ms

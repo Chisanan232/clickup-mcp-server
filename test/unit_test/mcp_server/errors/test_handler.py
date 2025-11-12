@@ -50,7 +50,7 @@ def sync_raise_validation() -> int:
 
 @pytest.mark.asyncio
 async def test_async_ok_list_wrapped() -> None:
-    result = await async_ok_list()
+    result = await async_ok_list()  # type: ignore[no-untyped-call]
     assert isinstance(result, ToolResponse)
     assert result.ok is True
     assert result.issues == []

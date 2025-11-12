@@ -39,7 +39,7 @@ def handle_tool_errors(
 ) -> Callable[P, Awaitable[ToolResponse[TModel]]]: ...
 
 
-def handle_tool_errors(
+def handle_tool_errors(  # type: ignore[misc]
     func: Callable[P, R] | Callable[P, Awaitable[R]],
 ) -> Callable[P, R] | Callable[P, Awaitable[R]]:
     """Wrap a tool function to return ToolResponse and map exceptions to ToolIssue.

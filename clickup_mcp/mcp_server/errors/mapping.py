@@ -67,7 +67,8 @@ def map_exception(exc: Exception) -> ToolIssue:
 
     # ClickUp domain exceptions
     if isinstance(exc, RateLimitError):
-        ms = int(float(exc.retry_after) * 1000) if getattr(exc, "retry_after", None) else None
+        assert exc.retry_after
+        ms = int(exc.retry_after * 1000) if getattr(exc, "retry_after", None) else None
         return ToolIssue(
             code=IssueCode.RATE_LIMIT, message="Rate limit exceeded", hint="Back off and retry", retry_after_ms=ms
         )

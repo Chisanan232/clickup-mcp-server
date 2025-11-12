@@ -23,19 +23,19 @@ def test_tool_issue_minimal_and_optional_fields() -> None:
 
 def test_tool_response_success_and_failure_variants() -> None:
     # Success with arbitrary payload types (list/dict/primitive)
-    ok_list = ToolResponse(ok=True, result=[{"x": 1}], issues=[])
+    ok_list: ToolResponse = ToolResponse(ok=True, result=[{"x": 1}], issues=[])
     assert ok_list.ok is True
     assert ok_list.issues == []
     assert isinstance(ok_list.result, list)
 
-    ok_dict = ToolResponse[dict](ok=True, result={"a": 1}, issues=[])
+    ok_dict: ToolResponse = ToolResponse[dict](ok=True, result={"a": 1}, issues=[])
     assert ok_dict.result == {"a": 1}
 
-    ok_none = ToolResponse(ok=True, result=None, issues=[])
+    ok_none: ToolResponse = ToolResponse(ok=True, result=None, issues=[])
     assert ok_none.result is None
 
     # Failure variant
-    fail = ToolResponse(ok=False, issues=[ToolIssue(code=IssueCode.INTERNAL, message="boom")])
+    fail: ToolResponse = ToolResponse(ok=False, issues=[ToolIssue(code=IssueCode.INTERNAL, message="boom")])
     assert fail.ok is False
     assert fail.result is None
     assert len(fail.issues) == 1

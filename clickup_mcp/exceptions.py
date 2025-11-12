@@ -69,7 +69,7 @@ class AuthorizationError(ClickUpAPIError):
 class RateLimitError(ClickUpAPIError):
     """Exception raised when API rate limit is exceeded."""
 
-    def __init__(self, message: str = "Rate limit exceeded", retry_after: Optional[int] = None, **kwargs: Any) -> None:
+    def __init__(self, message: str = "Rate limit exceeded", retry_after: Optional[float] = None, **kwargs: Any) -> None:
         super().__init__(message, **kwargs)
         self.retry_after = retry_after
 
