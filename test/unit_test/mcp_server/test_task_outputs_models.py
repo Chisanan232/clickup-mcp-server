@@ -1,3 +1,4 @@
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -23,9 +24,10 @@ from clickup_mcp.mcp_server.task import (
     task_set_custom_field,
     task_update,
 )
+from clickup_mcp.models.dto.task import TaskResp
 
 
-def _fake_task_resp(**overrides):
+def _fake_task_resp(**overrides: Any) -> TaskResp:
     # Minimal shape used by _taskresp_* mappers in handler
     status_obj = type("Status", (), {"status": overrides.get("status", "open")})()
     priority_obj = type("Prio", (), {"id": str(overrides.get("priority_id", "3"))})()
