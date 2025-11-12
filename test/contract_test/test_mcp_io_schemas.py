@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 from pydantic import TypeAdapter
 
+from clickup_mcp.mcp_server.models.outputs.folder import FolderListResult, FolderResult
 from clickup_mcp.mcp_server.models.outputs.space import SpaceListResult, SpaceResult
 from clickup_mcp.mcp_server.models.outputs.workspace import WorkspaceListResult
 
@@ -12,6 +13,8 @@ from clickup_mcp.mcp_server.models.outputs.workspace import WorkspaceListResult
     [
         SpaceResult,
         SpaceListResult,
+        FolderResult,
+        FolderListResult,
         WorkspaceListResult,
     ],
 )
