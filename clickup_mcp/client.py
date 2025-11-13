@@ -16,14 +16,13 @@ from typing import Any, Generic, Type, TypeVar
 import httpx
 from pydantic import BaseModel, Field
 
-from clickup_mcp.models.dto.base import BaseResponseDTO
-
 from ._base import BaseServerFactory
 from .api.folder import FolderAPI
 from .api.list import ListAPI
 from .api.space import SpaceAPI
 from .api.task import TaskAPI
 from .api.team import TeamAPI
+from .models.dto.base import BaseResponseDTO
 from .exceptions import (
     AuthenticationError,
     ClickUpAPIError,
