@@ -16,8 +16,6 @@ from typing import Any, Generic, Type, TypeVar
 import httpx
 from pydantic import BaseModel, Field
 
-from clickup_mcp.models.dto.base import BaseResponseDTO
-
 from ._base import BaseServerFactory
 from .api.folder import FolderAPI
 from .api.list import ListAPI
@@ -29,6 +27,7 @@ from .exceptions import (
     ClickUpAPIError,
     RateLimitError,
 )
+from .models.dto.base import BaseResponseDTO
 
 logger = logging.getLogger(__name__)
 
