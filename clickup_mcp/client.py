@@ -22,12 +22,12 @@ from .api.list import ListAPI
 from .api.space import SpaceAPI
 from .api.task import TaskAPI
 from .api.team import TeamAPI
-from .models.dto.base import BaseResponseDTO
 from .exceptions import (
     AuthenticationError,
     ClickUpAPIError,
     RateLimitError,
 )
+from .models.dto.base import BaseResponseDTO
 
 logger = logging.getLogger(__name__)
 

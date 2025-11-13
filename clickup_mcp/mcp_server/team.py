@@ -5,11 +5,14 @@ This module provides MCP functions for interacting with ClickUp Teams/Workspaces
 These functions follow the FastMCP pattern for easy integration into MCP servers.
 """
 
-from typing import Any, Dict, List
+from typing import List
 
 from clickup_mcp.client import ClickUpAPIClientFactory
 from clickup_mcp.mcp_server.errors import handle_tool_errors
-from clickup_mcp.mcp_server.models.outputs.workspace import WorkspaceListItem, WorkspaceListResult
+from clickup_mcp.mcp_server.models.outputs.workspace import (
+    WorkspaceListItem,
+    WorkspaceListResult,
+)
 
 from .app import mcp
 

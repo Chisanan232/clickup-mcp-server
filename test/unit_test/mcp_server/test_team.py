@@ -8,8 +8,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from clickup_mcp.mcp_server.team import get_authorized_teams
 from clickup_mcp.mcp_server.models.outputs.workspace import WorkspaceListResult
+from clickup_mcp.mcp_server.team import get_authorized_teams
 from clickup_mcp.models.domain.team import ClickUpTeam, ClickUpTeamMember, ClickUpUser
 
 
