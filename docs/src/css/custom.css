@@ -246,7 +246,9 @@ blockquote {
 pre {
   position: relative;
   border-radius: 8px;
-  overflow: hidden;
+  /* Allow horizontal scroll for long lines while keeping top rainbow bar visible */
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 pre::before {
@@ -258,6 +260,17 @@ pre::before {
   height: 3px;
   background: var(--rainbow-gradient);
   z-index: 1;
+}
+
+/* Ensure code blocks scroll horizontally in tabs/admonitions */
+.theme-code-block pre,
+.admonition pre,
+.tabs-container pre,
+.prism-code {
+  overflow-x: auto !important;
+  white-space: pre;
+  word-break: normal;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Custom scrollbar with rainbow colors */
