@@ -1,0 +1,93 @@
+---
+id: workspace-mcp-api
+title: Workspace
+sidebar_position: 1
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Workspace MCP API
+
+Tools for discovering workspaces (a.k.a. teams) accessible by the token.
+
+:::note Errors and retries
+All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
+and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
+[Errors and Retries (MCP)](./errors-and-retries.mdx) for details.
+:::
+
+## Tools
+
+### workspace.list
+
+Lists all workspaces (teams) the current token can access. This is a read-only discovery call that helps you obtain `team_id` values for downstream operations like `space.list`. The tool returns a `ToolResponse` envelope with `items[]` where each item includes `{ team_id, name }`.
+- **Parameters**: none
+
+```jsonc
+{}
+```
+
+- **Returns**: [WorkspaceListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/workspace.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true, // Tool succeeded
+  "result": {
+    "items": [
+      {
+        "team_id": "team_1", // Workspace (team) ID
+        "name": "Engineering" // Workspace name
+      }
+    ]
+  },
+  "issues": [] // Optional warnings/issues collected during execution
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+:::tip Quick start (call via MCP)
+<Tabs groupId="transport">
+  <TabItem value="sse" label="SSE (EventSource)" default>
+
+```js
+const es = new EventSource("http://localhost:55030/mcp/mcp/sse?tool=workspace.list");
+es.onmessage = (e) => {
+  const frame = JSON.parse(e.data);
+  if (frame.ok) console.log(frame.result.items);
+};
+```
+
+  </TabItem>
+  <TabItem value="http" label="Streamable HTTP (curl)">
+
+```bash
+curl -N -H "Content-Type: application/json" \
+  -d '{"tool":"workspace.list","arguments":{}}' \
+  http://localhost:55030/mcp/mcp
+```
+
+  </TabItem>
+  <TabItem value="py" label="Python (MCP client)">
+
+```python
+import asyncio
+from mcp import ClientSession
+
+async def main():
+    async with ClientSession("http://localhost:55030") as s:
+        result = await s.call_tool("workspace.list", {})
+        print(result)
+
+asyncio.run(main())
+```
+
+  </TabItem>
+</Tabs>
+:::
+
+
