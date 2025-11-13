@@ -8,6 +8,10 @@ sidebar_position: 2
 
 The MCP (Model Context Protocol) Server APIs provide programmatic interfaces for client libraries and applications to interact with ClickUp resources through a standardized protocol. For more information about MCP, see the [official documentation](https://modelcontextprotocol.io/docs/getting-started/intro).
 
+:::note No authentication parameter in any function
+- Auth: `CLICKUP_API_TOKEN` must be configured on the server
+:::
+
 ## Transport Options
 
 MCP Server supports two transport mechanisms:
@@ -19,12 +23,13 @@ MCP Server supports two transport mechanisms:
 
 The following resource endpoints are available:
 
-- ✅ [Team](./team.mdx) - Team management
-- 🚧 [Space](./space.mdx) - Space management within teams
-- ⛔️ [Folder](./folder.mdx) - Folder management within folders
-- ⛔️ [List](./list.mdx) - List management within folders
-- ⛔️ [Task](./task.mdx) - Task management within lists
-- ⛔️ [User](./user.mdx) - User management and information
+- ✅ [Workspace](./workspace.mdx) — Discover workspaces (teams)
+- ✅ [Team](./team.mdx) — Team/workspace management
+- ✅ [Space](./space.mdx) — Spaces within a workspace
+- ✅ [Folder](./folder.mdx) — Folders within a space
+- ✅ [List](./list.mdx) — Lists within a folder/space
+- ✅ [Task](./task.mdx) — Task operations
+- ⛔️ [User](./user.mdx) — User info (placeholder)
 
 ## Protocol Format
 
