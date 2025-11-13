@@ -37,28 +37,15 @@ class TestClickUpTeam(BaseMCPServerFunctionTest):
             timeout=OPERATION_TIMEOUT,
         )
 
-        # Check the response structure
+        # Check the response structure (WorkspaceListResult as dict)
         assert result is not None
-        assert isinstance(result, list), f"Expected list result, got {type(result)}"
+        assert isinstance(result, dict), f"Expected dict result, got {type(result)}"
+        assert "items" in result, "items field missing in WorkspaceListResult"
 
-        # Since we're testing with real data, we can only make general assertions
-        if len(result) > 0:
-            team = result[0]
-            # Verify the team has the expected fields based on our domain model
-            assert "team_id" in team, "team_id field missing"
-            assert "name" in team, "name field missing"
-
-            # Verify backward compatibility fields
-            assert "id" in team, "id field missing (backward compatibility)"
-            assert team["id"] == team["team_id"], "id should match team_id for backward compatibility"
-
-            # Test members field if present
-            if team.get("members") and len(team["members"]) > 0:
-                member = team["members"][0]
-                assert "user" in member, "user field missing in member"
-
-                if member["user"]:
-                    user = member["user"]
-                    assert "user_id" in user, "user_id field missing in user"
-                    if "id" in user:
-                        assert user["id"] == user["user_id"], "user id should match user_id for backward compatibility"
+        items = result.get("items") or []
+        if len(items) > 0:
+            first = items[0]
+            assert isinstance(first, dict)
+            # Verify the item has expected fields
+            assert "team_id" in first, "team_id field missing"
+            assert "name" in first, "name field missing"

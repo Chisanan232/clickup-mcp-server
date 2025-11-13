@@ -9,6 +9,7 @@ from typing import Any, Dict, List
 
 from clickup_mcp.client import ClickUpAPIClientFactory
 from clickup_mcp.mcp_server.errors import handle_tool_errors
+from clickup_mcp.mcp_server.models.outputs.workspace import WorkspaceListItem, WorkspaceListResult
 
 from .app import mcp
 
@@ -19,7 +20,7 @@ from .app import mcp
     description="Retrieve all teams/workspaces that the authenticated user has access to.",
 )
 @handle_tool_errors
-async def get_authorized_teams() -> List[Dict[str, Any]]:
+async def get_authorized_teams() -> WorkspaceListResult:
     """
     Get all teams/workspaces available to the authenticated user.
 
@@ -39,5 +40,10 @@ async def get_authorized_teams() -> List[Dict[str, Any]]:
     # Get the teams using the client
     async with client:
         teams = await client.team.get_authorized_teams()
-    # Convert to dict for proper serialization
-    return [team.model_dump() for team in teams]
+    # Map domain models to MCP output model
+    items: List[WorkspaceListItem] = []
+    for team in teams:
+        team_id_val = team.team_id or team.id or ""
+        name_val = team.name or ""
+        items.append(WorkspaceListItem(team_id=str(team_id_val), name=name_val))
+    return WorkspaceListResult(items=items)

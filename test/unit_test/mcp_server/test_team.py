@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from clickup_mcp.mcp_server.team import get_authorized_teams
+from clickup_mcp.mcp_server.models.outputs.workspace import WorkspaceListResult
 from clickup_mcp.models.domain.team import ClickUpTeam, ClickUpTeamMember, ClickUpUser
 
 
@@ -57,25 +58,21 @@ async def test_get_authorized_teams_success(mock_get_client: MagicMock) -> None:
 
     # Verify the result format and content
     assert envelope.ok is True
-    assert isinstance(envelope.result, list)
-    assert len(envelope.result) == 2
+    assert isinstance(envelope.result, WorkspaceListResult)
+    assert len(envelope.result.items) == 2
 
     # Check first team data
-    assert envelope.result[0]["team_id"] == "team1"
-    assert envelope.result[0]["name"] == "Team One"
-    assert envelope.result[0]["color"] == "#000000"
-    assert envelope.result[0]["avatar"] == "https://example.com/avatar.jpg"
+    first = envelope.result.items[0].model_dump()
+    assert first["team_id"] == "team1"
+    assert first["name"] == "Team One"
 
     # Check members data
-    assert len(envelope.result[0]["members"]) == 1
-    assert envelope.result[0]["members"][0]["user"]["user_id"] == 1234
-    assert envelope.result[0]["members"][0]["user"]["username"] == "test_user"
-    assert envelope.result[0]["members"][0]["user"]["email"] == "user@example.com"
+    # Members are not included in WorkspaceListItem projection
 
     # Check second team
-    assert envelope.result[1]["team_id"] == "team2"
-    assert envelope.result[1]["name"] == "Team Two"
-    assert envelope.result[1]["color"] == "#FFFFFF"
+    second = envelope.result.items[1].model_dump()
+    assert second["team_id"] == "team2"
+    assert second["name"] == "Team Two"
 
 
 @pytest.mark.asyncio
@@ -97,8 +94,8 @@ async def test_get_authorized_teams_empty_result(mock_get_client: MagicMock) -> 
     mock_client.team.get_authorized_teams.assert_called_once()
 
     assert envelope.ok is True
-    assert isinstance(envelope.result, list)
-    assert len(envelope.result) == 0
+    assert isinstance(envelope.result, WorkspaceListResult)
+    assert len(envelope.result.items) == 0
 
 
 @pytest.mark.asyncio
