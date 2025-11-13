@@ -4,50 +4,84 @@ title: Team
 sidebar_position: 1
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Team MCP API
 
 The Team MCP API allows you to interact with ClickUp teams (workspaces) using the Model Context Protocol interface. For more information about MCP, see the [official documentation](https://modelcontextprotocol.io/docs/getting-started/intro).
+ 
+:::note Errors and retries
+All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
+and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
+[Errors and Retries (MCP)](./errors-and-retries.mdx) for details.
+:::
 
 ## Available Functions
 
 ### get_authorized_teams
 
-* **Function name**: `get_authorized_teams`
-* **Function parameters**: `{}`
-* **Function description**: Retrieve all teams/workspaces that the authenticated user has access to. This function returns a list of team domain models with full details including team members if available.
+- **Function name**: `get_authorized_teams`
+- **Parameters**: none
+- **Returns**: [WorkspaceListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/workspace.py) in `ToolResponse`
 
-#### Response Example
-
-```json
-[
-  {
-    "team_id": "123456",
-    "name": "My Workspace",
-    "color": "#3498db",
-    "avatar": "https://example.com/avatar.png",
-    "members": [
+```jsonc
+{
+  "ok": true, // Tool succeeded
+  "result": {
+    "items": [
       {
-        "user_id": "789012",
-        "username": "john.doe",
-        "email": "john.doe@example.com",
-        "color": "#ff0000"
+        "team_id": "team_1", // Workspace (team) ID
+        "name": "Engineering" // Workspace name
       }
     ]
-  }
-]
-```
-
-#### Error Handling
-
-This function may raise errors in the following situations:
-- Missing or invalid API token
-- Network connectivity issues
-- API rate limiting
-- Server-side errors
-
-Error responses will include a descriptive message:
-```json
-{
-  "error": "Error retrieving teams: Unauthorized. Please check your API token."
+  },
+  "issues": [] // Optional warnings/issues collected during execution
 }
 ```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+:::tip Quick start (call via MCP)
+<Tabs groupId="transport">
+  <TabItem value="sse" label="SSE (EventSource)" default>
+
+```js
+const es = new EventSource("http://localhost:55030/mcp/mcp/sse?tool=get_authorized_teams");
+es.onmessage = (e) => {
+  const frame = JSON.parse(e.data);
+  if (frame.ok) console.log(frame.result.items);
+};
+```
+
+  </TabItem>
+  <TabItem value="http" label="Streamable HTTP (curl)">
+
+```bash
+curl -N -H "Content-Type: application/json" \
+  -d '{"tool":"get_authorized_teams","arguments":{}}' \
+  http://localhost:55030/mcp/mcp
+```
+
+  </TabItem>
+  <TabItem value="py" label="Python (MCP client)">
+
+```python
+import asyncio
+from mcp import ClientSession
+
+async def main():
+    async with ClientSession("http://localhost:55030") as s:
+        result = await s.call_tool("get_authorized_teams", {})
+        print(result)
+
+asyncio.run(main())
+```
+
+  </TabItem>
+</Tabs>
+:::
+
+
