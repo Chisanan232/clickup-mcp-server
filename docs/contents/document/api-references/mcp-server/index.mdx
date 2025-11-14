@@ -23,12 +23,12 @@ MCP Server supports two transport mechanisms:
 
 The following resource endpoints are available:
 
-- ✅ [Workspace](./workspace.mdx) — Discover workspaces (teams)
-- ✅ [Team](./team.mdx) — Team/workspace management
-- ✅ [Space](./space.mdx) — Spaces within a workspace
-- ✅ [Folder](./folder.mdx) — Folders within a space
-- ✅ [List](./list.mdx) — Lists within a folder/space
-- ✅ [Task](./task.mdx) — Task operations
+- ✅ [Workspace](tools/workspace.mdx) — Discover workspaces (teams)
+- ✅ [Team](tools/team.mdx) — Team/workspace management
+- ✅ [Space](tools/space.mdx) — Spaces within a workspace
+- ✅ [Folder](tools/folder.mdx) — Folders within a space
+- ✅ [List](tools/list.mdx) — Lists within a folder/space
+- ✅ [Task](tools/task.mdx) — Task operations
 
 ## Protocol Format
 
@@ -72,6 +72,8 @@ Or in case of an error:
 ## Error Handling
 
 MCP Server API errors follow a standard format with an error code and descriptive message. Common error codes include:
+
+For the standardized ToolResponse envelope and retry/backoff guidance, see [Errors and Retries (MCP)](./errors-and-retries.mdx).
 
 - `400` - Bad Request (invalid parameters)
 - `401` - Unauthorized (authentication required)

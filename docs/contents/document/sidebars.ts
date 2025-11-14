@@ -24,23 +24,36 @@ const sidebars: SidebarsConfig = {
         'api-references/api-references',
         {
           type: 'category',
-          label: 'Web APIs',
+          label: 'Web Server',
           items: [
-            'api-references/web-apis/web-apis',
-            'api-references/web-apis/web-api-health-check',
+            'api-references/web-server/web-apis',
+            {
+              type: 'category',
+              label: 'Endpoints',
+              items: [
+                'api-references/web-server/endpoints/web-api-health-check',
+              ],
+            },
           ],
         },
         {
           type: 'category',
-          label: 'MCP Server APIs',
+          label: 'MCP Server',
           items: [
-            'api-references/mcp-apis/mcp-apis',
-            'api-references/mcp-apis/workspace-mcp-api',
-            'api-references/mcp-apis/team-mcp-api',
-            'api-references/mcp-apis/space-mcp-api',
-            'api-references/mcp-apis/folder-mcp-api',
-            'api-references/mcp-apis/list-mcp-api',
-            'api-references/mcp-apis/task-mcp-api',
+            'api-references/mcp-server/mcp-apis',
+            'api-references/mcp-server/mcp-errors-and-retries',
+            {
+              type: 'category',
+              label: 'Tools',
+              items: [
+                'api-references/mcp-server/tools/workspace-mcp-api',
+                'api-references/mcp-server/tools/team-mcp-api',
+                'api-references/mcp-server/tools/space-mcp-api',
+                'api-references/mcp-server/tools/folder-mcp-api',
+                'api-references/mcp-server/tools/list-mcp-api',
+                'api-references/mcp-server/tools/task-mcp-api',
+              ],
+            },
           ],
         },
       ],
