@@ -24,7 +24,7 @@ const sidebars: SidebarsConfig = {
         'api-references/api-references',
         {
           type: 'category',
-          label: 'Web APIs',
+          label: 'Web Server',
           items: [
             'api-references/web-server/web-apis',
             {
@@ -38,7 +38,7 @@ const sidebars: SidebarsConfig = {
         },
         {
           type: 'category',
-          label: 'MCP Server APIs',
+          label: 'MCP Server',
           items: [
             'api-references/mcp-server/mcp-apis',
             'api-references/mcp-server/mcp-errors-and-retries',
