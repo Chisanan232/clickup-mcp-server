@@ -35,12 +35,12 @@ const sidebars: SidebarsConfig = {
           label: 'MCP Server APIs',
           items: [
             'api-references/mcp-apis/mcp-apis',
+            'api-references/mcp-apis/workspace-mcp-api',
             'api-references/mcp-apis/team-mcp-api',
             'api-references/mcp-apis/space-mcp-api',
             'api-references/mcp-apis/folder-mcp-api',
             'api-references/mcp-apis/list-mcp-api',
             'api-references/mcp-apis/task-mcp-api',
-            'api-references/mcp-apis/user-mcp-api',
           ],
         },
       ],

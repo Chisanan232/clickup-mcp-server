@@ -4,6 +4,256 @@ title: List
 sidebar_position: 4
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # List MCP API
 
-🚧 Coming soon
+Tools for creating, listing, retrieving, updating, and deleting lists; includes TIML operations.
+
+:::note Errors and retries
+All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
+and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
+[Errors and Retries (MCP)](./errors-and-retries.mdx) for details.
+:::
+
+## Tools
+
+### list.list_in_folder
+
+Lists all lists inside a specific folder (`folder_id`). This is a read-only discovery call that helps you enumerate lists before retrieving tasks or making updates. Returns a `ToolResponse` with `items[]` of `{ id, name }`.
+- **Parameters**: [ListListInFolderInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/list_.py)
+
+```jsonc
+{
+  "folder_id": "folder_1" // Parent folder ID to list its lists
+}
+```
+
+- **Returns**: [ListListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/list.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true, // Tool succeeded
+  "result": {
+    "items": [
+      {
+        "id": "list_1", // List ID
+        "name": "Sprint Backlog" // List name
+      }
+    ]
+  },
+  "issues": [] // Optional warnings/issues collected during execution
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `list_id` does not exist
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### list.list_in_space_folderless
+
+Lists folderless lists that live directly under a space (`space_id`). Read-only. Useful for discovering lists that are not nested in folders. Returns a `ToolResponse` with `items[]` of `{ id, name }`.
+- **Parameters**: [ListListInSpaceFolderlessInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/list_.py)
+
+```jsonc
+{
+  "space_id": "space_1" // Space ID to list folderless lists under the space
+}
+```
+
+- **Returns**: [ListListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/list.py)
+
+```jsonc
+{
+  "ok": true, // Tool succeeded
+  "result": {
+    "items": [
+      {
+        "id": "list_2", // List ID
+        "name": "Kanban" // List name
+      }
+    ]
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `space_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### list.get
+
+Retrieves a single list by `list_id`. Read-only. Returns properties such as `name`, optional `status`, and parent identifiers (`folder_id` and/or `space_id`).
+- **Parameters**: [ListGetInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/list_.py)
+
+```jsonc
+{
+  "list_id": "list_1" // Target list ID
+}
+```
+
+- **Returns**: [ListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/list.py)
+
+```jsonc
+{
+  "id": "list_1", // List ID
+  "name": "Sprint 12", // List name
+  "status": "Open", // Optional status label
+  "folder_id": "folder_1", // Optional parent folder ID
+  "space_id": "space_1" // Optional parent space ID (for folderless lists)
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `folder_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### list.create
+
+Creates a new list within the specified folder (`folder_id`). This operation changes data in ClickUp and returns the created list on success. Ensure the token has permission to create lists in the target folder.
+- **Parameters**: [ListCreateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/list_.py)
+
+```jsonc
+{
+  "folder_id": "folder_1", // Parent folder ID
+  "name": "Sprint Backlog", // List name
+  "content": "Sprint board for team A", // Optional description
+  "status": "Open", // Optional status label
+  "priority": 2, // Optional 1..4
+  "assignee": 42, // Optional user id
+  "due_date": 1731523200000, // Optional epoch ms
+  "due_date_time": true // Optional: whether due_date includes time
+}
+```
+
+- **Returns**: [ListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/list.py)
+
+
+```jsonc
+{
+  "id": "list_1", // New list ID
+  "name": "Sprint Backlog",
+  "status": "Open",
+  "folder_id": "folder_1",
+  "space_id": "space_1"
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `folder_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### list.update
+
+Partially updates an existing list. Provide only fields you intend to change (e.g., `name`, `status`, due dates, or metadata). Returns the updated list. Requires appropriate permissions.
+- **Parameters**: [ListUpdateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/list_.py)
+
+```jsonc
+{
+  "list_id": "list_1", // Target list ID
+  "name": "Sprint 12", // Optional
+  "content": "Updated description", // Optional
+  "status": "In progress", // Optional
+  "priority": 3, // Optional 1..4
+  "assignee": 42, // Optional user id
+  "due_date": 1732041600000, // Optional epoch ms
+  "due_date_time": false // Optional
+}
+```
+
+- **Returns**: [ListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/list.py)
+
+```jsonc
+{
+  "id": "list_1",
+  "name": "Sprint 12",
+  "status": "In progress",
+  "folder_id": "folder_1",
+  "space_id": "space_1"
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `list_id` does not exist
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### list.delete
+
+Permanently deletes a list by `list_id`. Destructive and cannot be undone. Verify retention or audit needs before deleting.
+- **Parameters**: [ListDeleteInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/list_.py)
+
+```jsonc
+{
+  "list_id": "list_1" // Target list ID
+}
+```
+
+- **Returns**: [DeletionResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "deleted": true // True if the list was deleted
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `list_id` does not exist
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### list.add_task
+
+Adds an existing task to a secondary list (TIML). This does not move the task’s home list; it creates an additional list association. Idempotent when the task is already present.
+- **Parameters**: [ListAddTaskInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/list_.py)
+
+```jsonc
+{
+  "list_id": "list_2", // Target list ID (secondary)
+  "task_id": "task_123" // Existing task ID
+}
+```
+
+- **Returns**: [OperationResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+  "ok": true // Operation succeeded
+}
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `list_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+Removes a task from a secondary list (TIML) without deleting the task or changing its home list. No-op if the task is not associated with the list.
+- **Parameters**: [ListRemoveTaskInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/list_.py)
+
+```jsonc
+{
+  "list_id": "list_2", // Target list ID (secondary)
+  "task_id": "task_123" // Existing task ID
+}
+```
+
+- **Returns**: [OperationResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "ok": true // Operation succeeded
+}
+```
+
+
