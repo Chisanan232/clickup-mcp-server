@@ -27,7 +27,13 @@ const sidebars: SidebarsConfig = {
           label: 'Web APIs',
           items: [
             'api-references/web-server/web-apis',
-            'api-references/web-server/web-api-health-check',
+            {
+              type: 'category',
+              label: 'Endpoints',
+              items: [
+                'api-references/web-server/endpoints/web-api-health-check',
+              ],
+            },
           ],
         },
         {
