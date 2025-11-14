@@ -15,7 +15,7 @@ For MCP background, see the [official docs](https://modelcontextprotocol.io/docs
 :::note Errors and retries
 All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
 and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
-[Errors and Retries (MCP)](./errors-and-retries.mdx) for details.
+[Errors and Retries (MCP)](../errors-and-retries.mdx) for details.
 :::
 
 ## Tools

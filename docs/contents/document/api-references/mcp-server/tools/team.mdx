@@ -1,33 +1,28 @@
 ---
-id: workspace-mcp-api
-title: Workspace
+id: team-mcp-api
+title: Team
 sidebar_position: 1
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Workspace MCP API
+# Team MCP API
 
-Tools for discovering workspaces (a.k.a. teams) accessible by the token.
-
+The Team MCP API allows you to interact with ClickUp teams (workspaces) using the Model Context Protocol interface. For more information about MCP, see the [official documentation](https://modelcontextprotocol.io/docs/getting-started/intro).
+ 
 :::note Errors and retries
 All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
 and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
-[Errors and Retries (MCP)](./errors-and-retries.mdx) for details.
+[Errors and Retries (MCP)](../errors-and-retries.mdx) for details.
 :::
 
-## Tools
+## Available Functions
 
-### workspace.list
+### get_authorized_teams
 
-Lists all workspaces (teams) the current token can access. This is a read-only discovery call that helps you obtain `team_id` values for downstream operations like `space.list`. The tool returns a `ToolResponse` envelope with `items[]` where each item includes `{ team_id, name }`.
+- **Function name**: `get_authorized_teams`
 - **Parameters**: none
-
-```jsonc
-{}
-```
-
 - **Returns**: [WorkspaceListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/workspace.py) in `ToolResponse`
 
 ```jsonc
