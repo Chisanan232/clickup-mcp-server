@@ -9,6 +9,7 @@ const sidebars: SidebarsConfig = {
     'requirements',
     'workflow',
     'coding-style',
+    'testing-strategy',
     {
       type: 'category',
       label: 'Architecture',
