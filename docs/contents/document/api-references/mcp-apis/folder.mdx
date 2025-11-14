@@ -53,46 +53,6 @@ Lists all folders within a given space (`space_id`). This is a read-only discove
   - `RATE_LIMIT` (429)
   - `UPSTREAM_ERROR` (5xx/timeout)
 
-:::tip Quick start (call via MCP)
-<Tabs groupId="transport">
-  <TabItem value="sse" label="SSE (EventSource)" default>
-
-```js
-const es = new EventSource("http://localhost:55030/mcp/mcp/sse?tool=folder.list_in_space&space_id=SPACE_ID");
-es.onmessage = (e) => {
-  const frame = JSON.parse(e.data);
-  if (frame.ok) console.log(frame.result.items);
-};
-```
-
-  </TabItem>
-  <TabItem value="http" label="Streamable HTTP (curl)">
-
-```bash
-curl -N -H "Content-Type: application/json" \
-  -d '{"tool":"folder.list_in_space","arguments":{"space_id":"SPACE_ID"}}' \
-  http://localhost:55030/mcp/mcp
-```
-
-  </TabItem>
-  <TabItem value="py" label="Python (MCP client)">
-
-```python
-import asyncio
-from mcp import ClientSession
-
-async def main():
-    async with ClientSession("http://localhost:55030") as s:
-        result = await s.call_tool("folder.list_in_space", {"space_id": "SPACE_ID"})
-        print(result)
-
-asyncio.run(main())
-```
-
-  </TabItem>
-</Tabs>
-:::
-
 ### folder.get
 
 Retrieves a single folder by `folder_id`. Read-only. Useful to validate the folder exists and to read its core properties like `name` and parent `space_id` before performing updates.
