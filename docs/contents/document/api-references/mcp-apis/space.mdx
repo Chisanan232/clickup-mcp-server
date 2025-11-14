@@ -54,47 +54,6 @@ List spaces within a workspace (team). Discover team IDs via `workspace.list`.
   - `RATE_LIMIT` (429)
   - `UPSTREAM_ERROR` (5xx/timeout)
 
-:::tip Quick start (call via MCP)
-<Tabs groupId="transport">
-  <TabItem value="sse" label="SSE (EventSource)" default>
-
-```js
-// team_id passed as query arg
-const es = new EventSource("http://localhost:55030/mcp/mcp/sse?tool=space.list&team_id=TEAM_ID");
-es.onmessage = (e) => {
-  const frame = JSON.parse(e.data);
-  if (frame.ok) console.log(frame.result.items);
-};
-```
-
-  </TabItem>
-  <TabItem value="http" label="Streamable HTTP (curl)">
-
-```bash
-curl -N -H "Content-Type: application/json" \
-  -d '{"tool":"space.list","arguments":{"team_id":"TEAM_ID"}}' \
-  http://localhost:55030/mcp/mcp
-```
-
-  </TabItem>
-  <TabItem value="py" label="Python (MCP client)">
-
-```python
-import asyncio
-from mcp import ClientSession
-
-async def main():
-    async with ClientSession("http://localhost:55030") as s:
-        result = await s.call_tool("space.list", {"team_id": "TEAM_ID"})
-        print(result)
-
-asyncio.run(main())
-```
-
-  </TabItem>
-</Tabs>
-:::
-
 ### space.get
 
 Retrieves a single space by its `space_id`. This call is read-only and returns core metadata such as the space's name, privacy, and owning `team_id`. Useful for validating IDs and reading properties before updates.
