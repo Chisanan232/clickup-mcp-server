@@ -19,9 +19,17 @@ class SpaceCreateInput(BaseModel):
         "json_schema_extra": {"examples": [{"team_id": "team_1", "name": "[TEST] Eng", "multiple_assignees": True}]}
     }
 
-    team_id: str = Field(..., min_length=1, description="Target workspace (team) ID.")
-    name: str = Field(..., min_length=1, description="Space name.")
-    multiple_assignees: Optional[bool] = Field(None, description="Allow multiple assignees for tasks in this space.")
+    team_id: str = Field(
+        ..., min_length=1, description="Target workspace (team) ID.", examples=["9018752317", "team_1"]
+    )
+    name: str = Field(
+        ..., min_length=1, description="Space name.", examples=["[TEST] Eng", "Platform", "Delivery"]
+    )
+    multiple_assignees: Optional[bool] = Field(
+        None,
+        description="Allow multiple assignees for tasks in this space.",
+        examples=[True, False],
+    )
 
 
 class SpaceGetInput(BaseModel):
@@ -32,7 +40,9 @@ class SpaceGetInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"space_id": "space_1"}]}}
 
-    space_id: str = Field(..., min_length=1, description="Space ID.")
+    space_id: str = Field(
+        ..., min_length=1, description="Space ID.", examples=["space_1", "abc123"]
+    )
 
 
 class SpaceUpdateInput(BaseModel):
@@ -50,10 +60,18 @@ class SpaceUpdateInput(BaseModel):
         }
     }
 
-    space_id: str = Field(..., min_length=1, description="Space ID.")
-    name: Optional[str] = Field(None, min_length=1, description="Space name.")
-    private: Optional[bool] = Field(None, description="Whether the space is private.")
-    multiple_assignees: Optional[bool] = Field(None, description="Allow multiple assignees for tasks.")
+    space_id: str = Field(
+        ..., min_length=1, description="Space ID.", examples=["space_1", "abc123"]
+    )
+    name: Optional[str] = Field(
+        None, min_length=1, description="Space name.", examples=["Delivery", "Engineering"]
+    )
+    private: Optional[bool] = Field(
+        None, description="Whether the space is private.", examples=[True, False]
+    )
+    multiple_assignees: Optional[bool] = Field(
+        None, description="Allow multiple assignees for tasks.", examples=[True, False]
+    )
 
 
 class SpaceDeleteInput(BaseModel):
@@ -64,7 +82,9 @@ class SpaceDeleteInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"space_id": "space_1"}]}}
 
-    space_id: str = Field(..., min_length=1, description="Space ID.")
+    space_id: str = Field(
+        ..., min_length=1, description="Space ID.", examples=["space_1", "abc123"]
+    )
 
 
 class SpaceListInput(BaseModel):
@@ -75,4 +95,6 @@ class SpaceListInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"team_id": "team_1"}]}}
 
-    team_id: str = Field(..., min_length=1, description="Workspace (team) ID.")
+    team_id: str = Field(
+        ..., min_length=1, description="Workspace (team) ID.", examples=["9018752317", "team_1"]
+    )
