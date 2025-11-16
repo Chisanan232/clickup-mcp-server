@@ -119,7 +119,7 @@ class ApiSpecChecker:
             httpx.HTTPError: If the request fails
         """
         logger.info(f"Fetching remote API specification from {self.spec_url}")
-        with httpx.Client(timeout=30.0) as client:
+        with httpx.Client(timeout=30.0, follow_redirects=True) as client:
             response = client.get(self.spec_url)
             response.raise_for_status()
             spec_data = response.json()
@@ -279,7 +279,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Check for changes in the ClickUp API specification")
     parser.add_argument(
         "--spec-url",
-        default="https://developer.clickup.com/openapi/673cf4cfdca96a0019533cad",
+        default="https://developer.clickup.com/openapi/clickup-api-v2-reference.json",
         help="URL to the ClickUp API specification",
     )
     parser.add_argument(
