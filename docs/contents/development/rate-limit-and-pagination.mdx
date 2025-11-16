@@ -1,0 +1,48 @@
+---
+id: rate-limit-and-pagination
+title: Rate Limits & Pagination
+---
+
+# Rate Limits & Pagination
+
+This page explains ClickUp API limits, client-side rate limiting, retries/backoff, and pagination patterns.
+
+## ClickUp limits
+
+- Max **100 items per page**.
+- Use cursor or page parameters as provided by endpoints.
+
+## Client rate limiting
+
+- Implemented in `ClickUpAPIClient._enforce_rate_limit()` ([clickup_mcp/client.py](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/client.py)).
+  - Tracks request timestamps; sleeps when exceeding `rate_limit_requests_per_minute`.
+  - Tested in [test/unit_test/test_client.py](https://github.com/Chisanan232/clickup-mcp-server/blob/master/test/unit_test/test_client.py) (rate limiting cases).
+
+## Retries & backoff
+
+- Implemented in `ClickUpAPIClient._make_request()` with exponential backoff on transport errors.
+  - See [clickup_mcp/client.py](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/client.py) for `max_retries`, `retry_delay` (base), backoff factor `2^attempt`.
+  - Covered by tests in [test/unit_test/test_client.py](https://github.com/Chisanan232/clickup-mcp-server/blob/master/test/unit_test/test_client.py): retry logic and backoff.
+- 401 → raises `AuthenticationError` (do not retry).
+- 429 → raises `RateLimitError` (honor `Retry-After` when using raw HTTP; MCP layer maps to `RATE_LIMIT`).
+- Other 4xx/5xx → `APIResponse(success=False, error=...)`.
+
+## Pagination patterns
+
+- Request pages up to 100; accumulate results until exhausted.
+- Prefer server cursors when available.
+- Expose MCP tools that either:
+  - accept pagination params, or
+  - return `next_cursor` for the next call.
+
+:::tip Cross-links
+- User guide: `docs/next/errors-and-retries`
+- Architecture: `dev/next/architecture/overview`
+:::
+
+### Code references
+
+- Client implementation: [clickup_mcp/client.py](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/client.py)
+- Error mapping (MCP layer): [clickup_mcp/mcp_server/errors/mapping.py](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/errors/mapping.py)
+- Tool error models: [clickup_mcp/mcp_server/errors/models.py](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/errors/models.py)
+- Tests: [test/unit_test/test_client.py](https://github.com/Chisanan232/clickup-mcp-server/blob/master/test/unit_test/test_client.py)
