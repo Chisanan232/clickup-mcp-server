@@ -8,10 +8,10 @@ from pydantic import BaseModel, Field
 class SpaceResult(BaseModel):
     """Concise space detail for LLM planning."""
 
-    id: str = Field(..., description="Space ID")
-    name: str = Field(..., description="Space name")
-    private: bool = Field(False, description="Whether the space is private")
-    team_id: Optional[str] = Field(None, description="Workspace (team) ID")
+    id: str = Field(..., description="Space ID", examples=["space_1", "spc_abc"])
+    name: str = Field(..., description="Space name", examples=["Engineering", "Delivery"])
+    private: bool = Field(False, description="Whether the space is private", examples=[False])
+    team_id: Optional[str] = Field(None, description="Workspace (team) ID", examples=["team_1", "9018752317"])
 
     model_config = {
         "json_schema_extra": {
@@ -21,11 +21,15 @@ class SpaceResult(BaseModel):
 
 
 class SpaceListItem(BaseModel):
-    id: str = Field(..., description="Space ID")
-    name: str = Field(..., description="Space name")
+    id: str = Field(..., description="Space ID", examples=["space_1", "spc_abc"])
+    name: str = Field(..., description="Space name", examples=["Engineering", "Delivery"])
 
 
 class SpaceListResult(BaseModel):
-    items: List[SpaceListItem] = Field(default_factory=list, description="Spaces in the workspace")
+    items: List[SpaceListItem] = Field(
+        default_factory=list,
+        description="Spaces in the workspace",
+        examples=[[{"id": "space_1", "name": "Engineering"}]],
+    )
 
     model_config = {"json_schema_extra": {"examples": [{"items": [{"id": "space_1", "name": "Engineering"}]}]}}
