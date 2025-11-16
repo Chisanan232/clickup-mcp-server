@@ -40,12 +40,12 @@ class TaskCreateInput(BaseModel):
     }
 
     list_id: str = Field(
-        ..., min_length=1, description="Target ClickUp list ID (home list for the new task).",
+        ...,
+        min_length=1,
+        description="Target ClickUp list ID (home list for the new task).",
         examples=["123", "list_1"],
     )
-    name: str = Field(
-        ..., min_length=1, description="Short task title.", examples=["Ship v1.2", "Fix login bug"]
-    )
+    name: str = Field(..., min_length=1, description="Short task title.", examples=["Ship v1.2", "Fix login bug"])
     description: Optional[str] = Field(
         None, description="Markdown/plaintext body.", examples=["We need to ship v1.2 by Friday."]
     )
@@ -62,12 +62,8 @@ class TaskCreateInput(BaseModel):
         description="Assignee user IDs.",
         examples=[[42], ["usr_abc"], [42, 43]],
     )
-    due_date: Optional[int] = Field(
-        None, description="Due timestamp in epoch milliseconds.", examples=[1731523200000]
-    )
-    time_estimate: Optional[int] = Field(
-        None, description="Estimate in milliseconds.", examples=[3600000, 14400000]
-    )
+    due_date: Optional[int] = Field(None, description="Due timestamp in epoch milliseconds.", examples=[1731523200000])
+    time_estimate: Optional[int] = Field(None, description="Estimate in milliseconds.", examples=[3600000, 14400000])
     parent: Optional[str] = Field(
         None, description="Parent task ID to create a subtask in the same list.", examples=["task_abc"]
     )
@@ -93,9 +89,7 @@ class TaskUpdateInput(BaseModel):
         }
     }
 
-    task_id: str = Field(
-        ..., min_length=1, description="Target task ID.", examples=["task_123", "CU-123"]
-    )
+    task_id: str = Field(..., min_length=1, description="Target task ID.", examples=["task_123", "CU-123"])
     name: Optional[str] = Field(
         None, min_length=1, description="New task title.", examples=["Update changelog", "Ship v1.2"]
     )
@@ -105,18 +99,12 @@ class TaskUpdateInput(BaseModel):
     status: Optional[str] = Field(
         None, description="Workflow status by name.", examples=["open", "in progress", "done"]
     )
-    priority: Optional[int] = Field(
-        None, ge=1, le=4, description="1..4 priority.", examples=[1, 2, 3, 4]
-    )
+    priority: Optional[int] = Field(None, ge=1, le=4, description="1..4 priority.", examples=[1, 2, 3, 4])
     assignees: Optional[List[int | str]] = Field(
         None, description="Assignee user IDs.", examples=[[42], ["usr_abc"], [42, 43]]
     )
-    due_date: Optional[int] = Field(
-        None, description="Due timestamp in epoch milliseconds.", examples=[1731523200000]
-    )
-    time_estimate: Optional[int] = Field(
-        None, description="Estimate in milliseconds.", examples=[7200000]
-    )
+    due_date: Optional[int] = Field(None, description="Due timestamp in epoch milliseconds.", examples=[1731523200000])
+    time_estimate: Optional[int] = Field(None, description="Estimate in milliseconds.", examples=[7200000])
 
 
 class TaskGetInput(BaseModel):
@@ -135,15 +123,9 @@ class TaskGetInput(BaseModel):
         }
     }
 
-    task_id: str = Field(
-        ..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"]
-    )
-    subtasks: Optional[bool] = Field(
-        None, description="Include subtasks (true/false).", examples=[True, False]
-    )
-    custom_task_ids: bool = Field(
-        False, description="Whether using custom task IDs.", examples=[True, False]
-    )
+    task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"])
+    subtasks: Optional[bool] = Field(None, description="Include subtasks (true/false).", examples=[True, False])
+    custom_task_ids: bool = Field(False, description="Whether using custom task IDs.", examples=[True, False])
     team_id: Optional[str] = Field(
         None,
         description="Team ID (required when custom_task_ids=true).",
@@ -168,21 +150,11 @@ class TaskListInListInput(BaseModel):
         }
     }
 
-    list_id: str = Field(
-        ..., min_length=1, description="List ID.", examples=["123", "list_1"]
-    )
-    page: int = Field(
-        0, ge=0, description="Page number (0-indexed).", examples=[0, 1, 2]
-    )
-    limit: int = Field(
-        100, ge=1, le=100, description="Page size (cap 100 by API).", examples=[25, 50, 100]
-    )
-    include_closed: bool = Field(
-        False, description="Include closed tasks.", examples=[True, False]
-    )
-    include_timl: bool = Field(
-        False, description="Include tasks from other lists (TIML).", examples=[True, False]
-    )
+    list_id: str = Field(..., min_length=1, description="List ID.", examples=["123", "list_1"])
+    page: int = Field(0, ge=0, description="Page number (0-indexed).", examples=[0, 1, 2])
+    limit: int = Field(100, ge=1, le=100, description="Page size (cap 100 by API).", examples=[25, 50, 100])
+    include_closed: bool = Field(False, description="Include closed tasks.", examples=[True, False])
+    include_timl: bool = Field(False, description="Include tasks from other lists (TIML).", examples=[True, False])
     statuses: Optional[List[str]] = Field(
         None, description="Filter by status names.", examples=[["open"], ["open", "in progress"]]
     )
@@ -207,14 +179,11 @@ class TaskSetCustomFieldInput(BaseModel):
         }
     }
 
-    task_id: str = Field(
-        ..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"]
-    )
-    field_id: str = Field(
-        ..., min_length=1, description="Custom field ID.", examples=["cf_priority", "cf_text"]
-    )
+    task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"])
+    field_id: str = Field(..., min_length=1, description="Custom field ID.", examples=["cf_priority", "cf_text"])
     value: object = Field(
-        ..., description="Value to set (type depends on field).",
+        ...,
+        description="Value to set (type depends on field).",
         examples=[3, "Ready to ship", True, 1700000000000],
     )
 
@@ -227,12 +196,8 @@ class TaskClearCustomFieldInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"task_id": "task_123", "field_id": "cf_priority"}]}}
 
-    task_id: str = Field(
-        ..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"]
-    )
-    field_id: str = Field(
-        ..., min_length=1, description="Custom field ID.", examples=["cf_priority", "cf_text"]
-    )
+    task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"])
+    field_id: str = Field(..., min_length=1, description="Custom field ID.", examples=["cf_priority", "cf_text"])
 
 
 class TaskAddDependencyInput(BaseModel):
@@ -247,9 +212,7 @@ class TaskAddDependencyInput(BaseModel):
         }
     }
 
-    task_id: str = Field(
-        ..., min_length=1, description="Task ID.", examples=["task_123"]
-    )
+    task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123"])
     depends_on: str = Field(
         ..., min_length=1, description="The ID of the task this task depends on.", examples=["task_456"]
     )

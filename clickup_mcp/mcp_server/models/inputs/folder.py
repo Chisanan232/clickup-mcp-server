@@ -17,12 +17,8 @@ class FolderCreateInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"space_id": "space_1", "name": "[TEST] Planning"}]}}
 
-    space_id: str = Field(
-        ..., min_length=1, description="Parent space ID.", examples=["space_1", "spc_abc"]
-    )
-    name: str = Field(
-        ..., min_length=1, description="Folder name.", examples=["[TEST] Planning", "Roadmap"]
-    )
+    space_id: str = Field(..., min_length=1, description="Parent space ID.", examples=["space_1", "spc_abc"])
+    name: str = Field(..., min_length=1, description="Folder name.", examples=["[TEST] Planning", "Roadmap"])
 
 
 class FolderGetInput(BaseModel):
@@ -33,9 +29,7 @@ class FolderGetInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"folder_id": "folder_1"}]}}
 
-    folder_id: str = Field(
-        ..., min_length=1, description="Folder ID.", examples=["folder_1", "fld_abc"]
-    )
+    folder_id: str = Field(..., min_length=1, description="Folder ID.", examples=["folder_1", "fld_abc"])
 
 
 class FolderUpdateInput(BaseModel):
@@ -46,12 +40,8 @@ class FolderUpdateInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"folder_id": "folder_1", "name": "Roadmap"}]}}
 
-    folder_id: str = Field(
-        ..., min_length=1, description="Folder ID.", examples=["folder_1", "fld_abc"]
-    )
-    name: Optional[str] = Field(
-        None, min_length=1, description="New folder name.", examples=["Roadmap", "Planning"]
-    )
+    folder_id: str = Field(..., min_length=1, description="Folder ID.", examples=["folder_1", "fld_abc"])
+    name: Optional[str] = Field(None, min_length=1, description="New folder name.", examples=["Roadmap", "Planning"])
 
 
 class FolderDeleteInput(BaseModel):
@@ -75,6 +65,4 @@ class FolderListInSpaceInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"space_id": "space_1"}]}}
 
-    space_id: str = Field(
-        ..., min_length=1, description="Space ID.", examples=["space_1", "spc_abc"]
-    )
+    space_id: str = Field(..., min_length=1, description="Space ID.", examples=["space_1", "spc_abc"])
