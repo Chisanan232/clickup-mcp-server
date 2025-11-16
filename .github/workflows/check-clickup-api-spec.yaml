@@ -63,7 +63,10 @@ jobs:
       - name: Check API specification changes
         id: check-api-spec
         run: |
-          uv run python scripts/ci/api_spec_checker.py --update --verbose
+          uv run python scripts/ci/api_spec_checker.py \
+            --update \
+            --verbose \
+            --spec-url https://developer.clickup.com/openapi/clickup-api-v2-reference.json
 
       - name: Create PR branch if changes detected
         if: ${{ failure()
