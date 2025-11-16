@@ -27,25 +27,30 @@ jobs:
     
     steps:
       - name: Checkout code
+        id: checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref }}
 
       - name: Install uv
+        id: setup-uv
         uses: astral-sh/setup-uv@v7
         with:
           python-version: 3.13    # NOTE: Caused by *PyO3's maximum supported version (3.13)*
 
       - name: Activate the uv virtual environment
+        id: activate-venv
         run: |
           uv venv
           . .venv/bin/activate
 
       - name: Install all the project dependencies
+        id: install-deps
         run: uv sync --no-install-project --no-default-groups
 
       - name: Sync branches from remote repository
+        id: sync-branches
         run: |
           # Setup git
           git config user.name "GitHub Actions Bot"
@@ -61,7 +66,13 @@ jobs:
           uv run python scripts/ci/api_spec_checker.py --update --verbose
 
       - name: Create PR branch if changes detected
-        if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
+        if: ${{ failure()
+              && steps.check-api-spec.conclusion == 'failure'
+              && steps.checkout.conclusion == 'success'
+              && steps.setup-uv.conclusion == 'success'
+              && steps.activate-venv.conclusion == 'success'
+              && steps.install-deps.conclusion == 'success'
+              && steps.sync-branches.conclusion == 'success' }}
         run: |
           # Create a new branch with timestamp
           git switch ${{ env.BASE_BRANCH }}
@@ -83,7 +94,13 @@ jobs:
           git push -u origin ${{ env.BRANCH_NAME }}
 
       - name: Process PR template
-        if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
+        if: ${{ failure()
+              && steps.check-api-spec.conclusion == 'failure'
+              && steps.checkout.conclusion == 'success'
+              && steps.setup-uv.conclusion == 'success'
+              && steps.activate-venv.conclusion == 'success'
+              && steps.install-deps.conclusion == 'success'
+              && steps.sync-branches.conclusion == 'success' }}
         run: |
           # Get current date
           CURRENT_DATE=$(date +"%Y-%m-%d")
@@ -99,7 +116,13 @@ jobs:
           cat ${{ env.PR_TEMPLATE_PATH }}
 
       - name: Create PR (gh cli)
-        if: ${{ failure() && steps.check-api-spec.conclusion == 'failure' }}
+        if: ${{ failure()
+              && steps.check-api-spec.conclusion == 'failure'
+              && steps.checkout.conclusion == 'success'
+              && steps.setup-uv.conclusion == 'success'
+              && steps.activate-venv.conclusion == 'success'
+              && steps.install-deps.conclusion == 'success'
+              && steps.sync-branches.conclusion == 'success' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
