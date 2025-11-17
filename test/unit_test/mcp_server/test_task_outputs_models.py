@@ -37,6 +37,8 @@ def _fake_task_resp(**overrides: Any) -> TaskResp:
         prio_fields["priority"] = prio_label
     priority_obj = type("Prio", (), prio_fields)()
     list_obj = type("ListRef", (), {"id": overrides.get("list_id", "L1")})()
+    folder_obj = overrides.get("folder", None)
+    space_obj = overrides.get("space", None)
     user = type("UserRef", (), {"id": 42})()
     base = {
         "id": overrides.get("id", "t1"),
@@ -44,8 +46,12 @@ def _fake_task_resp(**overrides: Any) -> TaskResp:
         "status": status_obj,
         "priority": priority_obj,
         "list": list_obj,
+        "folder": folder_obj,
+        "space": space_obj,
         "assignees": overrides.get("assignees", [user]),
         "due_date": overrides.get("due_date", 1731004800000),
+        "time_estimate": overrides.get("time_estimate", None),
+        "custom_fields": overrides.get("custom_fields", []),
         "url": overrides.get("url", "https://app.clickup.com/t/t1"),
         "parent": overrides.get("parent", None),
     }

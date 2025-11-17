@@ -7,7 +7,13 @@ Task domain entity. Keeps DTO shapes out of the domain.
 from __future__ import annotations
 
 from clickup_mcp.models.domain.task import ClickUpTask
+from clickup_mcp.models.mapping.priority import parse_priority_obj
 from clickup_mcp.models.dto.task import TaskCreate, TaskResp, TaskUpdate
+from clickup_mcp.mcp_server.models.outputs.task import TaskListItem, TaskResult
+from clickup_mcp.models.domain.task_priority import (
+    domain_priority_label,
+    int_to_domain_priority,
+)
 
 
 class TaskMapper:
@@ -20,43 +26,11 @@ class TaskMapper:
         if resp.status and resp.status.status:
             status_label = resp.status.status
 
-        def _parse_priority_id(v: object) -> int | None:
-            # Accept 1, "1", "priority_1"
-            if v is None:
-                return None
-            # direct int
-            if isinstance(v, int):
-                return v if 1 <= v <= 4 else None
-            # string forms
-            if isinstance(v, str):
-                s = v.strip().lower()
-                # numeric string
-                if s.isdigit():
-                    n = int(s)
-                    return n if 1 <= n <= 4 else None
-                # suffixed id like "priority_1"
-                if s.startswith("priority_"):
-                    tail = s.rsplit("_", 1)[-1]
-                    if tail.isdigit():
-                        n = int(tail)
-                        return n if 1 <= n <= 4 else None
-            return None
-
         prio_int: int | None = None
         if resp.priority is not None:
-            prio_int = _parse_priority_id(getattr(resp.priority, "id", None))
-            if prio_int is None:
-                # Fallback from label if present, e.g., resp.priority.priority == "High"
-                label = getattr(resp.priority, "priority", None)
-                if isinstance(label, str):
-                    lookup = {
-                        "urgent": 1,
-                        "high": 2,
-                        "normal": 3,
-                        "low": 4,
-                    }
-                    prio_int = lookup.get(label.strip().lower())
+            prio_int = parse_priority_obj(resp.priority)
 
+        # Direct property access for clarity; DTOs provide defaults
         assignees = [u.id for u in resp.assignees if u.id is not None]
         folder_id = resp.folder.id if resp.folder and resp.folder.id else None
         list_id = resp.list.id if resp.list and resp.list.id else None
@@ -106,4 +80,39 @@ class TaskMapper:
             assignees=list(task.assignee_ids) or None,
             due_date=task.due_date,
             time_estimate=task.time_estimate,
+        )
+
+    @staticmethod
+    def to_task_result_output(task: ClickUpTask, url: str | None = None) -> TaskResult:
+        """Map a ClickUpTask domain entity to the MCP TaskResult output model."""
+        prio_info = None
+        if task.priority is not None:
+            try:
+                d = int_to_domain_priority(task.priority)
+                prio_info = {"value": task.priority, "label": domain_priority_label(d)}
+            except Exception:
+                prio_info = None
+
+        return TaskResult(
+            id=task.id,
+            name=task.name,
+            status=task.status,
+            priority=task.priority,
+            priority_info=prio_info,
+            list_id=task.list_id,
+            assignee_ids=list(task.assignee_ids),
+            due_date_ms=task.due_date,
+            url=url,
+            parent_id=task.parent_id,
+        )
+
+    @staticmethod
+    def to_task_list_item_output(task: ClickUpTask, url: str | None = None) -> TaskListItem:
+        """Map a ClickUpTask domain entity to the MCP TaskListItem output model."""
+        return TaskListItem(
+            id=task.id,
+            name=task.name,
+            status=task.status,
+            list_id=task.list_id,
+            url=url,
         )
