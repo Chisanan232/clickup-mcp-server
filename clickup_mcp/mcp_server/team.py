@@ -13,6 +13,7 @@ from clickup_mcp.mcp_server.models.outputs.workspace import (
     WorkspaceListItem,
     WorkspaceListResult,
 )
+from clickup_mcp.models.mapping.team_mapper import TeamMapper
 
 from .app import mcp
 
@@ -43,10 +44,5 @@ async def get_authorized_teams() -> WorkspaceListResult:
     # Get the teams using the client
     async with client:
         teams = await client.team.get_authorized_teams()
-    # Map domain models to MCP output model
-    items: List[WorkspaceListItem] = []
-    for team in teams:
-        team_id_val = team.team_id or team.id or ""
-        name_val = team.name or ""
-        items.append(WorkspaceListItem(team_id=str(team_id_val), name=name_val))
-    return WorkspaceListResult(items=items)
+    # Map domain models to MCP output model via mapper
+    return TeamMapper.to_workspace_list_result_output(teams)
