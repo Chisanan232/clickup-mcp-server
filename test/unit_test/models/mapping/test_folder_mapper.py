@@ -3,6 +3,7 @@
 from clickup_mcp.models.domain.folder import ClickUpFolder
 from clickup_mcp.models.dto.folder import FolderResp
 from clickup_mcp.models.mapping.folder_mapper import FolderMapper
+from clickup_mcp.mcp_server.models.inputs.folder import FolderCreateInput, FolderUpdateInput
 
 
 def test_to_domain_from_resp_minimal() -> None:
@@ -47,3 +48,17 @@ def test_domain_to_output_result_and_list_item() -> None:
     item = FolderMapper.to_folder_list_item_output(dom)
     assert item.id == "f1"
     assert item.name == "Folder X"
+
+
+def test_from_create_input_builds_domain() -> None:
+    inp = FolderCreateInput(space_id="s1", name="Folder A")
+    dom = FolderMapper.from_create_input(inp)
+    assert dom.name == "Folder A"
+    assert dom.space_id == "s1"
+
+
+def test_from_update_input_builds_domain_and_defaults() -> None:
+    inp = FolderUpdateInput(folder_id="f1", name=None)
+    dom = FolderMapper.from_update_input(inp)
+    assert dom.id == "f1"
+    assert dom.name == ""
