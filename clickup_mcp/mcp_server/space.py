@@ -98,8 +98,8 @@ async def space_list(input: SpaceListInput) -> SpaceListResult:
 @handle_tool_errors
 async def space_create(input: SpaceCreateInput) -> SpaceResult | None:
     client = ClickUpAPIClientFactory.get()
-    # Input -> Domain -> DTO
-    domain = ClickUpSpace(id="temp", name=input.name, multiple_assignees=input.multiple_assignees or False)
+    # Input -> Domain -> DTO (via mapper)
+    domain = SpaceMapper.from_create_input(input)
     dto = SpaceMapper.to_create_dto(domain)
     async with client:
         resp = await client.space.create(input.team_id, dto)
@@ -119,13 +119,8 @@ async def space_create(input: SpaceCreateInput) -> SpaceResult | None:
 @handle_tool_errors
 async def space_update(input: SpaceUpdateInput) -> SpaceResult | None:
     client = ClickUpAPIClientFactory.get()
-    # Build a domain model carrying fields to update; name/multiple_assignees/private may be None
-    domain = ClickUpSpace(
-        id=input.space_id,
-        name=input.name or "",
-        private=bool(input.private) if input.private is not None else False,
-        multiple_assignees=bool(input.multiple_assignees) if input.multiple_assignees is not None else False,
-    )
+    # Input -> Domain -> DTO (via mapper)
+    domain = SpaceMapper.from_update_input(input)
     dto = SpaceMapper.to_update_dto(domain)
     async with client:
         resp = await client.space.update(input.space_id, dto)
