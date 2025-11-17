@@ -48,3 +48,25 @@ def test_to_create_and_update_dto_from_domain() -> None:
     assert up["name"] == "My Space"
     assert up["private"] is False
     assert up["multiple_assignees"] is True
+
+
+def test_domain_to_output_result_and_list_item() -> None:
+    dom = ClickUpSpace(
+        id="s1",
+        name="My Space",
+        private=False,
+        statuses=[],
+        multiple_assignees=True,
+        features=None,
+        team_id="t1",
+    )
+
+    res = SpaceMapper.to_space_result_output(dom)
+    assert res.id == "s1"
+    assert res.name == "My Space"
+    assert res.private is False
+    assert res.team_id == "t1"
+
+    item = SpaceMapper.to_space_list_item_output(dom)
+    assert item.id == "s1"
+    assert item.name == "My Space"

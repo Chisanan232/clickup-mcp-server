@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from clickup_mcp.models.domain.space import ClickUpSpace
 from clickup_mcp.models.dto.space import SpaceCreate, SpaceResp, SpaceUpdate
+from clickup_mcp.mcp_server.models.outputs.space import SpaceListItem, SpaceResult
 
 
 class SpaceMapper:
@@ -42,3 +43,11 @@ class SpaceMapper:
             color=None,
             features=None,
         )
+
+    @staticmethod
+    def to_space_result_output(space: ClickUpSpace) -> SpaceResult:
+        return SpaceResult(id=space.id, name=space.name, private=space.private, team_id=space.team_id)
+
+    @staticmethod
+    def to_space_list_item_output(space: ClickUpSpace) -> SpaceListItem:
+        return SpaceListItem(id=space.id, name=space.name)
