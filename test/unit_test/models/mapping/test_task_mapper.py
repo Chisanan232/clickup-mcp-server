@@ -68,3 +68,31 @@ def test_to_create_and_update_dto_from_domain() -> None:
     assert up["assignees"] == [1, 2]
     assert up["due_date"] == 1000
     assert up["time_estimate"] == 2000
+
+
+def test_to_domain_parses_priority_id_suffix() -> None:
+    resp = TaskResp(
+        id="t2",
+        name="Task Two",
+        status=TaskResp.TaskStatusInfo(status="open"),
+        priority=TaskResp.TaskPriorityInfo(id="priority_1"),
+        assignees=[],
+        list=TaskResp.EntityRef(id="l1"),
+    )
+    dom = TaskMapper.to_domain(resp)
+    assert dom.priority == 1
+
+
+def test_to_domain_fallbacks_to_priority_label() -> None:
+    # Provide label only to exercise fallback mapping
+    prio_obj = TaskResp.TaskPriorityInfo(id=None, priority="High")
+    resp = TaskResp(
+        id="t3",
+        name="Task Three",
+        status=TaskResp.TaskStatusInfo(status="open"),
+        priority=prio_obj,
+        assignees=[],
+        list=TaskResp.EntityRef(id="l1"),
+    )
+    dom = TaskMapper.to_domain(resp)
+    assert dom.priority == 2
