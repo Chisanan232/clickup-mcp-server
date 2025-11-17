@@ -22,10 +22,10 @@ EpochMs = Annotated[int, AfterValidator(_ms)]
 
 
 class Priority(IntEnum):
-    LOW = 1
-    NORMAL = 2
-    HIGH = 3
-    URGENT = 4
+    URGENT = 1
+    HIGH = 2
+    NORMAL = 3
+    LOW = 4
 
 
 class TaskStatus(str, Enum):
