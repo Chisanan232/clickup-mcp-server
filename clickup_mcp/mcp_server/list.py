@@ -44,17 +44,7 @@ from .app import mcp
 @handle_tool_errors
 async def list_create(input: ListCreateInput) -> ListResult | None:
     client = ClickUpAPIClientFactory.get()
-    domain = ClickUpList(
-        id="temp",
-        name=input.name,
-        content=input.content,
-        folder_id=input.folder_id,
-        status=input.status,
-        priority=input.priority,
-        assignee_id=input.assignee,
-        due_date=input.due_date,
-        due_date_time=input.due_date_time,
-    )
+    domain = ListMapper.from_create_input(input)
     dto = ListMapper.to_create_dto(domain)
     async with client:
         resp = await client.list.create(input.folder_id, dto)
@@ -89,16 +79,7 @@ async def list_get(input: ListGetInput) -> ListResult | None:
 @handle_tool_errors
 async def list_update(input: ListUpdateInput) -> ListResult | None:
     client = ClickUpAPIClientFactory.get()
-    domain = ClickUpList(
-        id=input.list_id,
-        name=input.name or "",
-        content=input.content,
-        status=input.status,
-        priority=input.priority,
-        assignee_id=input.assignee,
-        due_date=input.due_date,
-        due_date_time=input.due_date_time,
-    )
+    domain = ListMapper.from_update_input(input)
     dto = ListMapper.to_update_dto(domain)
     async with client:
         resp = await client.list.update(input.list_id, dto)
