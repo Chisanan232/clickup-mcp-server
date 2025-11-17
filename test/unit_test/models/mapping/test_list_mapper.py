@@ -2,7 +2,12 @@
 
 from clickup_mcp.models.domain.list import ClickUpList
 from clickup_mcp.models.dto.list import ListResp
+# NOTE: Why single-file runs used to fail here
+# - mcp_server/__init__.py eagerly imported tool modules, and mappers imported MCP models
+#   at module import time → circular import when importing this test alone.
+# Fix: mappers now defer MCP imports using TYPE_CHECKING + local imports inside functions.
 from clickup_mcp.models.mapping.list_mapper import ListMapper
+from clickup_mcp.mcp_server.models.inputs.list_ import ListCreateInput, ListUpdateInput
 
 
 def test_to_domain_from_resp_minimal() -> None:
@@ -91,3 +96,43 @@ def test_domain_to_output_result_and_list_item() -> None:
     item = ListMapper.to_list_list_item_output(dom)
     assert item.id == "l1"
     assert item.name == "List"
+
+
+def test_from_create_input_builds_domain_and_copies_fields() -> None:
+    inp = ListCreateInput(
+        folder_id="f1",
+        name="List A",
+        content="desc",
+        status="open",
+        priority=2,
+        assignee=77,
+        due_date=100,
+        due_date_time=True,
+    )
+    dom = ListMapper.from_create_input(inp)
+    assert dom.name == "List A"
+    assert dom.content == "desc"
+    assert dom.folder_id == "f1"
+    assert dom.status == "open"
+    assert dom.priority == 2
+    assert dom.assignee_id == 77
+    assert dom.due_date == 100
+    assert dom.due_date_time is True
+
+
+def test_from_update_input_builds_domain_and_defaults_name() -> None:
+    inp = ListUpdateInput(
+        list_id="l1",
+        name=None,
+        content="desc2",
+        status="open",
+        priority=3,
+        assignee=88,
+        due_date=200,
+        due_date_time=False,
+    )
+    dom = ListMapper.from_update_input(inp)
+    assert dom.id == "l1"
+    assert dom.name == ""
+    assert dom.content == "desc2"
+    assert dom.priority == 3

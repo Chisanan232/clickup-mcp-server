@@ -5,13 +5,46 @@ Translate between List transport DTOs and the ClickUpList domain entity.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from clickup_mcp.models.domain.list import ClickUpList
 from clickup_mcp.models.dto.list import ListCreate, ListResp, ListUpdate
-from clickup_mcp.mcp_server.models.outputs.list import ListListItem, ListResult
+if TYPE_CHECKING:
+    from clickup_mcp.mcp_server.models.outputs.list import ListListItem, ListResult
+    from clickup_mcp.mcp_server.models.inputs.list_ import ListCreateInput, ListUpdateInput
 
 
 class ListMapper:
     """Static helpers to convert between List DTOs and domain entity."""
+
+    @staticmethod
+    def from_create_input(input: "ListCreateInput") -> ClickUpList:
+        """Map MCP ListCreateInput to List domain entity."""
+        return ClickUpList(
+            id="temp",
+            name=input.name,
+            content=input.content,
+            folder_id=input.folder_id,
+            status=input.status,
+            priority=input.priority,
+            assignee_id=input.assignee,
+            due_date=input.due_date,
+            due_date_time=input.due_date_time,
+        )
+
+    @staticmethod
+    def from_update_input(input: "ListUpdateInput") -> ClickUpList:
+        """Map MCP ListUpdateInput to List domain entity."""
+        return ClickUpList(
+            id=input.list_id,
+            name=input.name or "",
+            content=input.content,
+            status=input.status,
+            priority=input.priority,
+            assignee_id=input.assignee,
+            due_date=input.due_date,
+            due_date_time=input.due_date_time,
+        )
 
     @staticmethod
     def to_domain(resp: ListResp) -> ClickUpList:
@@ -56,9 +89,13 @@ class ListMapper:
         )
 
     @staticmethod
-    def to_list_result_output(lst: ClickUpList) -> ListResult:
+    def to_list_result_output(lst: ClickUpList) -> "ListResult":
+        from clickup_mcp.mcp_server.models.outputs.list import ListResult
+
         return ListResult(id=lst.id, name=lst.name, status=lst.status, folder_id=lst.folder_id, space_id=lst.space_id)
 
     @staticmethod
-    def to_list_list_item_output(lst: ClickUpList) -> ListListItem:
+    def to_list_list_item_output(lst: ClickUpList) -> "ListListItem":
+        from clickup_mcp.mcp_server.models.outputs.list import ListListItem
+
         return ListListItem(id=lst.id, name=lst.name)
