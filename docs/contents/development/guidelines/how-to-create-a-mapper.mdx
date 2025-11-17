@@ -184,6 +184,26 @@ class TaskMapper:
 
 See overview in [Architecture: Models](../architecture/models.mdx).
 
+:::danger Prohibited mappings and usage
+- Do not convert DTO models directly to I/O models, or I/O models directly to DTO models.
+- Do not implement business/core logic using I/O or DTO models.
+
+Allowed paths:
+- Input (MCP) → Domain
+- DTO (API) → Domain
+- Domain → DTO (for outbound API calls)
+- Domain → Output (MCP)
+
+Rationale:
+- Preserves the Anti-Corruption Layer and domain purity.
+- Avoids circular imports and flaky single-file test runs.
+- Keeps handlers thin and mappers as the single projection point.
+
+Enforcement tips:
+- In mapper modules, put MCP imports under TYPE_CHECKING and import outputs locally inside functions.
+- Handlers should call mapper helpers instead of constructing outputs/DTOs inline.
+:::
+
 ## 1) Define or locate the Domain model
 
 - Location: `clickup_mcp/models/domain/`
