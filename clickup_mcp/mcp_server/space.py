@@ -66,7 +66,7 @@ async def space_get(input: SpaceGetInput) -> SpaceResult | None:
     if not resp:
         raise ResourceNotFoundError("Space not found")
     d = SpaceMapper.to_domain(resp)
-    return SpaceResult(id=d.id, name=d.name, private=d.private, team_id=d.team_id)
+    return SpaceMapper.to_space_result_output(d)
 
 
 @mcp.tool(
@@ -84,7 +84,7 @@ async def space_list(input: SpaceListInput) -> SpaceListResult:
     items = []
     for s in spaces:
         d = SpaceMapper.to_domain(s)
-        items.append(SpaceListItem(id=d.id, name=d.name))
+        items.append(SpaceMapper.to_space_list_item_output(d))
     return SpaceListResult(items=items)
 
 
@@ -106,7 +106,7 @@ async def space_create(input: SpaceCreateInput) -> SpaceResult | None:
     if not resp:
         raise ClickUpAPIError("Create space failed")
     d = SpaceMapper.to_domain(resp)
-    return SpaceResult(id=d.id, name=d.name, private=d.private, team_id=d.team_id)
+    return SpaceMapper.to_space_result_output(d)
 
 
 @mcp.tool(
@@ -132,7 +132,7 @@ async def space_update(input: SpaceUpdateInput) -> SpaceResult | None:
     if not resp:
         raise ResourceNotFoundError("Space not found")
     d = SpaceMapper.to_domain(resp)
-    return SpaceResult(id=d.id, name=d.name, private=d.private, team_id=d.team_id)
+    return SpaceMapper.to_space_result_output(d)
 
 
 @mcp.tool(
