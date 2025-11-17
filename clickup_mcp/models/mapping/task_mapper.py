@@ -6,10 +6,14 @@ Task domain entity. Keeps DTO shapes out of the domain.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from clickup_mcp.models.domain.task import ClickUpTask
-from clickup_mcp.models.mapping.priority import parse_priority_obj
+from clickup_mcp.models.mapping.priority import parse_priority_obj, normalize_priority_input
 from clickup_mcp.models.dto.task import TaskCreate, TaskResp, TaskUpdate
-from clickup_mcp.mcp_server.models.outputs.task import TaskListItem, TaskResult
+if TYPE_CHECKING:  # type hints only; avoid importing mcp_server package at runtime
+    from clickup_mcp.mcp_server.models.inputs.task import TaskCreateInput, TaskUpdateInput
+    from clickup_mcp.mcp_server.models.outputs.task import TaskListItem, TaskResult
 from clickup_mcp.models.domain.task_priority import (
     domain_priority_label,
     int_to_domain_priority,
@@ -18,6 +22,33 @@ from clickup_mcp.models.domain.task_priority import (
 
 class TaskMapper:
     """Static helpers to convert between Task DTOs and domain entity."""
+
+    @staticmethod
+    def from_create_input(input: "TaskCreateInput") -> ClickUpTask:
+        """Map MCP TaskCreateInput to Task domain entity."""
+        return ClickUpTask(
+            id="temp",
+            name=input.name,
+            status=input.status,
+            priority=normalize_priority_input(input.priority),
+            assignee_ids=list(input.assignees),
+            due_date=input.due_date,
+            time_estimate=input.time_estimate,
+            parent_id=input.parent,
+        )
+
+    @staticmethod
+    def from_update_input(input: "TaskUpdateInput") -> ClickUpTask:
+        """Map MCP TaskUpdateInput to Task domain entity."""
+        return ClickUpTask(
+            id=input.task_id,
+            name=input.name or "",
+            status=input.status,
+            priority=normalize_priority_input(input.priority),
+            assignee_ids=list(input.assignees) if input.assignees is not None else [],
+            due_date=input.due_date,
+            time_estimate=input.time_estimate,
+        )
 
     @staticmethod
     def to_domain(resp: TaskResp) -> ClickUpTask:
@@ -83,8 +114,9 @@ class TaskMapper:
         )
 
     @staticmethod
-    def to_task_result_output(task: ClickUpTask, url: str | None = None) -> TaskResult:
+    def to_task_result_output(task: ClickUpTask, url: str | None = None) -> "TaskResult":
         """Map a ClickUpTask domain entity to the MCP TaskResult output model."""
+        from clickup_mcp.mcp_server.models.outputs.task import TaskResult
         prio_info = None
         if task.priority is not None:
             try:
@@ -107,8 +139,10 @@ class TaskMapper:
         )
 
     @staticmethod
-    def to_task_list_item_output(task: ClickUpTask, url: str | None = None) -> TaskListItem:
+    def to_task_list_item_output(task: ClickUpTask, url: str | None = None) -> "TaskListItem":
         """Map a ClickUpTask domain entity to the MCP TaskListItem output model."""
+        from clickup_mcp.mcp_server.models.outputs.task import TaskListItem
+
         return TaskListItem(
             id=task.id,
             name=task.name,
