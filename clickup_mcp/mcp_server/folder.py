@@ -46,7 +46,7 @@ async def folder_create(input: FolderCreateInput) -> FolderResult | None:
     if not resp:
         raise ClickUpAPIError("Create folder failed")
     d = FolderMapper.to_domain(resp)
-    return FolderResult(id=d.id, name=d.name, space_id=d.space_id)
+    return FolderMapper.to_folder_result_output(d)
 
 
 @mcp.tool(
@@ -63,7 +63,7 @@ async def folder_get(input: FolderGetInput) -> FolderResult | None:
     if not resp:
         raise ResourceNotFoundError("Folder not found")
     d = FolderMapper.to_domain(resp)
-    return FolderResult(id=d.id, name=d.name, space_id=d.space_id)
+    return FolderMapper.to_folder_result_output(d)
 
 
 @mcp.tool(
@@ -107,5 +107,5 @@ async def folder_list_in_space(input: FolderListInSpaceInput) -> FolderListResul
     items: List[FolderListItem] = []
     for f in folders:
         d = FolderMapper.to_domain(f)
-        items.append(FolderListItem(id=d.id, name=d.name))
+        items.append(FolderMapper.to_folder_list_item_output(d))
     return FolderListResult(items=items)
