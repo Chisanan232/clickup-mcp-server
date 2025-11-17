@@ -65,3 +65,29 @@ def test_to_create_and_update_dto_from_domain() -> None:
     assert up["assignee"] == 77
     assert up["due_date"] == 1000
     assert up["due_date_time"] is False
+
+
+def test_domain_to_output_result_and_list_item() -> None:
+    dom = ClickUpList(
+        id="l1",
+        name="List",
+        content="desc",
+        status="open",
+        priority=3,
+        assignee_id=77,
+        due_date=1000,
+        due_date_time=False,
+        folder_id="f1",
+        space_id="s1",
+    )
+
+    res = ListMapper.to_list_result_output(dom)
+    assert res.id == "l1"
+    assert res.name == "List"
+    assert res.status == "open"
+    assert res.folder_id == "f1"
+    assert res.space_id == "s1"
+
+    item = ListMapper.to_list_list_item_output(dom)
+    assert item.id == "l1"
+    assert item.name == "List"

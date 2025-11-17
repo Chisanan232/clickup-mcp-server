@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from clickup_mcp.models.domain.list import ClickUpList
 from clickup_mcp.models.dto.list import ListCreate, ListResp, ListUpdate
+from clickup_mcp.mcp_server.models.outputs.list import ListListItem, ListResult
 
 
 class ListMapper:
@@ -53,3 +54,11 @@ class ListMapper:
             assignee=lst.assignee_id if isinstance(lst.assignee_id, int) else None,
             status=lst.status,
         )
+
+    @staticmethod
+    def to_list_result_output(lst: ClickUpList) -> ListResult:
+        return ListResult(id=lst.id, name=lst.name, status=lst.status, folder_id=lst.folder_id, space_id=lst.space_id)
+
+    @staticmethod
+    def to_list_list_item_output(lst: ClickUpList) -> ListListItem:
+        return ListListItem(id=lst.id, name=lst.name)
