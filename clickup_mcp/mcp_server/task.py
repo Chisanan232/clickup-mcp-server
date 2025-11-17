@@ -47,16 +47,7 @@ async def task_create(input: TaskCreateInput) -> TaskResult | None:
     client = ClickUpAPIClientFactory.get()
     # Input -> Domain -> DTO
 
-    domain = ClickUpTask(
-        id="temp",
-        name=input.name,
-        status=input.status,
-        priority=normalize_priority_input(input.priority),
-        assignee_ids=list(input.assignees),
-        due_date=input.due_date,
-        time_estimate=input.time_estimate,
-        parent_id=input.parent,
-    )
+    domain = TaskMapper.from_create_input(input)
     dto = TaskMapper.to_create_dto(domain)
     async with client:
         resp = await client.task.create(input.list_id, dto)
@@ -126,15 +117,7 @@ async def task_list_in_list(input: TaskListInListInput) -> TaskListResult:
 @handle_tool_errors
 async def task_update(input: TaskUpdateInput) -> TaskResult | None:
     client = ClickUpAPIClientFactory.get()
-    domain = ClickUpTask(
-        id=input.task_id,
-        name=input.name or "",
-        status=input.status,
-        priority=normalize_priority_input(input.priority),
-        assignee_ids=list(input.assignees) if input.assignees is not None else [],
-        due_date=input.due_date,
-        time_estimate=input.time_estimate,
-    )
+    domain = TaskMapper.from_update_input(input)
     dto = TaskMapper.to_update_dto(domain)
     async with client:
         resp = await client.task.update(input.task_id, dto)
