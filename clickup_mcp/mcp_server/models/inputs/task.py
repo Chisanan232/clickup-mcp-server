@@ -4,7 +4,7 @@ These inputs are LLM-friendly contracts used by FastMCP tools. They map to
 Domain entities first, then DTOs for ClickUp wire format.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Literal
 
 from pydantic import BaseModel, Field
 
@@ -54,8 +54,10 @@ class TaskCreateInput(BaseModel):
         description="Workflow status by name (e.g., 'Open', 'In progress').",
         examples=["open", "in progress", "done"],
     )
-    priority: Optional[int] = Field(
-        None, ge=1, le=4, description="1=Low, 2=Normal, 3=High, 4=Urgent.", examples=[1, 2, 3, 4]
+    priority: Optional[int | Literal["URGENT", "HIGH", "NORMAL", "LOW"]] = Field(
+        None,
+        description="Priority number 1..4 or label URGENT/HIGH/NORMAL/LOW.",
+        examples=[1, 2, 3, 4, "HIGH"],
     )
     assignees: List[int | str] = Field(
         default_factory=list,
@@ -99,7 +101,9 @@ class TaskUpdateInput(BaseModel):
     status: Optional[str] = Field(
         None, description="Workflow status by name.", examples=["open", "in progress", "done"]
     )
-    priority: Optional[int] = Field(None, ge=1, le=4, description="1..4 priority.", examples=[1, 2, 3, 4])
+    priority: Optional[int | Literal["URGENT", "HIGH", "NORMAL", "LOW"]] = Field(
+        None, description="Priority number 1..4 or label URGENT/HIGH/NORMAL/LOW.", examples=[1, 2, 3, 4, "LOW"]
+    )
     assignees: Optional[List[int | str]] = Field(
         None, description="Assignee user IDs.", examples=[[42], ["usr_abc"], [42, 43]]
     )
