@@ -39,7 +39,7 @@ from .app import mcp
 @handle_tool_errors
 async def folder_create(input: FolderCreateInput) -> FolderResult | None:
     client = ClickUpAPIClientFactory.get()
-    domain = ClickUpFolder(id="temp", name=input.name, space_id=input.space_id)
+    domain = FolderMapper.from_create_input(input)
     dto = FolderMapper.to_create_dto(domain)
     async with client:
         resp = await client.folder.create(input.space_id, dto)
@@ -73,7 +73,7 @@ async def folder_get(input: FolderGetInput) -> FolderResult | None:
 @handle_tool_errors
 async def folder_update(input: FolderUpdateInput) -> FolderResult | None:
     client = ClickUpAPIClientFactory.get()
-    domain = ClickUpFolder(id=input.folder_id, name=input.name or "")
+    domain = FolderMapper.from_update_input(input)
     dto = FolderMapper.to_update_dto(domain)
     async with client:
         resp = await client.folder.update(input.folder_id, dto)
