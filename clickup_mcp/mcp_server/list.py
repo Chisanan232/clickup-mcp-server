@@ -61,7 +61,7 @@ async def list_create(input: ListCreateInput) -> ListResult | None:
     if not resp:
         raise ClickUpAPIError("Create list failed")
     d = ListMapper.to_domain(resp)
-    return ListResult(id=d.id, name=d.name, status=d.status, folder_id=d.folder_id, space_id=d.space_id)
+    return ListMapper.to_list_result_output(d)
 
 
 @mcp.tool(
@@ -79,7 +79,7 @@ async def list_get(input: ListGetInput) -> ListResult | None:
     if not resp:
         return None
     d = ListMapper.to_domain(resp)
-    return ListResult(id=d.id, name=d.name, status=d.status, folder_id=d.folder_id, space_id=d.space_id)
+    return ListMapper.to_list_result_output(d)
 
 
 @mcp.tool(
@@ -105,7 +105,7 @@ async def list_update(input: ListUpdateInput) -> ListResult | None:
     if not resp:
         return None
     d = ListMapper.to_domain(resp)
-    return ListResult(id=d.id, name=d.name, status=d.status, folder_id=d.folder_id, space_id=d.space_id)
+    return ListMapper.to_list_result_output(d)
 
 
 @mcp.tool(
@@ -132,7 +132,7 @@ async def list_list_in_folder(input: ListListInFolderInput) -> ListListResult:
     items: List[ListListItem] = []
     for l in lists:
         d = ListMapper.to_domain(l)
-        items.append(ListListItem(id=d.id, name=d.name))
+        items.append(ListMapper.to_list_list_item_output(d))
     return ListListResult(items=items)
 
 
@@ -148,7 +148,7 @@ async def list_list_in_space_folderless(input: ListListInSpaceFolderlessInput) -
     items: List[ListListItem] = []
     for l in lists:
         d = ListMapper.to_domain(l)
-        items.append(ListListItem(id=d.id, name=d.name))
+        items.append(ListMapper.to_list_list_item_output(d))
     return ListListResult(items=items)
 
 
