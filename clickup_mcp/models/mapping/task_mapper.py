@@ -117,20 +117,19 @@ class TaskMapper:
     def to_task_result_output(task: ClickUpTask, url: str | None = None) -> "TaskResult":
         """Map a ClickUpTask domain entity to the MCP TaskResult output model."""
         from clickup_mcp.mcp_server.models.outputs.task import TaskResult
-        prio_info = None
+        prio_payload = None
         if task.priority is not None:
             try:
                 d = int_to_domain_priority(task.priority)
-                prio_info = {"value": task.priority, "label": domain_priority_label(d)}
+                prio_payload = {"value": task.priority, "label": domain_priority_label(d)}
             except Exception:
-                prio_info = None
+                prio_payload = None
 
         return TaskResult(
             id=task.id,
             name=task.name,
             status=task.status,
-            priority=task.priority,
-            priority_info=prio_info,
+            priority=prio_payload,
             list_id=task.list_id,
             assignee_ids=list(task.assignee_ids),
             due_date_ms=task.due_date,

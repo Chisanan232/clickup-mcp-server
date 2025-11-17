@@ -21,15 +21,7 @@ class TaskResult(BaseModel):
     id: str = Field(..., description="Task ID", examples=["t1", "task_123"])
     name: str = Field(..., description="Task title", examples=["Ship v1.2", "Fix login bug"])
     status: Optional[str] = Field(None, description="Workflow status name", examples=["open", "in progress", "done"])
-    # Deprecated: legacy numeric priority retained for backward compatibility.
-    priority: Optional[int] = Field(
-        None,
-        ge=1,
-        le=4,
-        description="[Deprecated] Numeric priority only. Use priority_info for value+label.",
-        examples=[1, 2, 3, 4],
-    )
-    priority_info: Optional[PriorityInfo] = Field(
+    priority: Optional[PriorityInfo] = Field(
         None,
         description="Priority details with both numeric value and label.",
         examples=[{"value": 2, "label": "HIGH"}],
@@ -51,12 +43,11 @@ class TaskResult(BaseModel):
                     "id": "t1",
                     "name": "Ship v1.2",
                     "status": "in progress",
-                    "priority": 3,
+                    "priority": {"value": 3, "label": "NORMAL"},
                     "list_id": "L1",
                     "assignee_ids": [42],
                     "due_date_ms": 1731004800000,
                     "url": "https://app.clickup.com/t/t1",
-                    "priority_info": {"value": 3, "label": "NORMAL"},
                 }
             ]
         }

@@ -52,14 +52,34 @@ def test_task_result_constraints() -> None:
     schema = TypeAdapter(TaskResult).json_schema()
     props = schema.get("properties", {})
     priority = props.get("priority", {})
-    # Optional[int] produces anyOf [int,null]
+    # Optional[PriorityInfo] produces anyOf [object,null]
     any_of = priority.get("anyOf") or []
-    int_schema = next((s for s in any_of if s.get("type") == "integer"), None)
-    if int_schema is None and priority.get("type") == "integer":
-        int_schema = priority
-    assert int_schema is not None, "integer schema for priority not found"
-    assert int_schema.get("maximum") == 4
-    assert int_schema.get("minimum") == 1
+    obj_schema = next((s for s in any_of if s.get("type") == "object"), None)
+    # Pydantic may emit a $ref instead of inlining the object
+    if obj_schema is None:
+        ref_entry = next((s for s in any_of if "$ref" in s), None)
+        if ref_entry is not None:
+            ref = ref_entry.get("$ref")
+            # Resolve $ref like '#/$defs/PriorityInfo'
+            if isinstance(ref, str) and ref.startswith("#/"):
+                cur = schema
+                for part in ref.lstrip("#/").split("/"):
+                    cur = cur.get(part, {})
+                if cur and isinstance(cur, dict):
+                    obj_schema = cur
+    if obj_schema is None and priority.get("type") == "object":
+        obj_schema = priority
+    assert obj_schema is not None, "object schema for priority not found"
+    prio_props = obj_schema.get("properties", {})
+    assert "value" in prio_props and "label" in prio_props
+    # value constraints
+    value_schema = prio_props.get("value", {})
+    assert value_schema.get("type") == "integer"
+    assert value_schema.get("maximum") == 4
+    assert value_schema.get("minimum") == 1
+    # label type
+    label_schema = prio_props.get("label", {})
+    assert label_schema.get("type") == "string"
     due = props.get("due_date_ms", {})
     # Optional[int] again -> anyOf [int,null]
     any_of_due = due.get("anyOf") or []

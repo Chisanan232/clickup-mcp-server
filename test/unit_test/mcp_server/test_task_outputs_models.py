@@ -71,11 +71,10 @@ async def test_task_create_and_get_return_taskresult(mock_get_client: MagicMock)
     create_env = await task_create(TaskCreateInput(list_id="L1", name="Ship"))
     assert create_env.ok is True and isinstance(create_env.result, TaskResult)
     assert create_env.result.id == "t1" and create_env.result.name == "Ship"
-    # priority_info is populated from default fake resp (id="3" -> NORMAL)
-    assert create_env.result.priority == 3
-    assert create_env.result.priority_info is not None
-    assert create_env.result.priority_info.value == 3
-    assert create_env.result.priority_info.label == "NORMAL"
+    # priority is PriorityInfo from default fake resp (id="3" -> NORMAL)
+    assert create_env.result.priority is not None
+    assert create_env.result.priority.value == 3
+    assert create_env.result.priority.label == "NORMAL"
 
     get_env = await task_get(TaskGetInput(task_id="t1"))
     assert get_env.ok is True and isinstance(get_env.result, TaskResult)
@@ -120,10 +119,9 @@ async def test_task_get_priority_id_suffix_parsed_and_info_populated(mock_get_cl
 
     get_env = await task_get(TaskGetInput(task_id="t1"))
     assert get_env.ok is True and isinstance(get_env.result, TaskResult)
-    assert get_env.result.priority == 1
-    assert get_env.result.priority_info is not None
-    assert get_env.result.priority_info.value == 1
-    assert get_env.result.priority_info.label == "URGENT"
+    assert get_env.result.priority is not None
+    assert get_env.result.priority.value == 1
+    assert get_env.result.priority.label == "URGENT"
 
 
 @pytest.mark.asyncio
