@@ -28,8 +28,31 @@ from clickup_mcp.mcp_server.models.outputs.task import (
 from clickup_mcp.models.domain.task import ClickUpTask
 from clickup_mcp.models.dto.task import TaskListQuery, TaskResp
 from clickup_mcp.models.mapping.task_mapper import TaskMapper
+from clickup_mcp.models.domain.task_priority import (
+    DomainPriority,
+    domain_priority_label,
+    domain_priority_to_int,
+    int_to_domain_priority,
+)
 
 from .app import mcp
+
+
+def _normalize_priority_in(p: int | str | None) -> int | None:
+    """Normalize priority input (int 1..4 or label) to provider int 1..4."""
+    if p is None:
+        return None
+    if isinstance(p, int):
+        if 1 <= p <= 4:
+            return p
+        raise ValueError("priority must be 1..4 or a valid label")
+    if isinstance(p, str):
+        up = p.strip().upper()
+        try:
+            return domain_priority_to_int(DomainPriority(up))
+        except Exception as e:  # noqa: BLE001
+            raise ValueError("priority label must be one of URGENT/HIGH/NORMAL/LOW") from e
+    return None
 
 
 @mcp.tool(
@@ -45,11 +68,12 @@ from .app import mcp
 async def task_create(input: TaskCreateInput) -> TaskResult | None:
     client = ClickUpAPIClientFactory.get()
     # Input -> Domain -> DTO
+
     domain = ClickUpTask(
         id="temp",
         name=input.name,
         status=input.status,
-        priority=input.priority,
+        priority=_normalize_priority_in(input.priority),
         assignee_ids=list(input.assignees),
         due_date=input.due_date,
         time_estimate=input.time_estimate,
@@ -128,7 +152,7 @@ async def task_update(input: TaskUpdateInput) -> TaskResult | None:
         id=input.task_id,
         name=input.name or "",
         status=input.status,
-        priority=input.priority,
+        priority=_normalize_priority_in(input.priority),
         assignee_ids=list(input.assignees) if input.assignees is not None else [],
         due_date=input.due_date,
         time_estimate=input.time_estimate,
@@ -196,19 +220,50 @@ async def task_delete(task_id: str) -> DeletionResult:
 
 def _taskresp_to_result(resp: TaskResp) -> TaskResult:
     status = resp.status.status if resp.status and resp.status.status else None
-    prio: int | None = None
-    if resp.priority and resp.priority.id:
-        try:
-            prio = int(resp.priority.id)
-        except Exception:
-            prio = None
+
+    def _parse_priority_from_resp() -> int | None:
+        prio_obj = getattr(resp, "priority", None)
+        if not prio_obj:
+            return None
+        # Try id: could be int-like or "priority_1"
+        pid = getattr(prio_obj, "id", None)
+        if isinstance(pid, int):
+            return pid if 1 <= pid <= 4 else None
+        if isinstance(pid, str):
+            s = pid.strip().lower()
+            if s.isdigit():
+                n = int(s)
+                return n if 1 <= n <= 4 else None
+            if s.startswith("priority_"):
+                tail = s.rsplit("_", 1)[-1]
+                if tail.isdigit():
+                    n = int(tail)
+                    return n if 1 <= n <= 4 else None
+        # Fallback: use label field if present ("High", "Urgent", etc.)
+        label = getattr(prio_obj, "priority", None)
+        if isinstance(label, str):
+            lookup = {"urgent": 1, "high": 2, "normal": 3, "low": 4}
+            return lookup.get(label.strip().lower())
+        return None
+
+    prio: int | None = _parse_priority_from_resp()
     list_id = resp.list.id if resp.list and resp.list.id else None
     assignees = [u.id for u in resp.assignees if u.id is not None]
+    # Prepare priority_info if we have a value
+    prio_info = None
+    if prio is not None:
+        try:
+            d = int_to_domain_priority(prio)
+            prio_info = {"value": prio, "label": domain_priority_label(d)}
+        except Exception:
+            prio_info = None
+
     return TaskResult(
         id=resp.id,
         name=resp.name,
         status=status,
         priority=prio,
+        priority_info=prio_info,
         list_id=list_id,
         assignee_ids=assignees,
         due_date_ms=resp.due_date,

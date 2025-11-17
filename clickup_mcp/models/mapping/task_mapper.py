@@ -20,12 +20,42 @@ class TaskMapper:
         if resp.status and resp.status.status:
             status_label = resp.status.status
 
+        def _parse_priority_id(v: object) -> int | None:
+            # Accept 1, "1", "priority_1"
+            if v is None:
+                return None
+            # direct int
+            if isinstance(v, int):
+                return v if 1 <= v <= 4 else None
+            # string forms
+            if isinstance(v, str):
+                s = v.strip().lower()
+                # numeric string
+                if s.isdigit():
+                    n = int(s)
+                    return n if 1 <= n <= 4 else None
+                # suffixed id like "priority_1"
+                if s.startswith("priority_"):
+                    tail = s.rsplit("_", 1)[-1]
+                    if tail.isdigit():
+                        n = int(tail)
+                        return n if 1 <= n <= 4 else None
+            return None
+
         prio_int: int | None = None
-        if resp.priority and resp.priority.id:
-            try:
-                prio_int = int(resp.priority.id)  # ClickUp often uses 1..4 ids
-            except (TypeError, ValueError):
-                prio_int = None
+        if resp.priority is not None:
+            prio_int = _parse_priority_id(getattr(resp.priority, "id", None))
+            if prio_int is None:
+                # Fallback from label if present, e.g., resp.priority.priority == "High"
+                label = getattr(resp.priority, "priority", None)
+                if isinstance(label, str):
+                    lookup = {
+                        "urgent": 1,
+                        "high": 2,
+                        "normal": 3,
+                        "low": 4,
+                    }
+                    prio_int = lookup.get(label.strip().lower())
 
         assignees = [u.id for u in resp.assignees if u.id is not None]
         folder_id = resp.folder.id if resp.folder and resp.folder.id else None
