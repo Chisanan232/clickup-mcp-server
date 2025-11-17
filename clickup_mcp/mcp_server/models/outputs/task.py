@@ -8,14 +8,31 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
+class PriorityInfo(BaseModel):
+    """Structured priority for clarity: numeric value and label."""
+
+    value: int = Field(..., ge=1, le=4, description="Priority value (1=Urgent, 4=low)", examples=[1, 2, 3, 4])
+    label: str = Field(..., description="Priority label (URGENT/HIGH/NORMAL/LOW)", examples=["HIGH"])
+
+
 class TaskResult(BaseModel):
     """Concise task detail; normalized units."""
 
     id: str = Field(..., description="Task ID", examples=["t1", "task_123"])
     name: str = Field(..., description="Task title", examples=["Ship v1.2", "Fix login bug"])
     status: Optional[str] = Field(None, description="Workflow status name", examples=["open", "in progress", "done"])
+    # Deprecated: legacy numeric priority retained for backward compatibility.
     priority: Optional[int] = Field(
-        None, ge=1, le=4, description="1=Low, 2=Normal, 3=High, 4=Urgent", examples=[1, 2, 3, 4]
+        None,
+        ge=1,
+        le=4,
+        description="[Deprecated] Numeric priority only. Use priority_info for value+label.",
+        examples=[1, 2, 3, 4],
+    )
+    priority_info: Optional[PriorityInfo] = Field(
+        None,
+        description="Priority details with both numeric value and label.",
+        examples=[{"value": 2, "label": "HIGH"}],
     )
     list_id: Optional[str] = Field(None, description="Home list ID", examples=["L1", "list_1"])
     assignee_ids: List[int | str] = Field(
@@ -39,6 +56,7 @@ class TaskResult(BaseModel):
                     "assignee_ids": [42],
                     "due_date_ms": 1731004800000,
                     "url": "https://app.clickup.com/t/t1",
+                    "priority_info": {"value": 3, "label": "NORMAL"},
                 }
             ]
         }
