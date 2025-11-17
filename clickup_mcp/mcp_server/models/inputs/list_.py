@@ -22,14 +22,16 @@ class ListCreateInput(BaseModel):
         }
     }
 
-    folder_id: str = Field(..., min_length=1, description="Parent folder ID.")
-    name: str = Field(..., min_length=1, description="List name.")
-    content: Optional[str] = Field(None, description="List description.")
-    status: Optional[str] = Field(None, description="Status label.")
-    priority: Optional[int] = Field(None, ge=1, le=4, description="1..4 priority.")
-    assignee: Optional[int | str] = Field(None, description="Assignee user ID.")
-    due_date: Optional[int] = Field(None, description="Due date (epoch ms).")
-    due_date_time: Optional[bool] = Field(None, description="Whether due date includes time.")
+    folder_id: str = Field(..., min_length=1, description="Parent folder ID.", examples=["folder_1", "fld_abc"])
+    name: str = Field(..., min_length=1, description="List name.", examples=["Sprint Backlog", "Bugs"])
+    content: Optional[str] = Field(
+        None, description="List description.", examples=["Backlog for sprint 12", "Bug queue"]
+    )
+    status: Optional[str] = Field(None, description="Status label.", examples=["Open", "In progress", "Done"])
+    priority: Optional[int] = Field(None, ge=1, le=4, description="1..4 priority.", examples=[1, 2, 3, 4])
+    assignee: Optional[int | str] = Field(None, description="Assignee user ID.", examples=[42, "usr_abc"])
+    due_date: Optional[int] = Field(None, description="Due date (epoch ms).", examples=[1731523200000])
+    due_date_time: Optional[bool] = Field(None, description="Whether due date includes time.", examples=[True, False])
 
 
 class ListGetInput(BaseModel):
@@ -40,7 +42,7 @@ class ListGetInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"list_id": "list_1"}]}}
 
-    list_id: str = Field(..., min_length=1, description="List ID.")
+    list_id: str = Field(..., min_length=1, description="List ID.", examples=["list_1", "lst_abc"])
 
 
 class ListUpdateInput(BaseModel):
@@ -55,14 +57,16 @@ class ListUpdateInput(BaseModel):
         }
     }
 
-    list_id: str = Field(..., min_length=1, description="List ID.")
-    name: Optional[str] = Field(None, min_length=1, description="List name.")
-    content: Optional[str] = Field(None, description="List description.")
-    status: Optional[str] = Field(None, description="Status label.")
-    priority: Optional[int] = Field(None, ge=1, le=4, description="1..4 priority.")
-    assignee: Optional[int | str] = Field(None, description="Assignee user ID.")
-    due_date: Optional[int] = Field(None, description="Due date (epoch ms).")
-    due_date_time: Optional[bool] = Field(None, description="Whether due date includes time.")
+    list_id: str = Field(..., min_length=1, description="List ID.", examples=["list_1", "lst_abc"])
+    name: Optional[str] = Field(None, min_length=1, description="List name.", examples=["Sprint 12", "Bugs"])
+    content: Optional[str] = Field(
+        None, description="List description.", examples=["Scope for sprint 12", "Known issues"]
+    )
+    status: Optional[str] = Field(None, description="Status label.", examples=["Open", "In progress", "Done"])
+    priority: Optional[int] = Field(None, ge=1, le=4, description="1..4 priority.", examples=[1, 2, 3, 4])
+    assignee: Optional[int | str] = Field(None, description="Assignee user ID.", examples=[42, "usr_abc"])
+    due_date: Optional[int] = Field(None, description="Due date (epoch ms).", examples=[1731523200000])
+    due_date_time: Optional[bool] = Field(None, description="Whether due date includes time.", examples=[True, False])
 
 
 class ListDeleteInput(BaseModel):
@@ -73,7 +77,9 @@ class ListDeleteInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"list_id": "list_1"}]}}
 
-    list_id: str = Field(..., min_length=1, description="List ID.")
+    list_id: str = Field(
+        ..., min_length=1, description="List ID.", json_schema_extra={"examples": ["list_1", "lst_abc"]}
+    )
 
 
 class ListListInFolderInput(BaseModel):
@@ -84,7 +90,7 @@ class ListListInFolderInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"folder_id": "folder_1"}]}}
 
-    folder_id: str = Field(..., min_length=1, description="Folder ID.")
+    folder_id: str = Field(..., min_length=1, description="Folder ID.", examples=["folder_1", "fld_abc"])
 
 
 class ListListInSpaceFolderlessInput(BaseModel):
@@ -95,7 +101,7 @@ class ListListInSpaceFolderlessInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"space_id": "space_1"}]}}
 
-    space_id: str = Field(..., min_length=1, description="Space ID.")
+    space_id: str = Field(..., min_length=1, description="Space ID.", examples=["space_1", "spc_abc"])
 
 
 class ListAddTaskInput(BaseModel):
@@ -106,8 +112,8 @@ class ListAddTaskInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"list_id": "list_2", "task_id": "task_123"}]}}
 
-    list_id: str = Field(..., min_length=1, description="Target list ID.")
-    task_id: str = Field(..., min_length=1, description="Existing task ID.")
+    list_id: str = Field(..., min_length=1, description="Target list ID.", examples=["list_2", "lst_abc"])
+    task_id: str = Field(..., min_length=1, description="Existing task ID.", examples=["task_123", "tsk_abc"])
 
 
 class ListRemoveTaskInput(BaseModel):
@@ -118,5 +124,9 @@ class ListRemoveTaskInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"list_id": "list_2", "task_id": "task_123"}]}}
 
-    list_id: str = Field(..., min_length=1, description="Target list ID.")
-    task_id: str = Field(..., min_length=1, description="Existing task ID.")
+    list_id: str = Field(
+        ..., min_length=1, description="Target list ID.", json_schema_extra={"examples": ["list_2", "lst_abc"]}
+    )
+    task_id: str = Field(
+        ..., min_length=1, description="Existing task ID.", json_schema_extra={"examples": ["task_123", "tsk_abc"]}
+    )
