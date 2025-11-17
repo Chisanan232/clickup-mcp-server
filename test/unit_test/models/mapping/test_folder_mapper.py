@@ -34,3 +34,16 @@ def test_to_create_and_update_dto_from_domain() -> None:
     update_dto = FolderMapper.to_update_dto(dom)
     up = update_dto.to_payload()
     assert up["name"] == "Folder X"
+
+
+def test_domain_to_output_result_and_list_item() -> None:
+    dom = ClickUpFolder(id="f1", name="Folder X", space_id="s1", override_statuses=False, hidden=False)
+
+    res = FolderMapper.to_folder_result_output(dom)
+    assert res.id == "f1"
+    assert res.name == "Folder X"
+    assert res.space_id == "s1"
+
+    item = FolderMapper.to_folder_list_item_output(dom)
+    assert item.id == "f1"
+    assert item.name == "Folder X"
