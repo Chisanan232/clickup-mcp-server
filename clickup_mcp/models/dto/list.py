@@ -58,6 +58,17 @@ class ListResp(BaseResponseDTO):
     status: str | None = Field(default=None, description=PROPERTY_STATUS_DESCRIPTION)
     priority: int | None = Field(default=None, description="Priority level")
 
+    # Statuses defined for this list (authoritative for task create/update)
+    class ListStatusDTO(BaseResponseDTO):
+        name: str = Field(description="Status name as configured on the list")
+        type: str | None = Field(default=None, description="Status type (open/closed/active/done)")
+        color: str | None = Field(default=None, description="UI color hex or token")
+        orderindex: int | None = Field(default=None, description="Ordering index on the list")
+
+    statuses: list[ListStatusDTO] | None = Field(
+        default=None, description="List-level effective statuses. Present on GET /list/{list_id}."
+    )
+
     # Lightweight typed refs
     class UserRef(BaseResponseDTO):
         id: int | str | None = Field(default=None)

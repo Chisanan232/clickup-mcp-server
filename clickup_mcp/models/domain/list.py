@@ -10,6 +10,15 @@ from pydantic import Field
 from .base import BaseDomainModel
 
 
+class ListStatus(BaseDomainModel):
+    """Domain value object for a List status definition."""
+
+    name: str = Field(description="Status name as configured on the list")
+    type: str | None = Field(default=None, description="Status type (open/closed/active/done)")
+    color: str | None = Field(default=None, description="UI color (hex or token)")
+    orderindex: int | None = Field(default=None, description="Ordering index on the list")
+
+
 class ClickUpList(BaseDomainModel):
     """Domain model for a ClickUp List.
 
@@ -32,6 +41,8 @@ class ClickUpList(BaseDomainModel):
     assignee_id: int | str | None = Field(default=None)
     due_date: int | None = Field(default=None)
     due_date_time: bool | None = Field(default=None)
+    # Effective statuses for this list (if fetched via GET /list/{list_id})
+    statuses: list[ListStatus] | None = Field(default=None)
 
     @property
     def id(self) -> str:
