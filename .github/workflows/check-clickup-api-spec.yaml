@@ -117,7 +117,7 @@ jobs:
           
           echo "PR_TEMPLATE_PATH=/tmp/processed-pr-template.md" >> $GITHUB_ENV
           echo "[DEBUG] PR body:"
-          cat ${{ env.PR_TEMPLATE_PATH }}
+          cat /tmp/processed-pr-template.md
 
       - name: Create PR (gh cli)
         if: ${{ failure()
