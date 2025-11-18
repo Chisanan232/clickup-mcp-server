@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          ref: ${{ github.head_ref }}
+          ref: ${{ env.BASE_BRANCH }}
 
       - name: Install uv
         id: setup-uv
@@ -57,8 +57,9 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           # Sync git branches
-          git fetch origin "${BASE_BRANCH}" "${BRANCH_NAME}" || true
-          git pull --rebase origin "${BRANCH_NAME}" || true
+          git fetch origin "${BASE_BRANCH}" || true
+          git switch "${BASE_BRANCH}"
+          git reset --hard "origin/${BASE_BRANCH}"
 
       - name: Check API specification changes
         id: check-api-spec
@@ -77,9 +78,9 @@ jobs:
               && steps.install-deps.conclusion == 'success'
               && steps.sync-branches.conclusion == 'success' }}
         run: |
-          # Create a new branch with timestamp
+          # Create or reset PR branch cleanly
           git switch ${{ env.BASE_BRANCH }}
-          git checkout -b ${{ env.BRANCH_NAME }}
+          git switch -C ${{ env.BRANCH_NAME }}
           echo "[DEBUG] Check the current changes"
           git status
           
@@ -94,7 +95,7 @@ jobs:
           git commit -m "🔧 Update ClickUp API spec to version $API_VERSION"
           
           # Push changes
-          git push -u origin ${{ env.BRANCH_NAME }}
+          git push --force-with-lease -u origin ${{ env.BRANCH_NAME }}
 
       - name: Process PR template
         if: ${{ failure()
@@ -116,7 +117,7 @@ jobs:
           
           echo "PR_TEMPLATE_PATH=/tmp/processed-pr-template.md" >> $GITHUB_ENV
           echo "[DEBUG] PR body:"
-          cat ${{ env.PR_TEMPLATE_PATH }}
+          cat /tmp/processed-pr-template.md
 
       - name: Create PR (gh cli)
         if: ${{ failure()
