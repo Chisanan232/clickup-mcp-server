@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from clickup_mcp.models.domain.list import ClickUpList
+from clickup_mcp.models.domain.list import ClickUpList, ListStatus
 from clickup_mcp.models.dto.list import ListCreate, ListResp, ListUpdate
 if TYPE_CHECKING:
     from clickup_mcp.mcp_server.models.outputs.list import ListListItem, ListResult
@@ -51,6 +51,11 @@ class ListMapper:
         folder_id = resp.folder.id if resp.folder and resp.folder.id else None
         space_id = resp.space.id if resp.space and resp.space.id else None
         assignee_id = resp.assignee.id if resp.assignee and resp.assignee.id is not None else None
+        statuses: list[ListStatus] | None = None
+        if resp.statuses:
+            statuses = [
+                ListStatus(name=s.name, type=s.type, color=s.color, orderindex=s.orderindex) for s in resp.statuses
+            ]
         return ClickUpList(
             id=resp.id,
             name=resp.name,
@@ -62,6 +67,7 @@ class ListMapper:
             assignee_id=assignee_id,
             due_date=resp.due_date,
             due_date_time=resp.due_date_time,
+            statuses=statuses,
         )
 
     @staticmethod
@@ -90,9 +96,26 @@ class ListMapper:
 
     @staticmethod
     def to_list_result_output(lst: ClickUpList) -> "ListResult":
-        from clickup_mcp.mcp_server.models.outputs.list import ListResult
+        from clickup_mcp.mcp_server.models.outputs.list import ListResult, ListStatusOutput
 
-        return ListResult(id=lst.id, name=lst.name, status=lst.status, folder_id=lst.folder_id, space_id=lst.space_id)
+        out = ListResult(
+            id=lst.id,
+            name=lst.name,
+            status=lst.status,
+            folder_id=lst.folder_id,
+            space_id=lst.space_id,
+        )
+        if lst.statuses:
+            out.statuses = [
+                ListStatusOutput(
+                    name=s.name,
+                    type=s.type,
+                    color=s.color,
+                    orderindex=s.orderindex,
+                )
+                for s in lst.statuses
+            ]
+        return out
 
     @staticmethod
     def to_list_list_item_output(lst: ClickUpList) -> "ListListItem":

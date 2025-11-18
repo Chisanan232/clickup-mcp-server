@@ -1,6 +1,6 @@
 """Unit tests for ListMapper DTO ↔ Domain conversions."""
 
-from clickup_mcp.models.domain.list import ClickUpList
+from clickup_mcp.models.domain.list import ClickUpList, ListStatus
 from clickup_mcp.models.dto.list import ListResp
 # NOTE: Why single-file runs used to fail here
 # - mcp_server/__init__.py eagerly imported tool modules, and mappers imported MCP models
@@ -96,6 +96,52 @@ def test_domain_to_output_result_and_list_item() -> None:
     item = ListMapper.to_list_list_item_output(dom)
     assert item.id == "l1"
     assert item.name == "List"
+
+
+def test_to_domain_includes_statuses_from_resp() -> None:
+    resp = ListResp(
+        id="l2",
+        name="List Two",
+        statuses=[
+            ListResp.ListStatusDTO(name="Open", type="open", color="#00ff00", orderindex=0),
+            ListResp.ListStatusDTO(name="In progress", type="active", color="#0000ff", orderindex=1),
+        ],
+    )
+
+    dom = ListMapper.to_domain(resp)
+
+    assert dom.id == "l2"
+    assert dom.statuses is not None
+    assert len(dom.statuses) == 2
+    assert dom.statuses[0].name == "Open"
+    assert dom.statuses[0].type == "open"
+    assert dom.statuses[0].color == "#00ff00"
+    assert dom.statuses[0].orderindex == 0
+    assert dom.statuses[1].name == "In progress"
+    assert dom.statuses[1].type == "active"
+    assert dom.statuses[1].orderindex == 1
+
+
+def test_domain_to_output_includes_statuses() -> None:
+    dom = ClickUpList(
+        id="l3",
+        name="List Three",
+        statuses=[
+            ListStatus(name="Open", type="open", color=None, orderindex=0),
+            ListStatus(name="Done", type="closed", color=None, orderindex=2),
+        ],
+    )
+
+    res = ListMapper.to_list_result_output(dom)
+
+    assert res.id == "l3"
+    assert res.statuses is not None
+    assert len(res.statuses) == 2
+    assert res.statuses[0].name == "Open"
+    assert res.statuses[0].type == "open"
+    assert res.statuses[0].orderindex == 0
+    assert res.statuses[1].name == "Done"
+    assert res.statuses[1].type == "closed"
 
 
 def test_from_create_input_builds_domain_and_copies_fields() -> None:
