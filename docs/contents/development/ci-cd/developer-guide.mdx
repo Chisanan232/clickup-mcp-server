@@ -19,7 +19,7 @@ This guide provides comprehensive information for developers working with the cl
 
 ### Configuring a Release
 
-Edit `.github/tag_and_release/intent.yaml` to configure your release:
+Edit [.github/tag_and_release/intent.yaml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/tag_and_release/intent.yaml) to configure your release:
 
 ```yaml
 # Example: Patch release with selective docs versioning
@@ -187,18 +187,18 @@ gh pr merge --merge
 ### UV Lock File Synchronization
 
 **Enhancement**: Version bump now automatically updates `uv.lock` file to maintain dependency synchronization
-
 **Process**:
 1. After `uv version --bump`, the workflow runs `uv lock` to update lock file
 2. Both `pyproject.toml` and `uv.lock` are committed together in version bump
 3. Ensures dependency lock file stays in sync with version changes
 
-### Documentation Versioning Issues
+#### 3. Documentation Versioning Issues
 
 **Problem**: Documentation not updating after release
 **Solutions**:
 - Verify `sections` configuration matches actual docs structure
 - Use `strategy: "always"` to force versioning regardless of changes  
+- Check that Docusaurus plugin IDs in `sections` array exist in [docusaurus.config.ts](https://github.com/Chisanan232/clickup-mcp-server/blob/master/docs/docusaurus.config.ts)
 - Check that Docusaurus plugin IDs in `sections` array exist in `docusaurus.config.ts`
 
 **Problem**: Guard job failing
@@ -211,7 +211,7 @@ gh pr merge --merge
 
 **Validation**: Configuration is validated against JSON schema during parsing
 **Error Handling**: Invalid configurations fail with descriptive error messages  
-**Testing**: Use `release-validate.yml` workflow to test configuration changes
+**Testing**: Use [release-validate.yml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/workflows/release-validate.yml) workflow to test configuration changes
 
 ### Common Configuration Mistakes
 
@@ -467,11 +467,11 @@ The following describes the legacy CD system (`cd.yaml`) which is maintained for
 All CI/CD workflows are defined in the `.github/workflows/` directory:
 
 ### Core Workflows
-- `ci.yaml` - Main CI workflow with comprehensive testing
-- `release.yml` - Modern intent-driven release system
-- `release-validate.yml` - Pre-release validation workflow  
-- `release-staging.yml` - Staging environment deployment
-- `documentation.yaml` - Documentation building and deployment
+- [ci.yaml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/workflows/ci.yaml) - Main CI workflow with comprehensive testing
+- [release.yml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/workflows/release.yml) - Modern intent-driven release system
+- [release-validate.yml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/workflows/release-validate.yml) - Pre-release validation workflow  
+- [release-staging.yml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/workflows/release-staging.yml) - Staging environment deployment
+- [documentation.yaml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/workflows/documentation.yaml) - Documentation building and deployment
 
 ### Reusable Workflows
 - `rw_docker_operations.yaml` - Docker build, test, and security operations

@@ -15,16 +15,16 @@ This document covers the Continuous Integration (CI) workflows used to maintain 
 
 ## Workflow Triggers
 
-Our CI workflow (`ci.yaml`) is triggered on:
+Our CI workflow ([ci.yaml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/workflows/ci.yaml)) is triggered on:
 
 - **Push to master branch**: Excluding branches with "e2e" in their name
 - **Pull requests to master**: Excluding branches with "e2e" in their name
 - Only when specific paths are modified:
   - GitHub Actions workflow files
-  - Python source code (`clickup_mcp/**/*.py`)
-  - Test files (`test/**/*.py`)
-  - Test configuration files (`.coveragerc`, `pytest.ini`, etc.)
-  - Project configuration (`pyproject.toml`, `uv.lock`)
+  - Python source code ([clickup_mcp/](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/))
+  - Test files ([test/](https://github.com/Chisanan232/clickup-mcp-server/blob/master/test/))
+  - Test configuration files ([.coveragerc](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.coveragerc), [pytest.ini](https://github.com/Chisanan232/clickup-mcp-server/blob/master/pytest.ini), etc.)
+  - Project configuration ([pyproject.toml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/pyproject.toml), [uv.lock](https://github.com/Chisanan232/clickup-mcp-server/blob/master/uv.lock))
 
 ## CI Workflow Structure
 
@@ -42,7 +42,7 @@ graph TD
 
 The CI process uses several reusable workflows to streamline the execution:
 
-### 1. Build and Test (`rw_build_and_test.yaml`)
+### 1. Build and Test ([rw_build_and_test.yaml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/workflows/rw_build_and_test.yaml))
 
 - Sets up Python environment (Python 3.13)
 - Installs dependencies via Poetry

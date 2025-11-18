@@ -1,0 +1,46 @@
+---
+id: team-mcp-api
+title: Team
+sidebar_position: 1
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Team MCP API
+
+The Team MCP API allows you to interact with ClickUp teams (workspaces) using the Model Context Protocol interface. For more information about MCP, see the [official documentation](https://modelcontextprotocol.io/docs/getting-started/intro).
+ 
+:::note Errors and retries
+All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
+and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
+[Errors and Retries (MCP)](../errors-and-retries.mdx) for details.
+:::
+
+## Available Functions
+
+### get_authorized_teams
+
+- **Function name**: `get_authorized_teams`
+- **Parameters**: none
+- **Returns**: [WorkspaceListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/workspace.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true, // Tool succeeded
+  "result": {
+    "items": [
+      {
+        "team_id": "team_1", // Workspace (team) ID
+        "name": "Engineering" // Workspace name
+      }
+    ]
+  },
+  "issues": [] // Optional warnings/issues collected during execution
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)

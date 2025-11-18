@@ -1,0 +1,136 @@
+---
+id: requirements
+title: Requirements
+sidebar_position: 2
+---
+
+```mdx-code-block
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+```
+
+# Development Requirements
+
+Before you begin contributing to ClickUp MCP Server, ensure your development environment meets these requirements.
+
+## Software Prerequisites
+
+### Required Software
+
+- **Python**: Python 3.13 or higher
+- **Git**: Latest stable version
+- **pip**, **poetry** or **uv**: Latest version
+- **virtualenv** or **pyenv**: For creating isolated Python environments
+
+### Recommended Development Tools
+
+- **Visual Studio Code**, **PyCharm**, or other IDE with Python support
+- **pre-commit**: For running pre-commit hooks
+- **Docker**: For containerized testing and deployment
+
+## Python Dependencies
+
+The project has several dependencies that will be installed automatically when you set up the development environment:
+
+- **FastAPI**: Web framework for API endpoints
+- **Pydantic**: Data validation and settings management
+- **httpx**: HTTP client for async requests
+- **pytest**: Testing framework
+- **python-dotenv**: Environment variable management
+- **uvicorn**: ASGI server for running the application
+
+## Development Environment Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Chisanan232/clickup-mcp-server.git
+   cd clickup-mcp-server
+   ```
+
+2. **Create a virtual environment**:
+   
+   <Tabs>
+     <TabItem value="virtualenv" label="virtualenv" default>
+     ```bash
+     python -m venv venv
+     source venv/bin/activate  # On Windows: venv\Scripts\activate
+     ```
+
+     </TabItem>
+     <TabItem value="conda" label="conda">
+     ```bash
+     conda create -n clickup-mcp python=3.13
+     conda activate clickup-mcp
+     ```
+
+     </TabItem>
+     <TabItem value="poetry" label="poetry">
+     ```bash
+     poetry shell
+     ```
+
+     </TabItem>
+     <TabItem value="uv" label="uv">
+     ```bash
+     uv venv
+     source .venv/bin/activate
+     ```
+
+     </TabItem>
+   </Tabs>
+
+3. **Install development dependencies**:
+   
+   <Tabs>
+     <TabItem value="pip" label="pip" default>
+      ```bash
+      pip install -e ".[dev]"
+      ```
+
+     </TabItem>
+     <TabItem value="poetry" label="poetry">
+      ```bash
+      poetry install --with=dev
+      ```
+
+     </TabItem>
+     <TabItem value="uv" label="uv">
+      ```bash
+      uv pip install .
+      ```
+
+     </TabItem>
+   </Tabs>
+
+4. **Set up pre-commit hooks**:
+   
+   <Tabs>
+     <TabItem value="pip" label="pip" default>
+      ```bash
+      pre-commit install
+      ```
+
+     </TabItem>
+     <TabItem value="poetry" label="poetry">
+      ```bash
+      poetry run pre-commit install
+      ```
+
+     </TabItem>
+     <TabItem value="uv" label="uv">
+      ```bash
+      uv run pre-commit install
+      ```
+
+     </TabItem>
+   </Tabs>
+
+5. **Create a `.env` file for local development**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your ClickUp API token
+   ```
+
+## Next Steps
+
+Once your development environment is set up, refer to the [Development Workflow](../workflow.mdx) documentation for the next steps.

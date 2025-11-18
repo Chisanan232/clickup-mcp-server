@@ -1,0 +1,32 @@
+---
+id: guidelines
+title: Guidelines for developers
+sidebar_position: 1
+---
+
+# Development Guidelines
+
+This section collects project-wide guidance to keep contributions consistent, safe, and easy for humans and LLMs to use.
+
+## What's inside
+
+- [Requirements](./requirements.mdx) — Set up your environment (Python, tooling, pre-commit)
+- [Coding Styles and Rules](./coding-style.mdx) — Code conventions, typing standards, and quality tools
+- [Testing Strategy](./testing-strategy.mdx) — Test pyramid, how to run tests, and coverage map
+- [MCP Tool Development Guidelines](./mcp-tool-development.mdx) — LLM-first tool design, naming, input/output models, and unified ToolResponse envelope
+- [How to create a new mapper](./how-to-create-a-mapper.mdx) — Step-by-step guide for DTO ↔ Domain ↔ Output mappers with examples and a Mermaid flowchart
+
+## When to use these
+
+- You are preparing your dev environment or CI locally
+- You are implementing a new feature or MCP tool
+- You are adding or refactoring tests
+- You are aligning tool inputs/outputs for LLM comprehension and token efficiency
+
+## Next steps
+
+- New contributor? Start with [Requirements](./requirements.mdx) and [Coding Styles and Rules](./coding-style.mdx)
+- Building/adjusting tools? Refer to the MCP Tool development doc for best practices.
+- For model layering and mapping patterns (DTO → Domain → Output), see [Architecture: Models](/docs/development/architecture/models).
+- For a step-by-step guide to creating a new mapper, see [How to create a new mapper](/docs/development/guidelines/how-to-create-a-mapper).
+- Verifying behavior? Follow the [Testing Strategy](./testing-strategy.mdx)

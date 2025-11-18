@@ -11,7 +11,7 @@ The release workflows for this template are now maintained in the centralized re
 
 ## Release workflows
 
-### Production release (`release.yml`)
+### Production release ([release.yml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/workflows/release.yml))
 [![Release](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release.yml)
 [![PyPI version](https://img.shields.io/pypi/v/clickup-mcp-server?label=PyPI&color=306998&logo=pypi)](https://pypi.org/project/clickup-mcp-server/)
 
@@ -42,7 +42,7 @@ flowchart LR
 See the reusable workflow guide for production releases: [rw_release_complete.yaml](https://chisanan232.github.io/GitHub-Action_Reusable_Workflows-Python/docs/next/workflows/release/rw_release_complete) (hosted in `Chisanan232/GitHub-Action_Reusable_Workflows-Python`).
 :::
 
-### Release staging (`release-staging.yml`)
+### Release staging ([release-staging.yml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/workflows/release-staging.yml))
 [![Release Staging](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-staging.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-staging.yml)
 [![TestPyPI version](https://img.shields.io/badge/dynamic/json?label=TestPyPI&color=ff6600&query=%24.info.version&url=https%3A%2F%2Ftest.pypi.org%2Fpypi%2Fclickup-mcp-server%2Fjson&logo=pypi)](https://test.pypi.org/project/clickup-mcp-server/)
 
@@ -73,7 +73,7 @@ flowchart LR
 Reusable staging workflow reference: [rw_release_staging_complete.yaml](https://chisanan232.github.io/GitHub-Action_Reusable_Workflows-Python/docs/next/workflows/release/rw_release_staging_complete).
 :::
 
-### Release validation (`release-validate.yml`)
+### Release validation ([release-validate.yml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/workflows/release-validate.yml))
 [![Release Validation](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-validate.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-validate.yml)
 
 Dry-runs the release pipeline for pull requests, verifying builds and security checks without publishing artifacts.
@@ -107,7 +107,7 @@ Reusable validation workflow details: [rw_release_validation_complete.yaml](http
 
 - **Centralized logic**: All release orchestration lives in the [reusable workflow repository](https://github.com/Chisanan232/GitHub-Action_Reusable_Workflows-Python).
 - **Multi-target support**: Python packages, container images, and documentation publishing remain available through the shared workflows.
-- **Configuration-driven**: Child projects configure releases via `intent.yaml`, delegating implementation details to the centralized workflows.
+- **Configuration-driven**: Child projects configure releases via [intent.yaml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/tag_and_release/intent.yaml), delegating implementation details to the centralized workflows.
 - **Release targets at a glance**:
   - PyPI for production Python packages
   - TestPyPI for staging/validation builds
@@ -125,6 +125,6 @@ These resources provide the authoritative, up-to-date reference for release oper
 
 ## Working in this template
 
-- Maintain `intent.yaml` to control release behavior for this project.
+- Maintain [intent.yaml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/tag_and_release/intent.yaml) to control release behavior for this project.
 - Ensure workflow references point to the centralized repository (for example, `uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_release_complete.yaml@main`).
 - Use the linked documentation for detailed steps, troubleshooting, and advanced configuration.

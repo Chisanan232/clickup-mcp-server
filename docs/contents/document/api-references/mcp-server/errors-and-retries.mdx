@@ -1,0 +1,86 @@
+---
+id: mcp-errors-and-retries
+title: Errors and Retries (MCP)
+sidebar_position: 99
+---
+
+# Errors and Retries for MCP APIs
+
+This page explains the standardized error envelope returned by the MCP server tools and provides guidance for retries and backoff when calling MCP tool functions.
+
+## [ToolResponse] envelope
+
+All MCP tool handlers are wrapped by a centralized error handler and return a uniform envelope.
+
+[ToolResponse]: https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/errors/models.py#L41-L69
+
+```json title="ToolResponse JSON shape"
+{
+  "ok": false,
+  "result": null,
+  "issues": [
+    {
+      "code": "RATE_LIMIT",
+      "message": "Rate limit exceeded",
+      "retry_after_ms": 3000,
+      "details": { "status_code": 429 }
+    }
+  ]
+}
+```
+
+- `ok`: boolean success flag.
+- `result`: the successful payload (typed model when `ok: true`).
+- `issues[]`: machine-readable issues (strict enum codes), localized message, optional `retry_after_ms` and extra details.
+
+:::note Implementation
+See [clickup_mcp/mcp_server/errors/](https://github.com/Chisanan232/clickup-mcp-server/tree/master/clickup_mcp/mcp_server/errors) for the error codes and the `@handle_tool_errors` decorator. Tool functions (e.g., [clickup_mcp/mcp_server/team.py](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/team.py)`:get_authorized_teams`) declare a domain return type; the decorator exposes a `ToolResponse[...]` return type at runtime for clients.
+:::
+
+### [ToolIssue] object
+
+Each issue in the `issues[]` array is a compact, typed object describing a problem condition. Clients can map `code` to handling behavior and optionally guide users with the human-readable `message` and `hint`.
+
+[ToolIssue]: https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/errors/models.py#L13-L36
+
+- **code**: canonical enum value of type `IssueCode` (e.g., `RATE_LIMIT`, `AUTH_ERROR`, `FORBIDDEN`, `NOT_FOUND`, `UPSTREAM_ERROR`).
+- **message**: short, end-user readable description.
+- **hint**: optional one-line remediation guidance.
+- **retry_after_ms**: optional backoff duration in milliseconds (when rate-limited).
+
+## When to retry
+
+- `429` (rate limited): respect `retry_after_ms` if present; otherwise back off exponentially.
+- `5xx` (server errors) and transient network errors: retry with exponential backoff.
+- `4xx` (except `401`/`403` permission and `404` not found): typically do not retry unless you fix inputs.
+
+### Backoff strategy
+
+- Base delay: 100–500ms (configurable per client).
+- Exponential factor: 2.0.
+- Jitter: add random 0–25% to avoid thundering herd.
+- Max retries: 3–5 in interactive clients.
+
+```python title="Example: ClickUpAPIClient automatic retry"
+# The low-level HTTP client already retries transport errors with exponential backoff.
+from clickup_mcp.client import ClickUpAPIClient
+
+async with ClickUpAPIClient(api_token="...", max_retries=3, retry_delay=0.25) as client:
+    resp = await client.get("/some/endpoint")
+    if not resp.success and resp.status_code == 429:
+        # Respect server-provided backoff if available
+        retry_after_ms = (resp.data or {}).get("retry_after_ms", 0)
+```
+
+## Mapping examples
+
+- `429` → `RATE_LIMIT` (with `retry_after_ms` when available)
+- `401` → `AUTH_ERROR` (invalid token)
+- `403` → `FORBIDDEN` (insufficient permissions)
+- `404` → `NOT_FOUND`
+- `409` → `CONFLICT`
+- `5xx` / timeouts → `UPSTREAM_ERROR`
+
+:::tip Cross-reference
+This page is specific to MCP tool functions. For background docs, see the site-wide Errors and Retries page if present.
+:::

@@ -5,12 +5,15 @@ This module provides a resource manager for interacting with ClickUp Spaces.
 It follows the Resource Manager pattern described in the project documentation.
 """
 
+import logging
 from typing import TYPE_CHECKING, Optional
 
 from clickup_mcp.models.dto.space import SpaceCreate, SpaceResp, SpaceUpdate
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
+
+logger = logging.getLogger(__name__)
 
 
 class SpaceAPI:
@@ -77,6 +80,7 @@ class SpaceAPI:
         if not isinstance(spaces_data, list):
             return []
 
+        logger.debug(f"All spaces: {spaces_data}")
         return [SpaceResp(**space_data) for space_data in spaces_data]
 
     async def get(self, space_id: str) -> Optional[SpaceResp]:
@@ -98,6 +102,7 @@ class SpaceAPI:
         if response.data is None or not isinstance(response.data, dict):
             return None
 
+        logger.debug(f"Space API response: {response.data}")
         return SpaceResp(**response.data)
 
     async def update(self, space_id: str, space_update: SpaceUpdate) -> Optional[SpaceResp]:

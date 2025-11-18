@@ -1,0 +1,291 @@
+---
+id: task-mcp-api
+title: Task
+sidebar_position: 5
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Task MCP API
+
+Tools for creating, retrieving, listing, updating, and deleting tasks; manage custom fields and dependencies.
+
+:::note Errors and retries
+All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
+and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
+[Errors and Retries (MCP)](../errors-and-retries.mdx) for details.
+:::
+
+## Tools
+
+### task.create
+
+Creates a new task in the specified home list (`list_id`). Supports common fields like `name`, `description`, `status`, priority, assignees, due dates, and optional `parent` to create a subtask. This operation modifies ClickUp data and returns the created task.
+- **Parameters**: [TaskCreateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/task.py)
+
+```jsonc
+{
+  "list_id": "L1", // Target list ID (home list for the new task)
+  "name": "Ship v1.2", // Short task title
+  "description": "Markdown/plaintext body", // Optional
+  "status": "in progress", // Optional workflow status name
+  "priority": 3, // Optional 1..4
+  "assignees": [42, "u_abc"], // Optional user IDs
+  "due_date": 1731523200000, // Optional epoch ms
+  "time_estimate": 7200000, // Optional ms
+  "parent": "task_parent" // Optional parent task to create a subtask
+}
+```
+
+- **Returns**: [TaskResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/task.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "t1", // Task ID
+    "name": "Ship v1.2", // Title
+    "status": "in progress", // Workflow status
+    "priority": 3, // 1..4
+    "list_id": "L1", // Home list
+    "assignee_ids": [42, "u_abc"], // Assigned users
+    "due_date_ms": 1731523200000, // Epoch ms
+    "url": "https://app.clickup.com/t/t1", // Canonical URL
+    "parent_id": "task_parent" // Parent task if subtask
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `list_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### task.get
+
+Retrieves a single task by `task_id` or custom task ID. Read-only. Optionally include subtasks. If using custom task IDs (e.g., `CU-123`), set `custom_task_ids=true` and provide `team_id`.
+- **Parameters**: [TaskGetInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/task.py)
+
+```jsonc
+{
+  "task_id": "t1", // Task ID (or custom task ID)
+  "subtasks": false, // Optional: include subtasks in response
+  "custom_task_ids": false, // Set true if using custom IDs like "CU-123"
+  "team_id": "team_1" // Required when custom_task_ids=true
+}
+```
+
+- **Returns**: [TaskResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/task.py)
+
+```jsonc
+{
+  "id": "t1", // Task ID
+  "name": "Ship v1.2", // Title
+  "status": "in progress", // Workflow status
+  "priority": 3, // 1..4
+  "list_id": "L1", // Home list
+  "assignee_ids": [42], // Assigned users
+  "due_date_ms": 1731523200000, // Due time epoch ms
+  "url": "https://app.clickup.com/t/t1", // Canonical URL
+  "parent_id": null // Parent task if subtask
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when task does not exist
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### task.list_in_list
+
+Lists tasks in a given list (`list_id`) with pagination and filters. Read-only. Supports `limit`, status filters, assignee filters, inclusion of closed tasks, and inclusion of TIML entries. Returns `items[]`, and paging metadata (`next_cursor`, `truncated`).
+- **Parameters**: [TaskListInListInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/task.py)
+
+```jsonc
+{
+  "list_id": "L1", // List to fetch tasks from
+  "page": 0, // Optional page index (0-based)
+  "limit": 50, // Optional page size (1..100)
+  "include_closed": false, // Optional include closed tasks
+  "include_timl": false, // Optional include tasks present in multiple lists
+  "statuses": ["open", "in progress"], // Optional filter by status
+  "assignees": [42] // Optional filter by assignee user IDs
+}
+```
+
+- **Returns**: [TaskListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/task.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "items": [
+      {
+        "id": "t1", // Task ID
+        "name": "Backfill analytics", // Title
+        "status": "open", // Status
+        "list_id": "L1", // Home list
+        "url": "https://app.clickup.com/t/t1" // URL
+      }
+    ],
+    "next_cursor": null, // Reserved (client currently caps to limit)
+    "truncated": false // True if items trimmed to requested limit
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `list_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### task.update
+
+Partially updates an existing task. Only provided fields are changed (e.g., `name`, `description`, `status`, `priority`, `assignees`, due dates). Returns the updated task. Requires appropriate permissions.
+- **Parameters**: [TaskUpdateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/task.py)
+
+```jsonc
+{
+  "task_id": "t1", // Target task ID
+  "name": "Ship v1.2.1", // Optional
+  "description": "Updated notes", // Optional
+  "status": "done", // Optional
+  "priority": 2, // Optional 1..4
+  "assignees": [42, 43], // Optional list of user IDs
+  "due_date": 1732041600000, // Optional epoch ms
+  "time_estimate": 5400000 // Optional ms
+}
+```
+
+- **Returns**: [TaskResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/task.py)
+
+```jsonc
+{
+  "id": "t1",
+  "name": "Ship v1.2.1",
+  "status": "done",
+  "priority": 2,
+  "list_id": "L1",
+  "assignee_ids": [42, 43],
+  "due_date_ms": 1732041600000,
+  "url": "https://app.clickup.com/t/t1",
+  "parent_id": null
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when task does not exist
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### task.set_custom_field
+
+Sets or replaces the value of a custom field on a task. This operation modifies data. Ensure the `value` type matches the custom field's schema in ClickUp.
+- **Parameters**: [TaskSetCustomFieldInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/task.py)
+
+```jsonc
+{
+  "task_id": "t1", // Task ID
+  "field_id": "cf_priority", // Custom field ID
+  "value": 3 // Value type depends on field
+}
+```
+
+- **Returns**: [OperationResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "ok": true // Operation succeeded
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when task or field is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### task.clear_custom_field
+
+Clears the value of a custom field on a task. Destructive to that field value but does not delete the field definition. Idempotent if already empty.
+- **Parameters**: [TaskClearCustomFieldInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/task.py)
+
+```jsonc
+{
+  "task_id": "t1", // Task ID
+  "field_id": "cf_priority" // Custom field ID
+}
+```
+
+- **Returns**: [OperationResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "ok": true
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when task or field is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### task.add_dependency
+
+Adds a dependency relationship between tasks. By default a `waiting_on` relationship is created (or specify `blocking`). This affects scheduling/ordering but not task content. Idempotent when the dependency already exists.
+- **Parameters**: [TaskAddDependencyInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/task.py)
+
+```jsonc
+{
+  "task_id": "t1", // Subject task
+  "depends_on": "t2", // The task this task depends on
+  "dependency_type": "waiting_on" // Optional: waiting_on | blocking
+}
+```
+
+- **Returns**: [OperationResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "ok": true
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when either task ID is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### task.delete
+
+Permanently deletes a task. This action cannot be undone and removes the task from its lists and indexes. Consider retention requirements before deleting.
+- **Parameters**: inline
+
+```jsonc
+{
+  "task_id": "t1" // Task ID to delete
+}
+```
+
+- **Returns**: [DeletionResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "deleted": true // True if the task was deleted
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when task does not exist
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)

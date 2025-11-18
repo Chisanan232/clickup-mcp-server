@@ -16,17 +16,18 @@ from typing import Any, Generic, Type, TypeVar
 import httpx
 from pydantic import BaseModel, Field
 
-from clickup_mcp.models.dto.base import BaseResponseDTO
-
 from ._base import BaseServerFactory
 from .api.folder import FolderAPI
+from .api.list import ListAPI
 from .api.space import SpaceAPI
+from .api.task import TaskAPI
 from .api.team import TeamAPI
 from .exceptions import (
     AuthenticationError,
     ClickUpAPIError,
     RateLimitError,
 )
+from .models.dto.base import BaseResponseDTO
 
 logger = logging.getLogger(__name__)
 
@@ -197,6 +198,8 @@ class ClickUpAPIClient:
         self.space = SpaceAPI(self)
         self.team = TeamAPI(self)
         self.folder = FolderAPI(self)
+        self.list = ListAPI(self)
+        self.task = TaskAPI(self)
 
     async def __aenter__(self) -> "ClickUpAPIClient":
         """Async context manager entry."""
@@ -305,6 +308,16 @@ class ClickUpAPIClient:
                         error_data = {}
                     error_message = error_data.get("err", f"HTTP {response.status_code} error")
 
+                    # Log error details for visibility into API failures
+                    logger.error(
+                        "API error %s %s -> %s: %s; response=%s",
+                        method,
+                        url,
+                        response.status_code,
+                        error_message,
+                        error_data,
+                    )
+
                     return APIResponse(
                         status_code=response.status_code,
                         data=error_data,
@@ -327,7 +340,14 @@ class ClickUpAPIClient:
                     await asyncio.sleep(self.retry_delay * (2**attempt))  # Exponential backoff
                 continue
 
-        # If we've exhausted all retries
+        # If we've exhausted all retries, log at error level then raise
+        logger.error(
+            "Request failed after %s attempts for %s %s: %s",
+            self.max_retries + 1,
+            method,
+            url,
+            last_exception,
+        )
         raise ClickUpAPIError(f"Request failed after {self.max_retries + 1} attempts: {last_exception}")
 
     async def get(

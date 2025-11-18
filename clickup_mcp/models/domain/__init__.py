@@ -5,13 +5,25 @@ This package contains domain models that represent core business entities
 in the ClickUp MCP application.
 """
 
+from .folder import ClickUpFolder, Folder
+from .list import ClickUpList, List
 from .space import ClickUpSpace, Space
+from .task import ClickUpTask, Task
 from .team import ClickUpTeam, ClickUpTeamMember, ClickUpUser, Team
 
 __all__ = [
     # Space models
     "ClickUpSpace",
     "Space",  # Backwards compatibility alias
+    # Folder models
+    "ClickUpFolder",
+    "Folder",  # Backwards compatibility alias
+    # List models
+    "ClickUpList",
+    "List",  # Backwards compatibility alias
+    # Task models
+    "ClickUpTask",
+    "Task",  # Backwards compatibility alias
     # Team models
     "ClickUpTeam",
     "ClickUpTeamMember",

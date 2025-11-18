@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from clickup_mcp.mcp_server.models.outputs.workspace import WorkspaceListResult
 from clickup_mcp.mcp_server.team import get_authorized_teams
 from clickup_mcp.models.domain.team import ClickUpTeam, ClickUpTeamMember, ClickUpUser
 
@@ -49,33 +50,29 @@ async def test_get_authorized_teams_success(mock_get_client: MagicMock) -> None:
     mock_get_client.return_value = mock_client
 
     # Call the function
-    result = await get_authorized_teams()
+    envelope = await get_authorized_teams()
 
     # Assertions
     mock_get_client.assert_called_once()
     mock_client.team.get_authorized_teams.assert_called_once()
 
     # Verify the result format and content
-    assert result is not None
-    assert isinstance(result, list)
-    assert len(result) == 2
+    assert envelope.ok is True
+    assert isinstance(envelope.result, WorkspaceListResult)
+    assert len(envelope.result.items) == 2
 
     # Check first team data
-    assert result[0]["team_id"] == "team1"
-    assert result[0]["name"] == "Team One"
-    assert result[0]["color"] == "#000000"
-    assert result[0]["avatar"] == "https://example.com/avatar.jpg"
+    first = envelope.result.items[0].model_dump()
+    assert first["team_id"] == "team1"
+    assert first["name"] == "Team One"
 
     # Check members data
-    assert len(result[0]["members"]) == 1
-    assert result[0]["members"][0]["user"]["user_id"] == 1234
-    assert result[0]["members"][0]["user"]["username"] == "test_user"
-    assert result[0]["members"][0]["user"]["email"] == "user@example.com"
+    # Members are not included in WorkspaceListItem projection
 
     # Check second team
-    assert result[1]["team_id"] == "team2"
-    assert result[1]["name"] == "Team Two"
-    assert result[1]["color"] == "#FFFFFF"
+    second = envelope.result.items[1].model_dump()
+    assert second["team_id"] == "team2"
+    assert second["name"] == "Team Two"
 
 
 @pytest.mark.asyncio
@@ -90,15 +87,15 @@ async def test_get_authorized_teams_empty_result(mock_get_client: MagicMock) -> 
     mock_get_client.return_value = mock_client
 
     # Call the function
-    result = await get_authorized_teams()
+    envelope = await get_authorized_teams()
 
     # Assertions
     mock_get_client.assert_called_once()
     mock_client.team.get_authorized_teams.assert_called_once()
 
-    assert result is not None
-    assert isinstance(result, list)
-    assert len(result) == 0
+    assert envelope.ok is True
+    assert isinstance(envelope.result, WorkspaceListResult)
+    assert len(envelope.result.items) == 0
 
 
 @pytest.mark.asyncio
@@ -108,9 +105,10 @@ async def test_get_authorized_teams_with_missing_token(mock_get_client: MagicMoc
     # Set up mock to raise ValueError when called
     mock_get_client.side_effect = ValueError("ClickUp API token not found")
 
-    # Call the function and expect the ValueError to be propagated
-    with pytest.raises(ValueError, match="ClickUp API token not found"):
-        await get_authorized_teams()
+    # Call the function; decorator should map error to envelope with issues
+    envelope = await get_authorized_teams()
+    assert envelope.ok is False
+    assert len(envelope.issues) == 1
 
     # Verify the mock was called
     mock_get_client.assert_called_once()
@@ -130,9 +128,10 @@ async def test_get_authorized_teams_with_error(mock_get_client: MagicMock) -> No
     mock_client.team.get_authorized_teams = AsyncMock(side_effect=test_error)
     mock_get_client.return_value = mock_client
 
-    # Call the function and expect the error to be wrapped in a ValueError
-    with pytest.raises(ValueError, match="Error retrieving teams: Test error"):
-        await get_authorized_teams()
+    # Call the function; decorator should map error to envelope with issues
+    envelope = await get_authorized_teams()
+    assert envelope.ok is False
+    assert len(envelope.issues) == 1
 
     # Verify mocks were called
     mock_get_client.assert_called_once()

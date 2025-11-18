@@ -1,0 +1,173 @@
+---
+id: space-mcp-api
+title: Space
+sidebar_position: 2
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Space MCP API
+
+The Space MCP API exposes tools for listing, retrieving, creating, updating, and deleting spaces.
+For MCP background, see the [official docs](https://modelcontextprotocol.io/docs/getting-started/intro).
+
+:::note Errors and retries
+All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
+and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
+[Errors and Retries (MCP)](../errors-and-retries.mdx) for details.
+:::
+
+## Tools
+
+### space.list
+
+List spaces within a workspace (team). Discover team IDs via `workspace.list`.
+- **Parameters**: [SpaceListInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/space.py)
+
+```jsonc
+{
+  "team_id": "team_1" // Workspace (team) ID to list its spaces
+}
+```
+
+- **Returns**: [SpaceListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/space.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true, // Tool succeeded
+  "result": {
+    "items": [
+      {
+        "id": "space_1", // Space ID
+        "name": "Engineering" // Space name
+      }
+    ]
+  },
+  "issues": [] // Optional warnings/issues collected during execution
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `team_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### space.get
+
+Retrieves a single space by its `space_id`. This call is read-only and returns core metadata such as the space's name, privacy, and owning `team_id`. Useful for validating IDs and reading properties before updates.
+- **Parameters**: [SpaceGetInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/space.py)
+
+```jsonc
+{
+  "space_id": "space_1" // Target space ID
+}
+```
+
+- **Returns**: [SpaceResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/space.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true, // Tool succeeded
+  "result": {
+    "id": "space_1", // Space ID
+    "name": "Engineering", // Space name
+    "private": false, // Whether space is private
+    "team_id": "team_1" // Owning workspace (team) ID
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `space_id` does not exist
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### space.create
+
+Creates a new space within the specified team (`team_id`). On success, returns the created space. This operation has side effects in ClickUp; ensure the token has permission to create spaces in the target team.
+- **Parameters**: [SpaceCreateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/space.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Workspace (team) ID
+  "name": "[TEST] Eng", // Space name
+  "multiple_assignees": true // Optional: allow multiple assignees in this space
+}
+```
+
+- **Returns**: [SpaceResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/space.py)
+
+```jsonc
+{
+  "id": "space_1", // New space ID
+  "name": "[TEST] Eng", // Space name
+  "private": false, // Whether the space is private
+  "team_id": "team_1" // Owning workspace (team) ID
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `team_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### space.update
+
+Partially updates an existing space. Provide only the fields you want to change (e.g., `name`, `private`, `multiple_assignees`). Returns the updated space. Requires appropriate permissions.
+- **Parameters**: [SpaceUpdateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/space.py)
+
+```jsonc
+{
+  "space_id": "space_1", // Target space ID
+  "name": "Delivery", // Optional
+  "private": false, // Optional
+  "multiple_assignees": true // Optional
+}
+```
+
+- **Returns**: [SpaceResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/space.py)
+
+```jsonc
+{
+  "id": "space_1",
+  "name": "Delivery",
+  "private": false,
+  "team_id": "team_1"
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `space_id` does not exist
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### space.delete
+
+Permanently deletes a space identified by `space_id`. This operation is destructive and cannot be undone. Review ClickUp workspace policies before deleting.
+- **Parameters**: [SpaceDeleteInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/space.py)
+
+```jsonc
+{
+  "space_id": "space_1" // Target space ID
+}
+```
+
+- **Returns**: [DeletionResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "deleted": true // True if the space was deleted
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `space_id` does not exist
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)

@@ -30,7 +30,7 @@ repos:
           - --in-place
 
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 25.9.0
+    rev: 25.11.0
     hooks:
       - id: black
         args: # arguments to configure black
@@ -60,6 +60,6 @@ repos:
 
   - repo: https://github.com/astral-sh/uv-pre-commit
     # uv version.
-    rev: 0.9.7
+    rev: 0.9.9
     hooks:
       - id: uv-lock
