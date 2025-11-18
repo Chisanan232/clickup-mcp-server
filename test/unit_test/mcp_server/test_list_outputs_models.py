@@ -51,6 +51,15 @@ async def test_list_crud_and_listing_return_result_models(mock_get_client: Magic
             "priority": None,
             "due_date": None,
             "due_date_time": None,
+            "statuses": [
+                type("StatusDTO", (), {"name": "Open", "type": "open", "color": "#00ff00", "orderindex": 0})(),
+                type(
+                    "StatusDTO",
+                    (),
+                    {"name": "In progress", "type": "active", "color": "#0000ff", "orderindex": 1},
+                )(),
+                type("StatusDTO", (), {"name": "Done", "type": "closed", "color": "#ff0000", "orderindex": 2})(),
+            ],
         },
     )()
     got = created
@@ -68,6 +77,10 @@ async def test_list_crud_and_listing_return_result_models(mock_get_client: Magic
             "priority": None,
             "due_date": None,
             "due_date_time": None,
+            "statuses": [
+                type("StatusDTO", (), {"name": "Open", "type": "open", "color": "#00ff00", "orderindex": 0})(),
+                type("StatusDTO", (), {"name": "Done", "type": "closed", "color": "#ff0000", "orderindex": 2})(),
+            ],
         },
     )()
 
@@ -84,12 +97,26 @@ async def test_list_crud_and_listing_return_result_models(mock_get_client: Magic
 
     c_env = await list_create(ListCreateInput(folder_id="f1", name="Sprint 12"))
     assert c_env.ok is True and isinstance(c_env.result, ListResult) and c_env.result.id == "L1"
+    assert c_env.result.statuses is not None and [s.name for s in c_env.result.statuses] == [
+        "Open",
+        "In progress",
+        "Done",
+    ]
 
     g_env = await list_get(ListGetInput(list_id="L1"))
     assert g_env.ok is True and isinstance(g_env.result, ListResult) and g_env.result.name == "Sprint 12"
+    assert g_env.result.statuses is not None and [s.type for s in g_env.result.statuses] == [
+        "open",
+        "active",
+        "closed",
+    ]
 
     u_env = await list_update(ListUpdateInput(list_id="L1", name="Sprint 13"))
     assert u_env.ok is True and isinstance(u_env.result, ListResult) and u_env.result.name == "Sprint 13"
+    assert u_env.result.statuses is not None and [s.name for s in u_env.result.statuses] == [
+        "Open",
+        "Done",
+    ]
 
     d_env = await list_delete(ListDeleteInput(list_id="L1"))
     assert d_env.ok is True and isinstance(d_env.result, DeletionResult) and d_env.result.deleted is True
