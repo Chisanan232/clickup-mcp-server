@@ -18,11 +18,9 @@ from clickup_mcp.mcp_server.models.inputs.space import (
 )
 from clickup_mcp.mcp_server.models.outputs.common import DeletionResult
 from clickup_mcp.mcp_server.models.outputs.space import (
-    SpaceListItem,
     SpaceListResult,
     SpaceResult,
 )
-from clickup_mcp.models.domain.space import ClickUpSpace
 from clickup_mcp.models.mapping.space_mapper import SpaceMapper
 
 from .app import mcp
@@ -66,7 +64,7 @@ async def space_get(input: SpaceGetInput) -> SpaceResult | None:
     if not resp:
         raise ResourceNotFoundError("Space not found")
     d = SpaceMapper.to_domain(resp)
-    return SpaceResult(id=d.id, name=d.name, private=d.private, team_id=d.team_id)
+    return SpaceMapper.to_space_result_output(d)
 
 
 @mcp.tool(
@@ -84,7 +82,7 @@ async def space_list(input: SpaceListInput) -> SpaceListResult:
     items = []
     for s in spaces:
         d = SpaceMapper.to_domain(s)
-        items.append(SpaceListItem(id=d.id, name=d.name))
+        items.append(SpaceMapper.to_space_list_item_output(d))
     return SpaceListResult(items=items)
 
 
@@ -98,15 +96,15 @@ async def space_list(input: SpaceListInput) -> SpaceListResult:
 @handle_tool_errors
 async def space_create(input: SpaceCreateInput) -> SpaceResult | None:
     client = ClickUpAPIClientFactory.get()
-    # Input -> Domain -> DTO
-    domain = ClickUpSpace(id="temp", name=input.name, multiple_assignees=input.multiple_assignees or False)
+    # Input -> Domain -> DTO (via mapper)
+    domain = SpaceMapper.from_create_input(input)
     dto = SpaceMapper.to_create_dto(domain)
     async with client:
         resp = await client.space.create(input.team_id, dto)
     if not resp:
         raise ClickUpAPIError("Create space failed")
     d = SpaceMapper.to_domain(resp)
-    return SpaceResult(id=d.id, name=d.name, private=d.private, team_id=d.team_id)
+    return SpaceMapper.to_space_result_output(d)
 
 
 @mcp.tool(
@@ -119,20 +117,15 @@ async def space_create(input: SpaceCreateInput) -> SpaceResult | None:
 @handle_tool_errors
 async def space_update(input: SpaceUpdateInput) -> SpaceResult | None:
     client = ClickUpAPIClientFactory.get()
-    # Build a domain model carrying fields to update; name/multiple_assignees/private may be None
-    domain = ClickUpSpace(
-        id=input.space_id,
-        name=input.name or "",
-        private=bool(input.private) if input.private is not None else False,
-        multiple_assignees=bool(input.multiple_assignees) if input.multiple_assignees is not None else False,
-    )
+    # Input -> Domain -> DTO (via mapper)
+    domain = SpaceMapper.from_update_input(input)
     dto = SpaceMapper.to_update_dto(domain)
     async with client:
         resp = await client.space.update(input.space_id, dto)
     if not resp:
         raise ResourceNotFoundError("Space not found")
     d = SpaceMapper.to_domain(resp)
-    return SpaceResult(id=d.id, name=d.name, private=d.private, team_id=d.team_id)
+    return SpaceMapper.to_space_result_output(d)
 
 
 @mcp.tool(

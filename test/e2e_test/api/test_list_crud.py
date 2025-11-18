@@ -13,6 +13,7 @@ Environment variables required:
 """
 
 import os
+import uuid
 from pathlib import Path
 from typing import AsyncGenerator, Generator
 
@@ -68,12 +69,14 @@ class TestListCRUDE2E:
         if not team_id or not space_id or not folder_id:
             pytest.skip("Test environment variables are required")
 
-        # Create a list
-        list_create = ListCreate(name="[TEST] List CRUD Test")
+        # Create a list with a unique name to avoid collisions
+        suffix = uuid.uuid4().hex[:8]
+        list_name = f"[TEST] List CRUD Test {suffix}"
+        list_create = ListCreate(name=list_name)
         created_list = await api_client.list.create(folder_id, list_create)
 
         assert created_list is not None
-        assert created_list.name == "[TEST] List CRUD Test"
+        assert created_list.name == list_name
         list_id = created_list.id
 
         try:
@@ -82,11 +85,12 @@ class TestListCRUDE2E:
             assert retrieved_list is not None
             assert retrieved_list.id == list_id
 
-            # Update the list
-            list_update = ListUpdate(name="[TEST] Updated List")
+            # Update the list with a unique name to avoid collisions
+            updated_name = f"[TEST] Updated List {suffix}"
+            list_update = ListUpdate(name=updated_name)
             updated_list = await api_client.list.update(list_id, list_update)
             assert updated_list is not None
-            assert updated_list.name == "[TEST] Updated List"
+            assert updated_list.name == updated_name
 
         finally:
             # Delete the list

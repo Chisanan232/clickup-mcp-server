@@ -67,6 +67,57 @@ flowchart LR
 - Trim I/O outputs to what agents need; prefer stable names and small shapes.
 :::
 
+## Standardized mapping across resources
+
+We consistently apply the pipeline above in all MCP handlers. Each handler:
+
+- Converts inbound DTOs to Domain using a mapper: `XMapper.to_domain(dto)`
+- Projects Domain to MCP Output using the same mapper: `XMapper.to_*_output(domain)`
+
+### Task
+
+- Mapper: `clickup_mcp/models/mapping/task_mapper.py`
+  - DTO → Domain: `TaskMapper.to_domain(resp: TaskResp) -> ClickUpTask`
+  - Domain → Output: `TaskMapper.to_task_result_output()`, `TaskMapper.to_task_list_item_output()`
+  - Shared parsing: `clickup_mcp/models/mapping/priority.py` (`parse_priority_obj`, `normalize_priority_input`)
+- Handler: `clickup_mcp/mcp_server/task.py`
+  - `_taskresp_to_result()` and `_taskresp_to_list_item()` now perform DTO → Domain → Output
+
+### List
+
+- Mapper: `clickup_mcp/models/mapping/list_mapper.py`
+  - DTO → Domain: `ListMapper.to_domain(resp: ListResp) -> ClickUpList`
+  - Domain → Output: `ListMapper.to_list_result_output()`, `ListMapper.to_list_list_item_output()`
+- Handler: `clickup_mcp/mcp_server/list.py`
+  - `list_create/get/update/list_*` now call mapper output functions
+
+### Folder
+
+- Mapper: `clickup_mcp/models/mapping/folder_mapper.py`
+  - DTO → Domain: `FolderMapper.to_domain(resp: FolderResp) -> ClickUpFolder`
+  - Domain → Output: `FolderMapper.to_folder_result_output()`, `FolderMapper.to_folder_list_item_output()`
+- Handler: `clickup_mcp/mcp_server/folder.py`
+  - `folder_create/get/update/list_in_space` now call mapper output functions
+
+### Space
+
+- Mapper: `clickup_mcp/models/mapping/space_mapper.py`
+  - DTO → Domain: `SpaceMapper.to_domain(resp: SpaceResp) -> ClickUpSpace`
+  - Domain → Output: `SpaceMapper.to_space_result_output()`, `SpaceMapper.to_space_list_item_output()`
+- Handler: `clickup_mcp/mcp_server/space.py`
+  - `space_get/list/create/update` now call mapper output functions
+
+### Workspace (Teams)
+
+- Handlers `workspace.list` and `get_authorized_teams` project minimal output directly from the Team domain models returned by the client.
+  - When upstream returns DTOs, introduce a `TeamMapper` to maintain the same pattern.
+
+## Rationale for centralizing mapping
+
+- Avoids duplicating projection logic across handlers
+- Keeps providers’ quirks (e.g., priority id formats) inside mappers
+- Makes unit testing easier: test mappers once, keep handlers thin
+
 :::danger Anti-patterns
 - Leaking raw upstream payloads into I/O outputs.
 - Importing HTTP client concerns into Domain models.

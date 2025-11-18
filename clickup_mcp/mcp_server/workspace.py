@@ -3,14 +3,12 @@
 Tool: workspace.list -> List workspaces available to the token.
 """
 
-from typing import List
-
 from clickup_mcp.client import ClickUpAPIClientFactory
 from clickup_mcp.mcp_server.errors import handle_tool_errors
 from clickup_mcp.mcp_server.models.outputs.workspace import (
-    WorkspaceListItem,
     WorkspaceListResult,
 )
+from clickup_mcp.models.mapping.team_mapper import TeamMapper
 
 from .app import mcp
 
@@ -28,7 +26,4 @@ async def workspace_list() -> WorkspaceListResult:
     client = ClickUpAPIClientFactory.get()
     async with client:
         teams = await client.team.get_authorized_teams()
-    items: List[WorkspaceListItem] = []
-    for t in teams:
-        items.append(WorkspaceListItem(team_id=str(t.team_id or t.id), name=t.name or ""))
-    return WorkspaceListResult(items=items)
+    return TeamMapper.to_workspace_list_result_output(teams)

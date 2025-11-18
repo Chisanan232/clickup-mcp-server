@@ -23,7 +23,6 @@ from clickup_mcp.mcp_server.models.outputs.folder import (
     FolderListResult,
     FolderResult,
 )
-from clickup_mcp.models.domain.folder import ClickUpFolder
 from clickup_mcp.models.mapping.folder_mapper import FolderMapper
 
 from .app import mcp
@@ -39,14 +38,14 @@ from .app import mcp
 @handle_tool_errors
 async def folder_create(input: FolderCreateInput) -> FolderResult | None:
     client = ClickUpAPIClientFactory.get()
-    domain = ClickUpFolder(id="temp", name=input.name, space_id=input.space_id)
+    domain = FolderMapper.from_create_input(input)
     dto = FolderMapper.to_create_dto(domain)
     async with client:
         resp = await client.folder.create(input.space_id, dto)
     if not resp:
         raise ClickUpAPIError("Create folder failed")
     d = FolderMapper.to_domain(resp)
-    return FolderResult(id=d.id, name=d.name, space_id=d.space_id)
+    return FolderMapper.to_folder_result_output(d)
 
 
 @mcp.tool(
@@ -63,7 +62,7 @@ async def folder_get(input: FolderGetInput) -> FolderResult | None:
     if not resp:
         raise ResourceNotFoundError("Folder not found")
     d = FolderMapper.to_domain(resp)
-    return FolderResult(id=d.id, name=d.name, space_id=d.space_id)
+    return FolderMapper.to_folder_result_output(d)
 
 
 @mcp.tool(
@@ -73,7 +72,7 @@ async def folder_get(input: FolderGetInput) -> FolderResult | None:
 @handle_tool_errors
 async def folder_update(input: FolderUpdateInput) -> FolderResult | None:
     client = ClickUpAPIClientFactory.get()
-    domain = ClickUpFolder(id=input.folder_id, name=input.name or "")
+    domain = FolderMapper.from_update_input(input)
     dto = FolderMapper.to_update_dto(domain)
     async with client:
         resp = await client.folder.update(input.folder_id, dto)
@@ -107,5 +106,5 @@ async def folder_list_in_space(input: FolderListInSpaceInput) -> FolderListResul
     items: List[FolderListItem] = []
     for f in folders:
         d = FolderMapper.to_domain(f)
-        items.append(FolderListItem(id=d.id, name=d.name))
+        items.append(FolderMapper.to_folder_list_item_output(d))
     return FolderListResult(items=items)

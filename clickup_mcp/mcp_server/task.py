@@ -25,7 +25,6 @@ from clickup_mcp.mcp_server.models.outputs.task import (
     TaskListResult,
     TaskResult,
 )
-from clickup_mcp.models.domain.task import ClickUpTask
 from clickup_mcp.models.dto.task import TaskListQuery, TaskResp
 from clickup_mcp.models.mapping.task_mapper import TaskMapper
 
@@ -45,16 +44,8 @@ from .app import mcp
 async def task_create(input: TaskCreateInput) -> TaskResult | None:
     client = ClickUpAPIClientFactory.get()
     # Input -> Domain -> DTO
-    domain = ClickUpTask(
-        id="temp",
-        name=input.name,
-        status=input.status,
-        priority=input.priority,
-        assignee_ids=list(input.assignees),
-        due_date=input.due_date,
-        time_estimate=input.time_estimate,
-        parent_id=input.parent,
-    )
+
+    domain = TaskMapper.from_create_input(input)
     dto = TaskMapper.to_create_dto(domain)
     async with client:
         resp = await client.task.create(input.list_id, dto)
@@ -124,15 +115,7 @@ async def task_list_in_list(input: TaskListInListInput) -> TaskListResult:
 @handle_tool_errors
 async def task_update(input: TaskUpdateInput) -> TaskResult | None:
     client = ClickUpAPIClientFactory.get()
-    domain = ClickUpTask(
-        id=input.task_id,
-        name=input.name or "",
-        status=input.status,
-        priority=input.priority,
-        assignee_ids=list(input.assignees) if input.assignees is not None else [],
-        due_date=input.due_date,
-        time_estimate=input.time_estimate,
-    )
+    domain = TaskMapper.from_update_input(input)
     dto = TaskMapper.to_update_dto(domain)
     async with client:
         resp = await client.task.update(input.task_id, dto)
@@ -195,29 +178,12 @@ async def task_delete(task_id: str) -> DeletionResult:
 
 
 def _taskresp_to_result(resp: TaskResp) -> TaskResult:
-    status = resp.status.status if resp.status and resp.status.status else None
-    prio: int | None = None
-    if resp.priority and resp.priority.id:
-        try:
-            prio = int(resp.priority.id)
-        except Exception:
-            prio = None
-    list_id = resp.list.id if resp.list and resp.list.id else None
-    assignees = [u.id for u in resp.assignees if u.id is not None]
-    return TaskResult(
-        id=resp.id,
-        name=resp.name,
-        status=status,
-        priority=prio,
-        list_id=list_id,
-        assignee_ids=assignees,
-        due_date_ms=resp.due_date,
-        url=resp.url,
-        parent_id=resp.parent,
-    )
+    # DTO -> Domain
+    dom = TaskMapper.to_domain(resp)
+    # Domain -> Output (pass url from DTO)
+    return TaskMapper.to_task_result_output(dom, url=resp.url)
 
 
 def _taskresp_to_list_item(resp: TaskResp) -> TaskListItem:
-    status = resp.status.status if resp.status and resp.status.status else None
-    list_id = resp.list.id if resp.list and resp.list.id else None
-    return TaskListItem(id=resp.id, name=resp.name, status=status, list_id=list_id, url=resp.url)
+    dom = TaskMapper.to_domain(resp)
+    return TaskMapper.to_task_list_item_output(dom, url=resp.url)
