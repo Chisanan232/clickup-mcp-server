@@ -34,3 +34,19 @@ def test_domain_priority_label() -> None:
     assert domain_priority_label(DomainPriority.HIGH) == "HIGH"
     assert domain_priority_label(DomainPriority.NORMAL) == "NORMAL"
     assert domain_priority_label(DomainPriority.LOW) == "LOW"
+
+
+def test_domain_priority_to_int_invalid_type_raises_with_message() -> None:
+    # Passing a non-DomainPriority should raise ValueError via the KeyError branch
+    with pytest.raises(ValueError) as excinfo:
+        domain_priority_to_int("INVALID")  # type: ignore[arg-type]
+    assert "unknown DomainPriority" in str(excinfo.value)
+
+    # Also verify with a different enum instance
+    from enum import Enum
+
+    class Fake(Enum):
+        FOO = "FOO"
+
+    with pytest.raises(ValueError):
+        domain_priority_to_int(Fake.FOO)  # type: ignore[arg-type]
