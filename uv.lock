@@ -173,7 +173,7 @@ dev = [
     { name = "aiohttp", specifier = ">=3.12.13,<4" },
     { name = "coverage", specifier = ">=7.9.2,<8" },
     { name = "httpx", specifier = ">=0.28.1,<0.29" },
-    { name = "pytest", specifier = ">=8.4.1,<9" },
+    { name = "pytest", specifier = ">=8.4.1,<10" },
     { name = "pytest-asyncio", specifier = ">=1.1.0,<2" },
     { name = "pytest-cov", specifier = ">=6.2.1,<8" },
     { name = "pytest-mock", specifier = ">=3.14.1,<4" },
