@@ -4,7 +4,7 @@ These inputs are LLM-friendly contracts used by FastMCP tools. They map to
 Domain entities first, then DTOs for ClickUp wire format.
 """
 
-from typing import List, Optional, Literal
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 

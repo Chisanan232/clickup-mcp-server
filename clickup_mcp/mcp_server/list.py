@@ -28,7 +28,6 @@ from clickup_mcp.mcp_server.models.outputs.list import (
     ListListResult,
     ListResult,
 )
-from clickup_mcp.models.domain.list import ClickUpList
 from clickup_mcp.models.mapping.list_mapper import ListMapper
 
 from .app import mcp

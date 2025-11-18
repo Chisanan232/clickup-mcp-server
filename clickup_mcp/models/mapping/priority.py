@@ -6,10 +6,15 @@ These helpers avoid duplication and handle common ClickUp variations:
 - id as suffixed string ("priority_1")
 - fallback label ("Urgent"|"High"|"Normal"|"Low")
 """
+
 from __future__ import annotations
 
 from typing import Any
-from clickup_mcp.models.domain.task_priority import DomainPriority, domain_priority_to_int
+
+from clickup_mcp.models.domain.task_priority import (
+    DomainPriority,
+    domain_priority_to_int,
+)
 
 
 def parse_priority_id(value: Any) -> int | None:

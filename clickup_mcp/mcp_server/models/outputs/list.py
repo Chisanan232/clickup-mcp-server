@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 class ListStatusOutput(BaseModel):
     name: str = Field(..., description="Status name as configured on the list", examples=["Open", "In progress"])
-    type: str | None = Field(None, description="Status type (open/closed/active/done)", examples=["open"]) 
+    type: str | None = Field(None, description="Status type (open/closed/active/done)", examples=["open"])
     color: str | None = Field(None, description="UI color (hex or token)", examples=["#6a5acd"])
     orderindex: int | None = Field(None, description="Ordering index", examples=[1])
 

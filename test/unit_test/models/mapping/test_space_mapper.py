@@ -1,12 +1,16 @@
 """Unit tests for SpaceMapper DTO ↔ Domain conversions."""
 
+from clickup_mcp.mcp_server.models.inputs.space import (
+    SpaceCreateInput,
+    SpaceUpdateInput,
+)
 from clickup_mcp.models.domain.space import ClickUpSpace
 from clickup_mcp.models.dto.space import DueDatesFeature, SpaceFeatures, SpaceResp
+
 # NOTE: Earlier single-file failure root cause and fix
 # - Eager imports in mcp_server/__init__.py + mappers importing MCP models at module level → cycle.
 # - SpaceMapper now defers MCP imports via TYPE_CHECKING and local imports inside functions.
 from clickup_mcp.models.mapping.space_mapper import SpaceMapper
-from clickup_mcp.mcp_server.models.inputs.space import SpaceCreateInput, SpaceUpdateInput
 
 
 def test_to_domain_from_resp_minimal() -> None:

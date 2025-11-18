@@ -9,9 +9,13 @@ from typing import TYPE_CHECKING
 
 from clickup_mcp.models.domain.space import ClickUpSpace
 from clickup_mcp.models.dto.space import SpaceCreate, SpaceResp, SpaceUpdate
+
 if TYPE_CHECKING:
+    from clickup_mcp.mcp_server.models.inputs.space import (
+        SpaceCreateInput,
+        SpaceUpdateInput,
+    )
     from clickup_mcp.mcp_server.models.outputs.space import SpaceListItem, SpaceResult
-    from clickup_mcp.mcp_server.models.inputs.space import SpaceCreateInput, SpaceUpdateInput
 
 
 class SpaceMapper:

@@ -1,13 +1,14 @@
 """Unit tests for ListMapper DTO ↔ Domain conversions."""
 
+from clickup_mcp.mcp_server.models.inputs.list_ import ListCreateInput, ListUpdateInput
 from clickup_mcp.models.domain.list import ClickUpList, ListStatus
 from clickup_mcp.models.dto.list import ListResp
+
 # NOTE: Why single-file runs used to fail here
 # - mcp_server/__init__.py eagerly imported tool modules, and mappers imported MCP models
 #   at module import time → circular import when importing this test alone.
 # Fix: mappers now defer MCP imports using TYPE_CHECKING + local imports inside functions.
 from clickup_mcp.models.mapping.list_mapper import ListMapper
-from clickup_mcp.mcp_server.models.inputs.list_ import ListCreateInput, ListUpdateInput
 
 
 def test_to_domain_from_resp_minimal() -> None:

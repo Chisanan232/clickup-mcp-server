@@ -18,11 +18,9 @@ from clickup_mcp.mcp_server.models.inputs.space import (
 )
 from clickup_mcp.mcp_server.models.outputs.common import DeletionResult
 from clickup_mcp.mcp_server.models.outputs.space import (
-    SpaceListItem,
     SpaceListResult,
     SpaceResult,
 )
-from clickup_mcp.models.domain.space import ClickUpSpace
 from clickup_mcp.models.mapping.space_mapper import SpaceMapper
 
 from .app import mcp

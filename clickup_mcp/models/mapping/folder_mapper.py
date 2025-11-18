@@ -9,9 +9,16 @@ from typing import TYPE_CHECKING
 
 from clickup_mcp.models.domain.folder import ClickUpFolder
 from clickup_mcp.models.dto.folder import FolderCreate, FolderResp, FolderUpdate
+
 if TYPE_CHECKING:  # only for type hints; avoids circular import at runtime
-    from clickup_mcp.mcp_server.models.inputs.folder import FolderCreateInput, FolderUpdateInput
-    from clickup_mcp.mcp_server.models.outputs.folder import FolderListItem, FolderResult
+    from clickup_mcp.mcp_server.models.inputs.folder import (
+        FolderCreateInput,
+        FolderUpdateInput,
+    )
+    from clickup_mcp.mcp_server.models.outputs.folder import (
+        FolderListItem,
+        FolderResult,
+    )
 
 
 class FolderMapper:

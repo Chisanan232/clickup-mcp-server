@@ -1,7 +1,12 @@
 """Unit tests for TaskMapper DTO ↔ Domain conversions."""
 
+import pytest
+from pydantic import ValidationError
+
+from clickup_mcp.mcp_server.models.inputs.task import TaskCreateInput, TaskUpdateInput
 from clickup_mcp.models.domain.task import ClickUpTask
 from clickup_mcp.models.dto.task import TaskResp
+
 # NOTE: Root cause for earlier single-file import failures
 # - mcp_server/__init__.py eagerly imported tool modules (task.py, etc.).
 # - mapper modules imported MCP input/output models at module import time.
@@ -10,9 +15,6 @@ from clickup_mcp.models.dto.task import TaskResp
 # - Defer MCP imports in mappers via TYPE_CHECKING and import outputs inside functions.
 #   See: clickup_mcp/models/mapping/task_mapper.py (and other mappers) for details.
 from clickup_mcp.models.mapping.task_mapper import TaskMapper
-from clickup_mcp.mcp_server.models.inputs.task import TaskCreateInput, TaskUpdateInput
-import pytest
-from pydantic import ValidationError
 
 
 def test_to_domain_from_resp_minimal() -> None:

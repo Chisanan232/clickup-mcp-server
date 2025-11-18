@@ -1,4 +1,5 @@
 """Unit tests for DomainPriority converters."""
+
 import pytest
 
 from clickup_mcp.models.domain.task_priority import (

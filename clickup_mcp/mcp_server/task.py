@@ -25,10 +25,8 @@ from clickup_mcp.mcp_server.models.outputs.task import (
     TaskListResult,
     TaskResult,
 )
-from clickup_mcp.models.domain.task import ClickUpTask
 from clickup_mcp.models.dto.task import TaskListQuery, TaskResp
 from clickup_mcp.models.mapping.task_mapper import TaskMapper
-from clickup_mcp.models.mapping.priority import normalize_priority_input
 
 from .app import mcp
 

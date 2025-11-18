@@ -3,6 +3,7 @@
 Source of truth for app-internal semantics. ClickUp provider mapping:
 1 = URGENT, 2 = HIGH, 3 = NORMAL, 4 = LOW.
 """
+
 from __future__ import annotations
 
 from enum import Enum

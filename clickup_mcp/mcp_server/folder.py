@@ -23,7 +23,6 @@ from clickup_mcp.mcp_server.models.outputs.folder import (
     FolderListResult,
     FolderResult,
 )
-from clickup_mcp.models.domain.folder import ClickUpFolder
 from clickup_mcp.models.mapping.folder_mapper import FolderMapper
 
 from .app import mcp

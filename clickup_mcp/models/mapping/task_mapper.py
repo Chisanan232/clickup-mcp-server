@@ -9,11 +9,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from clickup_mcp.models.domain.task import ClickUpTask
-from clickup_mcp.models.mapping.priority import parse_priority_obj, normalize_priority_input
 from clickup_mcp.models.dto.task import TaskCreate, TaskResp, TaskUpdate
+from clickup_mcp.models.mapping.priority import (
+    normalize_priority_input,
+    parse_priority_obj,
+)
+
 if TYPE_CHECKING:  # type hints only; avoid importing mcp_server package at runtime
     from clickup_mcp.mcp_server.models.inputs.task import TaskCreateInput, TaskUpdateInput
     from clickup_mcp.mcp_server.models.outputs.task import TaskListItem, TaskResult
+
 from clickup_mcp.models.domain.task_priority import (
     domain_priority_label,
     int_to_domain_priority,
@@ -117,6 +122,7 @@ class TaskMapper:
     def to_task_result_output(task: ClickUpTask, url: str | None = None) -> "TaskResult":
         """Map a ClickUpTask domain entity to the MCP TaskResult output model."""
         from clickup_mcp.mcp_server.models.outputs.task import TaskResult
+
         prio_payload = None
         if task.priority is not None:
             try:

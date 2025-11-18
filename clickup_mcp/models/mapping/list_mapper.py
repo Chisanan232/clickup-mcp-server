@@ -9,9 +9,13 @@ from typing import TYPE_CHECKING
 
 from clickup_mcp.models.domain.list import ClickUpList, ListStatus
 from clickup_mcp.models.dto.list import ListCreate, ListResp, ListUpdate
+
 if TYPE_CHECKING:
+    from clickup_mcp.mcp_server.models.inputs.list_ import (
+        ListCreateInput,
+        ListUpdateInput,
+    )
     from clickup_mcp.mcp_server.models.outputs.list import ListListItem, ListResult
-    from clickup_mcp.mcp_server.models.inputs.list_ import ListCreateInput, ListUpdateInput
 
 
 class ListMapper:
@@ -96,7 +100,10 @@ class ListMapper:
 
     @staticmethod
     def to_list_result_output(lst: ClickUpList) -> "ListResult":
-        from clickup_mcp.mcp_server.models.outputs.list import ListResult, ListStatusOutput
+        from clickup_mcp.mcp_server.models.outputs.list import (
+            ListResult,
+            ListStatusOutput,
+        )
 
         out = ListResult(
             id=lst.id,
