@@ -1,5 +1,6 @@
 """Unit tests for TaskMapper DTO ↔ Domain conversions."""
 
+import logging
 import pytest
 from pydantic import ValidationError
 
@@ -174,3 +175,35 @@ def test_from_update_input_assignees_empty_list_kept() -> None:
     inp = TaskUpdateInput(task_id="t1", assignees=[])
     dom = TaskMapper.from_update_input(inp)
     assert dom.assignee_ids == []
+
+
+def test_to_task_result_output_logs_error_when_priority_invalid(caplog: pytest.LogCaptureFixture) -> None:
+    # priority=5 will cause int_to_domain_priority to raise, we expect an ERROR log and priority None
+    from clickup_mcp.models.domain.task import ClickUpTask
+
+    task = ClickUpTask(id="t1", name="N", priority=5)
+    caplog.clear()
+    with caplog.at_level(logging.ERROR):
+        res = TaskMapper.to_task_result_output(task)
+    # priority should be None in output
+    assert res.priority is None
+    # an ERROR log with our message should be present
+    records = [r for r in caplog.records if r.levelno == logging.ERROR and "Failed to map priority" in r.getMessage()]
+    assert records, "expected an error log when priority mapping fails"
+    # extra fields should include task_id and priority
+    rec = records[-1]
+    assert getattr(rec, "task_id", None) == "t1"
+    assert getattr(rec, "priority", None) == 5
+
+
+def test_to_task_result_output_no_log_when_priority_none(caplog: pytest.LogCaptureFixture) -> None:
+    from clickup_mcp.models.domain.task import ClickUpTask
+
+    task = ClickUpTask(id="t2", name="N2", priority=None)
+    caplog.clear()
+    with caplog.at_level(logging.ERROR):
+        res = TaskMapper.to_task_result_output(task)
+    assert res.priority is None
+    # No error logs should be emitted
+    records = [r for r in caplog.records if r.levelno >= logging.ERROR and "Failed to map priority" in r.getMessage()]
+    assert not records
