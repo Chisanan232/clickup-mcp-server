@@ -78,9 +78,9 @@ jobs:
               && steps.install-deps.conclusion == 'success'
               && steps.sync-branches.conclusion == 'success' }}
         run: |
-          # Create a new branch with timestamp
+          # Create or reset PR branch cleanly
           git switch ${{ env.BASE_BRANCH }}
-          git checkout -b ${{ env.BRANCH_NAME }}
+          git switch -C ${{ env.BRANCH_NAME }}
           echo "[DEBUG] Check the current changes"
           git status
           
@@ -95,7 +95,7 @@ jobs:
           git commit -m "🔧 Update ClickUp API spec to version $API_VERSION"
           
           # Push changes
-          git push -u origin ${{ env.BRANCH_NAME }}
+          git push --force-with-lease -u origin ${{ env.BRANCH_NAME }}
 
       - name: Process PR template
         if: ${{ failure()
