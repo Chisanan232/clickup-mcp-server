@@ -57,8 +57,9 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           # Sync git branches
-          git fetch origin "${BASE_BRANCH}" "${BRANCH_NAME}" || true
-          git pull --rebase origin "${BRANCH_NAME}" || true
+          git fetch origin "${BASE_BRANCH}" || true
+          git switch "${BASE_BRANCH}"
+          git reset --hard "origin/${BASE_BRANCH}"
 
       - name: Check API specification changes
         id: check-api-spec
