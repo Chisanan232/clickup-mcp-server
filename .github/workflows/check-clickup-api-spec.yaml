@@ -7,11 +7,11 @@ on:
   # Allow manual triggering
   workflow_dispatch:
   # For testing and development
-#  push:
-#    branches:
-#      - "develop/ci-cd"
-#      - "**ci"
-#      - "ci**"
+  push:
+    branches:
+      - "develop/ci-cd"
+      - "**ci"
+      - "ci**"
 
 env:
   BASE_BRANCH: master
