@@ -60,7 +60,7 @@ class ListResp(BaseResponseDTO):
 
     # Statuses defined for this list (authoritative for task create/update)
     class ListStatusDTO(BaseResponseDTO):
-        name: str = Field(description="Status name as configured on the list")
+        name: str = Field(alias="status", description="Status name as configured on the list")
         type: str | None = Field(default=None, description="Status type (open/closed/active/done)")
         color: str | None = Field(default=None, description="UI color hex or token")
         orderindex: int | None = Field(default=None, description="Ordering index on the list")
