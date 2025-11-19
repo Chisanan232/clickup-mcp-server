@@ -9,7 +9,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from clickup_mcp.mcp_server.space import get_space
+from clickup_mcp.mcp_server.errors import IssueCode
+from clickup_mcp.mcp_server.models.inputs.space import (
+    SpaceCreateInput,
+    SpaceGetInput,
+    SpaceUpdateInput,
+)
+from clickup_mcp.mcp_server.space import (
+    get_space,
+    space_create,
+    space_get,
+    space_update,
+)
 from clickup_mcp.models.domain.space import ClickUpSpace
 
 
@@ -120,3 +131,46 @@ async def test_get_space_with_error(mock_get_client: MagicMock) -> None:
     # Verify mocks were called
     mock_get_client.assert_called_once()
     mock_client.space.get.assert_called_once_with(space_id)
+
+
+@pytest.mark.asyncio
+@patch("clickup_mcp.mcp_server.space.ClickUpAPIClientFactory.get")
+async def test_space_get_empty_response_maps_to_not_found(mock_get_client: MagicMock) -> None:
+    mock_client: MagicMock = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=None)
+    mock_client.space.get = AsyncMock(return_value=None)
+    mock_get_client.return_value = mock_client
+
+    env = await space_get(SpaceGetInput(space_id="s-missing"))
+    assert env.ok is False
+    assert env.issues and env.issues[0].code == IssueCode.NOT_FOUND
+
+
+@pytest.mark.asyncio
+@patch("clickup_mcp.mcp_server.space.ClickUpAPIClientFactory.get")
+async def test_space_create_empty_response_maps_to_internal(mock_get_client: MagicMock) -> None:
+    mock_client: MagicMock = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=None)
+    mock_client.space.create = AsyncMock(return_value=None)
+    mock_get_client.return_value = mock_client
+
+    env = await space_create(SpaceCreateInput(team_id="t1", name="Eng"))
+    assert env.ok is False
+    # ClickUpAPIError without explicit status maps to INTERNAL
+    assert env.issues and env.issues[0].code == IssueCode.INTERNAL
+
+
+@pytest.mark.asyncio
+@patch("clickup_mcp.mcp_server.space.ClickUpAPIClientFactory.get")
+async def test_space_update_empty_response_maps_to_not_found(mock_get_client: MagicMock) -> None:
+    mock_client: MagicMock = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=None)
+    mock_client.space.update = AsyncMock(return_value=None)
+    mock_get_client.return_value = mock_client
+
+    env = await space_update(SpaceUpdateInput(space_id="s-missing", name="New"))
+    assert env.ok is False
+    assert env.issues and env.issues[0].code == IssueCode.NOT_FOUND

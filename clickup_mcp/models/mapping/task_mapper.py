@@ -6,6 +6,7 @@ Task domain entity. Keeps DTO shapes out of the domain.
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 from clickup_mcp.models.domain.task import ClickUpTask
@@ -23,6 +24,8 @@ from clickup_mcp.models.domain.task_priority import (
     domain_priority_label,
     int_to_domain_priority,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class TaskMapper:
@@ -128,7 +131,15 @@ class TaskMapper:
             try:
                 d = int_to_domain_priority(task.priority)
                 prio_payload = {"value": task.priority, "label": domain_priority_label(d)}
-            except Exception:
+            except Exception as e:
+                logger.error(
+                    "Failed to map priority to domain label",
+                    extra={
+                        "task_id": getattr(task, "id", None),
+                        "priority": task.priority,
+                        "error": str(e),
+                    },
+                )
                 prio_payload = None
 
         return TaskResult(

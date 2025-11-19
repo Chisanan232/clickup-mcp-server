@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from clickup_mcp.mcp_server.errors import IssueCode
 from clickup_mcp.mcp_server.folder import (
     folder_create,
     folder_delete,
@@ -72,3 +73,45 @@ async def test_folder_crud_and_list_return_result_models(mock_get_client: MagicM
     l_env = await folder_list_in_space(FolderListInSpaceInput(space_id="s1"))
     assert l_env.ok is True and isinstance(l_env.result, FolderListResult)
     assert [i.id for i in l_env.result.items] == ["f1", "f1"]
+
+
+@pytest.mark.asyncio
+@patch("clickup_mcp.mcp_server.folder.ClickUpAPIClientFactory.get")
+async def test_folder_create_empty_response_maps_to_internal(mock_get_client: MagicMock) -> None:
+    mock_client: MagicMock = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=None)
+    mock_client.folder.create = AsyncMock(return_value=None)
+    mock_get_client.return_value = mock_client
+
+    env = await folder_create(FolderCreateInput(space_id="s1", name="X"))
+    assert env.ok is False
+    assert env.issues and env.issues[0].code == IssueCode.INTERNAL
+
+
+@pytest.mark.asyncio
+@patch("clickup_mcp.mcp_server.folder.ClickUpAPIClientFactory.get")
+async def test_folder_get_empty_response_maps_to_not_found(mock_get_client: MagicMock) -> None:
+    mock_client: MagicMock = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=None)
+    mock_client.folder.get = AsyncMock(return_value=None)
+    mock_get_client.return_value = mock_client
+
+    env = await folder_get(FolderGetInput(folder_id="f-missing"))
+    assert env.ok is False
+    assert env.issues and env.issues[0].code == IssueCode.NOT_FOUND
+
+
+@pytest.mark.asyncio
+@patch("clickup_mcp.mcp_server.folder.ClickUpAPIClientFactory.get")
+async def test_folder_update_empty_response_maps_to_not_found(mock_get_client: MagicMock) -> None:
+    mock_client: MagicMock = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=None)
+    mock_client.folder.update = AsyncMock(return_value=None)
+    mock_get_client.return_value = mock_client
+
+    env = await folder_update(FolderUpdateInput(folder_id="f-missing", name="New"))
+    assert env.ok is False
+    assert env.issues and env.issues[0].code == IssueCode.NOT_FOUND

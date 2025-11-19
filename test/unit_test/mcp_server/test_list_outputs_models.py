@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from clickup_mcp.mcp_server.errors import IssueCode
 from clickup_mcp.mcp_server.list import (
     list_add_task,
     list_create,
@@ -139,3 +140,47 @@ async def test_list_crud_and_listing_return_result_models(mock_get_client: Magic
     assert add_env.ok is True and isinstance(add_env.result, OperationResult) and add_env.result.ok is True
     rem_env = await list_remove_task(ListRemoveTaskInput(list_id="L1", task_id="t1"))
     assert rem_env.ok is True and isinstance(rem_env.result, OperationResult) and rem_env.result.ok is True
+
+
+@pytest.mark.asyncio
+@patch("clickup_mcp.mcp_server.list.ClickUpAPIClientFactory.get")
+async def test_list_create_empty_response_maps_to_internal(mock_get_client: MagicMock) -> None:
+    mock_client: MagicMock = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=None)
+    mock_client.list.create = AsyncMock(return_value=None)
+    mock_get_client.return_value = mock_client
+
+    env = await list_create(ListCreateInput(folder_id="f1", name="N"))
+    assert env.ok is False
+    assert env.issues and env.issues[0].code == IssueCode.INTERNAL
+
+
+@pytest.mark.asyncio
+@patch("clickup_mcp.mcp_server.list.ClickUpAPIClientFactory.get")
+async def test_list_get_empty_response_returns_ok_with_none(mock_get_client: MagicMock) -> None:
+    mock_client: MagicMock = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=None)
+    mock_client.list.get = AsyncMock(return_value=None)
+    mock_get_client.return_value = mock_client
+
+    env = await list_get(ListGetInput(list_id="L-missing"))
+    assert env.ok is True
+    assert env.result is None
+    assert env.issues == []
+
+
+@pytest.mark.asyncio
+@patch("clickup_mcp.mcp_server.list.ClickUpAPIClientFactory.get")
+async def test_list_update_empty_response_returns_ok_with_none(mock_get_client: MagicMock) -> None:
+    mock_client: MagicMock = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=None)
+    mock_client.list.update = AsyncMock(return_value=None)
+    mock_get_client.return_value = mock_client
+
+    env = await list_update(ListUpdateInput(list_id="L-missing", name="New"))
+    assert env.ok is True
+    assert env.result is None
+    assert env.issues == []
