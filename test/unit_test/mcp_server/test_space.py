@@ -10,9 +10,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from clickup_mcp.mcp_server.errors import IssueCode
-from clickup_mcp.mcp_server.models.inputs.space import SpaceGetInput, SpaceCreateInput, SpaceUpdateInput
-
-from clickup_mcp.mcp_server.space import get_space, space_get, space_create, space_update
+from clickup_mcp.mcp_server.models.inputs.space import (
+    SpaceCreateInput,
+    SpaceGetInput,
+    SpaceUpdateInput,
+)
+from clickup_mcp.mcp_server.space import (
+    get_space,
+    space_create,
+    space_get,
+    space_update,
+)
 from clickup_mcp.models.domain.space import ClickUpSpace
 
 

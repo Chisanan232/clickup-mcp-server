@@ -1,8 +1,8 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from clickup_mcp.mcp_server.errors import IssueCode
 
+from clickup_mcp.mcp_server.errors import IssueCode
 from clickup_mcp.mcp_server.folder import (
     folder_create,
     folder_delete,
