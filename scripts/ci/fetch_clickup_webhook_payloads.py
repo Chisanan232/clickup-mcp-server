@@ -11,9 +11,7 @@ from typing import Dict, Iterable, List, Tuple
 import httpx
 from bs4 import BeautifulSoup
 
-DEFAULT_FIXTURES_DIR = Path(
-    "test/contract_test/web_server/event/fixtures/clickup_webhooks"
-)
+DEFAULT_FIXTURES_DIR = Path("test/contract_test/web_server/event/fixtures/clickup_webhooks")
 
 DOC_URLS: Tuple[str, ...] = (
     "https://developer.clickup.com/docs/webhooktaskpayloads",

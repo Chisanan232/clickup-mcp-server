@@ -20,7 +20,7 @@ def test_extract_json_examples_parses_valid_event_payloads() -> None:
     valid1 = '{"event": "taskCreated", "foo": 1}'
     valid2_in_fence = """```json\n{\n  \"event\": \"listUpdated\", \n  \"bar\": true\n}\n```"""
     invalid_no_event = '{"not_event": 1}'
-    not_json = 'some text without json'
+    not_json = "some text without json"
 
     html = html_with_blocks([valid1, valid2_in_fence, invalid_no_event, not_json])
 
@@ -31,14 +31,18 @@ def test_extract_json_examples_parses_valid_event_payloads() -> None:
 
 def test_collect_remote_fixtures_dedup_and_numbering(monkeypatch: pytest.MonkeyPatch) -> None:
     # Two pages, same event appears twice with one duplicate and one distinct variant
-    page1 = html_with_blocks([
-        '{"event": "taskUpdated", "a": 1}',
-        '{"event": "taskUpdated", "a": 1}',  # dup
-    ])
-    page2 = html_with_blocks([
-        '{"event": "taskUpdated", "a": 2}',  # distinct
-        '{"event": "spaceCreated", "x": 0}',
-    ])
+    page1 = html_with_blocks(
+        [
+            '{"event": "taskUpdated", "a": 1}',
+            '{"event": "taskUpdated", "a": 1}',  # dup
+        ]
+    )
+    page2 = html_with_blocks(
+        [
+            '{"event": "taskUpdated", "a": 2}',  # distinct
+            '{"event": "spaceCreated", "x": 0}',
+        ]
+    )
 
     pages: Dict[str, str] = {
         "u1": page1,
@@ -81,7 +85,7 @@ def test_write_load_compare_roundtrip(tmp_path: Path) -> None:
     assert diff == 0
 
     # Change local to force CHANGED
-    (fixtures_dir / "taskCreated.json").write_text("{\n  \"event\": \"taskCreated\", \n  \"k\": 2\n}\n")
+    (fixtures_dir / "taskCreated.json").write_text('{\n  "event": "taskCreated", \n  "k": 2\n}\n')
     local2 = crawler.load_local_fixtures(fixtures_dir)
     diff2 = crawler.compare_fixtures(remote, local2)
     assert diff2 == 1
@@ -128,6 +132,6 @@ def test_main_noncheck_and_check_paths(monkeypatch: pytest.MonkeyPatch, tmp_path
     assert rc2 == 0
 
     # Modify file to force difference
-    (fixtures_dir / "goalCreated.json").write_text("{\n  \"event\": \"goalCreated\", \n  \"v\": 2\n}\n")
+    (fixtures_dir / "goalCreated.json").write_text('{\n  "event": "goalCreated", \n  "v": 2\n}\n')
     rc3 = crawler.main(["--fixtures-dir", str(fixtures_dir), "--check"])
     assert rc3 == 1
