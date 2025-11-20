@@ -16,11 +16,24 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures" / "clickup_webhooks"
     [
         # Task events
         ("taskCreated_full.json", ClickUpWebhookEventType.TASK_CREATED),
+        ("taskCreated.json", ClickUpWebhookEventType.TASK_CREATED),
+        ("taskUpdated.json", ClickUpWebhookEventType.TASK_UPDATED),
         ("taskDeleted.json", ClickUpWebhookEventType.TASK_DELETED),
+        ("taskStatusUpdated.json", ClickUpWebhookEventType.TASK_STATUS_UPDATED),
+        ("taskAssigneeUpdated.json", ClickUpWebhookEventType.TASK_ASSIGNEE_UPDATED),
+        ("taskDueDateUpdated.json", ClickUpWebhookEventType.TASK_DUE_DATE_UPDATED),
+        ("taskTagUpdated.json", ClickUpWebhookEventType.TASK_TAG_UPDATED),
+        ("taskMoved.json", ClickUpWebhookEventType.TASK_MOVED),
+        ("taskCommentPosted.json", ClickUpWebhookEventType.TASK_COMMENT_POSTED),
+        ("taskCommentUpdated.json", ClickUpWebhookEventType.TASK_COMMENT_UPDATED),
+        ("taskTimeEstimateUpdated.json", ClickUpWebhookEventType.TASK_TIME_ESTIMATE_UPDATED),
+        ("taskTimeTrackedUpdated.json", ClickUpWebhookEventType.TASK_TIME_TRACKED_UPDATED),
+        ("taskPriorityUpdated.json", ClickUpWebhookEventType.TASK_PRIORITY_UPDATED),
 
         # List events (multiple variants for some)
         ("listCreated.json", ClickUpWebhookEventType.LIST_CREATED),
         ("listCreated_2.json", ClickUpWebhookEventType.LIST_CREATED),
+        ("listUpdated.json", ClickUpWebhookEventType.LIST_UPDATED),
         ("listDeleted.json", ClickUpWebhookEventType.LIST_DELETED),
         ("listDeleted_2.json", ClickUpWebhookEventType.LIST_DELETED),
         ("listDeleted_3.json", ClickUpWebhookEventType.LIST_DELETED),
