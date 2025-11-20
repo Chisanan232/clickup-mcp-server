@@ -1,4 +1,5 @@
 from .enums import ClickUpWebhookEventType
+from .models import ClickUpWebhookEvent, ClickUpWebhookContext
 from .dto import (
     ClickUpWebhookRequest,
     ClickUpWebhookHistoryItem,
@@ -7,6 +8,8 @@ from .dto import (
 
 __all__ = [
     "ClickUpWebhookEventType",
+    "ClickUpWebhookEvent",
+    "ClickUpWebhookContext",
     "ClickUpWebhookRequest",
     "ClickUpWebhookHistoryItem",
     "ClickUpWebhookHistoryUser",
