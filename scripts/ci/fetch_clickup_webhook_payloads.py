@@ -5,6 +5,7 @@ import argparse
 import json
 import sys
 from dataclasses import dataclass
+import re
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
@@ -98,6 +99,26 @@ def extract_json_examples(html: str) -> List[dict]:
     return results
 
 
+_EVENT_NAME_PATTERN = re.compile(r"\b((?:task|list|folder|space|goal|keyResult)[A-Z][A-Za-z]+)\s+payload\b")
+
+
+def extract_event_names_from_text(html: str) -> List[str]:
+    """Extract event names mentioned in page text like 'taskStatusUpdated payload'.
+
+    Returns a list of unique event names in discovery order.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    text = soup.get_text(" ", strip=True)
+    seen: set[str] = set()
+    names: List[str] = []
+    for m in _EVENT_NAME_PATTERN.finditer(text):
+        name = m.group(1)
+        if name not in seen:
+            seen.add(name)
+            names.append(name)
+    return names
+
+
 def collect_remote_fixtures(urls: Iterable[str]) -> Dict[str, RemoteFixture]:
     """Return mapping filename -> RemoteFixture.
 
@@ -109,6 +130,7 @@ def collect_remote_fixtures(urls: Iterable[str]) -> Dict[str, RemoteFixture]:
     for url in urls:
         html = fetch_html(url)
         examples = extract_json_examples(html)
+        # 1) Add concrete examples from code blocks
         for payload in examples:
             event = payload.get("event")
             if not isinstance(event, str):
@@ -122,6 +144,16 @@ def collect_remote_fixtures(urls: Iterable[str]) -> Dict[str, RemoteFixture]:
             index = len(existing) + 1
             filename = f"{event}.json" if index == 1 else f"{event}_{index}.json"
             existing.append(RemoteFixture(filename=filename, json_obj=payload, normalized=normalized))
+
+        # 2) Synthesize minimal fixtures for events referenced in text but missing examples
+        referenced = extract_event_names_from_text(html)
+        for event in referenced:
+            if event not in by_event:
+                minimal = {"event": event}
+                normalized = _normalize_json(minimal)
+                by_event[event] = [
+                    RemoteFixture(filename=f"{event}.json", json_obj=minimal, normalized=normalized)
+                ]
 
     # Flatten
     out: Dict[str, RemoteFixture] = {}
