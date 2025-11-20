@@ -78,7 +78,7 @@ jobs:
     with:
       test_type: ci-script-test
       test_folder: './test/ci_script_test'
-      install_dependency_with_group: 'dev'
+      install_dependency_with_group: 'clickup-webhook-fixtures'
 
   unit-test_codecov:
 #    name: For unit test, organize and generate the testing report and upload it to Codecov
