@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from dataclasses import dataclass
-import re
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
@@ -151,9 +151,7 @@ def collect_remote_fixtures(urls: Iterable[str]) -> Dict[str, RemoteFixture]:
             if event not in by_event:
                 minimal = {"event": event}
                 normalized = _normalize_json(minimal)
-                by_event[event] = [
-                    RemoteFixture(filename=f"{event}.json", json_obj=minimal, normalized=normalized)
-                ]
+                by_event[event] = [RemoteFixture(filename=f"{event}.json", json_obj=minimal, normalized=normalized)]
 
     # Flatten
     out: Dict[str, RemoteFixture] = {}
