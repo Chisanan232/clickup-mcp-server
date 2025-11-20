@@ -1,10 +1,10 @@
-from .enums import ClickUpWebhookEventType
-from .models import ClickUpWebhookEvent, ClickUpWebhookContext
 from .dto import (
-    ClickUpWebhookRequest,
     ClickUpWebhookHistoryItem,
     ClickUpWebhookHistoryUser,
+    ClickUpWebhookRequest,
 )
+from .enums import ClickUpWebhookEventType
+from .models import ClickUpWebhookContext, ClickUpWebhookEvent
 
 __all__ = [
     "ClickUpWebhookEventType",
