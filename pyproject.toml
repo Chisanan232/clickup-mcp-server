@@ -48,6 +48,7 @@ clickup-mcp-server = "clickup_mcp.entry:main"
 release-intent = "scripts.ci.release_intent:main"
 
 [dependency-groups]
+# Dependencies for the development
 dev = [
     "pytest>=8.4.1,<10",
     "pytest-cov>=6.2.1,<8",
@@ -59,10 +60,16 @@ dev = [
     "httpx>=0.28.1,<0.29", # For FastAPI testing
     "pytest-mock>=3.14.1,<4",
 ]
+# Dependencies for the pre-commit CI in development environment
 pre-commit-ci = [
     "pre-commit>=4.2.0,<5",
     "pylint>=3.3.7,<5",
     "mypy>=1.16.1,<2",
+]
+# Dependencies just for the ClickUp webhook fixtures crawler script
+clickup-webhook-fixtures = [
+    "httpx>=0.28.1,<0.29",
+    "beautifulsoup4>=4.12.3,<5",
 ]
 
 [tool.uv]
