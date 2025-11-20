@@ -14,7 +14,37 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures" / "clickup_webhooks"
 @pytest.mark.parametrize(
     ("fixture_name", "expected_type"),
     [
+        # Task events
         ("taskCreated_full.json", ClickUpWebhookEventType.TASK_CREATED),
+        ("taskDeleted.json", ClickUpWebhookEventType.TASK_DELETED),
+
+        # List events (multiple variants for some)
+        ("listCreated.json", ClickUpWebhookEventType.LIST_CREATED),
+        ("listCreated_2.json", ClickUpWebhookEventType.LIST_CREATED),
+        ("listDeleted.json", ClickUpWebhookEventType.LIST_DELETED),
+        ("listDeleted_2.json", ClickUpWebhookEventType.LIST_DELETED),
+        ("listDeleted_3.json", ClickUpWebhookEventType.LIST_DELETED),
+
+        # Folder events
+        ("folderCreated.json", ClickUpWebhookEventType.FOLDER_CREATED),
+        ("folderUpdated.json", ClickUpWebhookEventType.FOLDER_UPDATED),
+        ("folderDeleted.json", ClickUpWebhookEventType.FOLDER_DELETED),
+
+        # Space events (with multiple variants for updated)
+        ("spaceCreated.json", ClickUpWebhookEventType.SPACE_CREATED),
+        ("spaceUpdated.json", ClickUpWebhookEventType.SPACE_UPDATED),
+        ("spaceUpdated_2.json", ClickUpWebhookEventType.SPACE_UPDATED),
+        ("spaceDeleted.json", ClickUpWebhookEventType.SPACE_DELETED),
+
+        # Goal events
+        ("goalCreated.json", ClickUpWebhookEventType.GOAL_CREATED),
+        ("goalUpdated.json", ClickUpWebhookEventType.GOAL_UPDATED),
+        ("goalDeleted.json", ClickUpWebhookEventType.GOAL_DELETED),
+
+        # Key Result events
+        ("keyResultCreated.json", ClickUpWebhookEventType.KEY_RESULT_CREATED),
+        ("keyResultUpdated.json", ClickUpWebhookEventType.KEY_RESULT_UPDATED),
+        ("keyResultDeleted.json", ClickUpWebhookEventType.KEY_RESULT_DELETED),
     ],
 )
 def test_clickup_webhook_request_parses_official_payloads(
