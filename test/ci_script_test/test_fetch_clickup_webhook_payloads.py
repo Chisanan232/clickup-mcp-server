@@ -135,3 +135,27 @@ def test_main_noncheck_and_check_paths(monkeypatch: pytest.MonkeyPatch, tmp_path
     (fixtures_dir / "goalCreated.json").write_text('{\n  "event": "goalCreated", \n  "v": 2\n}\n')
     rc3 = crawler.main(["--fixtures-dir", str(fixtures_dir), "--check"])
     assert rc3 == 1
+
+
+def test_collect_remote_fixtures_synthesizes_referenced_events(monkeypatch: pytest.MonkeyPatch) -> None:
+    # HTML page with only textual references, no code blocks
+    html = """
+    <html><body>
+    <h2>Task payloads</h2>
+    <p>This webhook is triggered when tasks are created or updated.</p>
+    <h3>taskStatusUpdated payload</h3>
+    <p>We also send the taskUpdated payload.</p>
+    <h3>taskAssigneeUpdated payload</h3>
+    </body></html>
+    """
+
+    def fake_fetch(url: str, *, timeout: float = 20.0) -> str:
+        return html
+
+    monkeypatch.setattr(crawler, "fetch_html", fake_fetch)
+
+    remote = crawler.collect_remote_fixtures(["dummy"])
+    # Should synthesize minimal fixtures for the referenced events
+    assert "taskStatusUpdated.json" in remote
+    assert "taskAssigneeUpdated.json" in remote
+    assert json.loads(remote["taskStatusUpdated.json"].normalized) == {"event": "taskStatusUpdated"}
