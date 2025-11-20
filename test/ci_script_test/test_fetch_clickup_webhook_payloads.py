@@ -49,7 +49,7 @@ def test_collect_remote_fixtures_dedup_and_numbering(monkeypatch: pytest.MonkeyP
         "u2": page2,
     }
 
-    def fake_fetch(url: str, *, timeout: float = 20.0) -> str:  # type: ignore[override]
+    def fake_fetch(url: str, *, timeout: float = 20.0) -> str:
         return pages[url]
 
     monkeypatch.setattr(crawler, "fetch_html", fake_fetch)
@@ -114,7 +114,7 @@ def test_main_noncheck_and_check_paths(monkeypatch: pytest.MonkeyPatch, tmp_path
     # Fake HTML with one payload
     html = html_with_blocks(['{"event": "goalCreated", "v": 1}'])
 
-    def fake_fetch(url: str, *, timeout: float = 20.0) -> str:  # type: ignore[override]
+    def fake_fetch(url: str, *, timeout: float = 20.0) -> str:
         return html
 
     monkeypatch.setattr(crawler, "fetch_html", fake_fetch)
