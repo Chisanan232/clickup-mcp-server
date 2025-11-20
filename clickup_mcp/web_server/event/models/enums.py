@@ -7,6 +7,15 @@ class ClickUpWebhookEventType(str, Enum):
     TASK_UPDATED = "taskUpdated"
     TASK_DELETED = "taskDeleted"
     TASK_STATUS_UPDATED = "taskStatusUpdated"
+    TASK_ASSIGNEE_UPDATED = "taskAssigneeUpdated"
+    TASK_DUE_DATE_UPDATED = "taskDueDateUpdated"
+    TASK_TAG_UPDATED = "taskTagUpdated"
+    TASK_MOVED = "taskMoved"
+    TASK_COMMENT_POSTED = "taskCommentPosted"
+    TASK_COMMENT_UPDATED = "taskCommentUpdated"
+    TASK_TIME_ESTIMATE_UPDATED = "taskTimeEstimateUpdated"
+    TASK_TIME_TRACKED_UPDATED = "taskTimeTrackedUpdated"
+    TASK_PRIORITY_UPDATED = "taskPriorityUpdated"
 
     # List events
     LIST_CREATED = "listCreated"
