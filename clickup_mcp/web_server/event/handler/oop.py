@@ -27,93 +27,93 @@ class BaseClickUpWebhookHandler(ABC):
     # ----- Hooks to be optionally overridden by subclasses -----
 
     async def on_task_status_updated(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_task_assignee_updated(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_task_due_date_updated(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_task_tag_updated(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_task_moved(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_task_comment_posted(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_task_comment_updated(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_task_time_estimate_updated(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_task_time_tracked_updated(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_task_priority_updated(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_task_created(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_task_updated(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_task_deleted(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     # List events
     async def on_list_created(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_list_updated(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_list_deleted(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     # Folder events
     async def on_folder_created(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_folder_updated(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_folder_deleted(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     # Space events
     async def on_space_created(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_space_updated(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_space_deleted(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     # Goal events
     async def on_goal_created(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_goal_updated(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_goal_deleted(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     # Key Result events
     async def on_key_result_created(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_key_result_updated(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     async def on_key_result_deleted(self, event: ClickUpWebhookEvent) -> None:  # pragma: no cover
-        pass
+        ...
 
     # ----- Internal helpers -----
 
