@@ -17,6 +17,7 @@ from clickup_mcp.mcp_server.app import mcp_factory
 from clickup_mcp.models.cli import MCPTransportType, ServerConfig
 from clickup_mcp.models.dto.health_check import HealthyCheckResponseDto
 from clickup_mcp.utils import load_environment_from_file
+from clickup_mcp.web_server.event.bootstrap import import_handler_modules_from_env
 from clickup_mcp.web_server.event.webhook import router as clickup_webhook_router
 
 _WEB_SERVER_INSTANCE: Optional[FastAPI] = None
@@ -120,6 +121,9 @@ def create_app(
 
     # Mount MCP routes
     mount_service(transport=transport)
+
+    # Import user handler modules from env if provided
+    import_handler_modules_from_env()
 
     # Root endpoint for health checks
     @web.get("/health", response_class=JSONResponse)
