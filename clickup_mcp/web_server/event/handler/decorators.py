@@ -21,7 +21,7 @@ class _HandlerFn(Protocol):
 
 def ensure_async(fn: _HandlerFn) -> AsyncHandler:
     if inspect.iscoroutinefunction(fn):
-        return fn  # type: ignore[return-value]
+        return fn
 
     async def wrapper(event: ClickUpWebhookEvent) -> None:
         fn(event)
@@ -39,9 +39,9 @@ class ClickUpEventDecorator:
                 ...
         """
 
-        def decorator(func: Handler):  # type: ignore[override]
+        def decorator(func: Handler):
             async_fn = ensure_async(func)
-            get_registry().register(event_type, async_fn)
+            get_registry().register(event_type, async_fn)  # type: ignore[arg-type]
             # Return original function to preserve user function identity
             return func
 

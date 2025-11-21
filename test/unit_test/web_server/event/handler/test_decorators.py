@@ -53,7 +53,7 @@ async def test_decorator_wraps_sync_handler():
     seen: list[int] = []
 
     @clickup_event.task_created
-    def handle_sync(_: ClickUpWebhookEvent) -> None:  # type: ignore[return-value]
+    def handle_sync(_: ClickUpWebhookEvent) -> None:
         seen.append(3)
 
     ev = ClickUpWebhookEvent(

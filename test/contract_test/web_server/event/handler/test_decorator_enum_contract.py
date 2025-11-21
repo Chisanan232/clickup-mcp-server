@@ -41,7 +41,7 @@ async def test_enum_decorator_sync_for_all_event_types(event_type: ClickUpWebhoo
     called: dict[str, ClickUpWebhookEvent] = {}
 
     @clickup_event(event_type)
-    def handle(ev: ClickUpWebhookEvent) -> None:  # type: ignore[return-value]
+    def handle(ev: ClickUpWebhookEvent) -> None:
         called["ev"] = ev
 
     ev = ClickUpWebhookEvent(
