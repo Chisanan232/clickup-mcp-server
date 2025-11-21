@@ -50,3 +50,34 @@ async def test_oop_base_registers_overrides_and_dispatches():
         f"status:{ClickUpWebhookEventType.TASK_STATUS_UPDATED}",
         f"created:{ClickUpWebhookEventType.TASK_CREATED}",
     ]
+
+
+@pytest.mark.asyncio
+async def test_oop_dunder_call_is_invoked_when_instance_is_registered():
+    seen: list[str] = []
+
+    class CallHandler(BaseClickUpWebhookHandler):
+        def __init__(self, seen_ref: list[str]) -> None:
+            self.seen = seen_ref
+            super().__init__()
+
+        async def on_task_created(self, event: ClickUpWebhookEvent) -> None:
+            self.seen.append(f"__call__:{event.type}")
+
+    h = CallHandler(seen)
+    # Clear the auto-registered per-event handlers and register the instance itself
+    reg = get_registry()
+    reg.clear()
+    reg.register(ClickUpWebhookEventType.TASK_CREATED, h)  # type: ignore[arg-type]
+
+    ev = ClickUpWebhookEvent(
+        type=ClickUpWebhookEventType.TASK_CREATED,
+        body={},
+        raw={},
+        headers={},
+        received_at=datetime.utcnow(),
+    )
+
+    await reg.dispatch(ev)
+
+    assert seen == [f"__call__:{ClickUpWebhookEventType.TASK_CREATED}"]
