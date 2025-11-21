@@ -52,6 +52,7 @@ jobs:
           set -o pipefail
           uv run python scripts/ci/fetch_clickup_webhook_payloads.py --check | tee fixtures_diff.txt
           echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
 
       - name: Prepare PR body
         if: steps.check.outputs.exit_code != '0'
