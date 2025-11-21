@@ -1,5 +1,5 @@
-from datetime import datetime
 import inspect
+from datetime import datetime
 
 import pytest
 
@@ -98,10 +98,8 @@ def test_oop_on_prefixed_methods_map_to_enum_and_resolve():
 
     base = BaseClickUpWebhookHandler()
     for hook in hook_names:
-        enum_name = hook[len("on_"):].upper()
-        assert (
-            enum_name in enum_names
-        ), f"Hook '{hook}' does not map to ClickUpWebhookEventType member '{enum_name}'"
+        enum_name = hook[len("on_") :].upper()
+        assert enum_name in enum_names, f"Hook '{hook}' does not map to ClickUpWebhookEventType member '{enum_name}'"
 
         et = ClickUpWebhookEventType[enum_name]
         resolved = base._resolve_handler(et)
@@ -118,6 +116,6 @@ def test_oop_every_enum_event_resolves_to_corresponding_on_method():
         expected_name = f"on_{et.name.lower()}"
         resolved = base._resolve_handler(et)
         assert resolved is not None, f"No handler resolved for {et}"
-        assert resolved.__name__ == expected_name, (
-            f"Resolved handler name mismatch for {et}: got {resolved.__name__}, expected {expected_name}"
-        )
+        assert (
+            resolved.__name__ == expected_name
+        ), f"Resolved handler name mismatch for {et}: got {resolved.__name__}, expected {expected_name}"
