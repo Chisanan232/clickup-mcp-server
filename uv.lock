@@ -3,6 +3,15 @@ revision = 2
 requires-python = ">=3.13"
 
 [[package]]
+name = "abstract-backend"
+version = "0.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/99/3c/2fde5cac67d4ba3b1544638acfb0ea0119c27d5d37f1e1a4dc0e2529fdee/abstract_backend-0.0.1.tar.gz", hash = "sha256:b716fc23f937cf96b4693e7663dbec143b59e6f12e7a4eccc566b99cdd73c2ed", size = 16748, upload-time = "2025-11-02T11:51:12.817Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c2/11/9b98d704f6b908a5ea60652de0bd497e58aae1e342031333076880536f95/abstract_backend-0.0.1-py3-none-any.whl", hash = "sha256:5f59200b098633d9150e41953a8fec8610047e14afdb5ef9e4986dcc6b99d485", size = 23525, upload-time = "2025-11-02T11:51:11.449Z" },
+]
+
+[[package]]
 name = "aiohappyeyeballs"
 version = "2.6.1"
 source = { registry = "https://pypi.org/simple" }
@@ -145,6 +154,7 @@ name = "clickup-mcp-server"
 version = "0.0.9"
 source = { editable = "." }
 dependencies = [
+    { name = "abstract-backend" },
     { name = "fastapi" },
     { name = "httpx" },
     { name = "mcp", extra = ["cli"] },
@@ -177,6 +187,7 @@ pre-commit-ci = [
 
 [package.metadata]
 requires-dist = [
+    { name = "abstract-backend", specifier = ">=0.0.1" },
     { name = "fastapi", specifier = ">=0.116.0" },
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.10.1" },
