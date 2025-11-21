@@ -68,7 +68,7 @@ async def test_oop_dunder_call_is_invoked_when_instance_is_registered():
     # Clear the auto-registered per-event handlers and register the instance itself
     reg = get_registry()
     reg.clear()
-    reg.register(ClickUpWebhookEventType.TASK_CREATED, h)  # type: ignore[arg-type]
+    reg.register(ClickUpWebhookEventType.TASK_CREATED, h)
 
     ev = ClickUpWebhookEvent(
         type=ClickUpWebhookEventType.TASK_CREATED,
