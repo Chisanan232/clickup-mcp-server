@@ -1,14 +1,19 @@
 from __future__ import annotations
 
-import asyncio
-import os
 from typing import Any, AsyncGenerator, Dict, List
 
 import pytest
 
 from clickup_mcp.web_server.event.handler.registry import get_registry
-from clickup_mcp.web_server.event.models import ClickUpWebhookEvent, ClickUpWebhookEventType
-from clickup_mcp.web_server.event.mq import deserialize_event, serialize_event, run_clickup_webhook_consumer
+from clickup_mcp.web_server.event.models import (
+    ClickUpWebhookEvent,
+    ClickUpWebhookEventType,
+)
+from clickup_mcp.web_server.event.mq import (
+    deserialize_event,
+    run_clickup_webhook_consumer,
+    serialize_event,
+)
 from clickup_mcp.web_server.event.sink import LocalEventSink, get_event_sink
 
 
@@ -85,7 +90,9 @@ async def test_queue_sink_produces_and_consumer_dispatches(monkeypatch: pytest.M
     reg.register(ClickUpWebhookEventType.TASK_UPDATED, handler)
 
     # Create event and call queue sink
-    from clickup_mcp.web_server.event.sink import get_event_sink  # re-import to pick env
+    from clickup_mcp.web_server.event.sink import (
+        get_event_sink,  # re-import to pick env
+    )
 
     event = ClickUpWebhookEvent(
         type=ClickUpWebhookEventType.TASK_UPDATED,

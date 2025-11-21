@@ -4,11 +4,12 @@ import asyncio
 import os
 from datetime import datetime
 from typing import Any, Dict, Optional
-from abe.backends.message_queue.loader import load_backend
-from abe.backends.message_queue.base.protocol import MessageQueueBackend
 
-from .handler import get_registry
+from abe.backends.message_queue.base.protocol import MessageQueueBackend
+from abe.backends.message_queue.loader import load_backend
+
 from .bootstrap import import_handler_modules_from_env
+from .handler import get_registry
 from .models import ClickUpWebhookEvent, ClickUpWebhookEventType
 from .sink import EventSink
 
