@@ -14,7 +14,7 @@ def test_queue_event_sink_ensure_backend_caches(monkeypatch: pytest.MonkeyPatch)
     class _DummyBackend:
         pass
 
-    def _fake_loader(name: str) -> _DummyBackend:  # type: ignore[no-redef]
+    def _fake_loader(name: str) -> _DummyBackend:
         calls.append(name)
         return _DummyBackend()
 
@@ -47,7 +47,7 @@ def test_main_parses_queue_backend_and_invokes_runner(
     # Capture the backend_name passed into the runner
     seen: List[str] = []
 
-    async def fake_runner(*, backend_name: str) -> None:  # type: ignore[no-redef]
+    async def fake_runner(*, backend_name: str) -> None:
         seen.append(backend_name)
 
     # Patch runner
