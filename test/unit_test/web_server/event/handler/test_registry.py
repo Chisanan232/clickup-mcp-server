@@ -58,3 +58,29 @@ async def test_registry_dispatch_calls_all_handlers_for_type():
     await reg.dispatch(ev)
 
     assert calls == [1, 2]
+
+
+@pytest.mark.asyncio
+async def test_registry_clear_removes_all_handlers():
+    calls: list[int] = []
+
+    async def h(_: ClickUpWebhookEvent) -> None:
+        calls.append(1)
+
+    reg = get_registry()
+    reg.register(ClickUpWebhookEventType.TASK_UPDATED, h)
+
+    # Clear all handlers and then attempt to dispatch
+    reg.clear()
+
+    ev = ClickUpWebhookEvent(
+        type=ClickUpWebhookEventType.TASK_UPDATED,
+        body={"k": "v"},
+        raw={"k": "v"},
+        headers={},
+        received_at=datetime.utcnow(),
+    )
+    await reg.dispatch(ev)
+
+    # Since we cleared the registry, the handler should not be called
+    assert calls == []
