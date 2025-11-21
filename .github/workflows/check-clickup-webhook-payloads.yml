@@ -49,13 +49,17 @@ jobs:
         id: check
         shell: bash
         run: |
+          # Disable 'errexit' so subsequent lines still run even if the check returns non-zero
+          set +e
           set -o pipefail
           uv run python scripts/ci/fetch_clickup_webhook_payloads.py --check | tee fixtures_diff.txt
-          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
-        continue-on-error: true
+          status=${PIPESTATUS[0]}
+          # Re-enable 'errexit' for following steps
+          set -e
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
 
       - name: Prepare PR body
-        if: steps.check.outputs.exit_code != '0'
+        if: steps.check.outputs.exit_code == '1'
         run: |
           {
             echo "# Refresh ClickUp webhook example payloads";
@@ -69,12 +73,12 @@ jobs:
           } > fixtures_pr_body.md
 
       - name: Update fixtures from docs
-        if: steps.check.outputs.exit_code != '0'
+        if: steps.check.outputs.exit_code == '1'
         run: |
           uv run python scripts/ci/fetch_clickup_webhook_payloads.py
 
       - name: Create Pull Request
-        if: steps.check.outputs.exit_code != '0'
+        if: steps.check.outputs.exit_code == '1'
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -87,3 +91,9 @@ jobs:
             test/contract_test/web_server/event/fixtures/clickup_webhooks/*.json
           signoff: true
           draft: false
+
+      - name: Fail when fetch failed (site down?)
+        if: steps.check.outputs.exit_code == '2'
+        run: |
+          echo "All sources failed to fetch. Failing the job." >&2
+          exit 1
