@@ -1,0 +1,114 @@
+name: Check ClickUp webhook payloads
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * *'  # Daily at 08:00 UTC
+# for develop and test only
+#  push:
+#    branches:
+#      - develop/ci-cd
+#    paths:
+#      - '.github/workflows/check-clickup-webhook-payloads.yml'
+#      - 'scripts/ci/fetch_clickup_webhook_payloads.py'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: check-clickup-webhook-payloads
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        id: setup-uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: 3.13    # NOTE: Caused by *PyO3's maximum supported version (3.13)*
+
+      - name: Activate the uv virtual environment
+        id: activate-venv
+        run: |
+          uv venv
+          . .venv/bin/activate
+
+      - name: Sync deps (clickup-webhook-fixtures group)
+        run: |
+          uv sync --group clickup-webhook-fixtures
+
+      - name: Check payloads fixture differences
+        id: check
+        shell: bash
+        run: |
+          # Disable 'errexit' so subsequent lines still run even if the check returns non-zero
+          set +e
+          set -o pipefail
+          uv run python scripts/ci/fetch_clickup_webhook_payloads.py --check | tee fixtures_diff.txt
+          status=${PIPESTATUS[0]}
+          # Re-enable 'errexit' for following steps
+          set -e
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare PR body
+        if: steps.check.outputs.exit_code == '1'
+        run: |
+          TEMPLATE=".github/webhook-payloads-pr-template.md"
+          NEW=$(grep -E '^\[NEW\]' -c fixtures_diff.txt || true)
+          CHANGED=$(grep -E '^\[CHANGED\]' -c fixtures_diff.txt || true)
+          STALE=$(grep -E '^\[STALE\]' -c fixtures_diff.txt || true)
+
+          NEW_LIST=$(grep -E '^\[NEW\]' fixtures_diff.txt | sed -E 's/^\[NEW\] +([^ ]+).*/- \1/' || true)
+          CHANGED_LIST=$(grep -E '^\[CHANGED\]' fixtures_diff.txt | sed -E 's/^\[CHANGED\] +([^ ]+).*/- \1/' || true)
+          STALE_LIST=$(grep -E '^\[STALE\]' fixtures_diff.txt | sed -E 's/^\[STALE\] +([^ ]+).*/- \1/' || true)
+          DETECTOR_OUTPUT=$(cat fixtures_diff.txt)
+
+          # Fallback to placeholders when lists are empty (to avoid sections looking odd)
+          [ -n "$NEW_LIST" ] || NEW_LIST="(none)"
+          [ -n "$CHANGED_LIST" ] || CHANGED_LIST="(none)"
+          [ -n "$STALE_LIST" ] || STALE_LIST="(none)"
+
+          sed \
+            -e "s|{{fixtures_dir}}|test/contract_test/web_server/event/fixtures/clickup_webhooks/|g" \
+            -e "s|{{new_count}}|$NEW|g" \
+            -e "s|{{changed_count}}|$CHANGED|g" \
+            -e "s|{{stale_count}}|$STALE|g" \
+            -e "s|{{new_list}}|$NEW_LIST|g" \
+            -e "s|{{changed_list}}|$CHANGED_LIST|g" \
+            -e "s|{{stale_list}}|$STALE_LIST|g" \
+            -e "s|{{detector_output}}|$DETECTOR_OUTPUT|g" \
+            "$TEMPLATE" > fixtures_pr_body.md
+
+      - name: Update fixtures from docs
+        if: steps.check.outputs.exit_code == '1'
+        run: |
+          uv run python scripts/ci/fetch_clickup_webhook_payloads.py
+
+      - name: Create Pull Request
+        if: steps.check.outputs.exit_code == '1'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: chore/refresh-clickup-webhook-payload-fixtures
+          title: 'chore(fixtures): refresh ClickUp webhook example payloads'
+          commit-message: 'chore(fixtures): refresh ClickUp webhook example payloads'
+          body-path: fixtures_pr_body.md
+          labels: maintenance, fixtures, clickup-webhooks
+          add-paths: |
+            test/contract_test/web_server/event/fixtures/clickup_webhooks/*.json
+          signoff: true
+          draft: false
+
+      - name: Fail when fetch failed (site down?)
+        if: steps.check.outputs.exit_code == '2'
+        run: |
+          echo "All sources failed to fetch. Failing the job." >&2
+          exit 1

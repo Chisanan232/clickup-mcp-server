@@ -49,12 +49,13 @@ def test_collect_remote_fixtures_dedup_and_numbering(monkeypatch: pytest.MonkeyP
         "u2": page2,
     }
 
-    def fake_fetch(url: str, *, timeout: float = 20.0) -> str:
+    def fake_fetch(url: str, *, timeout: float = 20.0, retries: int = 3, backoff: float = 1.0) -> str:
         return pages[url]
 
     monkeypatch.setattr(crawler, "fetch_html", fake_fetch)
 
-    remote = crawler.collect_remote_fixtures(["u1", "u2"])
+    remote, errs = crawler.collect_remote_fixtures(["u1", "u2"])
+    assert errs == 0
 
     # Should have: taskUpdated.json, taskUpdated_2.json, spaceCreated.json
     assert set(remote.keys()) == {"taskUpdated.json", "taskUpdated_2.json", "spaceCreated.json"}
@@ -149,13 +150,26 @@ def test_collect_remote_fixtures_synthesizes_referenced_events(monkeypatch: pyte
     </body></html>
     """
 
-    def fake_fetch(url: str, *, timeout: float = 20.0) -> str:
+    def fake_fetch(url: str, *, timeout: float = 20.0, retries: int = 3, backoff: float = 1.0) -> str:
         return html
 
     monkeypatch.setattr(crawler, "fetch_html", fake_fetch)
 
-    remote = crawler.collect_remote_fixtures(["dummy"])
+    remote, errs = crawler.collect_remote_fixtures(["dummy"])
+    assert errs == 0
     # Should synthesize minimal fixtures for the referenced events
     assert "taskStatusUpdated.json" in remote
     assert "taskAssigneeUpdated.json" in remote
     assert json.loads(remote["taskStatusUpdated.json"].normalized) == {"event": "taskStatusUpdated"}
+
+
+def test_maybe_extract_json_accepts_array_and_nested_payloads() -> None:
+    # Array of objects with event -> pick first
+    arr = '[{"event": "taskCreated", "a": 1}, {"event": "taskUpdated", "b": 2}]'
+    # Nested payload key with event
+    nested = '{"payload": {"event": "listUpdated", "x": 1}}'
+
+    html = html_with_blocks([arr, nested])
+    out = crawler.extract_json_examples(html)
+    events = sorted(p["event"] for p in out)
+    assert events == ["listUpdated", "taskCreated"]
