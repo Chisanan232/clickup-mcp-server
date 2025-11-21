@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 8 * * *'  # Daily at 08:00 UTC
-  push:
-    branches:
-      - master
-      - develop/ci-cd  # for develop and test only
-    paths:
-      - '.github/workflows/check-clickup-webhook-payloads.yml'
-      - 'scripts/ci/fetch_clickup_webhook_payloads.py'
+# for develop and test only
+#  push:
+#    branches:
+#      - develop/ci-cd
+#    paths:
+#      - '.github/workflows/check-clickup-webhook-payloads.yml'
+#      - 'scripts/ci/fetch_clickup_webhook_payloads.py'
 
 permissions:
   contents: write
