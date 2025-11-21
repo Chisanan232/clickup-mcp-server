@@ -1,4 +1,6 @@
 from .handler import (
+    clickup_event,
+    get_registry,
     ClickUpEventRegistry,
     get_registry,
 )
@@ -8,6 +10,7 @@ __all__ = [
     "ClickUpWebhookEventType",
     "ClickUpWebhookEvent",
     "ClickUpWebhookContext",
+    "clickup_event",
     "get_registry",
     "ClickUpEventRegistry",
 ]
