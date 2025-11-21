@@ -21,7 +21,9 @@ def _attach_methods():
     for et in ClickUpWebhookEventType:
         method_name = f"on_{et.name.lower()}"
 
-        async def _handler(self: RecordingHandler, event: ClickUpWebhookEvent, _et: ClickUpWebhookEventType = et) -> None:
+        async def _handler(
+            self: RecordingHandler, event: ClickUpWebhookEvent, _et: ClickUpWebhookEventType = et
+        ) -> None:
             self.calls.append((_et, event))
 
         setattr(RecordingHandler, method_name, _handler)

@@ -1,7 +1,11 @@
 from abc import ABC
 from typing import Optional
 
-from clickup_mcp.web_server.event.models import ClickUpWebhookEvent, ClickUpWebhookEventType
+from clickup_mcp.web_server.event.models import (
+    ClickUpWebhookEvent,
+    ClickUpWebhookEventType,
+)
+
 from .registry import AsyncHandler, get_registry
 
 

@@ -1,6 +1,6 @@
 from .decorators import clickup_event
-from .registry import ClickUpEventRegistry, get_registry
 from .oop import BaseClickUpWebhookHandler
+from .registry import ClickUpEventRegistry, get_registry
 
 __all__ = [
     "get_registry",

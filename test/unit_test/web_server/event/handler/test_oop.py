@@ -2,12 +2,12 @@ from datetime import datetime
 
 import pytest
 
-from clickup_mcp.web_server.event.handler import get_registry
 from clickup_mcp.web_server.event import (
     BaseClickUpWebhookHandler,
     ClickUpWebhookEvent,
     ClickUpWebhookEventType,
 )
+from clickup_mcp.web_server.event.handler import get_registry
 
 
 class MyHandler(BaseClickUpWebhookHandler):
