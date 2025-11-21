@@ -6,6 +6,7 @@ import json
 import re
 import sys
 from dataclasses import dataclass
+import time
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
@@ -30,10 +31,26 @@ class RemoteFixture:
     normalized: str
 
 
-def fetch_html(url: str, *, timeout: float = 20.0) -> str:
-    resp = httpx.get(url, timeout=timeout)
-    resp.raise_for_status()
-    return resp.text
+_DEFAULT_HEADERS = {
+    "User-Agent": "clickup-mcp-fixtures/1.0 (+https://github.com/Chisanan232/clickup-mcp-server)",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+}
+
+
+def fetch_html(url: str, *, timeout: float = 20.0, retries: int = 3, backoff: float = 1.0) -> str:
+    last_exc: Exception | None = None
+    for attempt in range(1, retries + 1):
+        try:
+            resp = httpx.get(url, timeout=timeout, headers=_DEFAULT_HEADERS, follow_redirects=True)
+            resp.raise_for_status()
+            return resp.text
+        except Exception as exc:  # pragma: no cover - network variability
+            last_exc = exc
+            if attempt >= retries:
+                break
+            time.sleep(backoff * attempt)
+    assert last_exc is not None
+    raise last_exc
 
 
 def _normalize_json(obj: dict) -> str:
@@ -63,11 +80,25 @@ def _maybe_extract_json(text: str) -> dict | None:
         parsed = json.loads(candidate)
     except json.JSONDecodeError:
         return None
-    if not isinstance(parsed, dict):
+
+    # Accept top-level dict with event
+    if isinstance(parsed, dict):
+        if isinstance(parsed.get("event"), str):
+            return parsed
+        # Sometimes nested under a key like 'payload'
+        payload = parsed.get("payload")
+        if isinstance(payload, dict) and isinstance(payload.get("event"), str):
+            return payload
         return None
-    if "event" not in parsed or not isinstance(parsed["event"], str):
+
+    # Accept list of objects; pick the first that has an 'event' string
+    if isinstance(parsed, list):
+        for item in parsed:
+            if isinstance(item, dict) and isinstance(item.get("event"), str):
+                return item
         return None
-    return parsed
+
+    return None
 
 
 def extract_json_examples(html: str) -> List[dict]:
@@ -75,21 +106,26 @@ def extract_json_examples(html: str) -> List[dict]:
     candidates: List[str] = []
     seen_texts: set[str] = set()
 
-    # Prefer <code> blocks
-    for tag in soup.find_all("code"):
+    # Prefer explicit code/pre
+    for tag in soup.select("pre code, code, pre"):
         text = tag.get_text("\n", strip=False)
         if text and text not in seen_texts:
             seen_texts.add(text)
             candidates.append(text)
 
-    # Include <pre> blocks that do not contain a <code> child
-    for tag in soup.find_all("pre"):
-        if tag.find("code") is not None:
-            continue
-        text = tag.get_text("\n", strip=False)
-        if text and text not in seen_texts:
-            seen_texts.add(text)
-            candidates.append(text)
+    # Also include common Docusaurus/Prism code wrappers
+    for sel in [
+        'div[class*="theme-code-block"]',
+        'div[class*="codeBlock"]',
+        'div[class*="prism-code"]',
+        'div[data-language="json"]',
+        'div[class*="language-json"]',
+    ]:
+        for tag in soup.select(sel):
+            text = tag.get_text("\n", strip=False)
+            if text and text not in seen_texts:
+                seen_texts.add(text)
+                candidates.append(text)
 
     results: List[dict] = []
     for txt in candidates:
@@ -119,16 +155,24 @@ def extract_event_names_from_text(html: str) -> List[str]:
     return names
 
 
-def collect_remote_fixtures(urls: Iterable[str]) -> Dict[str, RemoteFixture]:
-    """Return mapping filename -> RemoteFixture.
+def collect_remote_fixtures(urls: Iterable[str]) -> tuple[Dict[str, RemoteFixture], int]:
+    """Return (mapping filename -> RemoteFixture, fetch_error_count).
 
-    Handles deduplication and sequencing for multiple examples per event.
+    Handles deduplication and sequencing for multiple examples per event, and
+    tolerates per-URL fetch errors.
     """
     # Track unique normalized payloads per event value
     by_event: Dict[str, List[RemoteFixture]] = {}
+    fetch_errors = 0
 
     for url in urls:
-        html = fetch_html(url)
+        try:
+            html = fetch_html(url)
+        except Exception as exc:  # pragma: no cover - network variability
+            print(f"[ERROR] Failed to fetch {url}: {exc}", file=sys.stderr)
+            fetch_errors += 1
+            continue
+
         examples = extract_json_examples(html)
         # 1) Add concrete examples from code blocks
         for payload in examples:
@@ -158,7 +202,7 @@ def collect_remote_fixtures(urls: Iterable[str]) -> Dict[str, RemoteFixture]:
     for lst in by_event.values():
         for rf in lst:
             out[rf.filename] = rf
-    return out
+    return out, fetch_errors
 
 
 def load_local_fixtures(fixtures_dir: Path) -> Dict[str, str]:
@@ -236,14 +280,19 @@ def main(argv: List[str] | None = None) -> int:
     ns = parse_args(argv or sys.argv[1:])
     fixtures_dir = Path(ns.fixtures_dir)
 
-    remote = collect_remote_fixtures(DOC_URLS)
+    remote, fetch_errors = collect_remote_fixtures(DOC_URLS)
 
     if ns.check:
+        if fetch_errors == len(DOC_URLS):
+            print("[ERROR] All sources failed to fetch. Aborting.", file=sys.stderr)
+            return 2
         local = load_local_fixtures(fixtures_dir)
         diff_count = compare_fixtures(remote, local)
         return 1 if diff_count > 0 else 0
 
     # Default: write/update fixtures
+    if fetch_errors > 0:
+        print(f"[WARN] {fetch_errors} source(s) failed to fetch; writing what we have.", file=sys.stderr)
     write_fixtures(fixtures_dir, remote)
     return 0
 
