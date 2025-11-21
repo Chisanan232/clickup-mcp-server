@@ -3,9 +3,9 @@ from datetime import datetime
 import pytest
 
 from clickup_mcp.web_server.event import (
-    clickup_event,
     ClickUpWebhookEvent,
     ClickUpWebhookEventType,
+    clickup_event,
     get_registry,
 )
 

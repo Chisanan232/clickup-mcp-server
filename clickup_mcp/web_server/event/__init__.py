@@ -1,7 +1,6 @@
 from .handler import (
-    clickup_event,
-    get_registry,
     ClickUpEventRegistry,
+    clickup_event,
     get_registry,
 )
 from .models import ClickUpWebhookContext, ClickUpWebhookEvent, ClickUpWebhookEventType

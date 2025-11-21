@@ -1,4 +1,5 @@
 import pytest
+
 from clickup_mcp.web_server.event.handler import get_registry
 
 

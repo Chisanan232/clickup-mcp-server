@@ -1,7 +1,11 @@
 import inspect
 from typing import Awaitable, Callable, Protocol
 
-from clickup_mcp.web_server.event.models import ClickUpWebhookEvent, ClickUpWebhookEventType
+from clickup_mcp.web_server.event.models import (
+    ClickUpWebhookEvent,
+    ClickUpWebhookEventType,
+)
+
 from .registry import get_registry
 
 # Type aliases for clarity (human-friendly)
@@ -177,7 +181,6 @@ class ClickUpEventDecorator:
         for et in ClickUpWebhookEventType:
             base.add(et.name.lower())
         return sorted(base)
-
 
 
 clickup_event = ClickUpEventDecorator()
