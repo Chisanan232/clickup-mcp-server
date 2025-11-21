@@ -17,6 +17,7 @@ from clickup_mcp.mcp_server.app import mcp_factory
 from clickup_mcp.models.cli import MCPTransportType, ServerConfig
 from clickup_mcp.models.dto.health_check import HealthyCheckResponseDto
 from clickup_mcp.utils import load_environment_from_file
+from clickup_mcp.web_server.event.webhook import router as clickup_webhook_router
 
 _WEB_SERVER_INSTANCE: Optional[FastAPI] = None
 
@@ -52,6 +53,8 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
             allow_methods=["*"],
             allow_headers=["*"],
         )
+        # Mount ClickUp webhook endpoint(s)
+        _WEB_SERVER_INSTANCE.include_router(clickup_webhook_router)
         return _WEB_SERVER_INSTANCE
 
     @staticmethod
