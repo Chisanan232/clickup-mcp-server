@@ -1,4 +1,5 @@
 from datetime import datetime
+import inspect
 
 import pytest
 
@@ -81,3 +82,42 @@ async def test_oop_dunder_call_is_invoked_when_instance_is_registered():
     await reg.dispatch(ev)
 
     assert seen == [f"__call__:{ClickUpWebhookEventType.TASK_CREATED}"]
+
+
+def test_oop_on_prefixed_methods_map_to_enum_and_resolve():
+    prefixes = ("on_task_", "on_list_", "on_folder_", "on_space_", "on_goal_", "on_key_result_")
+    # Collect all on_* hook names from the base class
+    hook_names: list[str] = []
+    for name, member in inspect.getmembers(BaseClickUpWebhookHandler):
+        if name.startswith("on_") and any(name.startswith(p) for p in prefixes) and inspect.isfunction(member):
+            hook_names.append(name)
+
+    # Ensure every hook corresponds to an enum member, and resolve_handler maps it back
+    enum_names = {et.name for et in ClickUpWebhookEventType}
+    derived_enum_names = set()
+
+    base = BaseClickUpWebhookHandler()
+    for hook in hook_names:
+        enum_name = hook[len("on_"):].upper()
+        assert (
+            enum_name in enum_names
+        ), f"Hook '{hook}' does not map to ClickUpWebhookEventType member '{enum_name}'"
+
+        et = ClickUpWebhookEventType[enum_name]
+        resolved = base._resolve_handler(et)
+        assert resolved is not None and resolved.__name__ == hook
+        derived_enum_names.add(enum_name)
+
+    # The set of hooks should exactly cover the enum members
+    assert derived_enum_names == enum_names
+
+
+def test_oop_every_enum_event_resolves_to_corresponding_on_method():
+    base = BaseClickUpWebhookHandler()
+    for et in ClickUpWebhookEventType:
+        expected_name = f"on_{et.name.lower()}"
+        resolved = base._resolve_handler(et)
+        assert resolved is not None, f"No handler resolved for {et}"
+        assert resolved.__name__ == expected_name, (
+            f"Resolved handler name mismatch for {et}: got {resolved.__name__}, expected {expected_name}"
+        )
