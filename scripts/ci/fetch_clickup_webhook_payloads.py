@@ -64,13 +64,19 @@ def _maybe_extract_json(text: str) -> dict | None:
         s = s.strip("`")
         s = s.strip()
     # Some sites put language hints like ```json\n...``` — already stripped above
-    # Try to locate a JSON object substring
-    if not ("{" in s and "}" in s):
+    # Try to locate a JSON object/array substring
+    if not (("{" in s and "}" in s) or ("[" in s and "]" in s)):
         return None
-    # Prefer full object if it already looks proper
+    # Prefer full object or array if it already looks proper
     candidate = s
-    if not (candidate.lstrip().startswith("{") and candidate.rstrip().endswith("}")):
-        # Try to slice from first { to last }
+    # If it's an array, keep as-is for parsing
+    if s.lstrip().startswith("[") and s.rstrip().endswith("]"):
+        candidate = s
+    # Else if it's an object, keep as-is
+    elif s.lstrip().startswith("{") and s.rstrip().endswith("}"):
+        candidate = s
+    else:
+        # Try to slice from first { to last } to capture an object
         start = s.find("{")
         end = s.rfind("}")
         if start == -1 or end == -1 or end <= start:
