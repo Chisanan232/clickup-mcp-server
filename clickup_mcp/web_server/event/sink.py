@@ -23,6 +23,6 @@ def get_event_sink() -> EventSink:
     if backend == "local":
         return LocalEventSink()
     # Lazy import to avoid hard dependency at import time
-    from .mq import QueueEventSink  # type: ignore
+    from .mq import QueueEventSink
 
     return QueueEventSink(backend_name=backend)
