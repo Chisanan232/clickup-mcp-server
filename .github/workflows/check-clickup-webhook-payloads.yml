@@ -1,0 +1,88 @@
+name: Check ClickUp webhook payloads
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * *'  # Daily at 08:00 UTC
+  push:
+    branches:
+      - master
+      - develop/ci-cd  # for develop and test only
+    paths:
+      - '.github/workflows/check-clickup-webhook-payloads.yml'
+      - 'scripts/ci/fetch_clickup_webhook_payloads.py'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: check-clickup-webhook-payloads
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        id: setup-uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: 3.13    # NOTE: Caused by *PyO3's maximum supported version (3.13)*
+
+      - name: Activate the uv virtual environment
+        id: activate-venv
+        run: |
+          uv venv
+          . .venv/bin/activate
+
+      - name: Sync deps (clickup-webhook-fixtures group)
+        run: |
+          uv sync --group clickup-webhook-fixtures
+
+      - name: Check payloads fixture differences
+        id: check
+        shell: bash
+        run: |
+          set -o pipefail
+          uv run python scripts/ci/fetch_clickup_webhook_payloads.py --check | tee fixtures_diff.txt
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare PR body
+        if: steps.check.outputs.exit_code != '0'
+        run: |
+          {
+            echo "# Refresh ClickUp webhook example payloads";
+            echo;
+            echo "This PR updates the example payloads under \n\n\`test/contract_test/web_server/event/fixtures/clickup_webhooks/\`\n\nto match the latest data from the ClickUp developer documentation.";
+            echo;
+            echo "## Detector output";
+            echo '```';
+            cat fixtures_diff.txt;
+            echo '```';
+          } > fixtures_pr_body.md
+
+      - name: Update fixtures from docs
+        if: steps.check.outputs.exit_code != '0'
+        run: |
+          uv run python scripts/ci/fetch_clickup_webhook_payloads.py
+
+      - name: Create Pull Request
+        if: steps.check.outputs.exit_code != '0'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: chore/refresh-clickup-webhook-fixtures
+          title: 'chore(fixtures): refresh ClickUp webhook example payloads'
+          commit-message: 'chore(fixtures): refresh ClickUp webhook example payloads'
+          body-path: fixtures_pr_body.md
+          labels: maintenance, fixtures, clickup-webhooks
+          add-paths: |
+            test/contract_test/web_server/event/fixtures/clickup_webhooks/*.json
+          signoff: true
+          draft: false
