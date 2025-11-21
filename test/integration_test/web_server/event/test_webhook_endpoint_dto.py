@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -8,12 +9,17 @@ from clickup_mcp.web_server.event.webhook import router as webhook_router
 FIXTURE_DIR = Path(__file__).parents[3] / "contract_test" / "web_server" / "event" / "fixtures" / "clickup_webhooks"
 
 
-def test_clickup_webhook_endpoint_accepts_official_payload_task_created():
+# Discover all JSON fixtures under the directory at collection time
+_FILES = sorted(FIXTURE_DIR.glob("*.json")) if FIXTURE_DIR.exists() else []
+
+
+@pytest.mark.parametrize("fixture_path", _FILES, ids=[p.name for p in _FILES] if _FILES else None)
+def test_clickup_webhook_endpoint_accepts_official_payload(fixture_path: Path) -> None:
     app = FastAPI()
     app.include_router(webhook_router)
     client = TestClient(app)
 
-    body = (FIXTURE_DIR / "taskCreated.json").read_text()
+    body = fixture_path.read_text()
     resp = client.post(
         "/webhook/clickup",
         data=body,
