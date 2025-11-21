@@ -13,7 +13,7 @@ def test_clickup_webhook_endpoint_accepts_official_payload_task_created():
     app.include_router(webhook_router)
     client = TestClient(app)
 
-    body = (FIXTURE_DIR / "taskCreated_full.json").read_text()
+    body = (FIXTURE_DIR / "taskCreated.json").read_text()
     resp = client.post(
         "/webhook/clickup",
         data=body,

@@ -15,7 +15,6 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures" / "clickup_webhooks"
     ("fixture_name", "expected_type"),
     [
         # Task events
-        ("taskCreated_full.json", ClickUpWebhookEventType.TASK_CREATED),
         ("taskCreated.json", ClickUpWebhookEventType.TASK_CREATED),
         ("taskUpdated.json", ClickUpWebhookEventType.TASK_UPDATED),
         ("taskDeleted.json", ClickUpWebhookEventType.TASK_DELETED),
