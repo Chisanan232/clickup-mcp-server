@@ -1,10 +1,11 @@
-from datetime import datetime
-
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from clickup_mcp.web_server.event.handler import get_registry
-from clickup_mcp.web_server.event.models import ClickUpWebhookEvent, ClickUpWebhookEventType
+from clickup_mcp.web_server.event.models import (
+    ClickUpWebhookEvent,
+    ClickUpWebhookEventType,
+)
 from clickup_mcp.web_server.event.webhook import router
 
 

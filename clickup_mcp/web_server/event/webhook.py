@@ -1,11 +1,10 @@
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 
-from .models import ClickUpWebhookEvent, ClickUpWebhookEventType
+from .models import ClickUpWebhookEvent
 from .models.dto import ClickUpWebhookRequest
 from .sink import get_event_sink
-
 
 router = APIRouter(tags=["webhooks"], prefix="/webhook")
 
