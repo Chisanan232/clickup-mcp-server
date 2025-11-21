@@ -3,8 +3,11 @@ from typing import Any
 
 import pytest
 
-from clickup_mcp.web_server.event.models import ClickUpWebhookEvent, ClickUpWebhookEventType
 from clickup_mcp.web_server.event.handler import get_registry
+from clickup_mcp.web_server.event.models import (
+    ClickUpWebhookEvent,
+    ClickUpWebhookEventType,
+)
 
 
 @pytest.mark.asyncio

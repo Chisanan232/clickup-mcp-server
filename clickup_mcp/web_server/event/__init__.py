@@ -1,8 +1,8 @@
-from .models import ClickUpWebhookEventType, ClickUpWebhookEvent, ClickUpWebhookContext
 from .handler import (
-    get_registry,
     ClickUpEventRegistry,
+    get_registry,
 )
+from .models import ClickUpWebhookContext, ClickUpWebhookEvent, ClickUpWebhookEventType
 
 __all__ = [
     "ClickUpWebhookEventType",
@@ -11,4 +11,3 @@ __all__ = [
     "get_registry",
     "ClickUpEventRegistry",
 ]
-

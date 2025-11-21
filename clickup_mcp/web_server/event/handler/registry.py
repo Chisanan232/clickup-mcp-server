@@ -1,7 +1,10 @@
 from collections import defaultdict
 from typing import Awaitable, Callable, Dict, List
 
-from clickup_mcp.web_server.event.models import ClickUpWebhookEvent, ClickUpWebhookEventType
+from clickup_mcp.web_server.event.models import (
+    ClickUpWebhookEvent,
+    ClickUpWebhookEventType,
+)
 
 AsyncHandler = Callable[[ClickUpWebhookEvent], Awaitable[None]]
 
