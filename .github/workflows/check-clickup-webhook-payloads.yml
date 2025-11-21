@@ -82,7 +82,7 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: chore/refresh-clickup-webhook-fixtures
+          branch: chore/refresh-clickup-webhook-payload-fixtures
           title: 'chore(fixtures): refresh ClickUp webhook example payloads'
           commit-message: 'chore(fixtures): refresh ClickUp webhook example payloads'
           body-path: fixtures_pr_body.md
