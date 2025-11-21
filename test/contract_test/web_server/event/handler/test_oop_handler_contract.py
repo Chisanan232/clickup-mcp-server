@@ -17,7 +17,7 @@ class RecordingHandler(BaseClickUpWebhookHandler):
 
 
 # Dynamically attach on_<event> methods for all enum members before instantiation
-def _attach_methods():
+def _attach_methods() -> None:
     for et in ClickUpWebhookEventType:
         method_name = f"on_{et.name.lower()}"
 
