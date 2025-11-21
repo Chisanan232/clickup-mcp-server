@@ -34,6 +34,7 @@ dependencies = [
     "uvicorn>=0.35.0",
     "httpx>=0.27.0",
     "python-dotenv>=1.0.0",
+    "abstract-backend>=0.0.1",
 ]
 
 [project.urls]
@@ -45,6 +46,7 @@ Changelog = "https://chisanan232.github.io/clickup-mcp-server/docs/next/changelo
 
 [project.scripts]
 clickup-mcp-server = "clickup_mcp.entry:main"
+clickup-webhook-consumer = "clickup_mcp.web_server.event.mq:main"
 release-intent = "scripts.ci.release_intent:main"
 
 [dependency-groups]
