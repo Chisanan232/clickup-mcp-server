@@ -59,10 +59,15 @@ class _FakeBackend:
     def seed(self, payload: Dict[str, Any]) -> None:
         self._consume_seed.append(payload)
 
-    async def publish(self, *, topic: str, key: str, payload: Dict[str, Any]) -> None:
+    async def publish(
+        self, *, topic: str | None = None, key: str | None = None, payload: Dict[str, Any] | None = None
+    ) -> None:
+        # Support both legacy (topic+key+payload) and new (key-as-topic + payload) calling styles
         self.published.append({"topic": topic, "key": key, "payload": payload})
 
-    async def consume(self, *, topic: str) -> AsyncGenerator[Dict[str, Any], None]:
+    async def consume(
+        self, *, topic: str | None = None, group: str | None = None
+    ) -> AsyncGenerator[Dict[str, Any], None]:
         for v in list(self._consume_seed):
             yield v
 
@@ -111,8 +116,7 @@ async def test_queue_sink_produces_and_consumer_dispatches(monkeypatch: pytest.M
     # Assert published payload
     assert len(fake_backend.published) == 1
     published = fake_backend.published[0]
-    assert published["topic"] == "clickup.webhooks"
-    assert published["key"] == "d1"
+    assert published["key"] == "clickup.webhooks"
     assert published["payload"] == serialize_event(event)
 
     # Seed consumer with the published payload and run consumer once
