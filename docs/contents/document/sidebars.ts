@@ -27,6 +27,7 @@ const sidebars: SidebarsConfig = {
           label: 'Web Server',
           items: [
             'api-references/web-server/web-apis',
+            'api-references/web-server/webhooks-integration',
             {
               type: 'category',
               label: 'Endpoints',
