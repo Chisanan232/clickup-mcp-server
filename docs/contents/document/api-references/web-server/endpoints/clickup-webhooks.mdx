@@ -1,0 +1,279 @@
+---
+id: clickup-webhooks
+title: ClickUp Webhook Endpoint
+sidebar_label: ClickUp Webhooks
+---
+
+This page documents the ClickUp webhook HTTP endpoint exposed by the web server and how to run it in local and queue-backed modes.
+
+## Endpoint
+
+```
+POST /webhook/clickup
+```
+
+Receives ClickUp webhook payloads and returns a simple acknowledgement when accepted.
+
+## Request
+
+```json
+{
+  "event": "taskCreated",
+  "task_id": "task_123",
+  "list_id": "list_123",
+  "space_id": "space_123",
+  "webhook_id": "wh_123",
+  "history_items": []
+}
+```
+| Field                                                         | Type   | Required | Description                                             |
+|---------------------------------------------------------------|--------|----------|---------------------------------------------------------|
+| event                                                         | string | yes      | ClickUp event name; mapped to `ClickUpWebhookEventType` |
+| webhook_id                                                    | string | no       | ClickUp webhook id                                      |
+| task_id, list_id, folder_id, space_id, goal_id, key_result_id | string | depends  | Identifiers present depending on the event type         |
+| history_items                                                 | array  | no       | Change history items when included by ClickUp           |
+
+Extra fields from ClickUp are allowed and preserved (tolerant parsing in DTO).
+
+### Examples by feature level
+
+#### Task
+```json
+{
+  "event": "taskUpdated",
+  "webhook_id": "wh_123",
+  "task_id": "task_123",
+  "list_id": "list_123",
+  "folder_id": "folder_123",
+  "space_id": "space_123",
+  "history_items": [
+    { "field": "status", "before": "Open", "after": "In progress" },
+    { "field": "assignees", "added": ["user_1"], "removed": [] }
+  ],
+  "data": {
+    "name": "Fix critical bug",
+    "status": { "status": "in progress", "orderindex": 1 },
+    "priority": 3,
+    "due_date": "2025-11-20T10:20:30Z",
+    "tags": ["backend", "urgent"]
+  }
+}
+```
+
+| Field         | Type   | Required | Description                                    |
+|---------------|--------|----------|------------------------------------------------|
+| event         | string | yes      | ClickUp event name                             |
+| webhook_id    | string | no       | Webhook identifier                             |
+| task_id       | string | yes      | Task identifier                                |
+| list_id       | string | no       | Parent list identifier                         |
+| folder_id     | string | no       | Parent folder identifier                       |
+| space_id      | string | no       | Parent space identifier                        |
+| history_items | array  | no       | Change history entries provided by ClickUp     |
+| data          | object | no       | Additional event data (status, priority, etc.) |
+
+#### List
+```json
+{
+  "event": "listUpdated",
+  "webhook_id": "wh_123",
+  "list_id": "list_123",
+  "space_id": "space_123",
+  "data": { "name": "Sprint Backlog", "archived": false }
+}
+```
+
+| Field      | Type   | Required | Description                                 |
+|------------|--------|----------|---------------------------------------------|
+| event      | string | yes      | ClickUp event name                          |
+| webhook_id | string | no       | Webhook identifier                          |
+| list_id    | string | yes      | List identifier                             |
+| space_id   | string | no       | Parent space identifier                     |
+| data       | object | no       | Additional list info (name, archived, etc.) |
+
+#### Folder
+```json
+{
+  "event": "folderUpdated",
+  "webhook_id": "wh_123",
+  "folder_id": "folder_123",
+  "space_id": "space_123",
+  "data": { "name": "Product Roadmap" }
+}
+```
+
+| Field      | Type   | Required | Description                  |
+|------------|--------|----------|------------------------------|
+| event      | string | yes      | ClickUp event name           |
+| webhook_id | string | no       | Webhook identifier           |
+| folder_id  | string | yes      | Folder identifier            |
+| space_id   | string | no       | Parent space identifier      |
+| data       | object | no       | Folder metadata (e.g., name) |
+
+#### Space
+```json
+{
+  "event": "spaceUpdated",
+  "webhook_id": "wh_123",
+  "space_id": "space_123",
+  "data": { "name": "Engineering", "private": true }
+}
+```
+
+| Field    | Type   | Required | Description |
+|----------|--------|----------|-------------|
+| event    | string | yes      | ClickUp event name |
+| webhook_id | string | no     | Webhook identifier |
+| space_id | string | yes      | Space identifier |
+| data     | object | no       | Space metadata (e.g., name, privacy) |
+
+#### Goal
+```json
+{
+  "event": "goalUpdated",
+  "webhook_id": "wh_123",
+  "goal_id": "goal_123",
+  "data": { "name": "Q4 Revenue", "percent_completed": 0.42 }
+}
+```
+
+| Field      | Type   | Required | Description          |
+|------------|--------|----------|----------------------|
+| event      | string | yes      | ClickUp event name   |
+| webhook_id | string | no       | Webhook identifier   |
+| goal_id    | string | yes      | Goal identifier      |
+| data       | object | no       | Goal progress fields |
+
+#### Key Result
+```json
+{
+  "event": "keyResultUpdated",
+  "webhook_id": "wh_123",
+  "key_result_id": "kr_123",
+  "goal_id": "goal_123",
+  "data": { "name": "Close 50 enterprise deals", "current": 17, "target": 50 }
+}
+```
+
+| Field         | Type   | Required | Description            |
+|---------------|--------|----------|------------------------|
+| event         | string | yes      | ClickUp event name     |
+| webhook_id    | string | no       | Webhook identifier     |
+| key_result_id | string | yes      | Key result identifier  |
+| goal_id       | string | no       | Parent goal identifier |
+| data          | object | no       | Key result metrics     |
+
+### More details and references
+
+:::note Webhook payload references
+- Official docs: [Task](https://developer.clickup.com/docs/webhooktaskpayloads), [List](https://developer.clickup.com/docs/webhooklistpayloads), [Folder](https://developer.clickup.com/docs/webhookfolderpayloads), [Space](https://developer.clickup.com/docs/webhookspacepayloads), [Goal/Key Result](https://developer.clickup.com/docs/webhookgoaltargetpayloads)
+- Payload shape varies by event. Unknown fields are tolerated and preserved.
+- Example payloads used in tests live in `test/contract_test/web_server/event/fixtures/clickup_webhooks/` and are auto-refreshed by CI.
+:::
+
+## Response
+
+```json
+{ "ok": true }
+```
+
+| Field | Type    | Description                          |
+|-------|---------|--------------------------------------|
+| ok    | boolean | Always true when payload is accepted |
+
+## Event processing modes
+
+The endpoint is implemented in `clickup_mcp/web_server/event/webhook.py`. It converts the DTO to a domain event `ClickUpWebhookEvent` and forwards it to an Event Sink selected by `QUEUE_BACKEND`.
+
+- `QUEUE_BACKEND=local`
+  - Uses `LocalEventSink`, dispatches directly to in-process handlers via the registry.
+- `QUEUE_BACKEND=<backend>` (e.g. `kafka`, `redis`)
+  - Uses `QueueEventSink` from `abstract-backend` to publish to topic `clickup.webhooks`.
+  - A separate consumer process handles the events (see below).
+
+## Environment variables
+
+- `QUEUE_BACKEND`
+  - `local` for in-process handling (default).
+  - Any other supported backend name (provided by the `abstract-backend` plugin) enables queue mode.
+- `CLICKUP_WEBHOOK_HANDLER_MODULES`
+  - Comma-separated module list to import at startup. Importing registers handlers.
+  - Example: `CLICKUP_WEBHOOK_HANDLER_MODULES="myproj.clickup_handlers.oop,myproj.clickup_handlers.func"`
+
+## Writing handlers
+
+You can author handlers using either OOP or decorator style. Both register into the central registry and work in both modes.
+
+### OOP style
+
+```python
+from clickup_mcp.web_server.event.handler.oop import BaseClickUpWebhookHandler
+from clickup_mcp.web_server.event.models import ClickUpWebhookEvent
+
+class MyHandler(BaseClickUpWebhookHandler):
+    async def on_task_status_updated(self, event: ClickUpWebhookEvent) -> None:
+        # your logic
+        ...
+
+    async def on_task_created(self, event: ClickUpWebhookEvent) -> None:
+        ...
+```
+
+### Decorator style
+
+```python
+from clickup_mcp.web_server.event.handler.decorators import clickup_event
+from clickup_mcp.web_server.event.models.enums import ClickUpWebhookEventType
+from clickup_mcp.web_server.event.models import ClickUpWebhookEvent, ClickUpWebhookContext
+
+@clickup_event(ClickUpWebhookEventType.TASK_STATUS_UPDATED)
+async def handle_status(evt: ClickUpWebhookEvent, ctx: ClickUpWebhookContext) -> None:
+    ...
+
+@clickup_event.task_created
+async def handle_created(evt: ClickUpWebhookEvent, ctx: ClickUpWebhookContext) -> None:
+    ...
+```
+
+## Running locally
+
+```bash
+export QUEUE_BACKEND=local
+export CLICKUP_WEBHOOK_HANDLER_MODULES="myproj.clickup_handlers.oop,myproj.clickup_handlers.func"
+
+# Start your server (example CLI)
+clickup-mcp-server --integrated --transport sse --port 8000
+```
+
+## Running with a queue
+
+Install and configure an `abstract-backend` queue plugin (e.g. Kafka/Redis) and set its env variables as required by the plugin.
+
+1) Webhook server (publishes to queue):
+
+```bash
+export QUEUE_BACKEND=kafka
+export CLICKUP_WEBHOOK_HANDLER_MODULES="myproj.clickup_handlers.oop,myproj.clickup_handlers.func"
+# plus plugin-specific env vars like brokers, credentials, etc.
+
+clickup-mcp-server --integrated --transport sse --port 8000
+```
+
+2) Consumer (subscribes and dispatches):
+
+```bash
+export QUEUE_BACKEND=kafka
+export CLICKUP_WEBHOOK_HANDLER_MODULES="myproj.clickup_handlers.oop,myproj.clickup_handlers.func"
+
+clickup-webhook-consumer --queue-backend kafka
+```
+
+## Event types
+
+Supported `ClickUpWebhookEventType` values include all task/list/folder/space/goal/keyResult events mirrored from ClickUp docs and fixtures, for example:
+
+- Task: `taskCreated`, `taskUpdated`, `taskDeleted`, `taskStatusUpdated`, `taskAssigneeUpdated`, `taskDueDateUpdated`, `taskTagUpdated`, `taskMoved`, `taskCommentPosted`, `taskCommentUpdated`, `taskTimeEstimateUpdated`, `taskTimeTrackedUpdated`, `taskPriorityUpdated`
+- List: `listCreated`, `listUpdated`, `listDeleted`
+- Folder: `folderCreated`, `folderUpdated`, `folderDeleted`
+- Space: `spaceCreated`, `spaceUpdated`, `spaceDeleted`
+- Goal: `goalCreated`, `goalUpdated`, `goalDeleted`
+- Key Result: `keyResultCreated`, `keyResultUpdated`, `keyResultDeleted`

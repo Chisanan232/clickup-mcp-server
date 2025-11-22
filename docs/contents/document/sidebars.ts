@@ -32,6 +32,7 @@ const sidebars: SidebarsConfig = {
               label: 'Endpoints',
               items: [
                 'api-references/web-server/endpoints/web-api-health-check',
+                'api-references/web-server/endpoints/clickup-webhooks',
               ],
             },
           ],
