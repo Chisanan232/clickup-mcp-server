@@ -1,0 +1,312 @@
+---
+id: webhooks-architecture
+title: Webhooks Architecture Deep Dive
+sidebar_label: Webhooks Architecture
+---
+
+This page is a deeper, developer-focused view of the ClickUp Webhooks architecture: packages, classes, functions, and their relationships. It complements the high-level pipeline doc and endpoint docs with more detailed UML.
+
+:::tip Related docs
+- Pipeline overview: [Webhooks Pipeline](./webhooks-pipeline.mdx)
+- Endpoint reference: [ClickUp Webhook Endpoint](/docs/next/api-references/web-server/endpoints/clickup-webhooks)
+- Integration guide: [Webhooks Integration](/docs/next/api-references/web-server/webhooks-integration)
+:::
+
+## Package structure and responsibilities
+
+The webhook features are organized under `clickup_mcp.web_server.event`.
+
+```text
+clickup_mcp/web_server/event/
+  ├─ webhook.py            # FastAPI router: POST /webhook/clickup
+  ├─ sink.py               # EventSink abstraction + selector
+  ├─ mq.py                 # Queue sink + (de)serialization + consumer CLI
+  ├─ bootstrap.py          # Handler auto-discovery via env var
+  ├─ handler/
+  │   ├─ registry.py       # Central registry (event_type -> handlers)
+  │   ├─ oop.py            # BaseClickUpWebhookHandler (OOP style)
+  │   └─ decorators.py     # @clickup_event decorator API (functional style)
+  └─ models/
+      ├─ dto.py            # ClickUpWebhookRequest + history models
+      ├─ enums.py          # ClickUpWebhookEventType
+      └─ models.py         # ClickUpWebhookEvent + ClickUpWebhookContext
+```
+
+## Component diagram (packages)
+
+The following component diagram shows how the endpoint, models, handler registry, and sinks interact.
+
+```mermaid
+graph LR
+  subgraph Endpoint[webhook.py]
+    WS["POST /webhook/clickup<br/>clickup_webhook"]
+  end
+
+  subgraph Models[models/]
+    DTO[ClickUpWebhookRequest]
+    EVT[ClickUpWebhookEvent]
+    ENUM[ClickUpWebhookEventType]
+  end
+
+  subgraph Handlers[handler/]
+    REG[ClickUpEventRegistry]
+    OOP[BaseClickUpWebhookHandler]
+    DEC[clickup_event Decorator]
+  end
+
+  subgraph Sinks[sink.py / mq.py]
+    LS[LocalEventSink]
+    QS[QueueEventSink]
+  end
+
+  WS -- validates to --> DTO
+  WS -- builds --> EVT
+  WS -- forwards --> LS
+  WS -. queue-mode .-> QS
+
+  LS -- dispatch(event) --> REG
+  QS -- produce --> REG
+
+  style Endpoint fill:#BFDBFE,stroke:#1D4ED8,stroke-width:2px,color:#111827
+  style Models fill:#D1FAE5,stroke:#065F46,stroke-width:2px,color:#111827
+  style Handlers fill:#FDE68A,stroke:#B45309,stroke-width:2px,color:#111827
+  style Sinks fill:#FCA5A5,stroke:#7F1D1D,stroke-width:2px,color:#111827
+  style WS stroke-width:2px
+```
+
+### Component diagram description
+
+- **Endpoint**: Validates request DTO and builds a normalized `ClickUpWebhookEvent`.
+- **Handlers**: A central `ClickUpEventRegistry` dispatches to either OOP handlers or decorator-registered functions.
+- **Sinks**: `LocalEventSink` dispatches in-process. `QueueEventSink` publishes to a queue for async processing.
+- **Routing**: `QUEUE_BACKEND` selects local or queue-mode without changing endpoint/handler code.
+
+## Class relationships (core types)
+
+```mermaid
+classDiagram
+  class ClickUpWebhookEventType {
+    TASK_CREATED
+    TASK_UPDATED
+    TASK_DELETED
+    TASK_STATUS_UPDATED
+    TASK_ASSIGNEE_UPDATED
+    TASK_DUE_DATE_UPDATED
+    TASK_TAG_UPDATED
+    TASK_MOVED
+    TASK_COMMENT_POSTED
+    TASK_COMMENT_UPDATED
+    TASK_TIME_ESTIMATE_UPDATED
+    TASK_TIME_TRACKED_UPDATED
+    TASK_PRIORITY_UPDATED
+    LIST_CREATED
+    LIST_UPDATED
+    LIST_DELETED
+    FOLDER_CREATED
+    FOLDER_UPDATED
+    FOLDER_DELETED
+    SPACE_CREATED
+    SPACE_UPDATED
+    SPACE_DELETED
+    GOAL_CREATED
+    GOAL_UPDATED
+    GOAL_DELETED
+    KEY_RESULT_CREATED
+    KEY_RESULT_UPDATED
+    KEY_RESULT_DELETED
+  }
+
+  class ClickUpWebhookEvent {
+    +type: ClickUpWebhookEventType
+    +body: dict
+    +raw: dict
+    +headers: dict
+    +received_at: datetime
+    +delivery_id: string
+  }
+
+  class ClickUpWebhookContext {
+    +extras: dict
+  }
+
+  class ClickUpWebhookRequest {
+    +event: ClickUpWebhookEventType
+    +webhook_id: string
+    +task_id: string
+    +list_id: string
+    +folder_id: string
+    +space_id: string
+    +goal_id: string
+    +key_result_id: string
+    +history_items: list
+  }
+
+  class ClickUpEventRegistry {
+    -handlers: dict
+    +register(type, handler)
+    +dispatch(event)
+    +clear()
+  }
+
+  class EventSink {
+    +handle(event)
+  }
+
+  class LocalEventSink {
+    +handle(event)
+  }
+
+  class QueueEventSink {
+    -backend_name: string
+    -backend: MessageQueueBackend
+    +handle(event)
+  }
+
+  class BaseClickUpWebhookHandler {
+    +__call__(event)
+    +on_task_created(event)
+    +on_task_updated(event)
+    -_register_overridden_handlers()
+    -_resolve_handler(event_type)
+  }
+
+  class ClickUpEventDecorator {
+    +__call__(event_type)
+    +task_created(fn)
+    +task_updated(fn)
+    +task_deleted(fn)
+    +list_created(fn)
+    +list_updated(fn)
+    +list_deleted(fn)
+    +folder_created(fn)
+    +folder_updated(fn)
+    +folder_deleted(fn)
+    +space_created(fn)
+    +space_updated(fn)
+    +space_deleted(fn)
+    +goal_created(fn)
+    +goal_updated(fn)
+    +goal_deleted(fn)
+    +key_result_created(fn)
+    +key_result_updated(fn)
+    +key_result_deleted(fn)
+  }
+
+  ClickUpWebhookRequest --> ClickUpWebhookEventType
+  ClickUpWebhookEvent --> ClickUpWebhookEventType
+  EventSink <|.. LocalEventSink
+  EventSink <|.. QueueEventSink
+  LocalEventSink --> ClickUpEventRegistry : dispatch(event)
+  BaseClickUpWebhookHandler --> ClickUpEventRegistry : registers overridden hooks
+  ClickUpEventDecorator --> ClickUpEventRegistry : registers decorated fn
+```
+
+### Class diagram description
+
+- **ClickUpWebhookRequest** → validated input from HTTP; tolerant to extra fields.
+- **ClickUpWebhookEvent** → stable, normalized event for all handlers; carries type, body, headers, timestamps, delivery id.
+- **ClickUpEventRegistry** → maps `ClickUpWebhookEventType` to a list of handlers; provides `register` and `dispatch`.
+- **EventSink** → abstraction; `LocalEventSink` dispatches directly; `QueueEventSink` serializes and publishes.
+- **BaseClickUpWebhookHandler** → OOP hooks per event; auto-registers overridden methods into the registry.
+- **ClickUpEventDecorator** → functional style; registers decorated functions to the registry.
+
+## Object diagrams (runtime views)
+
+### Local mode (in-process)
+
+```mermaid
+graph LR
+  CU[ClickUp Service]
+  WS[Endpoint WS]
+  DTO[ClickUpWebhookRequest]
+  EVT[ClickUpWebhookEvent]
+  S[LocalEventSink]
+  R[ClickUpEventRegistry]
+  H1[Handler A]
+  H2[Handler B]
+
+  CU --> WS
+  WS --> DTO
+  WS --> EVT
+  WS --> S
+  S --> R
+  R --> H1
+  R --> H2
+```
+
+Description (Local):
+- A request from ClickUp hits the Endpoint, which creates DTO and Event objects.
+- Local sink forwards the Event to the Registry which invokes all subscribed handlers in-process.
+
+### Queue-backed mode
+
+```mermaid
+graph LR
+  CU[ClickUp Service]
+  WS[Endpoint WS]
+  EVT[ClickUpWebhookEvent]
+  PS[QueueEventSink]
+  Q[Message Queue]
+  C[Consumer Process]
+  R[ClickUpEventRegistry]
+  H[Handlers]
+
+  CU --> WS
+  WS --> EVT
+  WS --> PS
+  PS --> Q
+  C --> Q
+  C --> R
+  R --> H
+```
+
+Description (Queue):
+- Endpoint creates the Event and sends it to the Queue sink which publishes to the message queue.
+- A separate Consumer process deserializes the Event and dispatches via the Registry to handlers.
+
+## Handler registration summary
+
+- Decorator style: `@clickup_event.<event>` registers function handlers into the registry at import time.
+- OOP style: Subclass `BaseClickUpWebhookHandler`; overridden `on_*` methods are auto-registered on instantiation.
+
+## Extensibility and configuration
+
+- QUEUE_BACKEND
+  - `local` for in-process.
+  - Any other value activates queue mode via `abstract-backend` (see that plugin’s config).
+- CLICKUP_WEBHOOK_HANDLER_MODULES
+  - Comma-separated modules to auto-import at startup for handler registration.
+
+## Notes on testing and contracts
+
+- DTOs are tolerant to extra fields and mirror ClickUp samples.
+- Queue sink serialization is stable (`serialize_event`/`deserialize_event`).
+- Unit and contract tests verify event types, registry behavior, and queue mode.
+
+## References (source of truth)
+
+- Endpoint: `clickup_mcp/web_server/event/webhook.py`
+- Sinks: `clickup_mcp/web_server/event/sink.py`, `clickup_mcp/web_server/event/mq.py`
+- Handlers: `clickup_mcp/web_server/event/handler/`
+- Models: `clickup_mcp/web_server/event/models/`
+
+## Design discussion: pros and cons
+
+- **EventSink abstraction**
+  - Pros: Clear separation between HTTP handling and dispatch; easy to add backends.
+  - Cons: Another layer to test; queue configuration required in distributed mode.
+
+- **Central registry with dual handler styles**
+  - Pros: Uniform dispatch; teams pick OOP or decorators without fragmentation.
+  - Cons: Indirection can hide where handlers are registered; requires docs/tests.
+
+- **DTO → domain event normalization**
+  - Pros: Stable handler input; decouples ClickUp payload shape from business logic.
+  - Cons: Mapping step requires maintenance when payload semantics change.
+
+- **Local vs Queue modes**
+  - Local Pros: Lowest latency, simplest ops, great for dev/testing and small scale.
+  - Local Cons: Coupled lifecycle with web app; spikes can impact request latency.
+  - Queue Pros: Backpressure, retries, independent scaling, isolation of failures.
+  - Queue Cons: More moving parts (brokers, credentials), operational overhead.
+
