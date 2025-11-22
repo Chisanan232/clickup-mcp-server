@@ -100,6 +100,46 @@ export CLICKUP_WEBHOOK_HANDLER_MODULES="myproj.clickup_handlers.oop,myproj.click
 clickup-webhook-consumer --queue-backend kafka
 ```
 
+## Pluggable queue backends (abstract-backend)
+
+This project uses the Python library `abstract-backend` to load a message queue backend at runtime. That means you can quickly swap the queue implementation without code changes.
+
+- **Switching backends** is just package management + environment variables:
+  - Deprecate current backend: `pip uninstall <message-queue-backend>`
+  - Install a new backend: `pip install <message-queue-backend>`
+  - Point the system to it: `export QUEUE_BACKEND=<backend-name>`
+  - Provide any backend-specific environment variables (brokers, DSNs, creds), per the backend plugin.
+
+### Quick switch example (Kafka → Redis)
+
+```bash
+# Remove Kafka backend plugin
+pip uninstall abe-kafka
+
+# Install Redis backend plugin
+pip install abe-redis
+
+# Tell the system to use Redis
+export QUEUE_BACKEND=redis
+
+# (Optional) Backend-specific envs, e.g. for Redis
+export REDIS_URL=redis://localhost:6379/0
+
+# Start server and consumer as usual
+clickup-mcp-server --integrated --transport sse --port 8000
+clickup-webhook-consumer --queue-backend "$QUEUE_BACKEND"
+```
+
+Notes:
+- `QUEUE_BACKEND=local` keeps everything in-process (no external queue required).
+- Any non-`local` value activates queue mode using the installed `abstract-backend` plugin.
+- Backend package names above are examples; consult your chosen plugin for exact names and environment variables.
+
+:::tip See more
+- [abstract-backend](https://github.com/Chisanan232/abstract-backend): A lightweight plugin framework that loads message queue backends at runtime. It exposes a simple publish/consume interface and selects the backend via environment (e.g., `QUEUE_BACKEND`).
+- [abe-redis](https://github.com/Chisanan232/abe-redis): A Redis-backed implementation for abstract-backend providing message queue semantics over Redis. Ideal for local dev or lightweight deployments.
+:::
+
 ## Event types
 
 Supported `ClickUpWebhookEventType` values include all task/list/folder/space/goal/keyResult events mirrored from ClickUp docs and fixtures, for example:
