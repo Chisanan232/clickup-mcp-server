@@ -59,11 +59,15 @@ class _FakeBackend:
     def seed(self, payload: Dict[str, Any]) -> None:
         self._consume_seed.append(payload)
 
-    async def publish(self, *, topic: str | None = None, key: str | None = None, payload: Dict[str, Any] | None = None) -> None:
+    async def publish(
+        self, *, topic: str | None = None, key: str | None = None, payload: Dict[str, Any] | None = None
+    ) -> None:
         # Support both legacy (topic+key+payload) and new (key-as-topic + payload) calling styles
         self.published.append({"topic": topic, "key": key, "payload": payload})
 
-    async def consume(self, *, topic: str | None = None, group: str | None = None) -> AsyncGenerator[Dict[str, Any], None]:
+    async def consume(
+        self, *, topic: str | None = None, group: str | None = None
+    ) -> AsyncGenerator[Dict[str, Any], None]:
         for v in list(self._consume_seed):
             yield v
 
