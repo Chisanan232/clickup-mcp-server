@@ -71,7 +71,7 @@ class QueueEventSink(EventSink):
     async def handle(self, event: ClickUpWebhookEvent) -> None:
         backend = self._ensure_backend()
         payload = serialize_event(event)
-        result = backend.publish(topic=self._topic, key=event.delivery_id or event.type.value, payload=payload)
+        result = backend.publish(key=self._topic, payload=payload)
         if asyncio.iscoroutine(result):
             await result
 
@@ -85,7 +85,7 @@ async def run_clickup_webhook_consumer(backend_name: str) -> None:
     # Register webhook event handler
     registry = get_registry()
 
-    async for msg in backend.consume(topic=_TOPIC_NAME):
+    async for msg in backend.consume(group=_TOPIC_NAME):
         event = deserialize_event(msg)
         await registry.dispatch(event)
 
