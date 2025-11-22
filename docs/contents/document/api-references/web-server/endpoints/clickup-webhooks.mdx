@@ -1,0 +1,210 @@
+---
+id: clickup-webhooks
+title: ClickUp Webhook Endpoint
+sidebar_label: ClickUp Webhooks
+toc_max_heading_level: 4
+---
+
+This page documents the ClickUp webhook HTTP endpoint exposed by the web server and how to run it in local and queue-backed modes.
+
+:::tip See also
+For end-to-end setup and handler wiring, see [Webhooks Integration](../webhooks-integration.mdx).
+:::
+
+## Endpoint
+
+```
+POST /webhook/clickup
+```
+
+Receives ClickUp webhook payloads and returns a simple acknowledgement when accepted.
+
+## Request
+
+```json
+{
+  "event": "taskCreated",
+  "task_id": "task_123",
+  "list_id": "list_123",
+  "space_id": "space_123",
+  "webhook_id": "wh_123",
+  "history_items": []
+}
+```
+| Field                                                         | Type   | Required | Description                                             |
+|---------------------------------------------------------------|--------|----------|---------------------------------------------------------|
+| event                                                         | string | yes      | ClickUp event name; mapped to `ClickUpWebhookEventType` |
+| webhook_id                                                    | string | no       | ClickUp webhook id                                      |
+| task_id, list_id, folder_id, space_id, goal_id, key_result_id | string | depends  | Identifiers present depending on the event type         |
+| history_items                                                 | array  | no       | Change history items when included by ClickUp           |
+
+Extra fields from ClickUp are allowed and preserved (tolerant parsing in DTO).
+
+### Examples by feature level
+
+#### Task
+```json
+{
+  "event": "taskUpdated",
+  "webhook_id": "wh_123",
+  "task_id": "task_123",
+  "list_id": "list_123",
+  "folder_id": "folder_123",
+  "space_id": "space_123",
+  "history_items": [
+    { "field": "status", "before": "Open", "after": "In progress" },
+    { "field": "assignees", "added": ["user_1"], "removed": [] }
+  ],
+  "data": {
+    "name": "Fix critical bug",
+    "status": { "status": "in progress", "orderindex": 1 },
+    "priority": 3,
+    "due_date": "2025-11-20T10:20:30Z",
+    "tags": ["backend", "urgent"]
+  }
+}
+```
+
+| Field         | Type   | Required | Description                                    |
+|---------------|--------|----------|------------------------------------------------|
+| event         | string | yes      | ClickUp event name                             |
+| webhook_id    | string | no       | Webhook identifier                             |
+| task_id       | string | yes      | Task identifier                                |
+| list_id       | string | no       | Parent list identifier                         |
+| folder_id     | string | no       | Parent folder identifier                       |
+| space_id      | string | no       | Parent space identifier                        |
+| history_items | array  | no       | Change history entries provided by ClickUp     |
+| data          | object | no       | Additional event data (status, priority, etc.) |
+
+#### List
+```json
+{
+  "event": "listUpdated",
+  "webhook_id": "wh_123",
+  "list_id": "list_123",
+  "space_id": "space_123",
+  "data": { "name": "Sprint Backlog", "archived": false }
+}
+```
+
+| Field      | Type   | Required | Description                                 |
+|------------|--------|----------|---------------------------------------------|
+| event      | string | yes      | ClickUp event name                          |
+| webhook_id | string | no       | Webhook identifier                          |
+| list_id    | string | yes      | List identifier                             |
+| space_id   | string | no       | Parent space identifier                     |
+| data       | object | no       | Additional list info (name, archived, etc.) |
+
+#### Folder
+```json
+{
+  "event": "folderUpdated",
+  "webhook_id": "wh_123",
+  "folder_id": "folder_123",
+  "space_id": "space_123",
+  "data": { "name": "Product Roadmap" }
+}
+```
+
+| Field      | Type   | Required | Description                  |
+|------------|--------|----------|------------------------------|
+| event      | string | yes      | ClickUp event name           |
+| webhook_id | string | no       | Webhook identifier           |
+| folder_id  | string | yes      | Folder identifier            |
+| space_id   | string | no       | Parent space identifier      |
+| data       | object | no       | Folder metadata (e.g., name) |
+
+#### Space
+```json
+{
+  "event": "spaceUpdated",
+  "webhook_id": "wh_123",
+  "space_id": "space_123",
+  "data": { "name": "Engineering", "private": true }
+}
+```
+
+| Field    | Type   | Required | Description |
+|----------|--------|----------|-------------|
+| event    | string | yes      | ClickUp event name |
+| webhook_id | string | no     | Webhook identifier |
+| space_id | string | yes      | Space identifier |
+| data     | object | no       | Space metadata (e.g., name, privacy) |
+
+#### Goal
+```json
+{
+  "event": "goalUpdated",
+  "webhook_id": "wh_123",
+  "goal_id": "goal_123",
+  "data": { "name": "Q4 Revenue", "percent_completed": 0.42 }
+}
+```
+
+| Field      | Type   | Required | Description          |
+|------------|--------|----------|----------------------|
+| event      | string | yes      | ClickUp event name   |
+| webhook_id | string | no       | Webhook identifier   |
+| goal_id    | string | yes      | Goal identifier      |
+| data       | object | no       | Goal progress fields |
+
+#### Key Result
+```json
+{
+  "event": "keyResultUpdated",
+  "webhook_id": "wh_123",
+  "key_result_id": "kr_123",
+  "goal_id": "goal_123",
+  "data": { "name": "Close 50 enterprise deals", "current": 17, "target": 50 }
+}
+```
+
+| Field         | Type   | Required | Description            |
+|---------------|--------|----------|------------------------|
+| event         | string | yes      | ClickUp event name     |
+| webhook_id    | string | no       | Webhook identifier     |
+| key_result_id | string | yes      | Key result identifier  |
+| goal_id       | string | no       | Parent goal identifier |
+| data          | object | no       | Key result metrics     |
+
+### More details and references
+
+:::note Webhook payload references
+- Official docs: [Task](https://developer.clickup.com/docs/webhooktaskpayloads), [List](https://developer.clickup.com/docs/webhooklistpayloads), [Folder](https://developer.clickup.com/docs/webhookfolderpayloads), [Space](https://developer.clickup.com/docs/webhookspacepayloads), [Goal/Key Result](https://developer.clickup.com/docs/webhookgoaltargetpayloads)
+- Payload shape varies by event. Unknown fields are tolerated and preserved.
+- Example payloads used in tests live in `test/contract_test/web_server/event/fixtures/clickup_webhooks/` and are auto-refreshed by CI.
+:::
+
+## Response
+
+```json
+{ "ok": true }
+```
+
+| Field | Type    | Description                          |
+|-------|---------|--------------------------------------|
+| ok    | boolean | Always true when payload is accepted |
+
+## Error Handling
+
+If the server encounters an error, it will respond with an appropriate HTTP status code and a JSON response containing error details.
+
+### Common Status Codes
+
+| Status Code | Description                                                             |
+|-------------|-------------------------------------------------------------------------|
+| 200         | Success - The request was processed successfully                        |
+| 400         | Bad Request - The payload was malformed or contained invalid fields     |
+| 404         | Not Found - The requested resource was not found                        |
+| 500         | Internal Server Error - An unexpected error occurred on the server      |
+
+### Error Response Format
+
+```json
+{
+  "error": {
+    "message": "Description of the error",
+    "code": "ERROR_CODE"
+  }
+}
+```

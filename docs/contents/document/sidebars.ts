@@ -27,11 +27,13 @@ const sidebars: SidebarsConfig = {
           label: 'Web Server',
           items: [
             'api-references/web-server/web-apis',
+            'api-references/web-server/webhooks-integration',
             {
               type: 'category',
               label: 'Endpoints',
               items: [
                 'api-references/web-server/endpoints/web-api-health-check',
+                'api-references/web-server/endpoints/clickup-webhooks',
               ],
             },
           ],
