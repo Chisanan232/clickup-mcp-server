@@ -27,8 +27,8 @@ from .exceptions import (
     ClickUpAPIError,
     RateLimitError,
 )
-from .models.dto.base import BaseResponseDTO
 from .models.cli import ServerConfig
+from .models.dto.base import BaseResponseDTO
 from .utils import load_environment_from_file
 
 logger = logging.getLogger(__name__)
