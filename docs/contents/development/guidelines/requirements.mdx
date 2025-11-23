@@ -131,6 +131,45 @@ The project has several dependencies that will be installed automatically when y
    # Edit .env with your ClickUp API token
    ```
 
+## Environment variables for development and tests
+
+:::note
+The following variables are primarily intended for project maintainers and contributors.
+They are used in local development and automated tests and are not required for typical end-user setups.
+:::
+
+### Dev/Test-only variables
+
+| Variable                          | Purpose                                                                                                        | Example                                      |
+|-----------------------------------|----------------------------------------------------------------------------------------------------------------|----------------------------------------------|
+| `E2E_TEST_API_TOKEN`              | Fallback token used by examples/tests when `CLICKUP_API_TOKEN` is not set.                                     | `sk_clickup_test_xxx`                        |
+| `CLICKUP_WEBHOOK_HANDLER_MODULES` | Comma-separated module paths to auto-import at startup (web server and webhook consumer) for local handlers.   | `my_app.webhooks.handlers,more.pkg.handlers` |
+| `QUEUE_BACKEND`                   | Message queue backend selection for webhook producer/consumer. Use `local` for development.                    | `local`                                      |
+
+Minimal dev/test `.env` example:
+
+```dotenv
+# Use test token locally when not exporting CLICKUP_API_TOKEN
+E2E_TEST_API_TOKEN=sk_clickup_test_XXXXXXXXXXXXXXXX
+
+# Auto-import local webhook handlers
+CLICKUP_WEBHOOK_HANDLER_MODULES=my_app.webhooks.handlers
+
+# Use local message queue backend
+QUEUE_BACKEND=local
+```
+
+### E2E ClickUp IDs (optional)
+
+These IDs support end-to-end tests that create/read/update resources in a real ClickUp workspace.
+
+- `CLICKUP_TEST_TEAM_ID` — Team/Workspace ID for creating resources during tests
+- `CLICKUP_TEST_SPACE_ID` — Space ID used by some folder/list tests
+- `CLICKUP_TEST_FOLDER_ID` — Folder ID when not creating dynamically
+- `CLICKUP_TEST_LIST_ID` — Primary list for task tests
+- `CLICKUP_TEST_LIST_ID_2` — Secondary list for multi-list scenarios
+- `CLICKUP_TEST_CUSTOM_FIELD_ID` — Custom field ID used in custom field tests
+
 ## Next Steps
 
 Once your development environment is set up, refer to the [Development Workflow](../workflow.mdx) documentation for the next steps.

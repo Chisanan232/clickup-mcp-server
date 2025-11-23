@@ -41,7 +41,6 @@ You can configure the server via a dotenv file. The server will:
 | Variable                          | Required                      | Example                             | Description                                                                                                                                            |
 |-----------------------------------|-------------------------------|-------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `CLICKUP_API_TOKEN`               | Yes (unless `--token` is set) | `sk_clickup_xxx`                    | Preferred API token used by the server for authentication. Loaded from `.env` first; can be overridden by `--token`.                                   |
-| `E2E_TEST_API_TOKEN`              | Optional                      | `sk_clickup_test_xxx`               | Fallback token used primarily by examples/tests. The server will look for this only if `CLICKUP_API_TOKEN` is not set.                                 |
 | `CLICKUP_WEBHOOK_HANDLER_MODULES` | Optional                      | `my_app.webhooks.handlers,more.pkg` | Comma-separated module paths to auto-import at startup (web server and webhook consumer). Modules must be importable on PYTHONPATH.                    |
 | `QUEUE_BACKEND`                   | Optional                      | `local`                             | Message queue backend selection for webhook event sink/consumer. Common local value is `local`. Other values depend on your abe backends installation. |
 
@@ -53,16 +52,7 @@ CLICKUP_WEBHOOK_HANDLER_MODULES=my_app.webhooks.handlers
 QUEUE_BACKEND=local
 ```
 
-Optional E2E test IDs (used by E2E tests only):
-
-- `CLICKUP_TEST_TEAM_ID` — Team/Workspace ID for creating resources during tests
-- `CLICKUP_TEST_SPACE_ID` — Space ID used by some folder/list tests
-- `CLICKUP_TEST_FOLDER_ID` — Folder ID when not creating dynamically
-- `CLICKUP_TEST_LIST_ID` — Primary list for task tests
-- `CLICKUP_TEST_LIST_ID_2` — Secondary list for multi-list scenarios
-- `CLICKUP_TEST_CUSTOM_FIELD_ID` — Custom field ID used in custom field tests
-
-Refer to the repository file `.env.example` for a fully documented template.
+For development-only and E2E testing variables (including `E2E_TEST_API_TOKEN` and ClickUp test IDs), see the [Development Requirements](/dev/next/guidelines/requirements) page.
 
 # Transports
 
