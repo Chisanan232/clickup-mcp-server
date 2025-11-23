@@ -129,7 +129,9 @@ class TestEnvLoading:
         assert loaded is True
         assert os.environ.get("CLICKUP_API_TOKEN") == "from-parent"
 
-    def test_load_environment_from_file_returns_false_when_not_found(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    def test_load_environment_from_file_returns_false_when_not_found(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
         """If no .env exists anywhere upward, it should return False and not set vars."""
         # Work in an isolated directory tree with no .env
         empty_dir = tmp_path / "empty"
