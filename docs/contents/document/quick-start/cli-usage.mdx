@@ -1,0 +1,153 @@
+---
+title: CLI usages and scenarios
+---
+
+This page documents how to run the MCP server transport and how to connect to it from clients, with common usage scenarios.
+
+# CLI synopsis
+
+```bash
+clickup-mcp-server [--env <path>] [--token <token>] [--host <host>] [--port <port>] \
+                   [--log-level <level>] [--reload] [--transport <sse|http-streaming>]
+```
+
+# Options
+
+| Option        | Required | Default   | Usage example         | Description                                                                                                                                                                                  |
+|---------------|----------|-----------|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--env`       | Optional | `.env`    | `--env /path/to/.env` | Path to a dotenv file. Loaded first to populate environment variables. If not provided or not found, the server will attempt to auto-discover a `.env` in the current or parent directories. |
+| `--token`     | Optional | None      | `--token YOUR_TOKEN`  | ClickUp API token. If provided, it overrides any token loaded from `.env`. If omitted, the server looks for `CLICKUP_API_TOKEN` (preferred) or `E2E_TEST_API_TOKEN` in the environment.      |
+| `--host`      | Optional | `0.0.0.0` | `--host 0.0.0.0`      | Host interface to bind the server to.                                                                                                                                                        |
+| `--port`      | Optional | `8000`    | `--port 8000`         | Port to bind the server to. Must be between 1 and 65535.                                                                                                                                     |
+| `--log-level` | Optional | `info`    | `--log-level debug`   | Logging level. Allowed values: `debug`, `info`, `warning`, `error`, `critical`.                                                                                                              |
+| `--reload`    | Optional | `false`   | `--reload`            | Enable auto-reload for development (watches files and restarts on changes).                                                                                                                  |
+| `--transport` | Optional | `sse`     | `--transport sse`     | Transport protocol used by the MCP server. Allowed values: `sse`, `http-streaming`. SSE mounts at `/sse`; HTTP streaming mounts at `/mcp`.                                                   |
+
+:::note Token loading precedence
+
+- .env is loaded first (auto-discovered or via `--env`).
+- `--token` overrides any token value from `.env`.
+- The server reads `CLICKUP_API_TOKEN` (preferred) or `E2E_TEST_API_TOKEN`.
+
+:::
+
+## Environment variables (.env)
+
+You can configure the server via a dotenv file. The server will:
+
+- Load the specified file via `--env`, or
+- Auto-discover a `.env` file from the current directory upward (parent directories) when `--env` is not provided.
+
+| Variable                          | Required                      | Example                             | Description                                                                                                                                            |
+|-----------------------------------|-------------------------------|-------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `CLICKUP_API_TOKEN`               | Yes (unless `--token` is set) | `sk_clickup_xxx`                    | Preferred API token used by the server for authentication. Loaded from `.env` first; can be overridden by `--token`.                                   |
+| `E2E_TEST_API_TOKEN`              | Optional                      | `sk_clickup_test_xxx`               | Fallback token used primarily by examples/tests. The server will look for this only if `CLICKUP_API_TOKEN` is not set.                                 |
+| `CLICKUP_WEBHOOK_HANDLER_MODULES` | Optional                      | `my_app.webhooks.handlers,more.pkg` | Comma-separated module paths to auto-import at startup (web server and webhook consumer). Modules must be importable on PYTHONPATH.                    |
+| `QUEUE_BACKEND`                   | Optional                      | `local`                             | Message queue backend selection for webhook event sink/consumer. Common local value is `local`. Other values depend on your abe backends installation. |
+
+Minimal `.env` example:
+
+```dotenv
+CLICKUP_API_TOKEN=sk_clickup_XXXXXXXXXXXXXXXX
+CLICKUP_WEBHOOK_HANDLER_MODULES=my_app.webhooks.handlers
+QUEUE_BACKEND=local
+```
+
+Optional E2E test IDs (used by E2E tests only):
+
+- `CLICKUP_TEST_TEAM_ID` — Team/Workspace ID for creating resources during tests
+- `CLICKUP_TEST_SPACE_ID` — Space ID used by some folder/list tests
+- `CLICKUP_TEST_FOLDER_ID` — Folder ID when not creating dynamically
+- `CLICKUP_TEST_LIST_ID` — Primary list for task tests
+- `CLICKUP_TEST_LIST_ID_2` — Secondary list for multi-list scenarios
+- `CLICKUP_TEST_CUSTOM_FIELD_ID` — Custom field ID used in custom field tests
+
+Refer to the repository file `.env.example` for a fully documented template.
+
+# Transports
+
+- **SSE (default)**: mounted at `/sse`
+- **HTTP streaming**: mounted at `/mcp`
+
+# Client usage examples
+
+## SSE client
+
+```python
+import asyncio
+from mcp import ClientSession
+from mcp.client.sse import sse_client
+
+async def main():
+    url = "http://localhost:8000/sse"
+    async with sse_client(url) as (read_stream, write_stream):
+        async with ClientSession(read_stream, write_stream) as session:
+            await session.initialize()
+
+            tools = await session.list_tools()
+            print("Available tools:", [t.name for t in tools.tools])
+
+            res = await session.call_tool(name="get_authorized_teams")
+            print("get_authorized_teams →", res.model_dump())
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## HTTP streaming client
+
+```python
+import asyncio
+from mcp import ClientSession
+from mcp.client.streamable_http import streamablehttp_client
+
+async def main():
+    url = "http://localhost:8000/mcp/mcp"
+    async with streamablehttp_client(url) as (read_stream, write_stream, _close_fn):
+        async with ClientSession(read_stream, write_stream) as session:
+            await session.initialize()
+
+            tools = await session.list_tools()
+            print("Available tools:", [t.name for t in tools.tools])
+
+            res = await session.call_tool(name="get_authorized_teams")
+            print("get_authorized_teams →", res.model_dump())
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+# Scenarios
+
+- **Run SSE transport (default)**
+
+  ```bash
+  clickup-mcp-server --transport sse
+  ```
+
+- **Run streaming HTTP transport**
+
+  ```bash
+  clickup-mcp-server --transport http-streaming
+  ```
+
+- **Use .env for token**
+
+  ```bash
+  # .env contains CLICKUP_API_TOKEN=xxx
+  clickup-mcp-server
+  ```
+
+- **Override token via CLI**
+
+  ```bash
+  clickup-mcp-server --token YOUR_TOKEN
+  ```
+
+## Quick checks server state
+
+- **Health check**
+
+  ```bash
+  curl http://localhost:8000/health
+  ```
