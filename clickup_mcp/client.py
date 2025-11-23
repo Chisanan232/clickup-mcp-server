@@ -28,6 +28,7 @@ from .exceptions import (
     RateLimitError,
 )
 from .models.dto.base import BaseResponseDTO
+from .utils import load_environment_from_file
 
 logger = logging.getLogger(__name__)
 
@@ -406,18 +407,26 @@ def get_api_token(config=None) -> str:
     Raises:
         ValueError: If API token cannot be found
     """
-    # First check if token is provided directly via CLI option
-    if config and config.token:
+    # Try to load environment variables from the provided env file first
+    # so that values are available even if create_app wasn't called earlier
+    if config and getattr(config, "env_file", None):
+        load_environment_from_file(config.env_file)
+
+    # Then apply precedence: CLI token overrides .env token if provided
+    if config and getattr(config, "token", None):
         return config.token
 
-    # Otherwise get token from environment (env file should be loaded at entry point)
+    # Otherwise get token from environment
     token = os.environ.get("CLICKUP_API_TOKEN")
+    if not token:
+        # Backward-compatible fallback used by tests/examples
+        token = os.environ.get("E2E_TEST_API_TOKEN")
 
     # Raise error if we don't have a token
     if not token:
         raise ValueError(
-            "ClickUp API token not found. Please set the CLICKUP_API_TOKEN environment variable "
-            "in your .env file, or provide it using the --token command line option."
+            "ClickUp API token not found. Set CLICKUP_API_TOKEN (preferred) or E2E_TEST_API_TOKEN "
+            "in your .env/environment, or provide it using the --token option."
         )
 
     return token
