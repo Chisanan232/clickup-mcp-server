@@ -28,6 +28,7 @@ from .exceptions import (
     RateLimitError,
 )
 from .models.dto.base import BaseResponseDTO
+from .models.cli import ServerConfig
 from .utils import load_environment_from_file
 
 logger = logging.getLogger(__name__)
@@ -394,7 +395,7 @@ class ClickUpAPIClient:
         return await self._make_request("PATCH", endpoint, params=params, data=data, headers=headers)
 
 
-def get_api_token(config=None) -> str:
+def get_api_token(config: ServerConfig | None = None) -> str:
     """
     Get the ClickUp API token from CLI options or environment variables.
 
@@ -409,11 +410,11 @@ def get_api_token(config=None) -> str:
     """
     # Try to load environment variables from the provided env file first
     # so that values are available even if create_app wasn't called earlier
-    if config and getattr(config, "env_file", None):
+    if config and config.env_file:
         load_environment_from_file(config.env_file)
 
     # Then apply precedence: CLI token overrides .env token if provided
-    if config and getattr(config, "token", None):
+    if config and config.token:
         return config.token
 
     # Otherwise get token from environment
