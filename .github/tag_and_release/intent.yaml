@@ -4,7 +4,7 @@
 
 # === RELEASE CONTROL ===
 release: true
-level: patch  # auto | patch | minor | major
+level: minor  # auto | patch | minor | major
 
 # === RELEASE ARTIFACTS ===
 artifacts:
