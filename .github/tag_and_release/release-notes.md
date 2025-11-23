@@ -1,138 +1,62 @@
 ### 🎉 New feature
 
-1. Newborn of ClickUp MCP server project.
-    ```shell
-    >>> clickup-mcp-server --help
-    usage: clickup-mcp-server [-h] [--host HOST] [--port PORT] [--log-level {debug,info,warning,error,critical}] [--reload] [--env ENV_FILE] [--token TOKEN]
-                              [--transport {sse,http-streaming}]
-    
-    Run the ClickUp MCP FastAPI server
-    
-    options:
-      -h, --help            show this help message and exit
-      --host HOST           Host to bind the server to
-      --port PORT           Port to bind the server to
-      --log-level {debug,info,warning,error,critical}
-                            Logging level
-      --reload              Enable auto-reload for development
-      --env ENV_FILE        Path to the .env file for environment variables
-      --token TOKEN         ClickUp API token (overrides token from .env file if provided)
-      --transport {sse,http-streaming}
-                            Transport protocol to use for MCP (sse or http-streaming)
-    ```
+1. Support complete golden user journeys for ClickUp MCP server.
+   1. Implement the API clients with complete features for the MCP tools.
+   2. Add the MCP tools.
+      1. ClickUp team level features (get info only)
+      2. ClickUp workspace level features (get info only)
+      3. ClickUp space level features (get, create, update, delete)
+      4. ClickUp folder level features (get, create, update, delete)
+      5. ClickUp list level features (get, create, update, delete)
+      6. ClickUp task level features (get, create, update, delete)
+2. Support basic user journeys for ClickUp webhook features in the MCP server.
+   1. Implement the webhook endpoint for ClickUp service.
+   2. Provide the webhook event handlers.
+      1. Provide the Pythonic style webhook event handlers.
+      2. Provide the OOP style webhook event handlers.
+   3. Implement the message queue components for the MCP server.
 
 
-[//]: # (### 🔨 Breaking changes)
+### 🪲 Bug Fix
 
-[//]: # ()
-[//]: # (1. Deprecate Python 3.8 version support, will remove all code in next version. &#40;[PR#498]&#41;)
+#### 🙋‍♂️ For production
 
+1. 💣 Critical bugs: (0)
+   1. NaN
+2. 🦠 Major bugs: (1)
+   1. It only accepts to load the secret info from the command line option *--token*. ([PR#208])
+3. 🐛 Mirror bugs: (0)
+   1. NaN
 
-[//]: # (### 🪲 Bug Fix)
-
-[//]: # ()
-[//]: # (#### 🙋‍♂️ For production)
-
-[//]: # ()
-[//]: # (1. 💣 Critical bugs:)
-
-[//]: # (   1. Command line tool cannot work finely because filtering logic cannot cover all scenarios. &#40;[PR#496]&#41;)
-
-[//]: # (   2. Command line tool cannot work finely because missing Python dependency. &#40;[PR#498]&#41;)
-
-[//]: # (2. 🦠 Major bugs:)
-
-[//]: # (   1. The request checking process: &#40;[PR#493]&#41;)
-
-[//]: # (      1. Error messages are incorrect which would deeply mislead developers.)
-
-[//]: # (      2. The parameters data checking cannot work finely with array type parameters.)
-
-[//]: # (   2. It set incorrect customized value at format property with subcommand line `pull`. &#40;[PR#487]&#41;)
-
-[//]: # (   3. Generate incorrect data structure in API response. &#40;[PR#492]&#41;)
-
-[//]: # (3. 🐛 Mirror bugs:)
-
-[//]: # (   1. Command line option `--include-template-config` cannot work under subcommand line `pull`. &#40;[PR#485]&#41;)
-
-[//]: # (   2. Default value cannot be set correctly if it's empty string value. &#40;[PR#484]&#41;)
-
-[//]: # ()
-[//]: # ([PR#484]: https://github.com/Chisanan232/PyFake-API-Server/pull/484)
-
-[//]: # ([PR#485]: https://github.com/Chisanan232/PyFake-API-Server/pull/485)
-
-[//]: # ([PR#487]: https://github.com/Chisanan232/PyFake-API-Server/pull/487)
-
-[//]: # ([PR#485]: https://github.com/Chisanan232/PyFake-API-Server/pull/485)
-
-[//]: # ([PR#485]: https://github.com/Chisanan232/PyFake-API-Server/pull/485)
-
-[//]: # ([PR#485]: https://github.com/Chisanan232/PyFake-API-Server/pull/485)
-
-[//]: # ([PR#492]: https://github.com/Chisanan232/PyFake-API-Server/pull/492)
-
-[//]: # ([PR#493]: https://github.com/Chisanan232/PyFake-API-Server/pull/493)
-
-[//]: # ([PR#496]: https://github.com/Chisanan232/PyFake-API-Server/pull/496)
-
-[//]: # ([PR#498]: https://github.com/Chisanan232/PyFake-API-Server/pull/498)
+[PR#208]: https://github.com/Chisanan232/clickup-mcp-server/pull/208
 
 #### 👨‍💻 For development
 
-1. Provide the [development details] in [documentation].
+1. Use the incorrect APIs to get the ClickUp API specification configuration. ([PR#187], [PR#192]).
+2. CI workflow cannot upload README info to Docker Hub. ([PR#142])
 
-[development details]: https://chisanan232.github.io/clickup-mcp-server/dev/next
-
-
-[//]: # (### ♻️ Refactor)
-
-[//]: # ()
-[//]: # (1. content ...)
+[PR#187]: https://github.com/Chisanan232/clickup-mcp-server/pull/187
+[PR#192]: https://github.com/Chisanan232/clickup-mcp-server/pull/192
+[PR#142]: https://github.com/Chisanan232/clickup-mcp-server/pull/142
 
 
-[//]: # (### 🍀 Improvement)
+### 🍀 Improvement
 
-[//]: # ()
-[//]: # (1. Clear the Pre-Commit configuration. &#40;[PR#481]&#41;)
+1. Extract the long and big content about CI/CD workflows as a single section. ([PR#122])
+2. Add a new CI workflow checks the documentation building process. ([PR#144])
+3. Align all the workflows to reuse the GitHub Action reusable workflow repo. ([PR#157])
+4. Fix all the warnings in the documentation building. ([PR#160])
+5. Align the document content about the changes of aligning to reuse the GitHub Action reusable workflow repo. ([PR#161])
 
-[//]: # (2. Clear the CI workflow configurations. &#40;[PR#482]&#41;)
-
-[//]: # (3. Let program could raise obvious error message if it misses some necessary values at initial process. &#40;[PR#486]&#41;)
-
-[//]: # ()
-[//]: # ([PR#481]: https://github.com/Chisanan232/PyFake-API-Server/pull/481)
-
-[//]: # ([PR#482]: https://github.com/Chisanan232/PyFake-API-Server/pull/482)
-
-[//]: # ([PR#486]: https://github.com/Chisanan232/PyFake-API-Server/pull/486)
+[PR#122]: https://github.com/Chisanan232/clickup-mcp-server/pull/122
+[PR#144]: https://github.com/Chisanan232/clickup-mcp-server/pull/144
+[PR#157]: https://github.com/Chisanan232/clickup-mcp-server/pull/157
+[PR#160]: https://github.com/Chisanan232/clickup-mcp-server/pull/160
+[PR#161]: https://github.com/Chisanan232/clickup-mcp-server/pull/161
 
 
-### 📑 Docs
+### 🤖 Upgrade dependencies
 
-1. Provide the [details] in [documentation].
-
-[details]: https://chisanan232.github.io/clickup-mcp-server/docs/next/introduction
-[documentation]: https://chisanan232.github.io/clickup-mcp-server/
-
-
-[//]: # (### 🤖 Upgrade dependencies)
-
-[//]: # ()
-[//]: # ([//]: # &#40;1. Upgrade the Python dependencies.&#41;)
-[//]: # ()
-[//]: # (1. Upgrade pre-commit dependencies.)
-
-[//]: # (3. Upgrade the CI reusable workflows.)
-
-[//]: # ()
-[//]: # (   1. Upgrade SonarQube and update its configuration)
-
-[//]: # ()
-[//]: # (   2. Update the usage because upgrading the artifact actions)
-
-[//]: # (### 🚮Deprecate)
-
-[//]: # ()
-[//]: # (1. Deprecate and remove version 0.3.0 because it has multiple issue, and it cannot upload same version file to PyPI.)
+1. Upgrade the Python dependencies.
+2. Upgrade pre-commit dependencies.
+3. Upgrade the CI reusable workflows.
