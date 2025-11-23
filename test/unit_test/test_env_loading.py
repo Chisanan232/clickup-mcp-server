@@ -14,6 +14,7 @@ from clickup_mcp.client import (
     ClickUpAPIClientFactory,
     get_api_token,
 )
+from clickup_mcp.utils import load_environment_from_file
 
 
 class TestEnvLoading:
@@ -46,10 +47,125 @@ class TestEnvLoading:
         """Test error when API token is missing from environment."""
         # Ensure environment is clean
         monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
+        monkeypatch.delenv("E2E_TEST_API_TOKEN", raising=False)
 
         # Test that ValueError is raised when token is missing
         with pytest.raises(ValueError, match="ClickUp API token not found"):
             get_api_token()
+
+    def test_get_api_token_loads_from_env_file(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+        """Token should be read from the provided env_file even if create_app wasn't called."""
+        # Ensure environment is clean
+        monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
+
+        # Create .env file containing the token
+        env_file = tmp_path / ".env"
+        env_file.write_text("CLICKUP_API_TOKEN=token-from-env-file\n")
+
+        # Build a ServerConfig that points to this env file, without CLI token
+        from clickup_mcp.models.cli import ServerConfig
+
+        config = ServerConfig(env_file=str(env_file))
+
+        # get_api_token should load env file internally and return its value
+        token = get_api_token(config)
+        assert token == "token-from-env-file"
+
+        # Also ensure the environment was actually populated
+        assert os.environ.get("CLICKUP_API_TOKEN") == "token-from-env-file"
+
+    def test_get_api_token_missing_with_nonexistent_env_file(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+        """When env_file doesn't exist and no env var present, an error should be raised."""
+        # Ensure environment is clean
+        monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
+        monkeypatch.delenv("E2E_TEST_API_TOKEN", raising=False)
+
+        # Point to a non-existent env file
+        missing_env = tmp_path / "does_not_exist.env"
+
+        from clickup_mcp.models.cli import ServerConfig
+
+        config = ServerConfig(env_file=str(missing_env))
+
+        with pytest.raises(ValueError, match="ClickUp API token not found"):
+            get_api_token(config)
+
+    def test_env_auto_discovery_with_parent_dotenv(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+        """Ensure find_dotenv discovers .env in parent when running from a subdirectory."""
+        # Create parent .env with fallback variable
+        parent_env = tmp_path / ".env"
+        parent_env.write_text("E2E_TEST_API_TOKEN=parent-token\n")
+
+        # Create a subdirectory and chdir into it (no .env here)
+        subdir = tmp_path / "child"
+        subdir.mkdir()
+        monkeypatch.chdir(subdir)
+
+        # Ensure environment is clean
+        monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
+        monkeypatch.delenv("E2E_TEST_API_TOKEN", raising=False)
+
+        from clickup_mcp.models.cli import ServerConfig
+
+        # Use default env_file (".env"); discovery should find parent's .env
+        config = ServerConfig()
+        token = get_api_token(config)
+        assert token == "parent-token"
+
+    def test_load_environment_from_file_discovers_parent_dotenv(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+        """When env_file is None, the function should discover a .env in parent dirs."""
+        # Create parent .env and a child cwd without .env
+        parent_env = tmp_path / ".env"
+        parent_env.write_text("CLICKUP_API_TOKEN=from-parent\n")
+        child = tmp_path / "child"
+        child.mkdir()
+        monkeypatch.chdir(child)
+
+        # Ensure env is clean
+        monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
+
+        # Call with no explicit path to trigger discovery
+        loaded = load_environment_from_file()
+        assert loaded is True
+        assert os.environ.get("CLICKUP_API_TOKEN") == "from-parent"
+
+    def test_load_environment_from_file_returns_false_when_not_found(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """If no .env exists anywhere upward, it should return False and not set vars."""
+        # Work in an isolated directory tree with no .env
+        empty_dir = tmp_path / "empty"
+        empty_dir.mkdir()
+        monkeypatch.chdir(empty_dir)
+
+        # Ensure env is clean
+        monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
+
+        loaded = load_environment_from_file()
+        assert loaded is False
+        assert os.environ.get("CLICKUP_API_TOKEN") is None
+
+    def test_load_environment_from_file_discovers_by_filename_when_explicit_missing(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """If a filename is provided but that path doesn't exist, discovery by filename should work."""
+        # Create parent with a custom env filename
+        custom_name = "custom.env"
+        custom_env = tmp_path / custom_name
+        custom_env.write_text("CLICKUP_API_TOKEN=from-custom\n")
+
+        # Use a child as CWD so direct relative path check fails first
+        child = tmp_path / "child"
+        child.mkdir()
+        monkeypatch.chdir(child)
+
+        # Ensure env is clean
+        monkeypatch.delenv("CLICKUP_API_TOKEN", raising=False)
+
+        # Pass a filename that doesn't exist at CWD; implementation should discover in parent
+        loaded = load_environment_from_file(custom_name)
+        assert loaded is True
+        assert os.environ.get("CLICKUP_API_TOKEN") == "from-custom"
 
     def test_clickup_api_client_factory(self, monkeypatch: MonkeyPatch) -> None:
         """Test creating ClickUp client with token."""
