@@ -4,7 +4,7 @@ title: CLI usages and scenarios
 
 This page documents how to run the MCP server transport and how to connect to it from clients, with common usage scenarios.
 
-# CLI synopsis
+# MCP server CLI synopsis
 
 ```bash
 clickup-mcp-server [--env <path>] [--token <token>] [--host <host>] [--port <port>] \
@@ -58,6 +58,48 @@ For development-only and E2E testing variables (including `E2E_TEST_API_TOKEN` a
 
 - **SSE (default)**: mounted at `/sse`
 - **HTTP streaming**: mounted at `/mcp`
+
+# Webhook consumer CLI (clickup-webhook-consumer)
+
+The webhook consumer listens to the internal message queue topic and dispatches events to your registered handler functions.
+
+## Synopsis
+
+```bash
+clickup-webhook-consumer [--queue-backend <name>]
+```
+
+## Options
+
+| Option            | Required | Default                         | Usage example           | Description                                                                                                               |
+|-------------------|----------|---------------------------------|-------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| `--queue-backend` | Optional | From `QUEUE_BACKEND` or `local` | `--queue-backend local` | Queue backend to use for consuming events. Reads from the `QUEUE_BACKEND` env var if not provided; falls back to `local`. |
+
+## Environment variables
+
+- `QUEUE_BACKEND`: Selects the backend implementation (e.g., `local`). If not provided, the CLI defaults to `local`.
+- `CLICKUP_WEBHOOK_HANDLER_MODULES`: Comma-separated module paths that will be imported before consuming so your handlers are registered.
+
+## Examples
+
+- Run with default local backend
+
+  ```bash
+  clickup-webhook-consumer
+  ```
+
+- Run with a specific backend name
+
+  ```bash
+  clickup-webhook-consumer --queue-backend local
+  ```
+
+- Configure via environment variable
+
+  ```bash
+  export QUEUE_BACKEND=local
+  clickup-webhook-consumer
+  ```
 
 # Client usage examples
 
