@@ -1,0 +1,130 @@
+---
+title: Release System
+sidebar_position: 3
+---
+
+# Release System
+
+[![GitHub release](https://img.shields.io/github/v/release/Chisanan232/clickup-mcp-server?display_name=tag&color=24292e&logo=github)](https://github.com/Chisanan232/clickup-mcp-server/releases)
+
+The release workflows for this template are now maintained in the centralized repository `Chisanan232/GitHub-Action_Reusable_Workflows-Python`. This project consumes those reusable workflows for production, validation, and staging releases while keeping only minimal configuration locally.
+
+## Release workflows
+
+### Production release ([release.yml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/workflows/release.yml))
+[![Release](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release.yml)
+[![PyPI version](https://img.shields.io/pypi/v/clickup-mcp-server?label=PyPI&color=306998&logo=pypi)](https://pypi.org/project/clickup-mcp-server/)
+
+Publishes production artifacts (PyPI package, container images, docs) using the centralized `rw_release_complete.yaml` workflow logic.
+
+- **Purpose** – Ship the production-ready version of your project whenever you approve a release.
+- **Effects** – Builds from locked dependencies, signs artifacts (if configured), pushes semantic tags, and updates changelog summaries.
+- **Targets** – PyPI (wheel + sdist), Docker Hub/GHCR images, and the published Docusaurus docs site.
+
+```mermaid
+flowchart LR
+    classDef config fill:#fef3c7,stroke:#d97706,color:#78350f;
+    classDef workflow fill:#4338ca,stroke:#1e1b4b,color:#fff;
+    classDef jobs fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e;
+    classDef targets fill:#dcfce7,stroke:#15803d,color:#14532d,font-weight:bold;
+
+    intent[intent.yaml<br/>release configuration]:::config
+    trigger["release.yml<br/>(local workflow)"]:::workflow
+    reusable["Reusable workflow<br/>rw_release_complete.yaml"]:::workflow
+    jobs[Build → Test → Sign → Publish]:::jobs
+    targets[(PyPI · Docker Hub/GHCR · Docs)]:::targets
+
+    intent --> trigger --> reusable --> jobs --> targets
+```
+- **Documentation** – See the reusable workflow guide for production releases: [rw_release_complete.yaml](https://chisanan232.github.io/GitHub-Action_Reusable_Workflows-Python/docs/next/workflows/release/rw_release_complete) (hosted in `Chisanan232/GitHub-Action_Reusable_Workflows-Python`).
+
+:::note Documentation
+See the reusable workflow guide for production releases: [rw_release_complete.yaml](https://chisanan232.github.io/GitHub-Action_Reusable_Workflows-Python/docs/next/workflows/release/rw_release_complete) (hosted in `Chisanan232/GitHub-Action_Reusable_Workflows-Python`).
+:::
+
+### Release staging ([release-staging.yml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/workflows/release-staging.yml))
+[![Release Staging](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-staging.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-staging.yml)
+[![TestPyPI version](https://img.shields.io/badge/dynamic/json?label=TestPyPI&color=ff6600&query=%24.info.version&url=https%3A%2F%2Ftest.pypi.org%2Fpypi%2Fclickup-mcp-server%2Fjson&logo=pypi)](https://test.pypi.org/project/clickup-mcp-server/)
+
+Creates staging/TestPyPI packages, RC container images, and preview documentation to test releases before production.
+
+- **Purpose** – Provide a safe rehearsal of the full release pipeline with artifacts you can share internally.
+- **Effects** – Publishes release-candidate packages, tags container images with `-rc`, and deploys docs to preview channels without touching production identifiers.
+- **Targets** – TestPyPI, staging container registries (Docker Hub/GHCR), and preview docs buckets or branches.
+
+```mermaid
+flowchart LR
+    classDef config fill:#fef3c7,stroke:#d97706,color:#78350f;
+    classDef workflow fill:#7c3aed,stroke:#4c1d95,color:#fff;
+    classDef jobs fill:#ede9fe,stroke:#6d28d9,color:#312e81;
+    classDef targets fill:#cffafe,stroke:#0e7490,color:#0f172a,font-weight:bold;
+
+    intent[intent.yaml<br/>staging overrides]:::config
+    trigger["release-staging.yml<br/>(local workflow)"]:::workflow
+    reusable["Reusable workflow<br/>rw_release_staging_complete.yaml"]:::workflow
+    jobs[Build → Tag `-rc` → Publish preview docs]:::jobs
+    targets[(TestPyPI · Staging registries · Preview docs)]:::targets
+
+    intent --> trigger --> reusable --> jobs --> targets
+```
+- **Documentation** – Reusable staging workflow reference: [rw_release_staging_complete.yaml](https://chisanan232.github.io/GitHub-Action_Reusable_Workflows-Python/docs/next/workflows/release/rw_release_staging_complete).
+
+:::note Documentation
+Reusable staging workflow reference: [rw_release_staging_complete.yaml](https://chisanan232.github.io/GitHub-Action_Reusable_Workflows-Python/docs/next/workflows/release/rw_release_staging_complete).
+:::
+
+### Release validation ([release-validate.yml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/workflows/release-validate.yml))
+[![Release Validation](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-validate.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-validate.yml)
+
+Dry-runs the release pipeline for pull requests, verifying builds and security checks without publishing artifacts.
+
+- **Purpose** – Catch packaging, signing, or configuration issues before they reach staging or production.
+- **Effects** – Executes the same jobs as a real release (build, test, SBOM, signing) but discards artifacts after validation.
+- **Targets** – No registries are updated; results remain within the PR context and GitHub Actions artifact storage for review.
+
+```mermaid
+flowchart LR
+    classDef config fill:#fef3c7,stroke:#d97706,color:#78350f;
+    classDef workflow fill:#0ea5e9,stroke:#1e3a8a,color:#fff;
+    classDef jobs fill:#dbeafe,stroke:#1d4ed8,color:#1e3a8a;
+    classDef targets fill:#fde68a,stroke:#c2410c,color:#7c2d12,font-weight:bold;
+
+    intent[intent.yaml<br/>validation mode]:::config
+    trigger["release-validate.yml<br/>(local workflow)"]:::workflow
+    reusable["Reusable workflow<br/>rw_release_validation_complete.yaml"]:::workflow
+    jobs[Build → Test → Security scans → Summaries]:::jobs
+    targets[(Report only · Artifacts stored in run)]:::targets
+
+    intent --> trigger --> reusable --> jobs --> targets
+```
+- **Documentation** – Reusable validation workflow details: [rw_release_validation_complete.yaml](https://chisanan232.github.io/GitHub-Action_Reusable_Workflows-Python/docs/next/workflows/release/rw_release_validation_complete).
+
+:::note Documentation
+Reusable validation workflow details: [rw_release_validation_complete.yaml](https://chisanan232.github.io/GitHub-Action_Reusable_Workflows-Python/docs/next/workflows/release/rw_release_validation_complete).
+:::
+
+## Overview
+
+- **Centralized logic**: All release orchestration lives in the [reusable workflow repository](https://github.com/Chisanan232/GitHub-Action_Reusable_Workflows-Python).
+- **Multi-target support**: Python packages, container images, and documentation publishing remain available through the shared workflows.
+- **Configuration-driven**: Child projects configure releases via [intent.yaml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/tag_and_release/intent.yaml), delegating implementation details to the centralized workflows.
+- **Release targets at a glance**:
+  - PyPI for production Python packages
+  - TestPyPI for staging/validation builds
+  - Docker Hub and GitHub Container Registry for container images
+  - Docusaurus documentation deployments
+
+:::note Learn more
+For complete release architecture diagrams, configuration options, and usage guides, see the official documentation:
+
+- **Repository**: [Chisanan232/GitHub-Action_Reusable_Workflows-Python](https://github.com/Chisanan232/GitHub-Action_Reusable_Workflows-Python)
+- **Documentation**: [Release System & Workflows Guide](https://chisanan232.github.io/GitHub-Action_Reusable_Workflows-Python/docs/next/introduction)
+
+These resources provide the authoritative, up-to-date reference for release operations after the migration to centralized workflows.
+:::
+
+## Working in this template
+
+- Maintain [intent.yaml](https://github.com/Chisanan232/clickup-mcp-server/blob/master/.github/tag_and_release/intent.yaml) to control release behavior for this project.
+- Ensure workflow references point to the centralized repository (for example, `uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_release_complete.yaml@main`).
+- Use the linked documentation for detailed steps, troubleshooting, and advanced configuration.

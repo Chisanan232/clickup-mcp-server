@@ -1,0 +1,27 @@
+---
+title: Reusable Workflows
+sidebar_position: 5
+---
+
+# Reusable Workflows
+
+The reusable workflow implementations that power this template now live in the centralized repository `Chisanan232/GitHub-Action_Reusable_Workflows-Python`. This project simply references those shared workflows so every child project inherits the same battle-tested automation.
+
+## Overview
+
+- **Centralized maintenance**: Build, test, release, documentation, and packaging logic is defined once in the reusable workflow repository.
+- **Lightweight template**: Local workflow files stay minimal by calling the centralized definitions with `uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/<workflow>.yaml@ref`.
+- **Config driven**: Behavior is customized through `intent.yaml` and workflow inputs rather than editing workflow logic.
+
+:::note Learn more
+For the complete list of reusable workflows, supported operations, inputs, outputs, and architecture diagrams, visit the centralized resources:
+
+- **Repository**: [Chisanan232/GitHub-Action_Reusable_Workflows-Python](https://github.com/Chisanan232/GitHub-Action_Reusable_Workflows-Python)
+- **Documentation**: [Reusable Workflows Guide](https://chisanan232.github.io/GitHub-Action_Reusable_Workflows-Python/docs/next/introduction)
+:::
+
+## Using them in this template
+
+- Reference the centralized workflows from `.github/workflows/*.yml` using an explicit ref such as `@main` or a released tag.
+- Keep `intent.yaml` up to date; the centralized workflows read its values to decide which operations to run.
+- Consult the linked documentation for advanced configuration, authentication details, and troubleshooting tips.

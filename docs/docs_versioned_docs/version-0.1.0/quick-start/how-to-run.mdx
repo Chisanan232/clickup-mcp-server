@@ -1,0 +1,207 @@
+---
+id: how-to-run
+title: How to Run
+sidebar_position: 3
+---
+
+```mdx-code-block
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+```
+
+# How to Run ClickUp MCP Server
+
+This guide explains how to run and configure the ClickUp MCP Server after installation.
+
+:::tip CLI reference
+For a complete command reference (server and webhook consumer) including synopsis, options, environment variables, transports, and examples, see [CLI usages and scenarios](./cli-usage.mdx).
+:::
+
+## Configuration
+
+Before running the server, you need to set up your ClickUp API token. You have several options:
+
+### Using a .env File (Recommended)
+
+1. Create a `.env` file in your project directory:
+   ```
+   CLICKUP_API_TOKEN=your_clickup_api_token
+   ```
+
+2. Specify the path to your `.env` file when starting the server:
+   
+   <Tabs>
+     <TabItem value="pip" label="pip" default>
+     ```bash
+     clickup-mcp-server --env /path/to/.env
+     ```
+
+     </TabItem>
+     <TabItem value="poetry" label="poetry">
+     ```bash
+     poetry run clickup-mcp-server --env /path/to/.env
+     ```
+
+     </TabItem>
+     <TabItem value="uv" label="uv">
+     ```bash
+     uv run clickup-mcp-server --env /path/to/.env
+     ```
+
+     </TabItem>
+   </Tabs>
+
+### Using Command-line Arguments
+
+You can provide your API token directly as a command-line argument:
+   
+<Tabs>
+  <TabItem value="pip" label="pip" default>
+  ```bash
+  clickup-mcp-server --token your_clickup_api_token
+  ```
+
+  </TabItem>
+  <TabItem value="poetry" label="poetry">
+  ```bash
+  poetry run clickup-mcp-server --token your_clickup_api_token
+  ```
+
+  </TabItem>
+  <TabItem value="uv" label="uv">
+  ```bash
+  uv run clickup-mcp-server --token your_clickup_api_token
+  ```
+
+  </TabItem>
+</Tabs>
+
+## Running the Server
+
+### Basic Usage
+
+Start the server with default settings:
+
+<Tabs>
+  <TabItem value="pip" label="pip" default>
+  ```bash
+  clickup-mcp-server
+  ```
+
+  </TabItem>
+  <TabItem value="poetry" label="poetry">
+  ```bash
+  poetry run clickup-mcp-server
+  ```
+
+  </TabItem>
+  <TabItem value="uv" label="uv">
+  ```bash
+  uv run clickup-mcp-server
+  ```
+
+  </TabItem>
+</Tabs>
+
+This will start the server with HTTP streaming transport on port 8000.
+
+### Specifying Transport Type
+
+You can choose between HTTP streaming and Server-Sent Events (SSE) transport:
+   
+<Tabs>
+  <TabItem value="pip" label="pip" default>
+  For HTTP streaming (default)
+  ```bash
+  clickup-mcp-server --transport http-streaming
+  ```
+
+  For SSE 
+  ```bash
+  clickup-mcp-server --transport sse
+  ```
+
+  </TabItem>
+  <TabItem value="poetry" label="poetry">
+  For HTTP streaming (default)
+  ```bash
+  poetry run clickup-mcp-server --transport http-streaming
+  ```
+
+  For SSE 
+  ```bash
+  poetry run clickup-mcp-server --transport sse
+  ```
+
+  </TabItem>
+  <TabItem value="uv" label="uv">
+  For HTTP streaming (default)
+  ```bash
+  uv run clickup-mcp-server --transport http-streaming
+  ```
+
+  For SSE 
+  ```bash
+  uv run clickup-mcp-server --transport sse
+  ```
+
+  </TabItem>
+</Tabs>
+
+### Custom Port
+
+Run the server on a specific port:
+
+<Tabs>
+  <TabItem value="pip" label="pip" default>
+  ```bash
+  clickup-mcp-server --port 8080
+  ```
+
+  </TabItem>
+  <TabItem value="poetry" label="poetry">
+  ```bash
+  poetry run clickup-mcp-server --port 8080
+  ```
+
+  </TabItem>
+  <TabItem value="uv" label="uv">
+  ```bash
+  uv run clickup-mcp-server --port 8080
+  ```
+
+  </TabItem>
+</Tabs>
+
+### Full Example
+
+<Tabs>
+  <TabItem value="pip" label="pip" default>
+  ```bash
+  clickup-mcp-server --env /path/to/.env --transport sse --port 8080
+  ```
+
+  </TabItem>
+  <TabItem value="poetry" label="poetry">
+  ```bash
+  poetry run clickup-mcp-server --env /path/to/.env --transport sse --port 8080
+  ```
+
+  </TabItem>
+  <TabItem value="uv" label="uv">
+  ```bash
+  uv run clickup-mcp-server --env /path/to/.env --transport sse --port 8080
+  ```
+
+  </TabItem>
+</Tabs>
+
+## Verifying Server Operation
+
+Once the server is running, you can verify it's working by accessing:
+
+```
+curl http://localhost:8000/health
+```
+
+You should receive a JSON response confirming the server is operational.

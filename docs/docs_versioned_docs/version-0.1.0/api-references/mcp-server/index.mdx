@@ -1,0 +1,82 @@
+---
+id: mcp-apis
+title: MCP Server APIs
+sidebar_position: 2
+---
+
+# MCP Server APIs
+
+The MCP (Model Context Protocol) Server APIs provide programmatic interfaces for client libraries and applications to interact with ClickUp resources through a standardized protocol. For more information about MCP, see the [official documentation](https://modelcontextprotocol.io/docs/getting-started/intro).
+
+:::note No authentication parameter in any function
+- Auth: `CLICKUP_API_TOKEN` must be configured on the server
+:::
+
+## Transport Options
+
+MCP Server supports two transport mechanisms:
+
+1. **HTTP Streaming** - Long-lived HTTP connections with streaming responses
+2. **Server-Sent Events (SSE)** - Event-based communication over HTTP
+
+## Available Resources
+
+The following resource endpoints are available:
+
+- ✅ [Workspace](tools/workspace.mdx) — Discover workspaces (teams)
+- ✅ [Team](tools/team.mdx) — Team/workspace management
+- ✅ [Space](tools/space.mdx) — Spaces within a workspace
+- ✅ [Folder](tools/folder.mdx) — Folders within a space
+- ✅ [List](tools/list.mdx) — Lists within a folder/space
+- ✅ [Task](tools/task.mdx) — Task operations
+
+## Protocol Format
+
+MCP requests and responses follow a standardized JSON format:
+
+**Request:**
+```json
+{
+  "id": "request-id",
+  "method": "resource.action",
+  "params": {
+    // Request parameters
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "id": "request-id",
+  "result": {
+    // Response data
+  },
+  "error": null
+}
+```
+
+Or in case of an error:
+
+```json
+{
+  "id": "request-id",
+  "result": null,
+  "error": {
+    "code": 404,
+    "message": "Resource not found"
+  }
+}
+```
+
+## Error Handling
+
+MCP Server API errors follow a standard format with an error code and descriptive message. Common error codes include:
+
+For the standardized ToolResponse envelope and retry/backoff guidance, see [Errors and Retries (MCP)](./errors-and-retries.mdx).
+
+- `400` - Bad Request (invalid parameters)
+- `401` - Unauthorized (authentication required)
+- `403` - Forbidden (insufficient permissions)
+- `404` - Not Found (resource doesn't exist)
+- `500` - Server Error (internal error)

@@ -1,0 +1,98 @@
+---
+title: CI/CD Workflows
+sidebar_position: 6
+---
+
+# CI/CD Workflows
+
+This section describes the Continuous Integration and Continuous Deployment (CI/CD) workflows used in the ClickUp MCP Server project.
+
+## 🚀 **Quick Navigation**
+
+Our CI/CD system is organized into focused, developer-friendly sections:
+
+### **📋 [Continuous Integration](./continuous-integration.mdx)**
+
+[![CI](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/ci.yaml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/ci.yaml)
+[![CI + E2E](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/ci_includes_e2e_test.yaml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/ci_includes_e2e_test.yaml)
+
+- **CI workflow triggers and structure**  
+- **Multi-Python version testing**
+- **Code quality checks and coverage reporting**
+- **Test automation and validation**
+
+### **🔄 [Release System](./release-system.mdx)**
+
+[![Release Validation](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-validate.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-validate.yml)
+[![Release](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release.yml)
+[![Release Staging](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-staging.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/release-staging.yml)
+
+- **Production, validation, and staging releases**
+- **Multi-artifact deployment (Python, Docker, Docs)**
+- **Release intent configuration and supply chain security**
+- **Git synchronization fixes and version management**
+
+### **📖 [Documentation Deployment](./documentation-deployment.mdx)**  
+
+[![Documentation](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/documentation.yaml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/documentation.yaml)
+
+- **Advanced workflow_run trigger pattern**
+- **Intelligent documentation triggering with DOCS_UPDATED flags**
+- **Dual-trigger architecture solving GitHub Actions limitations**
+- **Guard job logic and troubleshooting**
+
+### **🔧 [Reusable Workflows](./reusable-workflows.mdx)**
+- **Docker, Python, and documentation operations**
+- **Workflow integration patterns and architecture**
+- **Standardized operations and DRY principles**
+
+### **⚙️ [Additional CI Workflows](./additional-ci-workflows.mdx)**
+
+[![API Spec Check](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/check-clickup-api-spec.yaml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/check-clickup-api-spec.yaml)
+[![Docker CI](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/docker-ci.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/docker-ci.yml)
+[![DockerHub README CI](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/dockerhub-readme-ci.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/dockerhub-readme-ci.yml)
+[![Docs Auto-Merge](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/docs-automerge.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/docs-automerge.yml)
+[![Docs Build Check](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/docs-build-check.yaml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/docs-build-check.yaml)
+
+- **API Specification Checking** - Automated ClickUp API monitoring
+- **Docker CI** - Container building and testing workflows  
+- **DockerHub README CI** - Repository description synchronization
+- **Documentation Auto-Approve & Auto-Merge** - Streamlined docs updates
+
+### **🛠️ [Developer Guide](./developer-guide.mdx)**
+- **Configuration and troubleshooting**
+- **Best practices for contributors**
+- **Common workflows and monitoring**
+- **Additional specialized workflows**
+
+---
+
+## 🎯 **CI/CD Overview**
+
+We use **GitHub Actions** to automate testing, code quality checks, and deployment processes. Our CI/CD pipelines help maintain code quality, ensure tests pass, and streamline the release process.
+
+**Monitor all workflows at:** [GitHub Actions Dashboard](https://github.com/Chisanan232/clickup-mcp-server/actions)
+
+### **System Highlights**
+
+✅ **Comprehensive CI**: Multi-Python testing, code quality, coverage reporting  
+✅ **Intelligent Releases**: Intent-based configuration with supply chain security  
+✅ **Advanced Documentation**: workflow_run pattern with DOCS_UPDATED flag logic  
+✅ **Reusable Architecture**: DRY workflows with standardized operations  
+✅ **Developer-Friendly**: Extensive validation, staging, and troubleshooting guidance  
+
+---
+
+## 🎯 **Getting Started**
+
+**New to our CI/CD system?** Start with:
+
+1. **📋 [Continuous Integration](./continuous-integration.mdx)** - Understand our testing and quality workflows
+2. **🔄 [Release System](./release-system.mdx)** - Learn about our release process and configuration
+3. **🛠️ [Developer Guide](./developer-guide.mdx)** - Find practical examples and troubleshooting tips
+
+**Need specific information?**
+- **Configuring releases:** → [Release System](./release-system.mdx)
+- **Documentation not deploying:** → [Documentation Deployment](./documentation-deployment.mdx)  
+- **Understanding workflow patterns:** → [Reusable Workflows](./reusable-workflows.mdx)
+- **Troubleshooting issues:** → [Developer Guide](./developer-guide.mdx)

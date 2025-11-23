@@ -1,0 +1,162 @@
+---
+id: folder-mcp-api
+title: Folder
+sidebar_position: 3
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Folder MCP API
+
+Tools for creating, listing, retrieving, updating, and deleting folders.
+
+:::note Errors and retries
+All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
+and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
+[Errors and Retries (MCP)](../errors-and-retries.mdx) for details.
+:::
+
+## Tools
+
+### folder.list_in_space
+
+Lists all folders within a given space (`space_id`). This is a read-only discovery call that returns the minimal folder metadata (e.g., `{ id, name }`) so you can enumerate containers before working with lists and tasks inside them.
+- **Parameters**: [FolderListInSpaceInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/folder.py)
+
+```jsonc
+{
+  "space_id": "space_1" // Space ID to list folders within
+}
+```
+
+- **Returns**: [FolderListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/folder.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true, // Tool succeeded
+  "result": {
+    "items": [
+      {
+        "id": "folder_1", // Folder ID
+        "name": "Planning" // Folder name
+      }
+    ]
+  },
+  "issues": [] // Optional warnings/issues collected during execution
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `space_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### folder.get
+
+Retrieves a single folder by `folder_id`. Read-only. Useful to validate the folder exists and to read its core properties like `name` and parent `space_id` before performing updates.
+- **Parameters**: [FolderGetInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/folder.py)
+
+```jsonc
+{
+  "folder_id": "folder_1" // Target folder ID
+}
+```
+
+- **Returns**: [FolderResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/folder.py)
+
+```jsonc
+{
+  "id": "folder_1", // Folder ID
+  "name": "Planning", // Folder name
+  "space_id": "space_1" // Parent space ID
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `folder_id` does not exist
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### folder.create
+
+Creates a new folder under the specified space (`space_id`). This operation has side effects in ClickUp and returns the newly created folder on success. Ensure the token has permission to create folders in the target space.
+- **Parameters**: [FolderCreateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/folder.py)
+
+```jsonc
+{
+  "space_id": "space_1", // Parent space ID
+  "name": "[TEST] Planning" // Folder name
+}
+```
+
+- **Returns**: [FolderResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/folder.py)
+
+```jsonc
+{
+  "id": "folder_1", // New folder ID
+  "name": "[TEST] Planning", // Folder name
+  "space_id": "space_1" // Parent space ID
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `space_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### folder.update
+
+Updates an existing folder. Provide only the fields you want to change (e.g., `name`). Returns the updated folder. Requires appropriate permissions in the target space.
+- **Parameters**: [FolderUpdateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/folder.py)
+
+```jsonc
+{
+  "folder_id": "folder_1", // Target folder ID
+  "name": "Roadmap" // New folder name
+}
+```
+
+- **Returns**: [FolderResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/folder.py)
+
+```jsonc
+{
+  "id": "folder_1",
+  "name": "Roadmap",
+  "space_id": "space_1"
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `folder_id` does not exist
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### folder.delete
+
+Permanently deletes a folder by `folder_id`. This is a destructive operation and cannot be undone. Consider workspace retention policies before deleting.
+- **Parameters**: [FolderDeleteInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/folder.py)
+
+```jsonc
+{
+  "folder_id": "folder_1" // Target folder ID
+}
+```
+
+- **Returns**: [DeletionResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "deleted": true // True if the folder was deleted
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `folder_id` does not exist
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)

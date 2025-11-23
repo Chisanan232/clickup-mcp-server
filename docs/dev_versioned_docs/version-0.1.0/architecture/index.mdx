@@ -1,0 +1,160 @@
+---
+title: Software Architecture
+sidebar_position: 1
+slug: /architecture/overview
+---
+
+# Software Architecture
+
+This document provides an overview of the ClickUp MCP Server architecture, its core components, and how they interact with each other.
+
+## System Overview
+
+ClickUp MCP Server is designed as a middleware layer between client applications and the ClickUp API. It implements a Model Context Protocol (MCP) pattern to provide a consistent interface regardless of the underlying transport mechanism. For more information about MCP, see the [official documentation](https://modelcontextprotocol.io/docs/getting-started/intro).
+
+:::info Streaming modes
+SSE uses the browser EventSource API and `text/event-stream` frames; messages are UTF-8 text with events separated by blank lines. Streamable HTTP uses chunked responses over a standard POST endpoint. Choose based on client/platform needs.
+:::
+
+```mermaid
+graph LR
+    Client[Client Applications] --> |MCP Protocol| Server[ClickUp MCP Server]
+    Server --> |HTTP API Calls| ClickUp[ClickUp API]
+    
+    subgraph "Transport Options"
+        HTTP[HTTP Streaming]
+        SSE[Server-Sent Events]
+    end
+    
+    Client --> HTTP
+    Client --> SSE
+    HTTP --> Server
+    SSE --> Server
+```
+
+## Core Components
+
+### Client Layer
+
+The client layer provides interfaces for applications to communicate with the MCP server:
+
+- **Transport Adapters**: Implementations for different communication protocols (HTTP streaming, SSE)
+- **Client Libraries**: Language-specific libraries that implement the MCP protocol
+
+### Server Layer
+
+The server is the central component that:
+
+1. Receives client requests via different transport mechanisms
+2. Processes commands according to the MCP protocol
+3. Communicates with the ClickUp API
+4. Returns standardized responses to clients
+
+:::tip Where to look next
+- Application instance factory (singleton lifecycle & workflow): [Application Instance Factory](./app-factory.mdx)
+- Error envelope and decorator: [Centralized Error Handling](./error-handling.mdx)
+- Models split and conversions: [Models — DTO vs Domain vs MCP I/O](./models.mdx)
+:::
+
+### Domain Models
+
+Domain models represent the core business entities from ClickUp:
+
+- **ClickUpTeam**: Represents a ClickUp workspace
+- **ClickUpSpace**: Represents a space within a team
+- **ClickUpFolder**: Represents a folder within a space
+- **ClickUpList**: Represents a list within a folder or space
+- **ClickUpTask**: Represents a task within a list
+- **ClickUpUser**: Represents a user within ClickUp
+
+:::info Model layer architecture
+This project separates concerns across three model layers: DTO (API client), Domain (rich entities), and MCP I/O (minimal, stable tool inputs/outputs). Error models are centralized under the MCP layer; see the source for standardized issues and envelopes:
+
+[clickup_mcp/mcp_server/errors/models.py](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/errors/models.py)
+:::
+
+## Transport Mechanisms
+
+### HTTP Streaming
+
+Long-lived HTTP connections that stream responses back to clients. Features:
+
+- Simpler to implement on the client side
+- Works with standard HTTP libraries
+- Compatible with most network environments
+
+### Server-Sent Events (SSE)
+
+Event-based communication mechanism for real-time updates. Features:
+
+- Native browser support
+- Automatic reconnection
+- Event-based programming model
+
+## Data Flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Transport
+    participant Server
+    participant API Client
+    participant ClickUp API
+
+    Client->>Transport: Send MCP Request
+    Transport->>Server: Process Request
+    Server->>API Client: Convert to API Call
+    API Client->>ClickUp API: Send HTTP Request
+    ClickUp API->>API Client: Return Response
+    API Client->>Server: Process Response
+    Server->>Transport: Format as MCP Response
+    Transport->>Client: Return Result
+```
+
+## Environment Configuration
+
+The server supports configuration through:
+
+- Command-line arguments
+- Environment variables
+- `.env` files with custom paths
+
+Configuration is handled through a centralized configuration system that ensures consistency across all components.
+
+## Security Model
+
+- API tokens are securely managed and never exposed
+- Token validation occurs before any API requests
+- No persistent storage of tokens (loaded at runtime)
+- Transport security relies on HTTPS/TLS
+
+## Error Handling
+
+- Standardized error responses across all transports
+- Detailed error information for debugging
+- Graceful degradation on API failures
+
+:::tip Centralized error handling
+All tools return a unified envelope and normalized issue codes. For mapping rules (e.g., 401/403/404/409/429), retry hints, and examples, see:
+
+[Centralized Error Handling](./error-handling.mdx)
+:::
+
+## Extensibility
+
+The architecture is designed to be extensible in several ways:
+
+1. **New Transport Mechanisms**: Additional transport options can be added by implementing the Transport interface
+2. **Additional API Resources**: New ClickUp API resources can be integrated by extending the domain models
+3. **Custom Command Handlers**: Special-purpose commands can be added with custom handlers
+
+## Design Patterns
+
+The project uses several design patterns:
+
+- **Factory Pattern**: For creating clients and server instances
+- **Strategy Pattern**: For selecting transport mechanisms
+- **Repository Pattern**: For data access abstraction
+- **Command Pattern**: For handling MCP commands
+- **Adapter Pattern**: For different transport implementations
+
