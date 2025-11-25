@@ -94,7 +94,7 @@ jobs:
 
       - name: Create Pull Request
         if: steps.check.outputs.exit_code == '1'
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: chore/refresh-clickup-webhook-payload-fixtures
