@@ -1467,7 +1467,7 @@
     "/v2/task/{task_id}/comment": {
       "get": {
         "summary": "Get Task Comments",
-        "description": "View task comments. \\\n \\\nIf you do not include the `start` and `start_id` parameters, this endpoint will return the most recent 25 comments.\\\n \\\nUse the `start` and `start id` parameters of the oldest comment to retrieve the next 25 comments.",
+        "description": "View task comments. \\\n \\\nRetrieve comments from a task. Results are returned in reverse chronological order (newest to oldest). By default, the request returns the 25 most recent comments.\\\n \\\n[Pagination](https://developer.clickup.com/docs/task-comments-pagination): To fetch the next page of history (older comments), you must use the `start` and `start_id` parameters together, using the data from the last comment of the current response.",
         "tags": [
           "Comments"
         ],
@@ -1516,7 +1516,7 @@
           {
             "name": "start",
             "in": "query",
-            "description": "Enter the `date` of a task comment using Unix time in milliseconds.",
+            "description": "The Unix timestamp (in milliseconds) of the reference comment. Required for pagination. Must be used in combination with `start_id`.\n\\\n Value should be the `date` of the last comment from the previous response.",
             "style": "form",
             "explode": true,
             "schema": {
@@ -1527,7 +1527,7 @@
           {
             "name": "start_id",
             "in": "query",
-            "description": "Enter the Comment `id` of a task comment.",
+            "description": "The unique ID of the reference comment. Required for pagination. Must be used in combination with `start`. \n\\\n Value should be the `id` of the last comment from the previous response.",
             "style": "form",
             "explode": true,
             "schema": {
