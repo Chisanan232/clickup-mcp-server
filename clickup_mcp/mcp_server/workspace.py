@@ -22,7 +22,30 @@ from .app import mcp
 )
 @handle_tool_errors
 async def workspace_list() -> WorkspaceListResult:
-    """List workspaces (teams). HTTP: GET /team"""
+    """
+    List workspaces (teams) accessible to the current token.
+
+    API:
+        GET /team
+
+    Returns:
+        WorkspaceListResult: Items containing `team_id` and `name` for each workspace.
+
+    Error Handling:
+        This function is wrapped by `@handle_tool_errors` and returns a ToolResponse at runtime.
+        On failure, `ok=False` with one or more issues (with canonical codes like VALIDATION_ERROR,
+        RATE_LIMIT, INTERNAL). On success, `ok=True` and `result` contains WorkspaceListResult.
+
+    Examples:
+        # Python (async)
+        response = await workspace_list()
+        if response.ok:
+            for ws in response.result.items:
+                print(ws.team_id, ws.name)
+        else:
+            for iss in response.issues:
+                print(iss.code, iss.message)
+    """
     client = ClickUpAPIClientFactory.get()
     async with client:
         teams = await client.team.get_authorized_teams()

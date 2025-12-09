@@ -1,3 +1,26 @@
+"""
+Decorator-based ClickUp webhook handler registration.
+
+Design:
+- Provides a friendly decorator API to register functions to specific
+  `ClickUpWebhookEventType` values using a central registry.
+- Supports both enum-based usage (`@clickup_event(ClickUpWebhookEventType.X)`) and
+  attribute-style aliases (e.g., `@clickup_event.task_updated`).
+
+Usage Examples:
+    from clickup_mcp.web_server.event.handler.decorators import clickup_event
+    from clickup_mcp.web_server.event.models import ClickUpWebhookEvent, ClickUpWebhookEventType
+
+    @clickup_event(ClickUpWebhookEventType.TASK_UPDATED)
+    async def on_task_updated(event: ClickUpWebhookEvent) -> None:
+        print("Task updated", event.body.get("task_id"))
+
+    @clickup_event.task_created
+    def on_task_created(event: ClickUpWebhookEvent) -> None:
+        # sync functions are auto-wrapped with ensure_async()
+        pass
+"""
+
 import inspect
 from typing import Awaitable, Callable, Protocol
 
@@ -20,6 +43,18 @@ class _HandlerFn(Protocol):
 
 
 def ensure_async(fn: _HandlerFn) -> AsyncHandler:
+    """
+    Wrap a sync handler into an async function if needed.
+
+    Args:
+        fn: A function that accepts `ClickUpWebhookEvent` and may be sync or async
+
+    Returns:
+        AsyncHandler: An awaitable version of the handler
+
+    Notes:
+        If `fn` is already async, it is returned unchanged.
+    """
     if inspect.iscoroutinefunction(fn):
         return fn
 
@@ -30,6 +65,16 @@ def ensure_async(fn: _HandlerFn) -> AsyncHandler:
 
 
 class ClickUpEventDecorator:
+    """
+    Decorator facade for registering webhook handlers.
+
+    Features:
+    - Enum-based usage via `clickup_event(ClickUpWebhookEventType.X)`
+    - Attribute-style aliases for each event, e.g. `clickup_event.task_updated`
+    - Maintains original function identity by returning the original function
+      after registering the async-wrapped version in the registry
+    """
+
     def __call__(self, event_type: ClickUpWebhookEventType):
         """
         Enum-based usage:

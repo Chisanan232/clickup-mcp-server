@@ -1,8 +1,22 @@
 """
 List DTOs for ClickUp API requests and responses.
 
-These DTOs handle serialization/deserialization of List data
-for API interactions.
+These DTOs provide serialization/deserialization helpers for List create, update,
+and response shapes. Request DTOs inherit from `BaseRequestDTO` so `to_payload()`
+excludes None values; response DTOs inherit from `BaseResponseDTO`.
+
+Usage Examples:
+    # Python - Create list payload
+    from clickup_mcp.models.dto.list import ListCreate
+
+    payload = ListCreate(name="Sprint Backlog", priority=2).serialize()
+    # => {"name": "Sprint Backlog", "priority": 2}
+
+    # Python - Update list payload
+    from clickup_mcp.models.dto.list import ListUpdate
+
+    update = ListUpdate(name="Sprint 14")
+    # => {"name": "Sprint 14"}
 """
 
 from pydantic import Field
@@ -16,10 +30,25 @@ PROPERTY_STATUS_DESCRIPTION: str = "Status of the list"
 
 
 class ListCreate(BaseRequestDTO):
-    """DTO for creating a new list.
+    """
+    DTO for creating a new list.
 
-    POST /folder/{folder_id}/list
-    https://developer.clickup.com/reference/createlist
+    API:
+        POST /folder/{folder_id}/list
+        Docs: https://developer.clickup.com/reference/createlist
+
+    Attributes:
+        name: List name
+        content: Optional description
+        due_date: Due date in epoch ms
+        due_date_time: Whether due date includes time
+        priority: Priority level (1-5)
+        assignee: User ID to assign the list to
+        status: Initial status label
+
+    Examples:
+        # Python
+        ListCreate(name="Sprint Backlog", priority=2).to_payload()
     """
 
     name: str = Field(description=PROPERTY_NAME_DESCRIPTION)
@@ -32,9 +61,24 @@ class ListCreate(BaseRequestDTO):
 
 
 class ListUpdate(BaseRequestDTO):
-    """DTO for updating an existing list.
+    """
+    DTO for updating an existing list.
 
-    PUT /list/{list_id}
+    API:
+        PUT /list/{list_id}
+
+    Attributes:
+        name: New list name
+        content: New description
+        due_date: New due date in epoch ms
+        due_date_time: Whether due date includes time
+        priority: New priority (1-5)
+        assignee: New assignee user id
+        status: New status label
+
+    Examples:
+        # Python
+        ListUpdate(name="Sprint 14").to_payload()
     """
 
     name: str | None = Field(default=None, description=PROPERTY_NAME_DESCRIPTION)
@@ -47,9 +91,32 @@ class ListUpdate(BaseRequestDTO):
 
 
 class ListResp(BaseResponseDTO):
-    """DTO for list API responses.
+    """
+    DTO for list API responses.
 
-    Represents a list returned from the ClickUp API.
+    Represents a list returned from the ClickUp API with typed refs for user, folder, and space.
+
+    Attributes:
+        id: List ID
+        name: List name
+        orderindex: Order index
+        status: Current status label
+        priority: Priority level
+        statuses: Effective statuses for this list (authoritative for task create/update)
+        assignee: Assigned user
+        task_count: Number of tasks in the list
+        due_date: Due date in epoch ms
+        due_date_time: Whether due date includes time
+        start_date: Start date in epoch ms
+        start_date_time: Whether start date includes time
+        folder: Parent folder ref
+        space: Parent space ref
+        content: Description
+        archived: Whether the list is archived
+
+    Examples:
+        # Python - Deserialize from API JSON
+        ListResp.deserialize({"id": "lst_1", "name": "Sprint"})
     """
 
     id: str = Field(description="The unique identifier for the list")

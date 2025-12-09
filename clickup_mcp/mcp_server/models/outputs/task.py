@@ -1,6 +1,22 @@
-"""Result models for Task tools.
+"""
+Result models for Task tools.
 
 Concise shapes for LLM planning; no raw ClickUp payloads leak.
+
+Usage Examples:
+    # Python - Single task result
+    from clickup_mcp.mcp_server.models.outputs.task import TaskResult, TaskListResult, TaskListItem, PriorityInfo
+
+    t = TaskResult(
+        id="t1",
+        name="Ship v1.2",
+        status="in progress",
+        priority=PriorityInfo(value=2, label="HIGH"),
+        list_id="L1",
+    )
+
+    # Python - List result
+    lr = TaskListResult(items=[TaskListItem(id="t1", name="Backfill analytics")])
 """
 
 from typing import List, Optional
@@ -55,6 +71,17 @@ class TaskResult(BaseModel):
 
 
 class TaskListItem(BaseModel):
+    """
+    Item shape for task summaries returned by MCP tools.
+
+    Attributes:
+        id: Task ID
+        name: Task title
+        status: Workflow status (if any)
+        list_id: Home list ID (if present)
+        url: Canonical URL (if present)
+    """
+
     id: str = Field(..., description="Task ID", examples=["t1", "task_123"])
     name: str = Field(..., description="Task title", examples=["Backfill analytics", "Fix webhook retry"])
     status: Optional[str] = Field(None, description="Workflow status", examples=["open", "in progress", "done"])

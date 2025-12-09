@@ -1,3 +1,10 @@
+"""
+Enum definitions for ClickUp webhook event types used across the web server.
+
+Each enum value corresponds to the `event` field in ClickUp webhook payloads and
+is used by routers, sinks, and handler registries to route events correctly.
+"""
+
 from enum import Enum
 
 

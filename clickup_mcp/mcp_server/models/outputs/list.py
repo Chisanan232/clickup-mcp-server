@@ -6,6 +6,16 @@ from pydantic import BaseModel, Field
 
 
 class ListStatusOutput(BaseModel):
+    """
+    Status metadata defined on a List.
+
+    Attributes:
+        name: Status name as configured on the list (display label)
+        type: Status type classification (e.g., open/closed/active/done)
+        color: UI color hex or token
+        orderindex: Ordering index within the list's statuses
+    """
+
     name: str = Field(..., description="Status name as configured on the list", examples=["Open", "In progress"])
     type: str | None = Field(None, description="Status type (open/closed/active/done)", examples=["open"])
     color: str | None = Field(None, description="UI color (hex or token)", examples=["#6a5acd"])
@@ -13,7 +23,17 @@ class ListStatusOutput(BaseModel):
 
 
 class ListResult(BaseModel):
-    """Concise list detail for LLM planning."""
+    """
+    Concise list detail for LLM planning.
+
+    Attributes:
+        id: List ID
+        name: List name
+        status: Status label (if any)
+        folder_id: Parent folder ID (if present)
+        space_id: Parent space ID (if present)
+        statuses: Effective statuses for this list (authoritative for task create/update)
+    """
 
     id: str = Field(..., description="List ID", examples=["list_1", "lst_abc"])
     name: str = Field(..., description="List name", examples=["Sprint 12", "Sprint Backlog"])
@@ -47,6 +67,8 @@ class ListResult(BaseModel):
 
 
 class ListListItem(BaseModel):
+    """Item shape for list summaries returned by MCP tools."""
+
     id: str = Field(..., description="List ID", examples=["list_1", "lst_abc"])
     name: str = Field(..., description="List name", examples=["Sprint Backlog", "Bugs"])
 

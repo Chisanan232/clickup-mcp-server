@@ -37,6 +37,28 @@ from .app import mcp
 )
 @handle_tool_errors
 async def folder_create(input: FolderCreateInput) -> FolderResult | None:
+    """
+    Create a folder under a space.
+
+    API:
+        POST /space/{space_id}/folder
+
+    Args:
+        input: FolderCreateInput with `space_id` and folder fields (e.g., name)
+
+    Returns:
+        FolderResult | None: Created folder projection, or None on failure
+
+    Error Handling:
+        Decorated with `@handle_tool_errors`, returns ToolResponse at runtime. On failure,
+        `ok=False` with issues (e.g., VALIDATION_ERROR, PERMISSION_DENIED, RATE_LIMIT).
+
+    Examples:
+        # Python (async)
+        response = await folder_create(FolderCreateInput(space_id="spc_1", name="Planning"))
+        if response.ok and response.result:
+            print(response.result.id)
+    """
     client = ClickUpAPIClientFactory.get()
     domain = FolderMapper.from_create_input(input)
     dto = FolderMapper.to_create_dto(domain)
@@ -56,6 +78,28 @@ async def folder_create(input: FolderCreateInput) -> FolderResult | None:
 )
 @handle_tool_errors
 async def folder_get(input: FolderGetInput) -> FolderResult | None:
+    """
+    Get a folder by ID.
+
+    API:
+        GET /folder/{folder_id}
+
+    Args:
+        input: FolderGetInput with `folder_id`
+
+    Returns:
+        FolderResult | None: Folder projection, or None if not found
+
+    Error Handling:
+        Decorated with `@handle_tool_errors`, returns ToolResponse at runtime. On failure,
+        `ok=False` with issues (e.g., NOT_FOUND, PERMISSION_DENIED, RATE_LIMIT).
+
+    Examples:
+        # Python (async)
+        response = await folder_get(FolderGetInput(folder_id="fld_1"))
+        if response.ok and response.result:
+            print(response.result.name)
+    """
     client = ClickUpAPIClientFactory.get()
     async with client:
         resp = await client.folder.get(input.folder_id)
@@ -71,6 +115,28 @@ async def folder_get(input: FolderGetInput) -> FolderResult | None:
 )
 @handle_tool_errors
 async def folder_update(input: FolderUpdateInput) -> FolderResult | None:
+    """
+    Update folder metadata (name only).
+
+    API:
+        PUT /folder/{folder_id}
+
+    Args:
+        input: FolderUpdateInput with `folder_id` and new name
+
+    Returns:
+        FolderResult | None: Updated folder projection, or None if not found
+
+    Error Handling:
+        Decorated with `@handle_tool_errors`, returns ToolResponse at runtime. On failure,
+        `ok=False` with issues (e.g., NOT_FOUND, PERMISSION_DENIED, RATE_LIMIT).
+
+    Examples:
+        # Python (async)
+        response = await folder_update(FolderUpdateInput(folder_id="fld_1", name="Roadmap"))
+        if response.ok and response.result:
+            print(response.result.name)
+    """
     client = ClickUpAPIClientFactory.get()
     domain = FolderMapper.from_update_input(input)
     dto = FolderMapper.to_update_dto(domain)
@@ -88,6 +154,27 @@ async def folder_update(input: FolderUpdateInput) -> FolderResult | None:
 )
 @handle_tool_errors
 async def folder_delete(input: FolderDeleteInput) -> DeletionResult:
+    """
+    Delete a folder by ID.
+
+    API:
+        DELETE /folder/{folder_id}
+
+    Args:
+        input: FolderDeleteInput with `folder_id`
+
+    Returns:
+        DeletionResult: `deleted=True` on success
+
+    Error Handling:
+        Decorated with `@handle_tool_errors`, returns ToolResponse at runtime. On failure,
+        `ok=False` with issues classifying the error.
+
+    Examples:
+        # Python (async)
+        response = await folder_delete(FolderDeleteInput(folder_id="fld_1"))
+        print(response.ok)
+    """
     client = ClickUpAPIClientFactory.get()
     async with client:
         ok = await client.folder.delete(input.folder_id)
@@ -100,6 +187,29 @@ async def folder_delete(input: FolderDeleteInput) -> DeletionResult:
 )
 @handle_tool_errors
 async def folder_list_in_space(input: FolderListInSpaceInput) -> FolderListResult:
+    """
+    List folders in a space.
+
+    API:
+        GET /space/{space_id}/folder
+
+    Args:
+        input: FolderListInSpaceInput with `space_id`
+
+    Returns:
+        FolderListResult: Items with id/name/space_id
+
+    Error Handling:
+        Decorated with `@handle_tool_errors`, returns ToolResponse at runtime. On failure,
+        `ok=False` with issues indicating the error category.
+
+    Examples:
+        # Python (async)
+        response = await folder_list_in_space(FolderListInSpaceInput(space_id="spc_1"))
+        if response.ok:
+            for it in response.result.items:
+                print(it.id, it.name)
+    """
     client = ClickUpAPIClientFactory.get()
     async with client:
         folders = await client.folder.get_all(input.space_id)

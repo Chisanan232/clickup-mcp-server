@@ -25,16 +25,26 @@ async def get_authorized_teams() -> WorkspaceListResult:
     """
     Get all teams/workspaces available to the authenticated user.
 
-    This function retrieves all teams/workspaces from ClickUp that the authenticated user
-    has access to. It returns a list of team domain models with full details including
-    team members if available.
+    API:
+        GET /team
 
     Returns:
-        A list of ClickUpTeam domain models as dictionaries. Returns an empty list
-        if no teams are found.
+        WorkspaceListResult: Items containing `team_id` and `name` for each workspace.
 
-    Raises:
-        ValueError: If the API token is not found or if there's an error retrieving teams.
+    Error Handling:
+        This function is wrapped by `@handle_tool_errors` and returns a ToolResponse at runtime.
+        On failure, `ok=False` with one or more issues (e.g., PERMISSION_DENIED, RATE_LIMIT,
+        TRANSIENT). On success, `ok=True` and `result` contains WorkspaceListResult.
+
+    Examples:
+        # Python (async)
+        response = await get_authorized_teams()
+        if response.ok:
+            for ws in response.result.items:
+                print(ws.team_id, ws.name)
+        else:
+            for iss in response.issues:
+                print(iss.code, iss.message)
     """
     client = ClickUpAPIClientFactory.get()
 

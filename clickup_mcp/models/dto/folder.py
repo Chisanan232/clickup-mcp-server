@@ -1,8 +1,14 @@
 """
 Folder DTOs for ClickUp API requests and responses.
 
-These DTOs handle serialization/deserialization of Folder data
-for API interactions.
+These DTOs provide serialization/deserialization helpers for folder creation,
+update, and response shapes.
+
+Usage Examples:
+    # Python - Create folder payload
+    from clickup_mcp.models.dto.folder import FolderCreate
+
+    FolderCreate(name="Planning").to_payload()  # {"name": "Planning"}
 """
 
 from typing import List
@@ -15,28 +21,61 @@ PROPERTY_NAME_DESCRIPTION: str = "The name of the folder"
 
 
 class FolderCreate(BaseRequestDTO):
-    """DTO for creating a new folder.
+    """
+    DTO for creating a new folder.
 
-    POST /space/{space_id}/folder
-    https://developer.clickup.com/reference/createfolder
+    API:
+        POST /space/{space_id}/folder
+        Docs: https://developer.clickup.com/reference/createfolder
+
+    Attributes:
+        name: Folder name
+
+    Examples:
+        # Python
+        FolderCreate(name="Planning").to_payload()
     """
 
     name: str = Field(description=PROPERTY_NAME_DESCRIPTION)
 
 
 class FolderUpdate(BaseRequestDTO):
-    """DTO for updating an existing folder.
+    """
+    DTO for updating an existing folder.
 
-    PUT /folder/{folder_id}
+    API:
+        PUT /folder/{folder_id}
+
+    Attributes:
+        name: New folder name
+
+    Examples:
+        # Python
+        FolderUpdate(name="Roadmap").to_payload()
     """
 
     name: str | None = Field(default=None, description=PROPERTY_NAME_DESCRIPTION)
 
 
 class FolderResp(BaseResponseDTO):
-    """DTO for folder API responses.
+    """
+    DTO for folder API responses.
 
-    Represents a folder returned from the ClickUp API.
+    Represents a folder returned from the ClickUp API with typed refs for space and lists.
+
+    Attributes:
+        id: Folder ID
+        name: Folder name
+        orderindex: Order index
+        override_statuses: Whether this folder overrides statuses
+        hidden: Whether the folder is hidden
+        space: Parent space reference
+        task_count: Number of tasks in this folder
+        lists: Lists contained in this folder
+
+    Examples:
+        # Python - Deserialize from API JSON
+        FolderResp.deserialize({"id": "fld_1", "name": "Planning"})
     """
 
     id: str = Field(description="The unique identifier for the folder")

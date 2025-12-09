@@ -9,11 +9,32 @@ from pydantic import BaseModel, Field
 
 
 class ListCreateInput(BaseModel):
-    """Create a list. HTTP: POST /folder/{folder_id}/list
+    """
+    Create a list. HTTP: POST /folder/{folder_id}/list
 
     When to use: You know the parent folder and want to create a list. If you don’t know `folder_id`,
     call `workspace.list` → `space.list` → `folder.list_in_space` first.
-    Constraints: `priority` 1..4; time fields are epoch ms.
+
+    Constraints:
+        - `priority` must be between 1 and 4
+        - Time fields are epoch milliseconds
+
+    Attributes:
+        folder_id: Parent folder ID
+        name: List name
+        content: Optional description
+        status: Initial status label
+        priority: Priority (1..4)
+        assignee: Assignee user ID
+        due_date: Due date in epoch ms
+        due_date_time: Whether due date includes time
+
+    Examples:
+        # Minimal
+        ListCreateInput(folder_id="folder_1", name="Sprint Backlog")
+
+        # With scheduling
+        ListCreateInput(folder_id="folder_1", name="Bugs", priority=2, due_date=1731523200000)
     """
 
     model_config = {
@@ -35,9 +56,16 @@ class ListCreateInput(BaseModel):
 
 
 class ListGetInput(BaseModel):
-    """Get a list. HTTP: GET /list/{list_id}
+    """
+    Get a list. HTTP: GET /list/{list_id}
 
     When to use: Retrieve list details by ID.
+
+    Attributes:
+        list_id: Target list ID
+
+    Examples:
+        ListGetInput(list_id="list_1")
     """
 
     model_config = {"json_schema_extra": {"examples": [{"list_id": "list_1"}]}}
@@ -46,9 +74,23 @@ class ListGetInput(BaseModel):
 
 
 class ListUpdateInput(BaseModel):
-    """Update a list. HTTP: PUT /list/{list_id}
+    """
+    Update a list. HTTP: PUT /list/{list_id}
 
     When to use: Change list metadata (name/content/status/priority/assignee/due fields).
+
+    Attributes:
+        list_id: Target list ID
+        name: New list name
+        content: New description
+        status: New status label
+        priority: New priority (1..4)
+        assignee: New assignee user ID
+        due_date: New due date in epoch ms
+        due_date_time: Whether due date includes time
+
+    Examples:
+        ListUpdateInput(list_id="list_1", name="Sprint 12", status="In progress", priority=3)
     """
 
     model_config = {
@@ -70,9 +112,16 @@ class ListUpdateInput(BaseModel):
 
 
 class ListDeleteInput(BaseModel):
-    """Delete a list. HTTP: DELETE /list/{list_id}
+    """
+    Delete a list. HTTP: DELETE /list/{list_id}
 
     When to use: Permanently remove a list (and associated tasks per permissions).
+
+    Attributes:
+        list_id: Target list ID
+
+    Examples:
+        ListDeleteInput(list_id="list_1")
     """
 
     model_config = {"json_schema_extra": {"examples": [{"list_id": "list_1"}]}}
@@ -83,9 +132,16 @@ class ListDeleteInput(BaseModel):
 
 
 class ListListInFolderInput(BaseModel):
-    """List lists in a folder. HTTP: GET /folder/{folder_id}/list
+    """
+    List lists in a folder. HTTP: GET /folder/{folder_id}/list
 
     When to use: Discover lists within a given folder.
+
+    Attributes:
+        folder_id: Parent folder ID
+
+    Examples:
+        ListListInFolderInput(folder_id="folder_1")
     """
 
     model_config = {"json_schema_extra": {"examples": [{"folder_id": "folder_1"}]}}
@@ -94,9 +150,16 @@ class ListListInFolderInput(BaseModel):
 
 
 class ListListInSpaceFolderlessInput(BaseModel):
-    """List folderless lists in a space. HTTP: GET /space/{space_id}/list
+    """
+    List folderless lists in a space. HTTP: GET /space/{space_id}/list
 
     When to use: Discover lists that exist directly under a space (not in folders).
+
+    Attributes:
+        space_id: Space ID
+
+    Examples:
+        ListListInSpaceFolderlessInput(space_id="space_1")
     """
 
     model_config = {"json_schema_extra": {"examples": [{"space_id": "space_1"}]}}
@@ -105,9 +168,17 @@ class ListListInSpaceFolderlessInput(BaseModel):
 
 
 class ListAddTaskInput(BaseModel):
-    """Add task to list (TIML). HTTP: POST /list/{list_id}/task/{task_id}
+    """
+    Add task to list (TIML). HTTP: POST /list/{list_id}/task/{task_id}
 
     When to use: TIML is enabled and you want to add an existing task to another list.
+
+    Attributes:
+        list_id: Target list ID
+        task_id: Existing task ID to add
+
+    Examples:
+        ListAddTaskInput(list_id="list_2", task_id="task_123")
     """
 
     model_config = {"json_schema_extra": {"examples": [{"list_id": "list_2", "task_id": "task_123"}]}}
@@ -117,9 +188,17 @@ class ListAddTaskInput(BaseModel):
 
 
 class ListRemoveTaskInput(BaseModel):
-    """Remove task from list (TIML). HTTP: DELETE /list/{list_id}/task/{task_id}
+    """
+    Remove task from list (TIML). HTTP: DELETE /list/{list_id}/task/{task_id}
 
     When to use: TIML is enabled and you want to remove a task from a secondary list.
+
+    Attributes:
+        list_id: Target list ID
+        task_id: Task ID to remove
+
+    Examples:
+        ListRemoveTaskInput(list_id="list_2", task_id="task_123")
     """
 
     model_config = {"json_schema_extra": {"examples": [{"list_id": "list_2", "task_id": "task_123"}]}}
