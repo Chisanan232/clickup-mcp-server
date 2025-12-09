@@ -3,6 +3,30 @@ Team API resource manager.
 
 This module provides a resource manager for interacting with ClickUp Teams/Workspaces.
 It follows the Resource Manager pattern described in the project documentation.
+
+Capabilities:
+- List authorized teams/workspaces for the current token
+- List spaces within a team
+
+Authentication:
+- All requests require the ClickUp API token in the `Authorization` header: `Authorization: pk_...`
+
+Quick Examples:
+    # Python (async)
+    from clickup_mcp.client import ClickUpAPIClient
+
+    async with ClickUpAPIClient(api_token="pk_...") as client:
+        team_api = client.team
+        teams = await team_api.get_authorized_teams()
+
+    # curl - List spaces in a team
+    # GET /team/{team_id}/space
+    curl -H "Authorization: pk_..." \
+         https://api.clickup.com/api/v2/team/123/space
+
+    # wget - Get teams (implicit via /team)
+    wget --header="Authorization: pk_..." \
+         https://api.clickup.com/api/v2/team
 """
 
 import logging
@@ -18,11 +42,20 @@ logger = logging.getLogger(__name__)
 
 
 class TeamAPI:
-    """Team API resource manager.
+    """
+    Team API resource manager.
 
-    This class provides methods for interacting with ClickUp Teams/Workspaces through
-    the ClickUp API. It follows the Resource Manager pattern, receiving
-    a shared HTTP client instance and providing domain-specific methods.
+    Provides methods for interacting with ClickUp Teams/Workspaces using a shared
+    HTTP client instance.
+
+    Usage Examples:
+        # Python (async) - Initialize
+        from clickup_mcp.client import ClickUpAPIClient
+
+        async with ClickUpAPIClient(api_token="pk_...") as client:
+            team_api = client.team
+            teams = await team_api.get_authorized_teams()
+            spaces = await team_api.get_spaces("123")
     """
 
     def __init__(self, client: "ClickUpAPIClient"):
@@ -34,11 +67,29 @@ class TeamAPI:
         self._client = client
 
     async def get_authorized_teams(self) -> List[ClickUpTeam]:
-        """Get authorized teams/workspaces available to the authenticated user.
+        """
+        Get teams/workspaces authorized for the current token.
+
+        API:
+            GET /team
 
         Returns:
-            A list of ClickUpTeam instances representing the authorized teams/workspaces.
-            Returns an empty list if no teams are found or if an error occurs.
+            list[ClickUpTeam]: Authorized teams/workspaces. Returns an empty list on errors
+            or when no teams are available.
+
+        Examples:
+            # Python (async)
+            teams = await team_api.get_authorized_teams()
+            for t in teams:
+                print(t.name)
+
+            # curl
+            curl -H "Authorization: pk_..." \
+                 https://api.clickup.com/api/v2/team
+
+            # wget
+            wget --header="Authorization: pk_..." \
+                 https://api.clickup.com/api/v2/team
         """
         response = await self._client.get("/team")
 
@@ -58,16 +109,31 @@ class TeamAPI:
         return [ClickUpTeam(**team_data) for team_data in teams_data]
 
     async def get_spaces(self, team_id: str) -> list[SpaceResp]:
-        """Get all spaces in a team/workspace.
+        """
+        Get all spaces in a team/workspace.
 
-        GET /team/{team_id}/space
-        https://developer.clickup.com/reference/getspaces
+        API:
+            GET /team/{team_id}/space
+            Docs: https://developer.clickup.com/reference/getspaces
 
         Args:
             team_id: The ID of the team/workspace
 
         Returns:
-            List of SpaceResp DTOs representing spaces in the team.
+            list[SpaceResp]: Spaces belonging to the team. Returns an empty list on errors
+            or when no spaces are present.
+
+        Examples:
+            # Python (async)
+            spaces = await team_api.get_spaces("123")
+
+            # curl
+            curl -H "Authorization: pk_..." \
+                 https://api.clickup.com/api/v2/team/123/space
+
+            # wget
+            wget --header="Authorization: pk_..." \
+                 https://api.clickup.com/api/v2/team/123/space
         """
         response = await self._client.get(f"/team/{team_id}/space")
 
