@@ -42,6 +42,28 @@ from .app import mcp
 )
 @handle_tool_errors
 async def list_create(input: ListCreateInput) -> ListResult | None:
+    """
+    Create a list under a folder.
+
+    API:
+        POST /folder/{folder_id}/list
+
+    Args:
+        input: ListCreateInput with `folder_id` and list fields (e.g., name)
+
+    Returns:
+        ListResult | None: Created list projection, or None on failure
+
+    Error Handling:
+        Decorated with `@handle_tool_errors`, returns ToolResponse at runtime. On failure,
+        `ok=False` with issues (e.g., VALIDATION_ERROR, PERMISSION_DENIED, RATE_LIMIT).
+
+    Examples:
+        # Python (async)
+        response = await list_create(ListCreateInput(folder_id="fld_1", name="Sprint Backlog"))
+        if response.ok and response.result:
+            print(response.result.id)
+    """
     client = ClickUpAPIClientFactory.get()
     domain = ListMapper.from_create_input(input)
     dto = ListMapper.to_create_dto(domain)
@@ -62,6 +84,28 @@ async def list_create(input: ListCreateInput) -> ListResult | None:
 )
 @handle_tool_errors
 async def list_get(input: ListGetInput) -> ListResult | None:
+    """
+    Get a list by ID.
+
+    API:
+        GET /list/{list_id}
+
+    Args:
+        input: ListGetInput with `list_id`
+
+    Returns:
+        ListResult | None: List projection, or None if not found
+
+    Error Handling:
+        Decorated with `@handle_tool_errors`, returns ToolResponse at runtime. On failure,
+        `ok=False` with issues (e.g., NOT_FOUND, PERMISSION_DENIED, RATE_LIMIT).
+
+    Examples:
+        # Python (async)
+        response = await list_get(ListGetInput(list_id="lst_1"))
+        if response.ok and response.result:
+            print(response.result.name)
+    """
     client = ClickUpAPIClientFactory.get()
     async with client:
         resp = await client.list.get(input.list_id)
@@ -77,6 +121,28 @@ async def list_get(input: ListGetInput) -> ListResult | None:
 )
 @handle_tool_errors
 async def list_update(input: ListUpdateInput) -> ListResult | None:
+    """
+    Update list metadata and scheduling fields.
+
+    API:
+        PUT /list/{list_id}
+
+    Args:
+        input: ListUpdateInput with `list_id` and fields to update
+
+    Returns:
+        ListResult | None: Updated list projection, or None if not found
+
+    Error Handling:
+        Decorated with `@handle_tool_errors`, returns ToolResponse at runtime. On failure,
+        `ok=False` with issues (e.g., NOT_FOUND, VALIDATION_ERROR, RATE_LIMIT).
+
+    Examples:
+        # Python (async)
+        response = await list_update(ListUpdateInput(list_id="lst_1", name="Sprint 14"))
+        if response.ok and response.result:
+            print(response.result.name)
+    """
     client = ClickUpAPIClientFactory.get()
     domain = ListMapper.from_update_input(input)
     dto = ListMapper.to_update_dto(domain)
@@ -94,6 +160,27 @@ async def list_update(input: ListUpdateInput) -> ListResult | None:
 )
 @handle_tool_errors
 async def list_delete(input: ListDeleteInput) -> DeletionResult:
+    """
+    Delete a list by ID.
+
+    API:
+        DELETE /list/{list_id}
+
+    Args:
+        input: ListDeleteInput with `list_id`
+
+    Returns:
+        DeletionResult: `deleted=True` on success
+
+    Error Handling:
+        Decorated with `@handle_tool_errors`, returns ToolResponse at runtime. On failure,
+        `ok=False` with issues classifying the error.
+
+    Examples:
+        # Python (async)
+        response = await list_delete(ListDeleteInput(list_id="lst_1"))
+        print(response.ok)
+    """
     client = ClickUpAPIClientFactory.get()
     async with client:
         ok = await client.list.delete(input.list_id)
@@ -106,6 +193,29 @@ async def list_delete(input: ListDeleteInput) -> DeletionResult:
 )
 @handle_tool_errors
 async def list_list_in_folder(input: ListListInFolderInput) -> ListListResult:
+    """
+    List lists in a folder.
+
+    API:
+        GET /folder/{folder_id}/list
+
+    Args:
+        input: ListListInFolderInput with `folder_id`
+
+    Returns:
+        ListListResult: Items with id/name/status/folder_id/space_id
+
+    Error Handling:
+        Decorated with `@handle_tool_errors`, returns ToolResponse at runtime. On failure,
+        `ok=False` with issues indicating the error category.
+
+    Examples:
+        # Python (async)
+        response = await list_list_in_folder(ListListInFolderInput(folder_id="fld_1"))
+        if response.ok:
+            for it in response.result.items:
+                print(it.id, it.name)
+    """
     client = ClickUpAPIClientFactory.get()
     async with client:
         lists = await client.list.get_all_in_folder(input.folder_id)
@@ -122,6 +232,29 @@ async def list_list_in_folder(input: ListListInFolderInput) -> ListListResult:
 )
 @handle_tool_errors
 async def list_list_in_space_folderless(input: ListListInSpaceFolderlessInput) -> ListListResult:
+    """
+    List folderless lists in a space.
+
+    API:
+        GET /space/{space_id}/list
+
+    Args:
+        input: ListListInSpaceFolderlessInput with `space_id`
+
+    Returns:
+        ListListResult: Items with id/name/status/folder_id/space_id
+
+    Error Handling:
+        Decorated with `@handle_tool_errors`, returns ToolResponse at runtime. On failure,
+        `ok=False` with issues indicating the error category.
+
+    Examples:
+        # Python (async)
+        response = await list_list_in_space_folderless(ListListInSpaceFolderlessInput(space_id="spc_1"))
+        if response.ok:
+            for it in response.result.items:
+                print(it.id, it.name)
+    """
     client = ClickUpAPIClientFactory.get()
     async with client:
         lists = await client.list.get_all_folderless(input.space_id)
@@ -138,6 +271,27 @@ async def list_list_in_space_folderless(input: ListListInSpaceFolderlessInput) -
 )
 @handle_tool_errors
 async def list_add_task(input: ListAddTaskInput) -> OperationResult:
+    """
+    Add an existing task to a list (TIML).
+
+    API:
+        POST /list/{list_id}/task/{task_id}
+
+    Args:
+        input: ListAddTaskInput with `list_id` and `task_id`
+
+    Returns:
+        OperationResult: `ok=True` on success
+
+    Error Handling:
+        Decorated with `@handle_tool_errors`, returns ToolResponse at runtime. On failure,
+        `ok=False` with issues classifying the error.
+
+    Examples:
+        # Python (async)
+        response = await list_add_task(ListAddTaskInput(list_id="lst_1", task_id="tsk_1"))
+        print(response.ok)
+    """
     client = ClickUpAPIClientFactory.get()
     async with client:
         ok = await client.list.add_task(input.list_id, input.task_id)
@@ -150,6 +304,27 @@ async def list_add_task(input: ListAddTaskInput) -> OperationResult:
 )
 @handle_tool_errors
 async def list_remove_task(input: ListRemoveTaskInput) -> OperationResult:
+    """
+    Remove a task from a secondary list (TIML).
+
+    API:
+        DELETE /list/{list_id}/task/{task_id}
+
+    Args:
+        input: ListRemoveTaskInput with `list_id` and `task_id`
+
+    Returns:
+        OperationResult: `ok=True` on success
+
+    Error Handling:
+        Decorated with `@handle_tool_errors`, returns ToolResponse at runtime. On failure,
+        `ok=False` with issues classifying the error.
+
+    Examples:
+        # Python (async)
+        response = await list_remove_task(ListRemoveTaskInput(list_id="lst_1", task_id="tsk_1"))
+        print(response.ok)
+    """
     client = ClickUpAPIClientFactory.get()
     async with client:
         ok = await client.list.remove_task(input.list_id, input.task_id)
