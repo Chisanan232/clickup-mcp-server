@@ -49,6 +49,7 @@ See also:
 - `clickup_mcp.web_server.app.WebServerFactory` – FastAPI app factory that mounts MCP
 - `clickup_mcp.web_server.app.mount_service` – helper to mount SSE/HTTP-streaming apps
 """
+
 import contextlib
 from collections.abc import Callable
 
@@ -71,6 +72,7 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
     - `lifespan()`: FastAPI lifespan context to initialize transports and run
       the session manager.
     """
+
     @staticmethod
     def create(**kwargs) -> FastMCP:
         """

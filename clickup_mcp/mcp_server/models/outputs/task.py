@@ -81,6 +81,7 @@ class TaskListItem(BaseModel):
         list_id: Home list ID (if present)
         url: Canonical URL (if present)
     """
+
     id: str = Field(..., description="Task ID", examples=["t1", "task_123"])
     name: str = Field(..., description="Task title", examples=["Backfill analytics", "Fix webhook retry"])
     status: Optional[str] = Field(None, description="Workflow status", examples=["open", "in progress", "done"])

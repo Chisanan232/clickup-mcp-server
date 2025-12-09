@@ -55,12 +55,14 @@ class SpaceResult(BaseModel):
 
 class SpaceListItem(BaseModel):
     """Item shape for space list results."""
+
     id: str = Field(..., description="Space ID", examples=["space_1", "spc_abc"])
     name: str = Field(..., description="Space name", examples=["Engineering", "Delivery"])
 
 
 class SpaceListResult(BaseModel):
     """List wrapper for spaces returned from MCP tools."""
+
     items: List[SpaceListItem] = Field(
         default_factory=list,
         description="Spaces in the workspace",

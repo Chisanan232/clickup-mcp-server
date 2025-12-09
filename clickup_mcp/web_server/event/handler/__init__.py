@@ -18,6 +18,7 @@ Usage:
         async def on_task_created(self, evt: ClickUpWebhookEvent) -> None:
             ...
 """
+
 from .decorators import clickup_event
 from .oop import BaseClickUpWebhookHandler
 from .registry import ClickUpEventRegistry, get_registry

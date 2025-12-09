@@ -15,6 +15,7 @@ class ListStatusOutput(BaseModel):
         color: UI color hex or token
         orderindex: Ordering index within the list's statuses
     """
+
     name: str = Field(..., description="Status name as configured on the list", examples=["Open", "In progress"])
     type: str | None = Field(None, description="Status type (open/closed/active/done)", examples=["open"])
     color: str | None = Field(None, description="UI color (hex or token)", examples=["#6a5acd"])
@@ -67,6 +68,7 @@ class ListResult(BaseModel):
 
 class ListListItem(BaseModel):
     """Item shape for list summaries returned by MCP tools."""
+
     id: str = Field(..., description="List ID", examples=["list_1", "lst_abc"])
     name: str = Field(..., description="List name", examples=["Sprint Backlog", "Bugs"])
 

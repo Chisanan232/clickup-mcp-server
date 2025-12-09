@@ -89,6 +89,7 @@ class BaseServerFactory[T](metaclass=ABCMeta):
             def reset() -> None:
                 MyFactory._instance = None
     """
+
     @staticmethod
     @abstractmethod
     def create(**kwargs) -> T:

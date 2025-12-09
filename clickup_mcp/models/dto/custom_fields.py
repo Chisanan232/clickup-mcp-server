@@ -29,6 +29,7 @@ class CFText(BaseDTO):
     Examples:
         cf = CFText(id="fld_text", value="hello")
     """
+
     id: str
     type: Literal["text"] = "text"
     value: str
@@ -45,6 +46,7 @@ class CFNumber(BaseDTO):
     Examples:
         cf = CFNumber(id="fld_num", value=3.14)
     """
+
     id: str
     type: Literal["number"] = "number"
     value: float
@@ -61,6 +63,7 @@ class CFCheckbox(BaseDTO):
     Examples:
         cf = CFCheckbox(id="fld_flag", value=True)
     """
+
     id: str
     type: Literal["checkbox"] = "checkbox"
     value: bool
@@ -77,6 +80,7 @@ class CFURL(BaseDTO):
     Examples:
         cf = CFURL(id="fld_url", value="https://example.com")
     """
+
     id: str
     type: Literal["url"] = "url"
     value: str
@@ -95,6 +99,7 @@ class CFDropdown(BaseDTO):
     Examples:
         cf = CFDropdown(id="fld_dd", value="opt_123")
     """
+
     id: str
     type: Literal["dropdown"] = "dropdown"
     # In ClickUp, dropdowns typically use option IDs
@@ -112,6 +117,7 @@ class CFLabels(BaseDTO):
     Examples:
         cf = CFLabels(id="fld_labels", value=["backend", "priority:high"])
     """
+
     id: str
     type: Literal["labels"] = "labels"
     value: list[str]
@@ -128,6 +134,7 @@ class CFDate(BaseDTO):
     Examples:
         cf = CFDate(id="fld_due", value=1702080000000)
     """
+
     id: str
     type: Literal["date"] = "date"
     value: EpochMs | None
@@ -144,6 +151,7 @@ class CFUsers(BaseDTO):
     Examples:
         cf = CFUsers(id="fld_users", value=[12345, 67890])
     """
+
     id: str
     type: Literal["users"] = "users"
     value: list[UserId]

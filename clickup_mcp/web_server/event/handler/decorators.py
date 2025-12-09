@@ -74,6 +74,7 @@ class ClickUpEventDecorator:
     - Maintains original function identity by returning the original function
       after registering the async-wrapped version in the registry
     """
+
     def __call__(self, event_type: ClickUpWebhookEventType):
         """
         Enum-based usage:

@@ -20,7 +20,7 @@ High-level flow (sequence):
 Configuration:
 - Uses `ServerConfig` for token, env file, and transport preferences.
 - Loads environment from `.env` (optional) before creating the API client.
- 
+
  Architecture (Mermaid):
  ```mermaid
  sequenceDiagram
