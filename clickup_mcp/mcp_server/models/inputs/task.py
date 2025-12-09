@@ -10,13 +10,35 @@ from pydantic import BaseModel, Field
 
 
 class TaskCreateInput(BaseModel):
-    """Create a task or subtask. HTTP: POST /list/{list_id}/task
+    """
+    Create a task or subtask. HTTP: POST /list/{list_id}/task
 
     When to use: You know the target list and want to create a task. Set `parent` to create a subtask
     in the same list. If you don’t know `list_id`, call `workspace.list` → `space.list` →
     `list.list_in_folder` or `list.list_in_space_folderless`.
-    Constraints: `priority` 1..4; time fields are epoch ms. Custom fields are not set here; use
-    `task.set_custom_field` after creation.
+
+    Constraints:
+        - `priority` must be 1..4 (or one of URGENT/HIGH/NORMAL/LOW)
+        - Time fields are epoch milliseconds
+        - Custom fields are not set here; use `task.set_custom_field` after creation
+
+    Attributes:
+        list_id: Home list ID for the new task
+        name: Short task title
+        description: Markdown/plaintext body
+        status: Workflow status by name (e.g., Open, In progress)
+        priority: Priority number (1..4) or label (URGENT/HIGH/NORMAL/LOW)
+        assignees: List of user IDs
+        due_date: Due timestamp in epoch ms
+        time_estimate: Time estimate in ms
+        parent: Parent task ID to create a subtask in the same list
+
+    Examples:
+        # Minimal
+        TaskCreateInput(list_id="123", name="Ship v1.2")
+
+        # Subtask
+        TaskCreateInput(list_id="123", name="Implement child", parent="task_abc")
     """
 
     model_config = {
@@ -72,10 +94,24 @@ class TaskCreateInput(BaseModel):
 
 
 class TaskUpdateInput(BaseModel):
-    """Update a task (no custom fields). HTTP: PUT /task/{task_id}
+    """
+    Update a task (no custom fields). HTTP: PUT /task/{task_id}
 
     When to use: Change core fields like name/status/priority/assignees/due/estimate.
     To change custom fields, call `task.set_custom_field` instead.
+
+    Attributes:
+        task_id: Target task ID
+        name: New task title
+        description: New Markdown/plaintext body
+        status: New status name
+        priority: New priority (1..4 or label)
+        assignees: New assignee IDs
+        due_date: New due timestamp (epoch ms)
+        time_estimate: New estimate in ms
+
+    Examples:
+        TaskUpdateInput(task_id="task_123", status="done", priority=2, assignees=[42, 43])
     """
 
     model_config = {
@@ -112,10 +148,21 @@ class TaskUpdateInput(BaseModel):
 
 
 class TaskGetInput(BaseModel):
-    """Get a task. HTTP: GET /task/{task_id}
+    """
+    Get a task. HTTP: GET /task/{task_id}
 
     When to use: You have a task ID and need its details. If using custom task IDs,
     set `custom_task_ids=true` and provide `team_id`.
+
+    Attributes:
+        task_id: Task ID
+        subtasks: Include subtasks
+        custom_task_ids: Whether using custom task IDs
+        team_id: Workspace/team ID (required when custom_task_ids=true)
+
+    Examples:
+        TaskGetInput(task_id="task_123")
+        TaskGetInput(task_id="CU-123", custom_task_ids=True, team_id="team_1")
     """
 
     model_config = {
@@ -138,11 +185,26 @@ class TaskGetInput(BaseModel):
 
 
 class TaskListInListInput(BaseModel):
-    """List tasks in a list. HTTP: GET /list/{list_id}/task
+    """
+    List tasks in a list. HTTP: GET /list/{list_id}/task
 
     When to use: Retrieve tasks from a specific list with pagination and filters.
-    Constraints: `limit` ≤ 100 per API; set `include_timl` to include tasks present in multiple lists.
-    If you don’t know `list_id`, call discovery tools first.
+
+    Constraints:
+        - `limit` ≤ 100 per API
+        - Set `include_timl` to include tasks present in multiple lists
+
+    Attributes:
+        list_id: List ID
+        page: Page number (0-indexed)
+        limit: Page size (cap 100)
+        include_closed: Include closed tasks
+        include_timl: Include tasks from other lists (TIML)
+        statuses: Optional status filters
+        assignees: Optional assignee filters
+
+    Examples:
+        TaskListInListInput(list_id="123", limit=50, statuses=["open", "in progress"])
     """
 
     model_config = {
@@ -168,10 +230,19 @@ class TaskListInListInput(BaseModel):
 
 
 class TaskSetCustomFieldInput(BaseModel):
-    """Set a task custom field. HTTP: POST /task/{task_id}/field/{field_id}
+    """
+    Set a task custom field. HTTP: POST /task/{task_id}/field/{field_id}
 
     When to use: Set or change a single custom field value.
     Body is always {"value": ...} as required by ClickUp API.
+
+    Attributes:
+        task_id: Task ID
+        field_id: Custom field ID
+        value: Value to set (type depends on field)
+
+    Examples:
+        TaskSetCustomFieldInput(task_id="task_123", field_id="cf_text", value="Ready to ship")
     """
 
     model_config = {
@@ -193,9 +264,17 @@ class TaskSetCustomFieldInput(BaseModel):
 
 
 class TaskClearCustomFieldInput(BaseModel):
-    """Clear a task custom field. HTTP: DELETE /task/{task_id}/field/{field_id}
+    """
+    Clear a task custom field. HTTP: DELETE /task/{task_id}/field/{field_id}
 
     When to use: Remove a custom field value from a task.
+
+    Attributes:
+        task_id: Task ID
+        field_id: Custom field ID
+
+    Examples:
+        TaskClearCustomFieldInput(task_id="task_123", field_id="cf_priority")
     """
 
     model_config = {"json_schema_extra": {"examples": [{"task_id": "task_123", "field_id": "cf_priority"}]}}
@@ -205,9 +284,18 @@ class TaskClearCustomFieldInput(BaseModel):
 
 
 class TaskAddDependencyInput(BaseModel):
-    """Add a dependency. HTTP: POST /task/{task_id}/dependency
+    """
+    Add a dependency. HTTP: POST /task/{task_id}/dependency
 
     When to use: Add a dependency relationship between two tasks.
+
+    Attributes:
+        task_id: Task that depends on another task
+        depends_on: The task ID this task depends on
+        dependency_type: Dependency type (waiting_on/blocking)
+
+    Examples:
+        TaskAddDependencyInput(task_id="task_123", depends_on="task_456", dependency_type="waiting_on")
     """
 
     model_config = {
