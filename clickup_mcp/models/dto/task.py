@@ -1,8 +1,28 @@
 """
 Task DTOs for ClickUp API requests and responses.
 
-These DTOs handle serialization/deserialization of Task data
-for API interactions.
+These DTOs provide serialization and deserialization helpers for ClickUp Task
+operations, including create, update, and list queries. All request DTOs inherit
+from `BaseRequestDTO` and exclude None values from payloads; response DTOs
+inherit from `BaseResponseDTO`.
+
+Usage Examples:
+    # Python - Create task payload
+    from clickup_mcp.models.dto.task import TaskCreate
+
+    payload = TaskCreate(
+        name="Ship v1.2",
+        description="Cut RC",
+        priority=2,
+        assignees=[12345],
+    ).to_payload()
+    # => {"name": "Ship v1.2", "description": "Cut RC", "priority": 2, "assignees": [12345]}
+
+    # Python - Build task list query
+    from clickup_mcp.models.dto.task import TaskListQuery
+
+    query = TaskListQuery(limit=50, include_closed=False).to_query()
+    # => {"page": 0, "limit": 50, "include_closed": "false", "include_timl": "false"}
 """
 
 import builtins
@@ -23,12 +43,36 @@ PROPERTY_TIME_ESTIMATE_DESCRIPTION: str = "Time estimate in milliseconds"
 
 
 class TaskCreate(BaseRequestDTO):
-    """DTO for creating a new task.
+    """
+    DTO for creating a new task.
 
-    POST /list/{list_id}/task
-    https://developer.clickup.com/reference/createtask
+    API:
+        POST /list/{list_id}/task
+        Docs: https://developer.clickup.com/reference/createtask
 
-    Supports creating subtasks by specifying parent task ID.
+    Notes:
+        Supports creating subtasks by specifying a parent task ID.
+
+    Attributes:
+        name: Task name
+        description: Optional description
+        status: Initial task status (string or TaskStatus)
+        priority: Priority level (1..4 or Priority enum)
+        assignees: List of user IDs to assign
+        due_date: Due timestamp in epoch ms
+        due_date_time: Whether due date includes time
+        time_estimate: Time estimate in milliseconds
+        parent: Parent task ID for subtasks
+        custom_fields: List of custom field values (either CF* DTOs or legacy {id,value} dicts)
+
+    Examples:
+        # Python - payload build with custom fields
+        TaskCreate(
+            name="Ship v1.2",
+            priority=2,
+            assignees=[123],
+            custom_fields=[{"id": "fld_text", "value": "hello"}],
+        ).to_payload()
     """
 
     name: str = Field(description=PROPERTY_NAME_DESCRIPTION)
@@ -44,6 +88,16 @@ class TaskCreate(BaseRequestDTO):
     custom_fields: List[CustomField | Dict[str, Any]] = Field(default_factory=list, description="Custom field values")
 
     def to_payload(self) -> dict[str, Any]:
+        """
+        Convert the DTO into a ClickUp create-task request body.
+
+        Returns:
+            dict[str, Any]: JSON-serializable payload with None values removed. Custom fields
+            are normalized to a list of {"id", "value"} dicts.
+
+        Examples:
+            TaskCreate(name="X", custom_fields=[{"id": "fld", "value": 1}]).to_payload()
+        """
         payload = super().to_payload()
         # Map CustomField union or legacy dicts to list of {id, value}
         if "custom_fields" in payload and self.custom_fields:
@@ -60,13 +114,25 @@ class TaskCreate(BaseRequestDTO):
 
 
 class TaskUpdate(BaseRequestDTO):
-    """DTO for updating an existing task.
+    """
+    DTO for updating an existing task.
 
-    PUT /task/{task_id}
-    https://developer.clickup.com/reference/updatetask
+    API:
+        PUT /task/{task_id}
+        Docs: https://developer.clickup.com/reference/updatetask
 
-    Note: Custom fields cannot be updated via this endpoint.
-    Use set_custom_field() instead.
+    Notes:
+        Custom fields cannot be updated via this endpoint; use `task.set_custom_field`.
+
+    Attributes:
+        name: New task name
+        description: New description
+        status: New status
+        priority: New priority (1..4 or Priority)
+        assignees: New list of assignee IDs (replaces existing)
+        due_date: New due date (epoch ms)
+        due_date_time: Whether due date includes time
+        time_estimate: New time estimate in ms
     """
 
     name: str | None = Field(default=None, description=PROPERTY_NAME_DESCRIPTION)
@@ -80,10 +146,20 @@ class TaskUpdate(BaseRequestDTO):
 
 
 class TaskListQuery(BaseRequestDTO):
-    """DTO for querying tasks in a list.
+    """
+    DTO for querying tasks in a list.
 
-    GET /list/{list_id}/task
-    https://developer.clickup.com/reference/gettasks
+    API:
+        GET /list/{list_id}/task
+        Docs: https://developer.clickup.com/reference/gettasks
+
+    Attributes:
+        page: Page number (0-indexed)
+        limit: Page size (max 100)
+        include_closed: Whether to include closed tasks
+        include_timl: Include tasks in multiple lists (TIML)
+        statuses: Optional status filters
+        assignees: Optional assignee filters
     """
 
     page: int = Field(default=0, description="Page number (0-indexed)")
@@ -94,10 +170,16 @@ class TaskListQuery(BaseRequestDTO):
     assignees: List[UserId] | None = Field(default=None, description="Filter by assignees")
 
     def to_query(self) -> dict[str, Any]:
-        """Convert to query parameters for API request.
+        """
+        Convert to query parameters for API request.
 
         Returns:
-            Dictionary of query parameters with proper formatting.
+            dict[str, Any]: Query parameters with booleans normalized to lowercase strings and
+            `limit` capped at 100.
+
+        Examples:
+            TaskListQuery(limit=150, include_closed=True).to_query()
+            # {"page": 0, "limit": 100, "include_closed": "true", "include_timl": "false"}
         """
         query = {
             "page": self.page,
@@ -116,9 +198,49 @@ class TaskListQuery(BaseRequestDTO):
 
 
 class TaskResp(BaseResponseDTO):
-    """DTO for task API responses.
+    """
+    DTO for task API responses.
 
-    Represents a task returned from the ClickUp API.
+    Represents a task returned from the ClickUp API with typed substructures for
+    status, priority, entity references, tags, users, checklists, custom fields, and dependencies.
+
+    Attributes:
+        id: Task ID
+        custom_id: Custom task ID (if enabled)
+        name: Task name
+        text_content: Text-only content
+        description: Rich description
+        status: Status info (id/name/type/color)
+        orderindex: Order index string
+        date_created: Creation timestamp (string)
+        date_updated: Last update timestamp (string)
+        date_closed: Closure timestamp (string)
+        due_date: Due epoch ms
+        due_date_time: Whether due date includes time
+        time_estimate: Time estimate in ms
+        time_spent: Time spent in ms
+        priority: Priority info
+        points: Story points
+        team_id: Workspace/team id
+        project_id: Project id (if present)
+        folder: Folder reference
+        list: List reference
+        space: Space reference
+        url: Canonical task URL
+        permission_level: User's permission level
+        tags: Task tags
+        parent: Parent task ID (for subtasks)
+        priority_id: Raw priority id
+        watchers: User refs watching the task
+        assignees: Assigned users
+        checklists: Checklist summaries
+        custom_fields: Custom field value summaries
+        dependencies: Task dependencies
+        subtasks: Subtask summaries
+
+    Examples:
+        # Python - Deserialize from API JSON
+        TaskResp.deserialize({"id": "t1", "name": "Ship"})
     """
 
     id: str = Field(description="The unique identifier for the task")
