@@ -1,3 +1,27 @@
+"""
+OOP-style ClickUp webhook handler base class.
+
+Design:
+- Subclass `BaseClickUpWebhookHandler` and override `on_*` methods for events you care about.
+- The base class auto-registers overridden methods into the central registry on instantiation.
+- Instances are callable and route incoming events to the appropriate overridden method.
+
+Registration semantics:
+- During `__init__`, the base inspects overridden methods and registers them with `get_registry()`.
+- Only methods actually overridden by the subclass are registered.
+
+Usage Example:
+    from clickup_mcp.web_server.event.handler.oop import BaseClickUpWebhookHandler
+    from clickup_mcp.web_server.event.models import ClickUpWebhookEvent
+
+    class TaskStatusHandler(BaseClickUpWebhookHandler):
+        async def on_task_status_updated(self, event: ClickUpWebhookEvent) -> None:
+            print("Status updated", event.body.get("task_id"))
+
+    # Instantiate to register handlers
+    _ = TaskStatusHandler()
+"""
+
 from abc import ABC
 from typing import Optional
 
@@ -11,9 +35,15 @@ from .registry import AsyncHandler, get_registry
 
 class BaseClickUpWebhookHandler(ABC):
     """
-    OOP style: subclasses override on_* methods for specific event types.
+    OOP style handler base for ClickUp webhooks.
 
-    The base class automatically registers overridden methods into the registry.
+    Subclasses implement one or more `on_*` methods corresponding to event types
+    (e.g., `on_task_status_updated`). The base automatically registers overridden
+    methods into the global registry.
+
+    Notes:
+    - Creating an instance triggers registration.
+    - The instance is also callable and will dispatch events to the resolved method.
     """
 
     def __init__(self) -> None:
@@ -158,8 +188,10 @@ class BaseClickUpWebhookHandler(ABC):
 
     def _register_overridden_handlers(self) -> None:
         """
-        For each event type, if the subclass has actually overridden the corresponding on_*
-        method, register it in the global registry.
+        Register only overridden `on_*` methods into the global registry.
+
+        The method compares the subclass bound method's underlying function against
+        the base class implementation to decide whether it's overridden.
         """
         registry = get_registry()
 
