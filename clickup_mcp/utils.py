@@ -10,11 +10,32 @@ def load_environment_from_file(env_file: str | None = None) -> bool:
     """
     Load environment variables from a .env file if provided.
 
+    This function provides flexible environment variable loading with automatic
+    discovery. If no path is provided, it attempts to find a .env file in the
+    current working directory or parent directories. If a specific path is provided,
+    it first checks if that file exists, and if not, attempts to discover it using
+    the provided filename.
+
     Args:
-        env_file: Path to the environment file
+        env_file: Path to the environment file. If None, attempts auto-discovery.
 
     Returns:
         True if environment was loaded successfully, False otherwise
+
+    Usage Examples:
+        # Python - Load from default .env file
+        load_environment_from_file()
+
+        # Python - Load from specific file
+        load_environment_from_file(".env.production")
+
+        # Python - Load from custom path
+        load_environment_from_file("/etc/clickup/.env")
+
+        # Environment file format (.env)
+        CLICKUP_API_TOKEN=pk_your_token_here
+        LOG_LEVEL=info
+        DATABASE_URL=postgresql://user:pass@localhost/db
     """
     from dotenv import find_dotenv, load_dotenv
 
