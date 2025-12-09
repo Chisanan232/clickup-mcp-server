@@ -1,5 +1,34 @@
 from __future__ import annotations
 
+"""
+Message queue integration for ClickUp webhook events.
+
+Design:
+- Provides a queue-backed `EventSink` implementation (`QueueEventSink`) that publishes
+  normalized webhook events to a topic (default: `clickup.webhooks`).
+- Includes a simple consumer loop (`run_clickup_webhook_consumer`) that reads messages
+  and dispatches them to the in-process registry.
+
+Environment & configuration:
+- Uses `QUEUE_BACKEND` to select a concrete message-queue backend via `abe` loader.
+- Topic name is `_TOPIC_NAME` ("clickup.webhooks").
+
+Usage Examples:
+    # Producer path
+    from clickup_mcp.web_server.event.mq import QueueEventSink
+    sink = QueueEventSink(backend_name="kafka")
+    await sink.handle(event)  # publishes serialized event to MQ
+
+    # Consumer path
+    import asyncio
+    from clickup_mcp.web_server.event.mq import run_clickup_webhook_consumer
+    asyncio.run(run_clickup_webhook_consumer(backend_name="kafka"))
+
+See also:
+- `clickup_mcp.web_server.event.handler.get_registry` – in-process registry used by consumer
+- `clickup_mcp.web_server.event.bootstrap.import_handler_modules_from_env` – discover handlers
+"""
+
 import asyncio
 import os
 from datetime import datetime
@@ -15,11 +44,20 @@ from .sink import EventSink
 
 _TOPIC_NAME = "clickup.webhooks"
 
-# Global queue backend for publishing Slack events
+# Global queue backend for publishing ClickUp webhook events
 _queue_backend: Optional[MessageQueueBackend] = None
 
 
 def serialize_event(event: ClickUpWebhookEvent) -> Dict[str, Any]:
+    """
+    Convert a `ClickUpWebhookEvent` into a transport-friendly dict.
+
+    Args:
+        event: Normalized webhook event
+
+    Returns:
+        Dict with primitives suitable for MQ payloads
+    """
     return {
         "type": event.type.value,
         "body": event.body,
@@ -30,6 +68,15 @@ def serialize_event(event: ClickUpWebhookEvent) -> Dict[str, Any]:
 
 
 def deserialize_event(message: Dict[str, Any]) -> ClickUpWebhookEvent:
+    """
+    Convert a MQ message payload into a `ClickUpWebhookEvent`.
+
+    Args:
+        message: Dict payload previously produced by `serialize_event`
+
+    Returns:
+        ClickUpWebhookEvent: normalized event object
+    """
     return ClickUpWebhookEvent(
         type=ClickUpWebhookEventType(message["type"]),
         body=message["body"],
@@ -41,12 +88,16 @@ def deserialize_event(message: Dict[str, Any]) -> ClickUpWebhookEvent:
 
 
 def _load_backend_selected(backend_name: str) -> MessageQueueBackend:
-    """Get or initialize the global queue backend.
+    """
+    Get or initialize the global queue backend.
 
-    Returns
-    -------
-    MessageQueueBackend
-        The global queue backend instance
+    Sets `QUEUE_BACKEND` then lazily loads a single global backend instance.
+
+    Args:
+        backend_name: Backend identifier (e.g., "kafka", "redis")
+
+    Returns:
+        MessageQueueBackend: Global backend instance
     """
     os.environ["QUEUE_BACKEND"] = backend_name
 
@@ -57,18 +108,37 @@ def _load_backend_selected(backend_name: str) -> MessageQueueBackend:
 
 
 class QueueEventSink(EventSink):
+    """
+    MQ-backed event sink that publishes webhook events to a topic.
+
+    Attributes:
+        _backend_name: Backend name resolved by `abe` loader
+        _backend: Cached backend instance
+        _topic: Topic name (defaults to `clickup.webhooks`)
+
+    Examples:
+        sink = QueueEventSink(backend_name="kafka")
+        await sink.handle(event)
+    """
+
     def __init__(self, backend_name: str) -> None:
         self._backend_name: str = backend_name
         self._backend: Optional[MessageQueueBackend] = None
         self._topic: str = _TOPIC_NAME
 
     def _ensure_backend(self) -> MessageQueueBackend:
+        """Lazily load and cache the queue backend instance."""
         if self._backend is not None:
             return self._backend
         self._backend = _load_backend_selected(self._backend_name)
         return self._backend
 
     async def handle(self, event: ClickUpWebhookEvent) -> None:
+        """
+        Publish the event to the configured MQ backend.
+
+        Awaits if the backend returns a coroutine.
+        """
         backend = self._ensure_backend()
         payload = serialize_event(event)
         result = backend.publish(key=self._topic, payload=payload)
@@ -77,7 +147,14 @@ class QueueEventSink(EventSink):
 
 
 async def run_clickup_webhook_consumer(backend_name: str) -> None:
-    """Consume webhook events and dispatch to the local registry."""
+    """
+    Consume webhook events from MQ and dispatch to the local registry.
+
+    Steps:
+    - Import user handler modules (ensures registry contains handlers)
+    - Resolve backend via the same mechanism used by the producer
+    - Consume messages and route to `get_registry().dispatch` after deserialization
+    """
     # Make sure user handler modules are loaded so registry has handlers
     import_handler_modules_from_env()
     # Resolve loader the same way as the producer sink
