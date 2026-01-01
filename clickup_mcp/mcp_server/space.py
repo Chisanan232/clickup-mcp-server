@@ -29,7 +29,9 @@ from .app import mcp
 @mcp.tool(
     title="Get ClickUp Space (Backward Compat)",
     name="get_space",
-    description=("Get a ClickUp space by its ID. Use for backward-compat tests. HTTP: GET /space/{space_id}. **Deprecated**: Use `space.get` instead."),
+    description=(
+        "Get a ClickUp space by its ID. Use for backward-compat tests. HTTP: GET /space/{space_id}. **Deprecated**: Use `space.get` instead."
+    ),
     annotations={
         "readOnlyHint": True,
         "openWorldHint": True,
