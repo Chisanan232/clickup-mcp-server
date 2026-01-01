@@ -34,11 +34,16 @@ from .app import mcp
 
 
 @mcp.tool(
+    title="Create List",
     name="list.create",
     description=(
         "Create a list under a folder. Discover `folder_id` via `workspace.list` → `space.list` → `folder.list_in_space`. "
         "Constraints: `priority` 1..4; due fields are epoch ms. HTTP: POST /folder/{folder_id}/list."
     ),
+    annotations={
+        "destructiveHint": False,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def list_create(input: ListCreateInput) -> ListResult | None:
@@ -76,11 +81,16 @@ async def list_create(input: ListCreateInput) -> ListResult | None:
 
 
 @mcp.tool(
+    title="Get List",
     name="list.get",
     description=(
         "Get a list by ID. If unknown, list via `list.list_in_folder` or `list.list_in_space_folderless`. "
         "HTTP: GET /list/{list_id}."
     ),
+    annotations={
+        "readOnlyHint": True,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def list_get(input: ListGetInput) -> ListResult | None:
@@ -116,8 +126,13 @@ async def list_get(input: ListGetInput) -> ListResult | None:
 
 
 @mcp.tool(
+    title="Update List",
     name="list.update",
     description=("Update list metadata (name/content/status/priority/assignee/due fields). HTTP: PUT /list/{list_id}."),
+    annotations={
+        "destructiveHint": False,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def list_update(input: ListUpdateInput) -> ListResult | None:
@@ -155,8 +170,13 @@ async def list_update(input: ListUpdateInput) -> ListResult | None:
 
 
 @mcp.tool(
+    title="Delete List",
     name="list.delete",
     description=("Delete a list by ID (irreversible; permission-scoped). HTTP: DELETE /list/{list_id}."),
+    annotations={
+        "destructiveHint": True,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def list_delete(input: ListDeleteInput) -> DeletionResult:
@@ -188,8 +208,13 @@ async def list_delete(input: ListDeleteInput) -> DeletionResult:
 
 
 @mcp.tool(
+    title="List Lists in Folder",
     name="list.list_in_folder",
     description=("List lists in a folder to discover list IDs. HTTP: GET /folder/{folder_id}/list."),
+    annotations={
+        "readOnlyHint": True,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def list_list_in_folder(input: ListListInFolderInput) -> ListListResult:
@@ -227,8 +252,13 @@ async def list_list_in_folder(input: ListListInFolderInput) -> ListListResult:
 
 
 @mcp.tool(
+    title="List Folderless Lists in Space",
     name="list.list_in_space_folderless",
     description=("List folderless lists in a space to discover list IDs. HTTP: GET /space/{space_id}/list."),
+    annotations={
+        "readOnlyHint": True,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def list_list_in_space_folderless(input: ListListInSpaceFolderlessInput) -> ListListResult:
@@ -266,8 +296,13 @@ async def list_list_in_space_folderless(input: ListListInSpaceFolderlessInput) -
 
 
 @mcp.tool(
+    title="Add Task to List",
     name="list.add_task",
     description=("Add an existing task to a list (TIML must be enabled). HTTP: POST /list/{list_id}/task/{task_id}."),
+    annotations={
+        "destructiveHint": False,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def list_add_task(input: ListAddTaskInput) -> OperationResult:
@@ -299,8 +334,13 @@ async def list_add_task(input: ListAddTaskInput) -> OperationResult:
 
 
 @mcp.tool(
+    title="Remove Task from List",
     name="list.remove_task",
     description=("Remove a task from a secondary list (TIML). HTTP: DELETE /list/{list_id}/task/{task_id}."),
+    annotations={
+        "destructiveHint": False,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def list_remove_task(input: ListRemoveTaskInput) -> OperationResult:
