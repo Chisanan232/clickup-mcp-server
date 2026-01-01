@@ -17,8 +17,12 @@ from .app import mcp
 
 @mcp.tool(
     name="get_authorized_teams",
-    title="Get ClickUp Teams",
-    description="Retrieve all teams/workspaces that the authenticated user has access to.",
+    title="Get ClickUp Teams (Deprecated)",
+    description="Retrieve all teams/workspaces that the authenticated user has access to. **Deprecated**: Use `workspace.list` instead.",
+    annotations={
+        "readOnlyHint": True,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def get_authorized_teams() -> WorkspaceListResult:
