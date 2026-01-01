@@ -32,6 +32,7 @@ from .app import mcp
 
 
 @mcp.tool(
+    title="Create Task",
     name="task.create",
     description=(
         "Create a task in a specific list; set `parent` to create a subtask in the same list. "
@@ -39,6 +40,10 @@ from .app import mcp
         "Constraints: `priority` 1..4; due/estimate are epoch ms. HTTP: POST /list/{list_id}/task. "
         "Note: Custom fields are set via `task.set_custom_field`, not `task.update`."
     ),
+    annotations={
+        "destructiveHint": False,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def task_create(input: TaskCreateInput) -> TaskResult | None:
@@ -78,11 +83,16 @@ async def task_create(input: TaskCreateInput) -> TaskResult | None:
 
 
 @mcp.tool(
+    title="Get Task",
     name="task.get",
     description=(
         "Get a task by ID. For custom task IDs, set `custom_task_ids=true` and include `team_id`. "
         "HTTP: GET /task/{task_id}."
     ),
+    annotations={
+        "readOnlyHint": True,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def task_get(input: TaskGetInput) -> TaskResult | None:
@@ -123,12 +133,17 @@ async def task_get(input: TaskGetInput) -> TaskResult | None:
 
 
 @mcp.tool(
+    title="List Tasks in List",
     name="task.list_in_list",
     description=(
         "List tasks in a list with pagination and filters. Constraints: `limit` ≤ 100; set `include_timl` to include multi-list tasks. "
         "If you don’t know `list_id`, discover via `workspace.list` → `space.list` → `list.list_in_*`. "
         "HTTP: GET /list/{list_id}/task."
     ),
+    annotations={
+        "readOnlyHint": True,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def task_list_in_list(input: TaskListInListInput) -> TaskListResult:
@@ -176,11 +191,16 @@ async def task_list_in_list(input: TaskListInListInput) -> TaskListResult:
 
 
 @mcp.tool(
+    title="Update Task",
     name="task.update",
     description=(
         "Update core task fields (name/status/priority/assignees/due/estimate). "
         "Does not modify custom fields—use `task.set_custom_field`. HTTP: PUT /task/{task_id}."
     ),
+    annotations={
+        "destructiveHint": False,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def task_update(input: TaskUpdateInput) -> TaskResult | None:
@@ -220,11 +240,16 @@ async def task_update(input: TaskUpdateInput) -> TaskResult | None:
 
 
 @mcp.tool(
+    title="Set Custom Field",
     name="task.set_custom_field",
     description=(
         'Set a single custom field value on a task. Body is always {"value": ...}. '
         "HTTP: POST /task/{task_id}/field/{field_id}."
     ),
+    annotations={
+        "destructiveHint": False,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def task_set_custom_field(input: TaskSetCustomFieldInput) -> OperationResult:
@@ -256,8 +281,13 @@ async def task_set_custom_field(input: TaskSetCustomFieldInput) -> OperationResu
 
 
 @mcp.tool(
+    title="Clear Custom Field",
     name="task.clear_custom_field",
     description=("Clear a custom field value from a task. HTTP: DELETE /task/{task_id}/field/{field_id}."),
+    annotations={
+        "destructiveHint": False,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def task_clear_custom_field(input: TaskClearCustomFieldInput) -> OperationResult:
@@ -289,8 +319,13 @@ async def task_clear_custom_field(input: TaskClearCustomFieldInput) -> Operation
 
 
 @mcp.tool(
+    title="Add Task Dependency",
     name="task.add_dependency",
     description=("Add a dependency between tasks (e.g., waiting_on/blocking). HTTP: POST /task/{task_id}/dependency."),
+    annotations={
+        "destructiveHint": False,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def task_add_dependency(input: TaskAddDependencyInput) -> OperationResult:
@@ -322,8 +357,13 @@ async def task_add_dependency(input: TaskAddDependencyInput) -> OperationResult:
 
 
 @mcp.tool(
+    title="Delete Task",
     name="task.delete",
     description=("Delete a task by ID. Irreversible and permission-scoped. HTTP: DELETE /task/{task_id}."),
+    annotations={
+        "destructiveHint": True,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def task_delete(task_id: str) -> DeletionResult:

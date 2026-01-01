@@ -29,11 +29,16 @@ from .app import mcp
 
 
 @mcp.tool(
+    title="Create Folder",
     name="folder.create",
     description=(
         "Create a folder under a space to group lists. Discover `space_id` via `workspace.list` → `space.list`. "
         "HTTP: POST /space/{space_id}/folder."
     ),
+    annotations={
+        "destructiveHint": False,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def folder_create(input: FolderCreateInput) -> FolderResult | None:
@@ -71,10 +76,15 @@ async def folder_create(input: FolderCreateInput) -> FolderResult | None:
 
 
 @mcp.tool(
+    title="Get Folder",
     name="folder.get",
     description=(
         "Get a folder by ID. If unknown, list folders via `folder.list_in_space`. HTTP: GET /folder/{folder_id}."
     ),
+    annotations={
+        "readOnlyHint": True,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def folder_get(input: FolderGetInput) -> FolderResult | None:
@@ -110,8 +120,13 @@ async def folder_get(input: FolderGetInput) -> FolderResult | None:
 
 
 @mcp.tool(
+    title="Update Folder",
     name="folder.update",
     description=("Rename a folder. Only name updates supported here. HTTP: PUT /folder/{folder_id}."),
+    annotations={
+        "destructiveHint": False,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def folder_update(input: FolderUpdateInput) -> FolderResult | None:
@@ -149,8 +164,13 @@ async def folder_update(input: FolderUpdateInput) -> FolderResult | None:
 
 
 @mcp.tool(
+    title="Delete Folder",
     name="folder.delete",
     description=("Delete a folder by ID (irreversible; permission-scoped). HTTP: DELETE /folder/{folder_id}."),
+    annotations={
+        "destructiveHint": True,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def folder_delete(input: FolderDeleteInput) -> DeletionResult:
@@ -182,8 +202,13 @@ async def folder_delete(input: FolderDeleteInput) -> DeletionResult:
 
 
 @mcp.tool(
+    title="List Folders in Space",
     name="folder.list_in_space",
     description=("List folders in a space to discover container IDs for lists. HTTP: GET /space/{space_id}/folder."),
+    annotations={
+        "readOnlyHint": True,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def folder_list_in_space(input: FolderListInSpaceInput) -> FolderListResult:

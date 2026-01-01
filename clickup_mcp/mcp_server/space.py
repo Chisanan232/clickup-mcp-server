@@ -27,9 +27,15 @@ from .app import mcp
 
 
 @mcp.tool(
+    title="Get ClickUp Space (Backward Compat)",
     name="get_space",
-    title="Get ClickUp Space",
-    description=("Get a ClickUp space by its ID. Use for backward-compat tests. HTTP: GET /space/{space_id}."),
+    description=(
+        "Get a ClickUp space by its ID. Use for backward-compat tests. HTTP: GET /space/{space_id}. **Deprecated**: Use `space.get` instead."
+    ),
+    annotations={
+        "readOnlyHint": True,
+        "openWorldHint": True,
+    },
 )
 async def get_space(space_id: str = "") -> dict[str, object] | None:
     """
@@ -63,11 +69,16 @@ async def get_space(space_id: str = "") -> dict[str, object] | None:
 
 
 @mcp.tool(
+    title="Get Space",
     name="space.get",
     description=(
         "Get a space by ID. If you don't know `space_id`, call `workspace.list` → `space.list` first. "
         "HTTP: GET /space/{space_id}."
     ),
+    annotations={
+        "readOnlyHint": True,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def space_get(input: SpaceGetInput) -> SpaceResult | None:
@@ -105,11 +116,16 @@ async def space_get(input: SpaceGetInput) -> SpaceResult | None:
 
 
 @mcp.tool(
+    title="List Spaces",
     name="space.list",
     description=(
         "List spaces in a workspace (team). Use `workspace.list` first to discover team IDs. "
         "HTTP: GET /team/{team_id}/space."
     ),
+    annotations={
+        "readOnlyHint": True,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def space_list(input: SpaceListInput) -> SpaceListResult:
@@ -147,11 +163,16 @@ async def space_list(input: SpaceListInput) -> SpaceListResult:
 
 
 @mcp.tool(
+    title="Create Space",
     name="space.create",
     description=(
         "Create a space under a workspace (team). Discover `team_id` via `workspace.list`. "
         "HTTP: POST /team/{team_id}/space."
     ),
+    annotations={
+        "destructiveHint": False,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def space_create(input: SpaceCreateInput) -> SpaceResult | None:
@@ -190,11 +211,16 @@ async def space_create(input: SpaceCreateInput) -> SpaceResult | None:
 
 
 @mcp.tool(
+    title="Update Space",
     name="space.update",
     description=(
         "Update space attributes (name, private, multiple_assignees). "
         "If you don't know `space_id`, call `space.list` first. HTTP: PUT /space/{space_id}."
     ),
+    annotations={
+        "destructiveHint": False,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def space_update(input: SpaceUpdateInput) -> SpaceResult | None:
@@ -233,11 +259,16 @@ async def space_update(input: SpaceUpdateInput) -> SpaceResult | None:
 
 
 @mcp.tool(
+    title="Delete Space",
     name="space.delete",
     description=(
         "Delete a space by ID (irreversible; permission-scoped). Discover IDs via `space.list`. "
         "HTTP: DELETE /space/{space_id}."
     ),
+    annotations={
+        "destructiveHint": True,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def space_delete(input: SpaceDeleteInput) -> DeletionResult:
