@@ -15,10 +15,15 @@ from .app import mcp
 
 @mcp.tool(
     name="workspace.list",
+    title="List Workspaces",
     description=(
         "List workspaces (teams) the token can access. Use this first to discover team IDs, then call "
         "`space.list` to enumerate spaces. HTTP: GET /team. Returns { workspaces: [{ team_id, name }] }."
     ),
+    annotations={
+        "readOnlyHint": True,
+        "openWorldHint": True,
+    },
 )
 @handle_tool_errors
 async def workspace_list() -> WorkspaceListResult:
