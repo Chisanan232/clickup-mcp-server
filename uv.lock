@@ -160,7 +160,6 @@ dependencies = [
     { name = "mcp", extra = ["cli"] },
     { name = "pydantic" },
     { name = "pydantic-settings" },
-    { name = "python-dotenv" },
     { name = "uvicorn" },
 ]
 
@@ -194,7 +193,6 @@ requires-dist = [
     { name = "mcp", extras = ["cli"], specifier = ">=1.10.1" },
     { name = "pydantic", specifier = ">=2.11.7" },
     { name = "pydantic-settings", specifier = ">=2.10.1" },
-    { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "uvicorn", specifier = ">=0.35.0" },
 ]
 
