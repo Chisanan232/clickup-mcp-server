@@ -10,14 +10,12 @@ Environment variables required:
 - CLICKUP_TEST_LIST_ID: List ID for testing
 """
 
-import os
-from pathlib import Path
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator
 
 import pytest
-from dotenv import load_dotenv
 
 from clickup_mcp.client import ClickUpAPIClient
+from clickup_mcp.config import TestSettings as E2ETestSettings
 from clickup_mcp.models.dto.task import TaskCreate, TaskListQuery, TaskUpdate
 
 
@@ -25,44 +23,27 @@ class TestTaskCRUDE2E:
     """End-to-end tests for Task CRUD operations."""
 
     @pytest.fixture
-    def env_setup(self) -> Generator[None, None, None]:
-        """Load environment variables from .env file."""
-        env_path = None
-        current_dir = Path.cwd()
-
-        for _ in range(4):
-            test_path = current_dir / ".env"
-            if test_path.exists():
-                env_path = test_path
-                break
-            current_dir = current_dir.parent
-
-        if env_path:
-            load_dotenv(env_path)
-
-        original_env = os.environ.copy()
-        yield
-        os.environ.clear()
-        os.environ.update(original_env)
+    def test_settings(self) -> E2ETestSettings:
+        """Get test settings."""
+        return E2ETestSettings()
 
     @pytest.fixture
-    async def api_client(self, env_setup) -> AsyncGenerator[ClickUpAPIClient, None]:
-        """Create a real ClickUpAPIClient using the API token from environment variables."""
-        api_token = os.environ.get("E2E_TEST_API_TOKEN")
+    async def api_client(self, test_settings: E2ETestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
+        """Create a real ClickUpAPIClient using the API token from settings."""
+        if not test_settings.e2e_test_api_token:
+            pytest.skip("E2E_TEST_API_TOKEN is required for this test")
 
-        if not api_token:
-            pytest.skip("E2E_TEST_API_TOKEN environment variable is required for this test")
-
-        assert api_token
+        assert test_settings.e2e_test_api_token
+        api_token = test_settings.e2e_test_api_token.get_secret_value()
         async with ClickUpAPIClient(api_token=api_token) as client:
             yield client
 
     @pytest.mark.asyncio
-    async def test_task_crud_operations(self, api_client: ClickUpAPIClient) -> None:
+    async def test_task_crud_operations(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
         """Test Task CRUD operations: Create, Read, Update, Delete."""
-        list_id = os.environ.get("CLICKUP_TEST_LIST_ID")
+        list_id = test_settings.clickup_test_list_id
         if not list_id:
-            pytest.skip("CLICKUP_TEST_LIST_ID environment variable is required")
+            pytest.skip("CLICKUP_TEST_LIST_ID is required")
         assert list_id
 
         # Create a task
@@ -97,11 +78,11 @@ class TestTaskCRUDE2E:
             assert delete_result is True
 
     @pytest.mark.asyncio
-    async def test_create_subtask(self, api_client: ClickUpAPIClient) -> None:
+    async def test_create_subtask(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
         """Test creating a subtask."""
-        list_id = os.environ.get("CLICKUP_TEST_LIST_ID")
+        list_id = test_settings.clickup_test_list_id
         if not list_id:
-            pytest.skip("CLICKUP_TEST_LIST_ID environment variable is required")
+            pytest.skip("CLICKUP_TEST_LIST_ID is required")
         assert list_id
 
         # Create a parent task
@@ -127,11 +108,11 @@ class TestTaskCRUDE2E:
             await api_client.task.delete(parent_task_id)
 
     @pytest.mark.asyncio
-    async def test_list_tasks_in_list(self, api_client: ClickUpAPIClient) -> None:
+    async def test_list_tasks_in_list(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
         """Test listing tasks in a list."""
-        list_id = os.environ.get("CLICKUP_TEST_LIST_ID")
+        list_id = test_settings.clickup_test_list_id
         if not list_id:
-            pytest.skip("CLICKUP_TEST_LIST_ID environment variable is required")
+            pytest.skip("CLICKUP_TEST_LIST_ID is required")
         assert list_id
 
         query = TaskListQuery(page=0, limit=10, include_closed=False)
@@ -141,11 +122,11 @@ class TestTaskCRUDE2E:
         assert isinstance(tasks, list)
 
     @pytest.mark.asyncio
-    async def test_list_tasks_with_timl(self, api_client: ClickUpAPIClient) -> None:
+    async def test_list_tasks_with_timl(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
         """Test listing tasks with TIML (Tasks in Multiple Lists) included."""
-        list_id = os.environ.get("CLICKUP_TEST_LIST_ID")
+        list_id = test_settings.clickup_test_list_id
         if not list_id:
-            pytest.skip("CLICKUP_TEST_LIST_ID environment variable is required")
+            pytest.skip("CLICKUP_TEST_LIST_ID is required")
         assert list_id
 
         query = TaskListQuery(page=0, limit=10, include_timl=True)
@@ -155,11 +136,11 @@ class TestTaskCRUDE2E:
         assert isinstance(tasks, list)
 
     @pytest.mark.asyncio
-    async def test_get_task_with_subtasks(self, api_client: ClickUpAPIClient) -> None:
+    async def test_get_task_with_subtasks(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
         """Test getting a task with subtasks included."""
-        list_id = os.environ.get("CLICKUP_TEST_LIST_ID")
+        list_id = test_settings.clickup_test_list_id
         if not list_id:
-            pytest.skip("CLICKUP_TEST_LIST_ID environment variable is required")
+            pytest.skip("CLICKUP_TEST_LIST_ID is required")
         assert list_id
 
         # Create a task
@@ -178,11 +159,13 @@ class TestTaskCRUDE2E:
             await api_client.task.delete(task_id)
 
     @pytest.mark.asyncio
-    async def test_task_with_due_date_and_time_estimate(self, api_client: ClickUpAPIClient) -> None:
+    async def test_task_with_due_date_and_time_estimate(
+        self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings
+    ) -> None:
         """Test creating a task with due date and time estimate."""
-        list_id = os.environ.get("CLICKUP_TEST_LIST_ID")
+        list_id = test_settings.clickup_test_list_id
         if not list_id:
-            pytest.skip("CLICKUP_TEST_LIST_ID environment variable is required")
+            pytest.skip("CLICKUP_TEST_LIST_ID is required")
         assert list_id
 
         # Create a task with due date and time estimate

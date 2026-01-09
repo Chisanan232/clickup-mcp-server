@@ -10,7 +10,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import os
 from typing import Any, Generic, Type, TypeVar
 
 import httpx
@@ -22,6 +21,7 @@ from .api.list import ListAPI
 from .api.space import SpaceAPI
 from .api.task import TaskAPI
 from .api.team import TeamAPI
+from .config import get_settings
 from .exceptions import (
     AuthenticationError,
     ClickUpAPIError,
@@ -29,7 +29,6 @@ from .exceptions import (
 )
 from .models.cli import ServerConfig
 from .models.dto.base import BaseResponseDTO
-from .utils import load_environment_from_file
 
 logger = logging.getLogger(__name__)
 
@@ -672,11 +671,10 @@ def get_api_token(config: ServerConfig | None = None) -> str:
 
     This function implements a precedence-based token resolution strategy:
     1. CLI token (if provided via --token option)
-    2. Environment variable CLICKUP_API_TOKEN
+    2. Environment variable CLICKUP_API_TOKEN (via BaseSettings)
     3. Fallback environment variable E2E_TEST_API_TOKEN (for testing)
 
-    The function also loads environment variables from a .env file if a path
-    is provided in the config, enabling flexible token management.
+    The function uses pydantic-settings for robust environment configuration.
 
     Args:
         config: Optional ServerConfig instance containing CLI options and env_file path
@@ -701,29 +699,23 @@ def get_api_token(config: ServerConfig | None = None) -> str:
         # Or in .env file
         CLICKUP_API_TOKEN=pk_your_token_here
     """
-    # Try to load environment variables from the provided env file first
-    # so that values are available even if create_app wasn't called earlier
-    if config and config.env_file:
-        load_environment_from_file(config.env_file)
-
-    # Then apply precedence: CLI token overrides .env token if provided
+    # 1. CLI token overrides everything if provided
     if config and config.token:
         return config.token
 
-    # Otherwise get token from environment
-    token = os.environ.get("CLICKUP_API_TOKEN")
-    if not token:
-        # Backward-compatible fallback used by tests/examples
-        token = os.environ.get("E2E_TEST_API_TOKEN")
+    # 2. Get settings (handles .env file loading if configured)
+    env_file = config.env_file if config else None
+    settings = get_settings(env_file)
+
+    # 3. Try primary token
+    if settings.clickup_api_token:
+        return settings.clickup_api_token.get_secret_value()
 
     # Raise error if we don't have a token
-    if not token:
-        raise ValueError(
-            "ClickUp API token not found. Set CLICKUP_API_TOKEN (preferred) or E2E_TEST_API_TOKEN "
-            "in your .env/environment, or provide it using the --token option."
-        )
-
-    return token
+    raise ValueError(
+        "ClickUp API token not found. Set CLICKUP_API_TOKEN in your .env/environment, "
+        "or provide it using the --token option."
+    )
 
 
 _CLICKUP_API_CLIENT: ClickUpAPIClient | None = None

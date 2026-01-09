@@ -10,14 +10,12 @@ Environment variables required:
 - CLICKUP_TEST_TEAM_ID: Team ID for testing
 """
 
-import os
-from pathlib import Path
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator
 
 import pytest
-from dotenv import load_dotenv
 
 from clickup_mcp.client import ClickUpAPIClient
+from clickup_mcp.config import TestSettings as E2ETestSettings
 from clickup_mcp.models.dto.space import SpaceCreate, SpaceUpdate
 
 
@@ -25,43 +23,26 @@ class TestSpaceCRUDE2E:
     """End-to-end tests for Space, Folder, and List CRUD operations."""
 
     @pytest.fixture
-    def env_setup(self) -> Generator[None, None, None]:
-        """Load environment variables from .env file."""
-        env_path = None
-        current_dir = Path.cwd()
-
-        for _ in range(4):
-            test_path = current_dir / ".env"
-            if test_path.exists():
-                env_path = test_path
-                break
-            current_dir = current_dir.parent
-
-        if env_path:
-            load_dotenv(env_path)
-
-        original_env = os.environ.copy()
-        yield
-        os.environ.clear()
-        os.environ.update(original_env)
+    def test_settings(self) -> E2ETestSettings:
+        """Get test settings."""
+        return E2ETestSettings()
 
     @pytest.fixture
-    async def api_client(self, env_setup) -> AsyncGenerator[ClickUpAPIClient, None]:
-        """Create a real ClickUpAPIClient using the API token from environment variables."""
-        api_token = os.environ.get("E2E_TEST_API_TOKEN", "")
+    async def api_client(self, test_settings: E2ETestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
+        """Create a real ClickUpAPIClient using the API token from settings."""
+        assert (
+            test_settings.e2e_test_api_token
+        ), "Miss property from dotenv file: *E2E_TEST_API_TOKEN* is required for this test"
 
-        if not api_token:
-            pytest.skip("E2E_TEST_API_TOKEN environment variable is required for this test")
-
+        api_token = test_settings.e2e_test_api_token.get_secret_value()
         async with ClickUpAPIClient(api_token=api_token) as client:
             yield client
 
     @pytest.mark.asyncio
-    async def test_space_crud_operations(self, api_client: ClickUpAPIClient) -> None:
+    async def test_space_crud_operations(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
         """Test Space CRUD operations: Create, Read, Update, Delete."""
-        team_id = os.environ.get("CLICKUP_TEST_TEAM_ID", "")
-        if not team_id:
-            pytest.skip("CLICKUP_TEST_TEAM_ID environment variable is required for this test")
+        team_id = test_settings.clickup_test_team_id
+        assert team_id, "Miss property from dotenv file: *CLICKUP_TEST_TEAM_ID* is required"
 
         # Create a space
         space_create = SpaceCreate(name="[TEST] Space CRUD Test", multiple_assignees=True)
@@ -96,11 +77,10 @@ class TestSpaceCRUDE2E:
                 assert delete_result is True
 
     @pytest.mark.asyncio
-    async def test_get_all_spaces(self, api_client: ClickUpAPIClient) -> None:
+    async def test_get_all_spaces(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
         """Test getting all spaces in a team."""
-        team_id = os.environ.get("CLICKUP_TEST_TEAM_ID", "")
-        if not team_id:
-            pytest.skip("CLICKUP_TEST_TEAM_ID environment variable is required")
+        team_id = test_settings.clickup_test_team_id
+        assert team_id, "Miss property from dotenv file: *CLICKUP_TEST_TEAM_ID* is required"
 
         spaces = await api_client.space.get_all(team_id)
 

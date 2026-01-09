@@ -33,14 +33,18 @@ Access the API documentation at `http://localhost:8000/docs`
 
 The Docker container can be configured using environment variables:
 
-| Environment Variable | Description                                                     | Default   |
-|----------------------|-----------------------------------------------------------------|-----------|
-| `CLICKUP_API_TOKEN`  | Your ClickUp API token (required)                               | -         |
-| `SERVER_HOST`        | Host to bind the server to                                      | `0.0.0.0` |
-| `SERVER_PORT`        | Port to bind the server to                                      | `8000`    |
-| `MCP_TRANSPORT`      | Transport mode (`sse`, `streamable-http`)                       | `sse`     |
-| `LOG_LEVEL`          | Logging level (`debug`, `info`, `warning`, `error`, `critical`) | `info`    |
-| `RELOAD`             | Enable auto-reload for development                              | -         |
+| Environment Variable     | Description                                                     | Default   |
+|--------------------------|-----------------------------------------------------------------|-----------|
+| `CLICKUP_API_TOKEN`      | Your ClickUp API token (required)                               | -         |
+| `SERVER_HOST`            | Host to bind the server to                                      | `0.0.0.0` |
+| `SERVER_PORT`            | Port to bind the server to                                      | `8000`    |
+| `MCP_TRANSPORT`          | Transport mode (`sse`, `streamable-http`)                       | `sse`     |
+| `LOG_LEVEL`              | Logging level (`debug`, `info`, `warning`, `error`, `critical`) | `info`    |
+| `RELOAD`                 | Enable auto-reload for development                              | -         |
+| `CORS_ALLOW_ORIGINS`     | List of allowed origins (JSON string)                           | `["*"]`   |
+| `CORS_ALLOW_CREDENTIALS` | Allow credentials (cookies)                                     | `True`    |
+| `CORS_ALLOW_METHODS`     | List of allowed methods (JSON string)                           | `["*"]`   |
+| `CORS_ALLOW_HEADERS`     | List of allowed headers (JSON string)                           | `["*"]`   |
 
 ### 📝 Using Environment Files
 

@@ -41,3 +41,22 @@ class TestAPIEndpoints(BaseE2ETestWithRunningServer):
             assert json_response.get("status") == "ok", "Invalid status in response"
             assert "server" in json_response, "Missing server field in response"
             assert json_response.get("server") == "ClickUp MCP Server", "Invalid server in response"
+
+    def test_cors_headers(self, server_fixture: MCPServerFixtureValue) -> None:
+        """Test that CORS headers are returned correctly."""
+        base_url = f"http://{server_fixture.host}:{server_fixture.port}"
+        url = f"{base_url}/health"
+
+        headers = {"Origin": "http://example.com"}
+
+        with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
+            response = client.get(url, headers=headers)
+
+        assert response.status_code == 200
+        # Check for CORS headers
+        # Note: FastAPI/Starlette CORSMiddleware defaults to echoing the origin if allowed,
+        # but with allow_origins=["*"], it returns "*"
+        assert "access-control-allow-origin" in response.headers
+        assert response.headers["access-control-allow-origin"] == "*"
+        assert "access-control-allow-credentials" in response.headers
+        assert response.headers["access-control-allow-credentials"] == "true"

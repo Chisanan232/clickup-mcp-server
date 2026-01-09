@@ -11,14 +11,12 @@ Environment variables required:
 - CLICKUP_TEST_SPACE_ID: Space ID where folders will be created
 """
 
-import os
-from pathlib import Path
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator
 
 import pytest
-from dotenv import load_dotenv
 
 from clickup_mcp.client import ClickUpAPIClient
+from clickup_mcp.config import TestSettings as E2ETestSettings
 from clickup_mcp.models.dto.folder import FolderCreate, FolderUpdate
 
 
@@ -26,45 +24,29 @@ class TestFolderCRUDE2E:
     """End-to-end tests for Folder CRUD operations."""
 
     @pytest.fixture
-    def env_setup(self) -> Generator[None, None, None]:
-        """Load environment variables from .env file."""
-        env_path = None
-        current_dir = Path.cwd()
-
-        for _ in range(4):
-            test_path = current_dir / ".env"
-            if test_path.exists():
-                env_path = test_path
-                break
-            current_dir = current_dir.parent
-
-        if env_path:
-            load_dotenv(env_path)
-
-        original_env = os.environ.copy()
-        yield
-        os.environ.clear()
-        os.environ.update(original_env)
+    def test_settings(self) -> E2ETestSettings:
+        """Get test settings."""
+        return E2ETestSettings()
 
     @pytest.fixture
-    async def api_client(self, env_setup) -> AsyncGenerator[ClickUpAPIClient, None]:
-        """Create a real ClickUpAPIClient using the API token from environment variables."""
-        api_token = os.environ.get("E2E_TEST_API_TOKEN", "")
+    async def api_client(self, test_settings: E2ETestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
+        """Create a real ClickUpAPIClient using the API token from settings."""
+        assert (
+            test_settings.e2e_test_api_token
+        ), "Miss property from dotenv file: *E2E_TEST_API_TOKEN* is required for this test"
 
-        if not api_token:
-            pytest.skip("E2E_TEST_API_TOKEN environment variable is required for this test")
-
+        api_token = test_settings.e2e_test_api_token.get_secret_value()
         async with ClickUpAPIClient(api_token=api_token) as client:
             yield client
 
     @pytest.mark.asyncio
-    async def test_folder_crud_operations(self, api_client: ClickUpAPIClient) -> None:
+    async def test_folder_crud_operations(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
         """Test Folder CRUD operations: Create, Read, Update, Delete."""
-        team_id = os.environ.get("CLICKUP_TEST_TEAM_ID", "")
-        space_id = os.environ.get("CLICKUP_TEST_SPACE_ID", "")
-
-        if not team_id or not space_id:
-            pytest.skip("CLICKUP_TEST_TEAM_ID and CLICKUP_TEST_SPACE_ID environment variables are required")
+        team_id = test_settings.clickup_test_team_id
+        space_id = test_settings.clickup_test_space_id
+        assert (
+            team_id and space_id
+        ), "Miss property from dotenv file: *CLICKUP_TEST_TEAM_ID* and *CLICKUP_TEST_SPACE_ID* are required"
 
         # Create a folder
         folder_create = FolderCreate(name="[TEST] Folder CRUD Test")
@@ -92,11 +74,10 @@ class TestFolderCRUDE2E:
             assert delete_result is True
 
     @pytest.mark.asyncio
-    async def test_get_all_folders(self, api_client: ClickUpAPIClient) -> None:
+    async def test_get_all_folders(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
         """Test getting all folders in a space."""
-        space_id = os.environ.get("CLICKUP_TEST_SPACE_ID", "")
-        if not space_id:
-            pytest.skip("CLICKUP_TEST_SPACE_ID environment variable is required")
+        space_id = test_settings.clickup_test_space_id
+        assert space_id, "Miss property from dotenv file: *CLICKUP_TEST_SPACE_ID* is required"
 
         folders = await api_client.folder.get_all(space_id)
 
