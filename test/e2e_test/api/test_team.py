@@ -5,14 +5,11 @@ This module contains tests that make real API calls to the ClickUp API
 using the TeamAPI client. These tests require a valid ClickUp API token.
 """
 
-import os
-from pathlib import Path
-from typing import AsyncGenerator, Generator
-
 import pytest
-from dotenv import load_dotenv
+from typing import AsyncGenerator
 
 from clickup_mcp.client import ClickUpAPIClient
+from clickup_mcp.config import TestSettings as E2ETestSettings
 from clickup_mcp.models.domain import ClickUpTeam
 from clickup_mcp.models.dto.space import SpaceFeatures, SpaceResp
 
@@ -21,51 +18,19 @@ class TestTeamAPIE2E:
     """End-to-end tests for TeamAPI that make real API calls."""
 
     @pytest.fixture
-    def env_setup(self) -> Generator[None, None, None]:
-        """
-        Load environment variables from .env file.
-
-        This fixture looks for a .env file in the project root or parent directories
-        and loads the variables, making them available through os.environ.
-        """
-        # Try to find and load .env file from current directory or parent directories
-        env_path = None
-        current_dir = Path.cwd()
-
-        # Try current directory and up to 3 parent directories
-        for _ in range(4):
-            test_path = current_dir / ".env"
-            if test_path.exists():
-                env_path = test_path
-                break
-            current_dir = current_dir.parent
-
-        if env_path:
-            load_dotenv(env_path)
-
-        # Store original environment variables
-        original_env = os.environ.copy()
-
-        yield
-
-        # Restore original environment variables
-        os.environ.clear()
-        os.environ.update(original_env)
+    def test_settings(self) -> E2ETestSettings:
+        """Get test settings."""
+        return E2ETestSettings()
 
     @pytest.fixture
-    async def api_client(self, env_setup) -> AsyncGenerator[ClickUpAPIClient, None]:
+    async def api_client(self, test_settings: E2ETestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
         """
-        Create a real ClickUpAPIClient using the API token from environment variables.
-
-        This fixture requires that E2E_TEST_API_TOKEN is set in the environment.
+        Create a real ClickUpAPIClient using the API token from settings.
         """
-        api_token = os.environ.get("E2E_TEST_API_TOKEN")
+        if not test_settings.e2e_test_api_token:
+            pytest.skip("E2E_TEST_API_TOKEN is required for this test")
 
-        # Skip tests if no API token is available
-        if not api_token:
-            pytest.skip("E2E_TEST_API_TOKEN environment variable is required for this test")
-
-        assert api_token
+        api_token = test_settings.e2e_test_api_token.get_secret_value()
         async with ClickUpAPIClient(api_token=api_token) as client:
             yield client
 
@@ -103,12 +68,12 @@ class TestTeamAPIE2E:
                         assert member.user.id == member.user.user_id  # Test backward compatibility
 
     @pytest.mark.asyncio
-    async def test_get_spaces_for_team(self, api_client: ClickUpAPIClient) -> None:
+    async def test_get_spaces_for_team(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
         """Test getting spaces for a specific team with a real API call."""
-        team_id = os.environ.get("CLICKUP_TEST_TEAM_ID")
+        team_id = test_settings.clickup_test_team_id
 
         if not team_id:
-            pytest.skip("CLICKUP_TEST_TEAM_ID environment variable is required for this test")
+            pytest.skip("CLICKUP_TEST_TEAM_ID is required for this test")
 
         assert team_id
         spaces = await api_client.team.get_spaces(team_id)
