@@ -128,13 +128,16 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
             lifespan=mcp_factory.lifespan(),
         )
 
+        # Get settings for CORS configuration
+        settings = get_settings()
+
         # Configure CORS
         _WEB_SERVER_INSTANCE.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],  # In production, replace with specific origins
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
+            allow_origins=settings.cors_allow_origins,
+            allow_credentials=settings.cors_allow_credentials,
+            allow_methods=settings.cors_allow_methods,
+            allow_headers=settings.cors_allow_headers,
         )
         # Mount ClickUp webhook endpoint(s)
         _WEB_SERVER_INSTANCE.include_router(clickup_webhook_router)
