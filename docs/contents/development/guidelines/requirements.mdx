@@ -142,14 +142,14 @@ They are used in local development and automated tests and are not required for 
 
 | Variable                          | Purpose                                                                                                        | Example                                      |
 |-----------------------------------|----------------------------------------------------------------------------------------------------------------|----------------------------------------------|
-| `E2E_TEST_API_TOKEN`              | Fallback token used by examples/tests when `CLICKUP_API_TOKEN` is not set.                                     | `sk_clickup_test_xxx`                        |
+| `E2E_TEST_API_TOKEN`              | Dedicated token used strictly by the E2E test suite.                                                           | `sk_clickup_test_xxx`                        |
 | `CLICKUP_WEBHOOK_HANDLER_MODULES` | Comma-separated module paths to auto-import at startup (web server and webhook consumer) for local handlers.   | `my_app.webhooks.handlers,more.pkg.handlers` |
 | `QUEUE_BACKEND`                   | Message queue backend selection for webhook producer/consumer. Use `local` for development.                    | `local`                                      |
 
 Minimal dev/test `.env` example:
 
 ```dotenv
-# Use test token locally when not exporting CLICKUP_API_TOKEN
+# Token for E2E tests
 E2E_TEST_API_TOKEN=sk_clickup_test_XXXXXXXXXXXXXXXX
 
 # Auto-import local webhook handlers

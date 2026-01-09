@@ -24,8 +24,11 @@ Before running the server, you need to set up your ClickUp API token. You have s
 ### Using a .env File (Recommended)
 
 1. Create a `.env` file in your project directory:
-   ```
+   ```dotenv
    CLICKUP_API_TOKEN=your_clickup_api_token
+   
+   # Optional CORS configuration
+   CORS_ALLOW_ORIGINS=["https://app.clickup.com"]
    ```
 
 2. Specify the path to your `.env` file when starting the server:

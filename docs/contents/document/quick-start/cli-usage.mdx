@@ -25,7 +25,7 @@ clickup-mcp-server [--env <path>] [--token <token>] [--host <host>] [--port <por
 | Option        | Required | Type    | Default   | Allowed values                                  | Usage example         | Description                                                                                                                                                                                  |
 |---------------|----------|---------|-----------|-------------------------------------------------|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `--env`       | Optional | string  | `.env`    | -                                               | `--env /path/to/.env` | Path to a dotenv file. Loaded first to populate environment variables. If not provided or not found, the server will attempt to auto-discover a `.env` in the current or parent directories. |
-| `--token`     | Optional | string  | None      | -                                               | `--token YOUR_TOKEN`  | ClickUp API token. If provided, it overrides any token loaded from `.env`. If omitted, the server looks for `CLICKUP_API_TOKEN` (preferred) or `E2E_TEST_API_TOKEN` in the environment.      |
+| `--token`     | Optional | string  | None      | -                                               | `--token YOUR_TOKEN`  | ClickUp API token. If provided, it overrides any token loaded from `.env`. If omitted, the server looks for `CLICKUP_API_TOKEN` in the environment.      |
 | `--host`      | Optional | string  | `0.0.0.0` | -                                               | `--host 0.0.0.0`      | Host interface to bind the server to.                                                                                                                                                        |
 | `--port`      | Optional | number  | `8000`    | 1–65535                                         | `--port 8000`         | Port to bind the server to. Must be between 1 and 65535.                                                                                                                                     |
 | `--log-level` | Optional | enum    | `info`    | `debug`, `info`, `warning`, `error`, `critical` | `--log-level debug`   | Logging level.                                                                                                                                                                               |
@@ -36,7 +36,7 @@ clickup-mcp-server [--env <path>] [--token <token>] [--host <host>] [--port <por
 
 - .env is loaded first (auto-discovered or via `--env`).
 - `--token` overrides any token value from `.env`.
-- The server reads `CLICKUP_API_TOKEN` (preferred) or `E2E_TEST_API_TOKEN`.
+- The server reads `CLICKUP_API_TOKEN`.
 
 :::
 
@@ -52,6 +52,10 @@ You can configure the server via a dotenv file. The server will:
 | `CLICKUP_API_TOKEN`               | Yes (unless `--token` is set) | Server          | `sk_clickup_xxx`                    | Preferred API token used by the server for authentication. Loaded from `.env` first; can be overridden by `--token`.                                   |
 | `CLICKUP_WEBHOOK_HANDLER_MODULES` | Optional                      | Server/Consumer | `my_app.webhooks.handlers,more.pkg` | Comma-separated module paths to auto-import at startup so your custom handlers are registered. Modules must be importable on PYTHONPATH.               |
 | `QUEUE_BACKEND`                   | Optional                      | Consumer        | `local`                             | Message queue backend selection for webhook event sink/consumer. Common local value is `local`. Other values depend on your abe backends installation. |
+| `CORS_ALLOW_ORIGINS`              | Optional                      | Server          | `["https://app.clickup.com"]`       | JSON-formatted list of allowed origins for CORS. Default: `["*"]`.                                                                                     |
+| `CORS_ALLOW_CREDENTIALS`          | Optional                      | Server          | `True`                              | Boolean indicating if cookies should be supported for cross-origin requests. Default: `True`.                                                          |
+| `CORS_ALLOW_METHODS`              | Optional                      | Server          | `["GET", "POST"]`                   | JSON-formatted list of allowed HTTP methods. Default: `["*"]`.                                                                                         |
+| `CORS_ALLOW_HEADERS`              | Optional                      | Server          | `["Authorization"]`                 | JSON-formatted list of allowed HTTP headers. Default: `["*"]`.                                                                                         |
 
 Minimal `.env` example:
 

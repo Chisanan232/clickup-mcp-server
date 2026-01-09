@@ -12,6 +12,12 @@ set -e
 # ENV_FILE → --env-file
 # RELOAD → --reload
 #
+# CORS Environment Variables (read directly by application):
+# CORS_ALLOW_ORIGINS
+# CORS_ALLOW_CREDENTIALS
+# CORS_ALLOW_METHODS
+# CORS_ALLOW_HEADERS
+#
 
 # Initialize command line arguments array
 CMD_ARGS=()
