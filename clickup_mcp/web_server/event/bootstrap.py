@@ -23,22 +23,23 @@ Examples:
 """
 
 import importlib
-import os
-from typing import List
+from typing import List, Optional
+
+from clickup_mcp.config import get_settings
 
 
-def import_handler_modules_from_env(env_var: str = "CLICKUP_WEBHOOK_HANDLER_MODULES") -> List[str]:
+def import_handler_modules_from_env(env_file: Optional[str] = None) -> List[str]:
     """
-    Import handler modules declared in an environment variable.
+    Import handler modules declared in configuration.
 
     Behavior:
-    - Reads `env_var` from the environment; if empty, returns an empty list.
+    - Reads `CLICKUP_WEBHOOK_HANDLER_MODULES` from settings.
     - Splits by comma, strips whitespace, ignores empty entries.
     - Imports each module using `importlib.import_module`.
     - Returns the list of successfully imported module names.
 
     Args:
-        env_var: Environment variable name holding CSV of module paths.
+        env_file: Optional path to .env file to load settings from.
 
     Returns:
         List of module names that were imported.
@@ -50,10 +51,13 @@ def import_handler_modules_from_env(env_var: str = "CLICKUP_WEBHOOK_HANDLER_MODU
         names = import_handler_modules_from_env()
         assert names == ["acme.handlers.clickup", "foo.bar"]
     """
-    modules_str = os.getenv(env_var, "").strip()
+    settings = get_settings(env_file)
+    modules_str = settings.clickup_webhook_handler_modules.strip()
+    
     imported: List[str] = []
     if not modules_str:
         return imported
+        
     for name in [m.strip() for m in modules_str.split(",") if m.strip()]:
         importlib.import_module(name)
         imported.append(name)
