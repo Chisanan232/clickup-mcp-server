@@ -55,10 +55,10 @@ from fastapi.responses import JSONResponse
 
 from clickup_mcp._base import BaseServerFactory
 from clickup_mcp.client import ClickUpAPIClientFactory, get_api_token
+from clickup_mcp.config import get_settings
 from clickup_mcp.mcp_server.app import mcp_factory
 from clickup_mcp.models.cli import MCPTransportType, ServerConfig
 from clickup_mcp.models.dto.health_check import HealthyCheckResponseDto
-from clickup_mcp.utils import load_environment_from_file
 from clickup_mcp.web_server.event.bootstrap import import_handler_modules_from_env
 from clickup_mcp.web_server.event.webhook import router as clickup_webhook_router
 
@@ -235,11 +235,10 @@ def create_app(
     This function is the main entry point for initializing the ClickUp MCP server.
     It performs the following initialization steps:
 
-    1. Loads environment variables from .env file (if configured)
-    2. Creates and configures the ClickUp API client with authentication
-    3. Mounts the MCP server with the specified transport protocol
-    4. Registers user-defined event handlers
-    5. Configures health check endpoint
+    1. Creates and configures the ClickUp API client with authentication (using Settings)
+    2. Mounts the MCP server with the specified transport protocol
+    3. Registers user-defined event handlers
+    4. Configures health check endpoint
 
     The resulting FastAPI application is ready to:
     - Accept MCP protocol requests via SSE or HTTP streaming
@@ -296,10 +295,8 @@ def create_app(
         app = create_app()
         uvicorn.run(app, host="0.0.0.0", port=8000)
     """
-    # Load environment variables from file if provided
-    load_environment_from_file(server_config.env_file if server_config else None)
-
     # Create client with the token from configuration or environment
+    # get_api_token uses get_settings() which handles environment loading
     ClickUpAPIClientFactory.create(api_token=get_api_token(server_config))
 
     # Use default server type if no configuration is provided
@@ -309,7 +306,7 @@ def create_app(
     mount_service(transport=transport)
 
     # Import user handler modules from env if provided
-    import_handler_modules_from_env()
+    import_handler_modules_from_env(server_config.env_file if server_config else None)
 
     # Root endpoint for health checks
     @web.get("/health", response_class=JSONResponse)
