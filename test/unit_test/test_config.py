@@ -116,6 +116,29 @@ class TestConfig:
             with pytest.raises(ValueError, match="ClickUp API token not found"):
                 get_api_token()
 
+    def test_cors_settings_defaults(self) -> None:
+        """Test default CORS settings."""
+        settings = Settings(_env_file="non_existent_env_file")
+        assert settings.cors_allow_origins == ["*"]
+        assert settings.cors_allow_credentials is True
+        assert settings.cors_allow_methods == ["*"]
+        assert settings.cors_allow_headers == ["*"]
+
+    def test_cors_settings_from_env_vars(self) -> None:
+        """Test loading CORS settings from environment variables."""
+        # Pydantic Settings parses lists from JSON strings in env vars
+        os.environ["CORS_ALLOW_ORIGINS"] = '["http://localhost:3000", "https://example.com"]'
+        os.environ["CORS_ALLOW_CREDENTIALS"] = "False"
+        os.environ["CORS_ALLOW_METHODS"] = '["GET", "POST"]'
+        os.environ["CORS_ALLOW_HEADERS"] = '["Authorization", "Content-Type"]'
+        
+        settings = Settings(_env_file="non_existent_env_file")
+        
+        assert settings.cors_allow_origins == ["http://localhost:3000", "https://example.com"]
+        assert settings.cors_allow_credentials is False
+        assert settings.cors_allow_methods == ["GET", "POST"]
+        assert settings.cors_allow_headers == ["Authorization", "Content-Type"]
+
     def test_webhook_modules_parsing(self, tmp_path: Path) -> None:
         """Test parsing of webhook modules from env."""
         env_file = tmp_path / ".env"

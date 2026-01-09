@@ -31,6 +31,24 @@ class Settings(BaseSettings):
         description="Comma-separated list of Python module paths to import for webhook handling"
     )
     
+    # CORS Configuration
+    cors_allow_origins: list[str] = Field(
+        default=["*"],
+        description="List of origins that are allowed to make cross-origin requests"
+    )
+    cors_allow_credentials: bool = Field(
+        default=True,
+        description="Indicate that cookies should be supported for cross-origin requests"
+    )
+    cors_allow_methods: list[str] = Field(
+        default=["*"],
+        description="List of allowed HTTP methods"
+    )
+    cors_allow_headers: list[str] = Field(
+        default=["*"],
+        description="List of allowed HTTP headers"
+    )
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
