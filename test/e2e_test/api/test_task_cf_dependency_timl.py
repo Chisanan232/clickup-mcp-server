@@ -77,16 +77,16 @@ class TestTaskCFDependencyTIMLe2e:
 
         # Create a task
         task_create = TaskCreate(name="[TEST] Task for CF Clear")
-        task = await api_client.task.create(list_id, task_create)
+        task = await api_client.task.create(list_id, task_create)  # type: ignore[arg-type]
         assert task is not None
         task_id = task.id
 
         try:
             # Set a custom field value
-            await api_client.task.set_custom_field(task_id, field_id, "test_value")
+            await api_client.task.set_custom_field(task_id, field_id, "test_value")  # type: ignore[arg-type]
 
             # Clear the custom field
-            result = await api_client.task.clear_custom_field(task_id, field_id)
+            result = await api_client.task.clear_custom_field(task_id, field_id)  # type: ignore[arg-type]
             assert result is True
 
         finally:
