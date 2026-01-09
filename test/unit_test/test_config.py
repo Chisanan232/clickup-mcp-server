@@ -14,7 +14,7 @@ from clickup_mcp.client import (
     ClickUpAPIClientFactory,
     get_api_token,
 )
-from clickup_mcp.config import get_settings, Settings
+from clickup_mcp.config import get_settings, Settings, TestSettings as E2ETestSettings
 
 
 class TestConfig:
@@ -27,7 +27,7 @@ class TestConfig:
         
         # Also clear env vars that might affect tests
         old_env = os.environ.copy()
-        for key in ["CLICKUP_API_TOKEN", "E2E_TEST_API_TOKEN", "LOG_LEVEL", "CLICKUP_WEBHOOK_HANDLER_MODULES"]:
+        for key in ["CLICKUP_API_TOKEN", "E2E_TEST_API_TOKEN", "LOG_LEVEL", "CLICKUP_WEBHOOK_HANDLER_MODULES", "CLICKUP_TEST_TEAM_ID"]:
             if key in os.environ:
                 del os.environ[key]
                 
@@ -42,9 +42,14 @@ class TestConfig:
         # Pass a non-existent file to ensure we don't load local .env
         settings = Settings(_env_file="non_existent_env_file")
         assert settings.clickup_api_token is None
-        assert settings.e2e_test_api_token is None
         assert settings.log_level == "INFO"
         assert settings.clickup_webhook_handler_modules == ""
+
+    def test_test_settings_defaults(self) -> None:
+        """Test default TestSettings values."""
+        settings = E2ETestSettings(_env_file="non_existent_env_file")
+        assert settings.e2e_test_api_token is None
+        assert settings.clickup_test_team_id is None
 
     def test_settings_from_env_vars(self) -> None:
         """Test loading settings from environment variables."""
@@ -53,9 +58,17 @@ class TestConfig:
         
         # Pass non-existent file to avoid .env interference
         settings = Settings(_env_file="non_existent_env_file")
-        assert settings.clickup_api_token
         assert settings.clickup_api_token.get_secret_value() == "env_token"
         assert settings.log_level == "DEBUG"
+
+    def test_test_settings_from_env_vars(self) -> None:
+        """Test loading TestSettings from environment variables."""
+        os.environ["E2E_TEST_API_TOKEN"] = "test_token"
+        os.environ["CLICKUP_TEST_TEAM_ID"] = "12345"
+        
+        settings = E2ETestSettings(_env_file="non_existent_env_file")
+        assert settings.e2e_test_api_token.get_secret_value() == "test_token"
+        assert settings.clickup_test_team_id == "12345"
 
     def test_settings_from_env_file(self, tmp_path: Path) -> None:
         """Test loading settings from a .env file."""
@@ -63,7 +76,6 @@ class TestConfig:
         env_file.write_text("CLICKUP_API_TOKEN=file_token\nLOG_LEVEL=WARNING")
         
         settings = get_settings(str(env_file))
-        assert settings.clickup_api_token
         assert settings.clickup_api_token.get_secret_value() == "file_token"
         assert settings.log_level == "WARNING"
 
@@ -72,8 +84,6 @@ class TestConfig:
         from clickup_mcp.models.cli import ServerConfig
 
         # 1. Test CLI token priority
-        # We need to mock get_settings to return empty settings to ensure CLI is what's being returned
-        # and not falling back to some env var
         with patch("clickup_mcp.client.get_settings") as mock_settings:
             mock_settings.return_value = Settings(_env_file="non_existent")
             config = ServerConfig(token="cli_token")
@@ -84,14 +94,8 @@ class TestConfig:
         env_file = tmp_path / ".env"
         env_file.write_text("CLICKUP_API_TOKEN=file_token")
         
-        # Force settings to load this file, but env var should override
-        # We need to clear cache to ensure new settings are loaded
         get_settings.cache_clear()
-        
-        # Note: We must ensure get_api_token uses this specific file
         config = ServerConfig(env_file=str(env_file))
-        
-        # With env var set, it should take precedence
         assert get_api_token(config) == "env_var_token"
 
         # 3. Test File priority when no Env Var
@@ -100,32 +104,10 @@ class TestConfig:
         
         assert get_api_token(config) == "file_token"
 
-    def test_get_api_token_fallback(self) -> None:
-        """Test fallback to E2E_TEST_API_TOKEN."""
-        # We must prevent loading real .env
-        with patch("clickup_mcp.client.get_settings") as mock_get_settings:
-            # Create settings with only fallback token
-            settings = Settings(_env_file="non_existent")
-            # We can't set SecretStr directly easily on instance if frozen, 
-            # but BaseSettings defaults to not frozen? 
-            # Actually easier to just use env vars and mock the settings loader to ignore .env
-            pass
-
-        # Better approach: mocking the Settings object returned
-        mock_settings = MagicMock()
-        mock_settings.clickup_api_token = None
-        mock_settings.e2e_test_api_token = MagicMock()
-        mock_settings.e2e_test_api_token.get_secret_value.return_value = "fallback_token"
-        
-        with patch("clickup_mcp.client.get_settings", return_value=mock_settings):
-            assert get_api_token() == "fallback_token"
-
     def test_get_api_token_missing(self) -> None:
         """Test error when no token is found."""
-        # Mock get_settings to return empty settings (ignore local .env)
         mock_settings = MagicMock()
         mock_settings.clickup_api_token = None
-        mock_settings.e2e_test_api_token = None
         
         with patch("clickup_mcp.client.get_settings", return_value=mock_settings):
             with pytest.raises(ValueError, match="ClickUp API token not found"):
@@ -144,8 +126,6 @@ class TestConfig:
         from clickup_mcp.web_server.event.bootstrap import import_handler_modules_from_env
         
         with patch("importlib.import_module") as mock_import:
-            # We need to ensure import_handler_modules_from_env calls get_settings with our file
-            # But get_settings is cached.
             get_settings.cache_clear()
             
             modules = import_handler_modules_from_env(str(env_file))
@@ -159,14 +139,8 @@ class TestConfig:
         import clickup_mcp.client
         clickup_mcp.client._CLICKUP_API_CLIENT = None
         
-        # Mock get_api_token to return a known token without relying on env/files
         with patch("clickup_mcp.client.get_api_token", return_value="factory_token"):
-             # Should work without arguments by picking up token from get_api_token (if create uses it? No create takes arg)
-             # Wait, create takes arg. If I call create(api_token=...), it just uses it.
-             # The integration is usually: app calls get_api_token(), then passes result to create().
-             
-             # Let's test get_api_token + factory
-             token = "factory_token" # Simulated
+             token = "factory_token"
              client = ClickUpAPIClientFactory.create(api_token=token)
              assert client.api_token == "factory_token"
         
