@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 import pytest
 
 from clickup_mcp.config import get_settings
