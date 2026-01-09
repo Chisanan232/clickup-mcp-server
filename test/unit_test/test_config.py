@@ -58,6 +58,7 @@ class TestConfig:
         
         # Pass non-existent file to avoid .env interference
         settings = Settings(_env_file="non_existent_env_file")
+        assert settings.clickup_api_token
         assert settings.clickup_api_token.get_secret_value() == "env_token"
         assert settings.log_level == "DEBUG"
 
@@ -67,6 +68,7 @@ class TestConfig:
         os.environ["CLICKUP_TEST_TEAM_ID"] = "12345"
         
         settings = E2ETestSettings(_env_file="non_existent_env_file")
+        assert settings.e2e_test_api_token
         assert settings.e2e_test_api_token.get_secret_value() == "test_token"
         assert settings.clickup_test_team_id == "12345"
 
@@ -76,6 +78,7 @@ class TestConfig:
         env_file.write_text("CLICKUP_API_TOKEN=file_token\nLOG_LEVEL=WARNING")
         
         settings = get_settings(str(env_file))
+        assert settings.clickup_api_token
         assert settings.clickup_api_token.get_secret_value() == "file_token"
         assert settings.log_level == "WARNING"
 

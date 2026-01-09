@@ -30,6 +30,7 @@ class TestTeamAPIE2E:
         if not test_settings.e2e_test_api_token:
             pytest.skip("E2E_TEST_API_TOKEN is required for this test")
 
+        assert test_settings.e2e_test_api_token
         api_token = test_settings.e2e_test_api_token.get_secret_value()
         async with ClickUpAPIClient(api_token=api_token) as client:
             yield client

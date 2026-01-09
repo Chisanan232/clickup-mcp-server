@@ -29,8 +29,7 @@ class TestSpaceCRUDE2E:
     @pytest.fixture
     async def api_client(self, test_settings: E2ETestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
         """Create a real ClickUpAPIClient using the API token from settings."""
-        if not test_settings.e2e_test_api_token:
-            pytest.skip("E2E_TEST_API_TOKEN is required for this test")
+        assert test_settings.e2e_test_api_token, "Miss property from dotenv file: *E2E_TEST_API_TOKEN* is required for this test"
 
         api_token = test_settings.e2e_test_api_token.get_secret_value()
         async with ClickUpAPIClient(api_token=api_token) as client:
@@ -40,8 +39,7 @@ class TestSpaceCRUDE2E:
     async def test_space_crud_operations(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
         """Test Space CRUD operations: Create, Read, Update, Delete."""
         team_id = test_settings.clickup_test_team_id
-        if not team_id:
-            pytest.skip("CLICKUP_TEST_TEAM_ID is required for this test")
+        assert team_id, "Miss property from dotenv file: *CLICKUP_TEST_TEAM_ID* is required"
 
         # Create a space
         space_create = SpaceCreate(name="[TEST] Space CRUD Test", multiple_assignees=True)
@@ -79,8 +77,7 @@ class TestSpaceCRUDE2E:
     async def test_get_all_spaces(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
         """Test getting all spaces in a team."""
         team_id = test_settings.clickup_test_team_id
-        if not team_id:
-            pytest.skip("CLICKUP_TEST_TEAM_ID is required")
+        assert team_id, "Miss property from dotenv file: *CLICKUP_TEST_TEAM_ID* is required"
 
         spaces = await api_client.space.get_all(team_id)
 
