@@ -712,14 +712,10 @@ def get_api_token(config: ServerConfig | None = None) -> str:
     if settings.clickup_api_token:
         return settings.clickup_api_token.get_secret_value()
 
-    # 4. Try fallback token
-    if settings.e2e_test_api_token:
-        return settings.e2e_test_api_token.get_secret_value()
-
     # Raise error if we don't have a token
     raise ValueError(
-        "ClickUp API token not found. Set CLICKUP_API_TOKEN (preferred) or E2E_TEST_API_TOKEN "
-        "in your .env/environment, or provide it using the --token option."
+        "ClickUp API token not found. Set CLICKUP_API_TOKEN in your .env/environment, "
+        "or provide it using the --token option."
     )
 
 
