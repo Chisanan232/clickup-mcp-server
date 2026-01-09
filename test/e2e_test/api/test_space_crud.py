@@ -10,8 +10,9 @@ Environment variables required:
 - CLICKUP_TEST_TEAM_ID: Team ID for testing
 """
 
-import pytest
 from typing import AsyncGenerator
+
+import pytest
 
 from clickup_mcp.client import ClickUpAPIClient
 from clickup_mcp.config import TestSettings as E2ETestSettings
@@ -29,7 +30,9 @@ class TestSpaceCRUDE2E:
     @pytest.fixture
     async def api_client(self, test_settings: E2ETestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
         """Create a real ClickUpAPIClient using the API token from settings."""
-        assert test_settings.e2e_test_api_token, "Miss property from dotenv file: *E2E_TEST_API_TOKEN* is required for this test"
+        assert (
+            test_settings.e2e_test_api_token
+        ), "Miss property from dotenv file: *E2E_TEST_API_TOKEN* is required for this test"
 
         api_token = test_settings.e2e_test_api_token.get_secret_value()
         async with ClickUpAPIClient(api_token=api_token) as client:

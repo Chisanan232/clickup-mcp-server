@@ -53,11 +53,11 @@ def import_handler_modules_from_env(env_file: Optional[str] = None) -> List[str]
     """
     settings = get_settings(env_file)
     modules_str = settings.clickup_webhook_handler_modules.strip()
-    
+
     imported: List[str] = []
     if not modules_str:
         return imported
-        
+
     for name in [m.strip() for m in modules_str.split(",") if m.strip()]:
         importlib.import_module(name)
         imported.append(name)

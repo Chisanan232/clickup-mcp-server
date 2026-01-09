@@ -10,8 +10,9 @@ Environment variables required:
 - CLICKUP_TEST_LIST_ID: List ID for testing
 """
 
-import pytest
 from typing import AsyncGenerator
+
+import pytest
 
 from clickup_mcp.client import ClickUpAPIClient
 from clickup_mcp.config import TestSettings as E2ETestSettings
@@ -158,7 +159,9 @@ class TestTaskCRUDE2E:
             await api_client.task.delete(task_id)
 
     @pytest.mark.asyncio
-    async def test_task_with_due_date_and_time_estimate(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_task_with_due_date_and_time_estimate(
+        self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings
+    ) -> None:
         """Test creating a task with due date and time estimate."""
         list_id = test_settings.clickup_test_list_id
         if not list_id:

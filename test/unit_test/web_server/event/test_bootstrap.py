@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+
 import pytest
-from unittest.mock import patch, MagicMock
+
 from clickup_mcp.config import get_settings
 from clickup_mcp.web_server.event.bootstrap import import_handler_modules_from_env
 
@@ -17,7 +18,7 @@ def clear_settings_cache():
 def test_import_handler_modules_none(monkeypatch: pytest.MonkeyPatch) -> None:
     # No env var set -> returns empty list
     monkeypatch.delenv("CLICKUP_WEBHOOK_HANDLER_MODULES", raising=False)
-    
+
     # We must mock get_settings or ensure environment is clean
     # Since monkeypatch modifies os.environ, get_settings() should pick it up if cache is cleared
     assert import_handler_modules_from_env() == []

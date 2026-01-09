@@ -5,8 +5,9 @@ This module contains tests that make real API calls to the ClickUp API
 using the TeamAPI client. These tests require a valid ClickUp API token.
 """
 
-import pytest
 from typing import AsyncGenerator
+
+import pytest
 
 from clickup_mcp.client import ClickUpAPIClient
 from clickup_mcp.config import TestSettings as E2ETestSettings

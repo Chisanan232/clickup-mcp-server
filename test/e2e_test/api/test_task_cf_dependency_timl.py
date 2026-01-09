@@ -32,7 +32,9 @@ class TestTaskCFDependencyTIMLe2e:
     @pytest.fixture
     async def api_client(self, test_settings: E2ETestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
         """Create a real ClickUpAPIClient using the API token from settings."""
-        assert test_settings.e2e_test_api_token, "Miss property from dotenv file: *E2E_TEST_API_TOKEN* is required for this test"
+        assert (
+            test_settings.e2e_test_api_token
+        ), "Miss property from dotenv file: *E2E_TEST_API_TOKEN* is required for this test"
 
         api_token = test_settings.e2e_test_api_token.get_secret_value()
         async with ClickUpAPIClient(api_token=api_token) as client:
@@ -126,11 +128,15 @@ class TestTaskCFDependencyTIMLe2e:
 
     @pytest.mark.skip(reason="My plan is limited to usages of feature.")
     @pytest.mark.asyncio
-    async def test_add_task_to_multiple_lists_timl(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_add_task_to_multiple_lists_timl(
+        self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings
+    ) -> None:
         """Test adding a task to multiple lists (TIML)."""
         list_id_1 = test_settings.clickup_test_list_id
         list_id_2 = test_settings.clickup_test_list_id_2
-        assert (list_id_1 and list_id_2), "Miss property from dotenv file: *CLICKUP_TEST_LIST_ID* and *CLICKUP_TEST_LIST_ID_2* is required"
+        assert (
+            list_id_1 and list_id_2
+        ), "Miss property from dotenv file: *CLICKUP_TEST_LIST_ID* and *CLICKUP_TEST_LIST_ID_2* is required"
 
         # Create a task in the first list
         task_create = TaskCreate(name="[TEST] Task for TIML")
@@ -170,7 +176,9 @@ class TestTaskCFDependencyTIMLe2e:
             await api_client.task.delete(task_id)
 
     @pytest.mark.asyncio
-    async def test_create_task_with_custom_fields(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_create_task_with_custom_fields(
+        self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings
+    ) -> None:
         """Test creating a task with custom fields."""
         list_id = test_settings.clickup_test_list_id
         assert list_id, "Miss property from dotenv file: *CLICKUP_TEST_LIST_ID* is required"

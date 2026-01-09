@@ -65,8 +65,10 @@ class TestClickUpMCPCliE2E:
         """Create a temporary .env file with test API token."""
         # Get token from TestSettings or use fallback
         settings = E2ETestSettings()
-        token = settings.e2e_test_api_token.get_secret_value() if settings.e2e_test_api_token else "test_token_e2e_tests"
-        
+        token = (
+            settings.e2e_test_api_token.get_secret_value() if settings.e2e_test_api_token else "test_token_e2e_tests"
+        )
+
         # Create a temporary .env file
         with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as temp_file:
             temp_file.write(f"CLICKUP_API_TOKEN={token}\n")

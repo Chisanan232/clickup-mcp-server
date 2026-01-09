@@ -48,7 +48,7 @@ class TestAPIEndpoints(BaseE2ETestWithRunningServer):
         url = f"{base_url}/health"
 
         headers = {"Origin": "http://example.com"}
-        
+
         with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
             response = client.get(url, headers=headers)
 
