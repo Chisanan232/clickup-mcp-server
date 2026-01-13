@@ -18154,14 +18154,11 @@
                     },
                     "status": {
                       "title": "Status",
-                      "required": [
-                        "status",
-                        "color",
-                        "orderindex",
-                        "type"
-                      ],
                       "type": "object",
                       "properties": {
+                        "id": {
+                          "type": "string"
+                        },
                         "status": {
                           "type": "string"
                         },
@@ -18178,6 +18175,7 @@
                       },
                       "examples": [
                         {
+                          "id": "p7001234_FxGmgrnk",
                           "status": "in progress",
                           "color": "#d3d3d3",
                           "orderindex": 1,
