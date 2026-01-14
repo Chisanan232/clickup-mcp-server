@@ -37,3 +37,30 @@ class TestSettings(BaseSettings):
 	)
 
 	model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", case_sensitive=False)
+
+
+def get_test_settings(env_file: Optional[str] = None) -> TestSettings:
+	"""
+	Generate and return a TestSettings instance.
+
+	This utility function provides a convenient way to instantiate TestSettings
+	with optional custom .env file path. It's used by the pytest fixture and
+	can also be used directly in tests that need to load settings programmatically.
+
+	Args:
+		env_file: Optional path to a custom .env file.
+				 If provided, it overrides the default .env file.
+
+	Returns:
+		TestSettings instance with loaded configuration from environment variables
+		or the specified .env file.
+
+	Example:
+		>>> settings = get_test_settings()
+		>>> api_token = settings.e2e_test_api_token
+		>>> team_id = settings.clickup_test_team_id
+	"""
+	if env_file:
+		return TestSettings(_env_file=env_file)
+
+	return TestSettings()
