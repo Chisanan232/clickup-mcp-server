@@ -21,7 +21,7 @@ import pytest
 from dotenv import load_dotenv
 from mcp import ClientSession
 
-from clickup_mcp.config import TestSettings as E2ETestSettings
+from test.config import TestSettings as E2ETestSettings
 
 from .client import EndpointClient, SSEClient, StreamingHTTPClient
 

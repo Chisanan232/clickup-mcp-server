@@ -19,7 +19,7 @@ from typing import Any, Generator, Sequence
 
 import pytest
 
-from clickup_mcp.config import TestSettings as E2ETestSettings
+from test.config import TestSettings as E2ETestSettings
 
 # Path to the root of the project
 PROJECT_ROOT = Path(__file__).parent.parent.parent.absolute()

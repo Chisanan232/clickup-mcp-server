@@ -17,7 +17,7 @@ from typing import AsyncGenerator
 import pytest
 
 from clickup_mcp.client import ClickUpAPIClient
-from clickup_mcp.config import TestSettings as E2ETestSettings
+from test.config import TestSettings as E2ETestSettings
 from clickup_mcp.models.dto.task import TaskCreate
 
 

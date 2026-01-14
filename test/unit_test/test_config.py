@@ -13,7 +13,7 @@ from clickup_mcp.client import (
     get_api_token,
 )
 from clickup_mcp.config import Settings
-from clickup_mcp.config import TestSettings as E2ETestSettings
+from test.config import TestSettings as E2ETestSettings
 from clickup_mcp.config import get_settings
 
 
