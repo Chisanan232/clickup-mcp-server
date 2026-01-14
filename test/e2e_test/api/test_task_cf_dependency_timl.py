@@ -17,7 +17,7 @@ from typing import AsyncGenerator
 import pytest
 
 from clickup_mcp.client import ClickUpAPIClient
-from test.config import TestSettings as E2ETestSettings
+from test.config import TestSettings
 from clickup_mcp.models.dto.task import TaskCreate
 
 
@@ -25,12 +25,7 @@ class TestTaskCFDependencyTIMLe2e:
     """End-to-end tests for Task Custom Fields, Dependencies, and TIML."""
 
     @pytest.fixture
-    def test_settings(self) -> E2ETestSettings:
-        """Get test settings."""
-        return E2ETestSettings()
-
-    @pytest.fixture
-    async def api_client(self, test_settings: E2ETestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
+    async def api_client(self, test_settings: TestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
         """Create a real ClickUpAPIClient using the API token from settings."""
         assert (
             test_settings.e2e_test_api_token
@@ -41,7 +36,7 @@ class TestTaskCFDependencyTIMLe2e:
             yield client
 
     @pytest.mark.asyncio
-    async def test_set_custom_field(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_set_custom_field(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test setting a custom field value on a task."""
         list_id = test_settings.clickup_test_list_id
         assert list_id, "Required environment variables not set"
@@ -69,7 +64,7 @@ class TestTaskCFDependencyTIMLe2e:
             await api_client.task.delete(task_id)
 
     @pytest.mark.asyncio
-    async def test_clear_custom_field(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_clear_custom_field(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test clearing a custom field value on a task."""
         list_id = test_settings.clickup_test_list_id
         field_id = test_settings.clickup_test_custom_field_id
@@ -95,7 +90,7 @@ class TestTaskCFDependencyTIMLe2e:
             await api_client.task.delete(task_id)
 
     @pytest.mark.asyncio
-    async def test_add_dependency(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_add_dependency(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test adding a dependency between tasks."""
         list_id = test_settings.clickup_test_list_id
         assert list_id, "Miss property from dotenv file: *CLICKUP_TEST_LIST_ID* is required"
@@ -129,7 +124,7 @@ class TestTaskCFDependencyTIMLe2e:
     @pytest.mark.skip(reason="My plan is limited to usages of feature.")
     @pytest.mark.asyncio
     async def test_add_task_to_multiple_lists_timl(
-        self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings
+        self, api_client: ClickUpAPIClient, test_settings: TestSettings
     ) -> None:
         """Test adding a task to multiple lists (TIML)."""
         list_id_1 = test_settings.clickup_test_list_id
@@ -177,7 +172,7 @@ class TestTaskCFDependencyTIMLe2e:
 
     @pytest.mark.asyncio
     async def test_create_task_with_custom_fields(
-        self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings
+        self, api_client: ClickUpAPIClient, test_settings: TestSettings
     ) -> None:
         """Test creating a task with custom fields."""
         list_id = test_settings.clickup_test_list_id
@@ -210,7 +205,7 @@ class TestTaskCFDependencyTIMLe2e:
             await api_client.task.delete(task_id)
 
     @pytest.mark.asyncio
-    async def test_task_dependency_types(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_task_dependency_types(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test different dependency types."""
         list_id = test_settings.clickup_test_list_id
         assert list_id, "Miss property from dotenv file: *CLICKUP_TEST_LIST_ID* is required"

@@ -10,7 +10,7 @@ from typing import AsyncGenerator
 import pytest
 
 from clickup_mcp.client import ClickUpAPIClient
-from test.config import TestSettings as E2ETestSettings
+from test.config import TestSettings
 from clickup_mcp.models.domain import ClickUpTeam
 from clickup_mcp.models.dto.space import SpaceFeatures, SpaceResp
 
@@ -19,12 +19,7 @@ class TestTeamAPIE2E:
     """End-to-end tests for TeamAPI that make real API calls."""
 
     @pytest.fixture
-    def test_settings(self) -> E2ETestSettings:
-        """Get test settings."""
-        return E2ETestSettings()
-
-    @pytest.fixture
-    async def api_client(self, test_settings: E2ETestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
+    async def api_client(self, test_settings: TestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
         """
         Create a real ClickUpAPIClient using the API token from settings.
         """
@@ -70,7 +65,7 @@ class TestTeamAPIE2E:
                         assert member.user.id == member.user.user_id  # Test backward compatibility
 
     @pytest.mark.asyncio
-    async def test_get_spaces_for_team(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_get_spaces_for_team(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test getting spaces for a specific team with a real API call."""
         team_id = test_settings.clickup_test_team_id
 

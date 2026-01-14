@@ -21,7 +21,7 @@ import pytest
 from dotenv import load_dotenv
 from mcp import ClientSession
 
-from test.config import TestSettings as E2ETestSettings
+from test.config import TestSettings, get_test_settings
 
 from .client import EndpointClient, SSEClient, StreamingHTTPClient
 
@@ -128,7 +128,7 @@ class MCPServerFixture:
     """Base class for MCP server end-to-end tests."""
 
     @pytest.fixture
-    def temp_env_file(self) -> Generator[str, None, None]:
+    def temp_env_file(self, test_settings: TestSettings) -> Generator[str, None, None]:
         """
         Create a temporary .env file with test API token.
 
@@ -138,8 +138,7 @@ class MCPServerFixture:
         Skips the test if the E2E_TEST_API_TOKEN environment variable is not set.
         """
         # Get API token from TestSettings
-        settings = E2ETestSettings()
-        api_token = settings.e2e_test_api_token.get_secret_value() if settings.e2e_test_api_token else None
+        api_token = test_settings.e2e_test_api_token.get_secret_value() if test_settings.e2e_test_api_token else None
 
         if not api_token:
             pytest.skip("E2E_TEST_API_TOKEN environment variable is required for this test")

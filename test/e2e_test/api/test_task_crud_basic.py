@@ -15,7 +15,7 @@ from typing import AsyncGenerator
 import pytest
 
 from clickup_mcp.client import ClickUpAPIClient
-from test.config import TestSettings as E2ETestSettings
+from test.config import TestSettings
 from clickup_mcp.models.dto.task import TaskCreate, TaskListQuery, TaskUpdate
 
 
@@ -23,12 +23,7 @@ class TestTaskCRUDE2E:
     """End-to-end tests for Task CRUD operations."""
 
     @pytest.fixture
-    def test_settings(self) -> E2ETestSettings:
-        """Get test settings."""
-        return E2ETestSettings()
-
-    @pytest.fixture
-    async def api_client(self, test_settings: E2ETestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
+    async def api_client(self, test_settings: TestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
         """Create a real ClickUpAPIClient using the API token from settings."""
         if not test_settings.e2e_test_api_token:
             pytest.skip("E2E_TEST_API_TOKEN is required for this test")
@@ -39,7 +34,7 @@ class TestTaskCRUDE2E:
             yield client
 
     @pytest.mark.asyncio
-    async def test_task_crud_operations(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_task_crud_operations(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test Task CRUD operations: Create, Read, Update, Delete."""
         list_id = test_settings.clickup_test_list_id
         if not list_id:
@@ -78,7 +73,7 @@ class TestTaskCRUDE2E:
             assert delete_result is True
 
     @pytest.mark.asyncio
-    async def test_create_subtask(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_create_subtask(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test creating a subtask."""
         list_id = test_settings.clickup_test_list_id
         if not list_id:
@@ -108,7 +103,7 @@ class TestTaskCRUDE2E:
             await api_client.task.delete(parent_task_id)
 
     @pytest.mark.asyncio
-    async def test_list_tasks_in_list(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_list_tasks_in_list(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test listing tasks in a list."""
         list_id = test_settings.clickup_test_list_id
         if not list_id:
@@ -122,7 +117,7 @@ class TestTaskCRUDE2E:
         assert isinstance(tasks, list)
 
     @pytest.mark.asyncio
-    async def test_list_tasks_with_timl(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_list_tasks_with_timl(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test listing tasks with TIML (Tasks in Multiple Lists) included."""
         list_id = test_settings.clickup_test_list_id
         if not list_id:
@@ -136,7 +131,7 @@ class TestTaskCRUDE2E:
         assert isinstance(tasks, list)
 
     @pytest.mark.asyncio
-    async def test_get_task_with_subtasks(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_get_task_with_subtasks(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test getting a task with subtasks included."""
         list_id = test_settings.clickup_test_list_id
         if not list_id:
@@ -160,7 +155,7 @@ class TestTaskCRUDE2E:
 
     @pytest.mark.asyncio
     async def test_task_with_due_date_and_time_estimate(
-        self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings
+        self, api_client: ClickUpAPIClient, test_settings: TestSettings
     ) -> None:
         """Test creating a task with due date and time estimate."""
         list_id = test_settings.clickup_test_list_id

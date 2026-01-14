@@ -16,7 +16,7 @@ from typing import AsyncGenerator
 import pytest
 
 from clickup_mcp.client import ClickUpAPIClient
-from test.config import TestSettings as E2ETestSettings
+from test.config import TestSettings
 from clickup_mcp.models.dto.folder import FolderCreate, FolderUpdate
 
 
@@ -24,12 +24,7 @@ class TestFolderCRUDE2E:
     """End-to-end tests for Folder CRUD operations."""
 
     @pytest.fixture
-    def test_settings(self) -> E2ETestSettings:
-        """Get test settings."""
-        return E2ETestSettings()
-
-    @pytest.fixture
-    async def api_client(self, test_settings: E2ETestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
+    async def api_client(self, test_settings: TestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
         """Create a real ClickUpAPIClient using the API token from settings."""
         assert (
             test_settings.e2e_test_api_token
@@ -40,7 +35,7 @@ class TestFolderCRUDE2E:
             yield client
 
     @pytest.mark.asyncio
-    async def test_folder_crud_operations(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_folder_crud_operations(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test Folder CRUD operations: Create, Read, Update, Delete."""
         team_id = test_settings.clickup_test_team_id
         space_id = test_settings.clickup_test_space_id
@@ -74,7 +69,7 @@ class TestFolderCRUDE2E:
             assert delete_result is True
 
     @pytest.mark.asyncio
-    async def test_get_all_folders(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_get_all_folders(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test getting all folders in a space."""
         space_id = test_settings.clickup_test_space_id
         assert space_id, "Miss property from dotenv file: *CLICKUP_TEST_SPACE_ID* is required"

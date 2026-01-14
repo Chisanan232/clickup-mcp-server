@@ -18,7 +18,7 @@ from typing import AsyncGenerator
 import pytest
 
 from clickup_mcp.client import ClickUpAPIClient
-from test.config import TestSettings as E2ETestSettings
+from test.config import TestSettings
 from clickup_mcp.models.dto.list import ListCreate, ListUpdate
 
 
@@ -26,12 +26,7 @@ class TestListCRUDE2E:
     """End-to-end tests for List CRUD operations."""
 
     @pytest.fixture
-    def test_settings(self) -> E2ETestSettings:
-        """Get test settings."""
-        return E2ETestSettings()
-
-    @pytest.fixture
-    async def api_client(self, test_settings: E2ETestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
+    async def api_client(self, test_settings: TestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
         """Create a real ClickUpAPIClient using the API token from settings."""
         assert (
             test_settings.e2e_test_api_token
@@ -42,7 +37,7 @@ class TestListCRUDE2E:
             yield client
 
     @pytest.mark.asyncio
-    async def test_list_crud_operations(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_list_crud_operations(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test List CRUD operations: Create, Read, Update, Delete."""
         team_id = test_settings.clickup_test_team_id
         space_id = test_settings.clickup_test_space_id
@@ -78,7 +73,7 @@ class TestListCRUDE2E:
             assert delete_result is True
 
     @pytest.mark.asyncio
-    async def test_get_all_lists_in_folder(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_get_all_lists_in_folder(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test getting all lists in a folder."""
         folder_id = test_settings.clickup_test_folder_id
         assert folder_id, "Miss property in dotenv file, *CLICKUP_TEST_FOLDER_ID* is required"
@@ -89,7 +84,7 @@ class TestListCRUDE2E:
         assert isinstance(lists, list)
 
     @pytest.mark.asyncio
-    async def test_get_all_folderless_lists(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_get_all_folderless_lists(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test getting all folderless lists in a space."""
         space_id = test_settings.clickup_test_space_id
         assert space_id, "Miss property in dotenv file, *CLICKUP_TEST_SPACE_ID* is required"
