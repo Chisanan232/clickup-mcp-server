@@ -10,12 +10,12 @@ Environment variables required:
 - CLICKUP_TEST_TEAM_ID: Team ID for testing
 """
 
+from test.config import TestSettings
 from typing import AsyncGenerator
 
 import pytest
 
 from clickup_mcp.client import ClickUpAPIClient
-from test.config import TestSettings
 from clickup_mcp.models.dto.space import SpaceCreate, SpaceUpdate
 
 

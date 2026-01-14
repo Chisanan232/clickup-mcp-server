@@ -4,6 +4,7 @@ Tests for configuration and environment variable loading.
 
 import os
 from pathlib import Path
+from test.config import TestSettings
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -12,9 +13,7 @@ from clickup_mcp.client import (
     ClickUpAPIClientFactory,
     get_api_token,
 )
-from clickup_mcp.config import Settings
-from test.config import TestSettings, get_test_settings
-from clickup_mcp.config import get_settings
+from clickup_mcp.config import Settings, get_settings
 
 
 class TestConfig:

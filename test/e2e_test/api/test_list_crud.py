@@ -13,12 +13,12 @@ Environment variables required:
 """
 
 import uuid
+from test.config import TestSettings
 from typing import AsyncGenerator
 
 import pytest
 
 from clickup_mcp.client import ClickUpAPIClient
-from test.config import TestSettings
 from clickup_mcp.models.dto.list import ListCreate, ListUpdate
 
 

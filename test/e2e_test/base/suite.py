@@ -15,13 +15,12 @@ from abc import ABC
 from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
+from test.config import TestSettings
 from typing import AsyncGenerator, Generator, Sequence, Type
 
 import pytest
 from dotenv import load_dotenv
 from mcp import ClientSession
-
-from test.config import TestSettings, get_test_settings
 
 from .client import EndpointClient, SSEClient, StreamingHTTPClient
 

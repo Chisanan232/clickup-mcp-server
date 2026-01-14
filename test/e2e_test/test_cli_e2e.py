@@ -15,11 +15,10 @@ import urllib.error
 import urllib.request
 from contextlib import closing
 from pathlib import Path
+from test.config import TestSettings
 from typing import Any, Generator, Sequence
 
 import pytest
-
-from test.config import TestSettings
 
 # Path to the root of the project
 PROJECT_ROOT = Path(__file__).parent.parent.parent.absolute()
@@ -64,7 +63,9 @@ class TestClickUpMCPCliE2E:
     def temp_env_file(self, test_settings: TestSettings) -> Generator[str, Any, None]:
         """Create a temporary .env file with test API token."""
         token = (
-            test_settings.e2e_test_api_token.get_secret_value() if test_settings.e2e_test_api_token else "test_token_e2e_tests"
+            test_settings.e2e_test_api_token.get_secret_value()
+            if test_settings.e2e_test_api_token
+            else "test_token_e2e_tests"
         )
 
         # Create a temporary .env file

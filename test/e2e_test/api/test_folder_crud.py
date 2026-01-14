@@ -11,12 +11,12 @@ Environment variables required:
 - CLICKUP_TEST_SPACE_ID: Space ID where folders will be created
 """
 
+from test.config import TestSettings
 from typing import AsyncGenerator
 
 import pytest
 
 from clickup_mcp.client import ClickUpAPIClient
-from test.config import TestSettings
 from clickup_mcp.models.dto.folder import FolderCreate, FolderUpdate
 
 
