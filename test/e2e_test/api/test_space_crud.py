@@ -10,12 +10,12 @@ Environment variables required:
 - CLICKUP_TEST_TEAM_ID: Team ID for testing
 """
 
+from test.config import TestSettings
 from typing import AsyncGenerator
 
 import pytest
 
 from clickup_mcp.client import ClickUpAPIClient
-from clickup_mcp.config import TestSettings as E2ETestSettings
 from clickup_mcp.models.dto.space import SpaceCreate, SpaceUpdate
 
 
@@ -23,12 +23,7 @@ class TestSpaceCRUDE2E:
     """End-to-end tests for Space, Folder, and List CRUD operations."""
 
     @pytest.fixture
-    def test_settings(self) -> E2ETestSettings:
-        """Get test settings."""
-        return E2ETestSettings()
-
-    @pytest.fixture
-    async def api_client(self, test_settings: E2ETestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
+    async def api_client(self, test_settings: TestSettings) -> AsyncGenerator[ClickUpAPIClient, None]:
         """Create a real ClickUpAPIClient using the API token from settings."""
         assert (
             test_settings.e2e_test_api_token
@@ -39,7 +34,7 @@ class TestSpaceCRUDE2E:
             yield client
 
     @pytest.mark.asyncio
-    async def test_space_crud_operations(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_space_crud_operations(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test Space CRUD operations: Create, Read, Update, Delete."""
         team_id = test_settings.clickup_test_team_id
         assert team_id, "Miss property from dotenv file: *CLICKUP_TEST_TEAM_ID* is required"
@@ -77,7 +72,7 @@ class TestSpaceCRUDE2E:
                 assert delete_result is True
 
     @pytest.mark.asyncio
-    async def test_get_all_spaces(self, api_client: ClickUpAPIClient, test_settings: E2ETestSettings) -> None:
+    async def test_get_all_spaces(self, api_client: ClickUpAPIClient, test_settings: TestSettings) -> None:
         """Test getting all spaces in a team."""
         team_id = test_settings.clickup_test_team_id
         assert team_id, "Miss property from dotenv file: *CLICKUP_TEST_TEAM_ID* is required"

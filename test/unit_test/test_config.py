@@ -4,6 +4,7 @@ Tests for configuration and environment variable loading.
 
 import os
 from pathlib import Path
+from test.config import TestSettings
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -12,9 +13,7 @@ from clickup_mcp.client import (
     ClickUpAPIClientFactory,
     get_api_token,
 )
-from clickup_mcp.config import Settings
-from clickup_mcp.config import TestSettings as E2ETestSettings
-from clickup_mcp.config import get_settings
+from clickup_mcp.config import Settings, get_settings
 
 
 class TestConfig:
@@ -53,7 +52,7 @@ class TestConfig:
 
     def test_test_settings_defaults(self) -> None:
         """Test default TestSettings values."""
-        settings = E2ETestSettings(_env_file="non_existent_env_file")
+        settings = TestSettings(_env_file="non_existent_env_file")
         assert settings.e2e_test_api_token is None
         assert settings.clickup_test_team_id is None
 
@@ -73,7 +72,7 @@ class TestConfig:
         os.environ["E2E_TEST_API_TOKEN"] = "test_token"
         os.environ["CLICKUP_TEST_TEAM_ID"] = "12345"
 
-        settings = E2ETestSettings(_env_file="non_existent_env_file")
+        settings = TestSettings(_env_file="non_existent_env_file")
         assert settings.e2e_test_api_token
         assert settings.e2e_test_api_token.get_secret_value() == "test_token"
         assert settings.clickup_test_team_id == "12345"
