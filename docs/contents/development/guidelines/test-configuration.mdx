@@ -1,0 +1,416 @@
+---
+id: test-configuration
+title: Test Configuration & Settings
+sidebar_position: 5
+---
+
+# Test Configuration & Settings
+
+Guide to configuring and using test settings in the ClickUp MCP Server test suite.
+
+## Overview
+
+The test suite uses a centralized `TestSettings` configuration model to manage test-specific settings, including API tokens and resource IDs for E2E tests. This configuration is loaded from environment variables and `.env` files using Pydantic's `BaseSettings`.
+
+## Architecture
+
+### Components
+
+The test configuration system consists of three main components:
+
+1. **`TestSettings` Model** (`test/config.py`)
+   - Pydantic `BaseSettings` model defining all test configuration fields
+   - Loads settings from environment variables and `.env` files
+   - Provides type-safe access to test configuration
+
+2. **`get_test_settings()` Utility Function** (`test/config.py`)
+   - Factory function to instantiate `TestSettings`
+   - Supports optional custom `.env` file paths
+   - Used by pytest fixtures and tests that need programmatic access
+
+3. **`test_settings` Pytest Fixture** (`test/conftest.py`)
+   - Global pytest fixture available to all test modules
+   - Automatically discovered and injected by pytest
+   - Provides consistent access to test configuration across the test suite
+
+## TestSettings Fields
+
+The `TestSettings` model includes the following fields:
+
+### Authentication
+
+| Field                | Type                  | Description                                   | Required |
+|----------------------|-----------------------|-----------------------------------------------|----------|
+| `e2e_test_api_token` | `Optional[SecretStr]` | Valid ClickUp API token for running E2E tests | No       |
+
+### Test Resource IDs
+
+| Field                          | Type            | Description                                        | Required |
+|--------------------------------|-----------------|----------------------------------------------------|----------|
+| `clickup_test_team_id`         | `Optional[str]` | Team/Workspace ID to create temporary resources in | No       |
+| `clickup_test_space_id`        | `Optional[str]` | Space ID used by folder/list tests                 | No       |
+| `clickup_test_folder_id`       | `Optional[str]` | Folder ID used by list tests                       | No       |
+| `clickup_test_list_id`         | `Optional[str]` | Primary list ID for task tests                     | No       |
+| `clickup_test_list_id_2`       | `Optional[str]` | Secondary list ID for multi-list task tests (TIML) | No       |
+| `clickup_test_custom_field_id` | `Optional[str]` | Custom field ID for custom field tests             | No       |
+
+All fields are optional with `None` as default values. Tests should gracefully skip or fail with clear messages when required settings are missing.
+
+## Configuration Methods
+
+### Method 1: Environment Variables
+
+Set environment variables directly in your shell or CI/CD environment:
+
+```bash
+export E2E_TEST_API_TOKEN="pk_your_token_here"
+export CLICKUP_TEST_TEAM_ID="123456"
+export CLICKUP_TEST_SPACE_ID="789012"
+export CLICKUP_TEST_FOLDER_ID="345678"
+export CLICKUP_TEST_LIST_ID="901234"
+export CLICKUP_TEST_LIST_ID_2="567890"
+export CLICKUP_TEST_CUSTOM_FIELD_ID="abcdef"
+```
+
+Then run tests:
+
+```bash
+uv run pytest test/e2e_test/
+```
+
+### Method 2: .env File (Recommended for Local Development)
+
+Create a `.env` file in the test directory (`test/.env`):
+
+```bash
+# test/.env
+E2E_TEST_API_TOKEN=pk_your_token_here
+CLICKUP_TEST_TEAM_ID=123456
+CLICKUP_TEST_SPACE_ID=789012
+CLICKUP_TEST_FOLDER_ID=345678
+CLICKUP_TEST_LIST_ID=901234
+CLICKUP_TEST_LIST_ID_2=567890
+CLICKUP_TEST_CUSTOM_FIELD_ID=abcdef
+```
+
+The `TestSettings` model automatically loads from `test/.env` if it exists.
+
+### Method 3: Custom .env File Path
+
+Use the `get_test_settings()` function with a custom path:
+
+```python
+from test.config import get_test_settings
+
+# Load from custom .env file
+settings = get_test_settings(env_file="/path/to/custom/.env")
+api_token = settings.e2e_test_api_token
+```
+
+## Using Test Settings in Tests
+
+### Via Pytest Fixture (Recommended)
+
+The `test_settings` fixture is automatically available to all tests:
+
+```python
+import pytest
+from test.config import TestSettings
+
+class TestMyFeature:
+    @pytest.mark.asyncio
+    async def test_something(self, test_settings: TestSettings):
+        """Test using the test_settings fixture."""
+        if not test_settings.e2e_test_api_token:
+            pytest.skip("E2E_TEST_API_TOKEN is required for this test")
+        
+        api_token = test_settings.e2e_test_api_token.get_secret_value()
+        team_id = test_settings.clickup_test_team_id
+        
+        # Use settings in your test
+        assert api_token is not None
+```
+
+### In Fixtures
+
+Fixtures can also depend on `test_settings`:
+
+```python
+import pytest
+from clickup_mcp.client import ClickUpAPIClient
+from test.config import TestSettings
+
+class TestMyFeature:
+    @pytest.fixture
+    async def api_client(self, test_settings: TestSettings):
+        """Create a real ClickUpAPIClient using test settings."""
+        if not test_settings.e2e_test_api_token:
+            pytest.skip("E2E_TEST_API_TOKEN is required")
+        
+        api_token = test_settings.e2e_test_api_token.get_secret_value()
+        async with ClickUpAPIClient(api_token=api_token) as client:
+            yield client
+```
+
+### Direct Instantiation (Less Common)
+
+For cases where you need settings outside of pytest:
+
+```python
+from test.config import get_test_settings
+
+# Load default settings from test/.env
+settings = get_test_settings()
+
+# Or load from custom path
+settings = get_test_settings(env_file="/path/to/.env.production")
+```
+
+## Configuration File Template
+
+Use `test/.env.example` as a template:
+
+```bash
+# ClickUp API configuration for E2E tests
+#
+# The test suite loads settings from this file (if present),
+# then applies environment variable overrides.
+# Do NOT commit real tokens.
+
+# Valid ClickUp API token for running E2E tests
+E2E_TEST_API_TOKEN=
+
+# Optional: IDs used by E2E tests (set to real IDs from your workspace)
+# Team/workspace to create temporary resources in E2E tests
+CLICKUP_TEST_TEAM_ID=
+
+# Space used by folder/list tests (if not creating dynamically)
+CLICKUP_TEST_SPACE_ID=
+
+# Folder used by list tests (if not creating dynamically)
+CLICKUP_TEST_FOLDER_ID=
+
+# Primary list for task tests
+CLICKUP_TEST_LIST_ID=
+
+# Secondary list for TIML tests (tasks in multiple lists)
+CLICKUP_TEST_LIST_ID_2=
+
+# Custom field ID used in custom field tests
+CLICKUP_TEST_CUSTOM_FIELD_ID=
+```
+
+## Setting Up for Local Development
+
+### Step 1: Copy the Example File
+
+```bash
+cd test
+cp .env.example .env
+```
+
+### Step 2: Get Your ClickUp API Token
+
+1. Log in to [ClickUp](https://app.clickup.com)
+2. Go to Settings → Apps → API
+3. Copy your API token
+
+### Step 3: Populate .env File
+
+Edit `test/.env` and add your token and test resource IDs:
+
+```bash
+E2E_TEST_API_TOKEN=pk_your_actual_token_here
+CLICKUP_TEST_TEAM_ID=your_team_id
+CLICKUP_TEST_SPACE_ID=your_space_id
+CLICKUP_TEST_FOLDER_ID=your_folder_id
+CLICKUP_TEST_LIST_ID=your_list_id
+```
+
+### Step 4: Run Tests
+
+```bash
+# Run all tests
+uv run pytest test/
+
+# Run only E2E tests
+uv run pytest test/e2e_test/
+
+# Run with verbose output
+uv run pytest test/e2e_test/ -v
+```
+
+## Environment Variable Loading Priority
+
+The `TestSettings` model uses the following priority order (highest to lowest):
+
+1. **Environment variables** - Set in shell or CI/CD
+2. **.env file** - Loaded from `test/.env` or custom path
+3. **Default values** - All fields default to `None`
+
+This means environment variables override `.env` file values, allowing for flexible configuration across different environments.
+
+## Security Best Practices
+
+### Do's ✅
+
+- **Use `.env` files for local development** - Keep tokens out of version control
+- **Use environment variables in CI/CD** - Set secrets via CI/CD platform (GitHub Actions, etc.)
+- **Use `SecretStr` for tokens** - Prevents accidental logging of sensitive values
+- **Add `.env` to `.gitignore`** - Ensure test `.env` files are never committed
+
+### Don'ts ❌
+
+- **Never commit `.env` files** - They contain real API tokens
+- **Never hardcode tokens in test files** - Use configuration instead
+- **Never log or print token values** - Use `SecretStr` which masks values
+- **Never share `.env` files** - Each developer should have their own
+
+### .gitignore Configuration
+
+Ensure your `.gitignore` includes:
+
+```bash
+# Test configuration
+test/.env
+test/.env.local
+test/.env.*.local
+```
+
+## CI/CD Integration
+
+### GitHub Actions Example
+
+Set secrets in your GitHub repository settings, then use them in workflows:
+
+```yaml
+name: E2E Tests
+
+on: [push, pull_request]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+      
+      - name: Install dependencies
+        run: pip install uv && uv sync
+      
+      - name: Run E2E tests
+        env:
+          E2E_TEST_API_TOKEN: ${{ secrets.CLICKUP_API_TOKEN }}
+          CLICKUP_TEST_TEAM_ID: ${{ secrets.CLICKUP_TEST_TEAM_ID }}
+          CLICKUP_TEST_SPACE_ID: ${{ secrets.CLICKUP_TEST_SPACE_ID }}
+          CLICKUP_TEST_FOLDER_ID: ${{ secrets.CLICKUP_TEST_FOLDER_ID }}
+          CLICKUP_TEST_LIST_ID: ${{ secrets.CLICKUP_TEST_LIST_ID }}
+        run: uv run pytest test/e2e_test/ -v
+```
+
+## Handling Missing Configuration
+
+Tests should gracefully handle missing configuration:
+
+```python
+import pytest
+from test.config import TestSettings
+
+def test_feature(test_settings: TestSettings):
+    """Test that gracefully skips if configuration is missing."""
+    if not test_settings.e2e_test_api_token:
+        pytest.skip("E2E_TEST_API_TOKEN is required for this test")
+    
+    if not test_settings.clickup_test_team_id:
+        pytest.skip("CLICKUP_TEST_TEAM_ID is required for this test")
+    
+    # Test implementation
+    assert test_settings.e2e_test_api_token is not None
+```
+
+Or use assertions for required fields:
+
+```python
+def test_feature(test_settings: TestSettings):
+    """Test that fails with clear message if configuration is missing."""
+    assert (
+        test_settings.e2e_test_api_token
+    ), "E2E_TEST_API_TOKEN is required for this test"
+    
+    assert (
+        test_settings.clickup_test_team_id
+    ), "CLICKUP_TEST_TEAM_ID is required for this test"
+```
+
+## Fixture Composition
+
+The `test_settings` fixture can be composed with other fixtures:
+
+```python
+import pytest
+from clickup_mcp.client import ClickUpAPIClient
+from test.config import TestSettings
+
+class TestAPIOperations:
+    @pytest.fixture
+    async def authenticated_client(self, test_settings: TestSettings):
+        """Create an authenticated API client using test settings."""
+        if not test_settings.e2e_test_api_token:
+            pytest.skip("E2E_TEST_API_TOKEN is required")
+        
+        token = test_settings.e2e_test_api_token.get_secret_value()
+        async with ClickUpAPIClient(api_token=token) as client:
+            yield client
+    
+    @pytest.mark.asyncio
+    async def test_get_team(self, authenticated_client, test_settings: TestSettings):
+        """Test getting team information."""
+        team_id = test_settings.clickup_test_team_id
+        assert team_id, "CLICKUP_TEST_TEAM_ID is required"
+        
+        team = await authenticated_client.team.get(team_id)
+        assert team is not None
+```
+
+## Troubleshooting
+
+### Settings Not Loading
+
+**Problem**: `test_settings` always has `None` values
+
+**Solutions**:
+1. Check that `.env` file exists in `test/` directory
+2. Verify environment variables are set: `echo $E2E_TEST_API_TOKEN`
+3. Check file permissions: `ls -la test/.env`
+4. Verify `.env` file format (no spaces around `=`)
+
+### Token Not Being Recognized
+
+**Problem**: Tests skip with "E2E_TEST_API_TOKEN is required"
+
+**Solutions**:
+1. Verify token is set: `echo $E2E_TEST_API_TOKEN`
+2. Check token format (should start with `pk_`)
+3. Ensure token is valid in ClickUp settings
+4. Check for trailing whitespace in `.env` file
+
+### Wrong Resource IDs
+
+**Problem**: Tests fail with "resource not found" errors
+
+**Solutions**:
+1. Verify IDs are from the correct ClickUp workspace
+2. Check that resources still exist (not deleted)
+3. Ensure IDs are in correct format (numeric strings)
+4. Use ClickUp UI to verify resource IDs
+
+## References
+
+- [TestSettings Model](https://github.com/Chisanan232/clickup-mcp-server/blob/master/test/config.py)
+- [Pytest Fixture](https://github.com/Chisanan232/clickup-mcp-server/blob/master/test/conftest.py)
+- [Example .env File](https://github.com/Chisanan232/clickup-mcp-server/blob/master/test/.env.example)
+- [Pydantic Settings Documentation](https://docs.pydantic.dev/latest/concepts/pydantic_settings/)

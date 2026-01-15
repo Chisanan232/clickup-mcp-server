@@ -31,10 +31,12 @@ uv run pytest -q test/unit_test/test_client.py
 - Use `AsyncMock` for async context managers.
 - Validate logging on errors and retry exhaustion.
 - For E2E, assert tool list and tool call result shape (`WorkspaceListResult`).
+- Use the `test_settings` pytest fixture for accessing test configuration (see [Test Configuration & Settings](./test-configuration.mdx)).
 
 :::info References
 - [clickup_mcp/mcp_server/team.py](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/team.py)
 - [test/e2e_test/mcp_server/test_team.py](https://github.com/Chisanan232/clickup-mcp-server/blob/master/test/e2e_test/mcp_server/test_team.py)
+- [Test Configuration & Settings](./test-configuration.mdx)
 :::
 
 ## Test pyramid and coverage map
