@@ -82,6 +82,10 @@ default-groups = [
 
 [tool.hatch.build.targets.sdist]
 include = ["clickup_mcp/"]
+packages = ["clickup_mcp"]
+artifacts = ["clickup_mcp/py.typed"]
 
 [tool.hatch.build.targets.wheel]
 include = ["clickup_mcp/"]
+packages = ["clickup_mcp"]
+artifacts = ["clickup_mcp/py.typed"]
