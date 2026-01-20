@@ -250,23 +250,23 @@ class ClickUpClientProtocol(Protocol):
         >>> client: ClickUpClientProtocol = MyClient()
     """
     
-    async def get(self, endpoint: str, **kwargs: Any) -> ClickUpAPIResponse:
+    async def get(self, endpoint: str, params: dict[str, Any] | None = ..., headers: dict[str, str] | None = ...) -> ClickUpAPIResponse:
         """Make a GET request to the ClickUp API."""
         ...
     
-    async def post(self, endpoint: str, **kwargs: Any) -> ClickUpAPIResponse:
+    async def post(self, endpoint: str, data: dict[str, Any] | None = ..., params: dict[str, Any] | None = ..., headers: dict[str, str] | None = ...) -> ClickUpAPIResponse:
         """Make a POST request to the ClickUp API."""
         ...
     
-    async def put(self, endpoint: str, **kwargs: Any) -> ClickUpAPIResponse:
+    async def put(self, endpoint: str, data: dict[str, Any] | None = ..., params: dict[str, Any] | None = ..., headers: dict[str, str] | None = ...) -> ClickUpAPIResponse:
         """Make a PUT request to the ClickUp API."""
         ...
     
-    async def patch(self, endpoint: str, **kwargs: Any) -> ClickUpAPIResponse:
+    async def patch(self, endpoint: str, data: dict[str, Any] | None = ..., params: dict[str, Any] | None = ..., headers: dict[str, str] | None = ...) -> ClickUpAPIResponse:
         """Make a PATCH request to the ClickUp API."""
         ...
     
-    async def delete(self, endpoint: str, **kwargs: Any) -> ClickUpAPIResponse:
+    async def delete(self, endpoint: str, params: dict[str, Any] | None = ..., headers: dict[str, str] | None = ...) -> ClickUpAPIResponse:
         """Make a DELETE request to the ClickUp API."""
         ...
 
@@ -582,7 +582,7 @@ def is_mcp_tool_name(value: str) -> bool:
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
     from clickup_mcp.web_server.app import FastAPI
-    from clickup_mcp.web_server.event.models import ClickUpWebhookEvent
+    from clickup_mcp.web_server.event.models import ClickUpWebhookEvent, ClickUpWebhookEventType
     
     type ClickUpClient = ClickUpAPIClient
     """Type alias for ClickUp API client."""
@@ -591,8 +591,7 @@ if TYPE_CHECKING:
     """Type alias for FastAPI web server."""
     
     # Forward references for protocol types
-    type ClickUpWebhookEvent = ClickUpWebhookEvent
-    """Type alias for normalized ClickUp webhook event."""
+    # Note: ClickUpWebhookEvent and ClickUpWebhookEventType are imported above
 else:
     type ClickUpClient = Any
     type WebServer = Any
