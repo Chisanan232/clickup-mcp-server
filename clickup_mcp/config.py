@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Optional
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from clickup_mcp.types import ClickUpToken, LogLevel, EnvironmentFile
@@ -20,6 +20,14 @@ class Settings(BaseSettings):
 
     # Logging Configuration
     log_level: LogLevel = Field(default="info", description="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)")
+
+    @field_validator('log_level', mode='before')
+    @classmethod
+    def normalize_log_level(cls, v: str) -> str:
+        """Normalize log level to lowercase."""
+        if isinstance(v, str):
+            return v.lower()
+        return v
 
     # Webhook Handler Configuration
     clickup_webhook_handler_modules: str = Field(

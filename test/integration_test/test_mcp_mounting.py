@@ -123,7 +123,7 @@ class TestMCPServerMounting:
         mock_web_factory.get.return_value = mock_web_server
 
         # Case 1: Test with SSE transport
-        mount_service(MCPTransportType.SSE.value)
+        mount_service(MCPTransportType.SSE)
 
         mock_mcp_factory.get.assert_called()
         mock_mcp_server.sse_app.assert_called_once()
@@ -139,7 +139,7 @@ class TestMCPServerMounting:
         mock_mcp_factory.get.return_value = mock_mcp_server
 
         # Case 2: Test with HTTP streaming transport
-        mount_service(MCPTransportType.HTTP_STREAMING.value)
+        mount_service(MCPTransportType.HTTP_STREAMING)
 
         mock_mcp_factory.get.assert_called()
         mock_mcp_server.streamable_http_app.assert_called_once()

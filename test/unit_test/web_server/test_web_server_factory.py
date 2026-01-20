@@ -159,18 +159,18 @@ class TestWebServerFactory:
         "transport_type, expected_app_calls",
         [
             (
-                MCPTransportType.SSE.value,
+                MCPTransportType.SSE,
                 {"sse_app": 1, "streamable_http_app": 0, "endpoint_path": "/sse"},
             ),
             (
-                MCPTransportType.HTTP_STREAMING.value,
+                MCPTransportType.HTTP_STREAMING,
                 {"sse_app": 0, "streamable_http_app": 1, "endpoint_path": "/mcp"},
             ),
         ],
     )
     def test_mount_service_parameterized(
         self,
-        transport_type: str,
+        transport_type: MCPTransportType,
         expected_app_calls: Dict[str, Union[int, str]],
         mock_mcp_server: MagicMock,
     ) -> None:
