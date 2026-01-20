@@ -239,23 +239,24 @@ jobs:
         run: |
           uv run python -c "
           from clickup_mcp import types
+          from clickup_mcp.web_server.event.models.enums import ClickUpWebhookEventType
           from typing import Dict, Any, List
 
           # Test ClickUpClientProtocol
           class TestClickUpClient:
-              async def get(self, endpoint: str, **kwargs) -> types.ClickUpAPIResponse:
+              async def get(self, endpoint: str, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None) -> types.ClickUpAPIResponse:
                   return {'data': 'test'}
               
-              async def post(self, endpoint: str, **kwargs) -> types.ClickUpAPIResponse:
+              async def post(self, endpoint: str, data: dict[str, Any] | None = None, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None) -> types.ClickUpAPIResponse:
                   return {'data': 'created'}
               
-              async def put(self, endpoint: str, **kwargs) -> types.ClickUpAPIResponse:
+              async def put(self, endpoint: str, data: dict[str, Any] | None = None, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None) -> types.ClickUpAPIResponse:
                   return {'data': 'updated'}
               
-              async def patch(self, endpoint: str, **kwargs) -> types.ClickUpAPIResponse:
+              async def patch(self, endpoint: str, data: dict[str, Any] | None = None, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None) -> types.ClickUpAPIResponse:
                   return {'data': 'patched'}
               
-              async def delete(self, endpoint: str, **kwargs) -> types.ClickUpAPIResponse:
+              async def delete(self, endpoint: str, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None) -> types.ClickUpAPIResponse:
                   return {'data': 'deleted'}
 
           client: types.ClickUpClientProtocol = TestClickUpClient()
@@ -263,7 +264,7 @@ jobs:
 
           # Test EventHandlerDecoratorProtocol
           class TestEventDecorator:
-              def __call__(self, event_type: types.ClickUpWebhookEventType):
+              def __call__(self, event_type: ClickUpWebhookEventType):
                   def decorator(func: types.EventHandlerProtocol) -> types.EventHandlerProtocol:
                       return func
                   return decorator

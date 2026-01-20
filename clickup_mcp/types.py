@@ -631,7 +631,7 @@ if TYPE_CHECKING:
     """Type alias for FastAPI web server."""
 
     # Forward references for protocol types
-    # Note: ClickUpWebhookEvent and ClickUpWebhookEventType are imported above
+    # Note: Both ClickUpWebhookEvent and ClickUpWebhookEventType are imported above
 else:
     type ClickUpClient = Any
     type WebServer = Any
