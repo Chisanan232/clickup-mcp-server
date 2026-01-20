@@ -37,7 +37,10 @@ jobs:
 
   run_one_e2e-test:
 #    name: Run all end-to-end test items under one case
-    if: ${{ inputs.run_e2e != true }}
+    if: ${{ 
+        !contains(github.event.pull_request.labels.*.name, 'dependencies') && 
+        inputs.run_e2e != true
+      }}
     uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_uv_run_test.yaml@master
     with:
       test_type: e2e-test
