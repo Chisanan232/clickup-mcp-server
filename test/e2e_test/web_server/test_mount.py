@@ -27,10 +27,14 @@ class TestWebServerMountMcpServer(BaseE2ETestWithRunningServer):
             response = client.head(mcp_url)
             status_code = response.status_code
 
-        # If the endpoint is mounted, we should get a (200,307) status
+        # If the endpoint is mounted, we should get a (200,307,405) status
+        # 200: Direct route (SSE /sse/sse)
+        # 307: Redirect (HTTP streaming /mcp, SSE /sse)
+        # 405: Method not allowed but route exists (HTTP streaming /mcp/mcp)
         # If the endpoint is not mounted, we would get a 404 Not Found
         assert status_code != 404, f"Expected status non-(404) for {server_fixture.url_suffix}, got {status_code}"
         assert status_code in (
             200,
             307,
-        ), f"Expected status (200,307) for {server_fixture.url_suffix}, got {status_code}"
+            405,
+        ), f"Expected status (200,307,405) for {server_fixture.url_suffix}, got {status_code}"
