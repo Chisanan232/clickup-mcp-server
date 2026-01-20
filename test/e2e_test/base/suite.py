@@ -155,7 +155,7 @@ class MCPServerFixture:
     @pytest.fixture(
         params=[
             MCPServerFixtureParameters(client=SSEClient, url_suffix="/sse/sse", transport="sse"),
-            MCPServerFixtureParameters(client=StreamingHTTPClient, url_suffix="/mcp", transport="http-streaming"),
+            MCPServerFixtureParameters(client=StreamingHTTPClient, url_suffix="/mcp/mcp", transport="http-streaming"),
         ],
         ids=["sse", "streaming-http"],
     )
