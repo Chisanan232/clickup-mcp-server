@@ -34,8 +34,7 @@ PROJECT_ROOT: Path = Path(__file__).parent.parent.parent.parent
 SERVER_START_TIMEOUT: int = 3
 
 # Additional time to wait for routes to be registered (seconds)
-# Increased for HTTP streaming transport initialization in CI
-ROUTES_REGISTRATION_TIME: float = 3.0
+ROUTES_REGISTRATION_TIME: float = 2.0
 
 # Timeout for operations (seconds)
 OPERATION_TIMEOUT: float = 5.0
@@ -155,8 +154,8 @@ class MCPServerFixture:
 
     @pytest.fixture(
         params=[
-            MCPServerFixtureParameters(client=SSEClient, url_suffix="/sse", transport="sse"),
-            MCPServerFixtureParameters(client=StreamingHTTPClient, url_suffix="/mcp", transport="http-streaming"),
+            MCPServerFixtureParameters(client=SSEClient, url_suffix="/sse/sse", transport="sse"),
+            MCPServerFixtureParameters(client=StreamingHTTPClient, url_suffix="/mcp/mcp", transport="http-streaming"),
         ],
         ids=["sse", "streaming-http"],
     )
