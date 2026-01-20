@@ -139,7 +139,12 @@ class TaskAPI:
         return TaskResp(**response.data)
 
     async def get(
-        self, task_id: ClickUpTaskID, *, subtasks: bool | None = None, custom_task_ids: bool = False, team_id: str | None = None
+        self,
+        task_id: ClickUpTaskID,
+        *,
+        subtasks: bool | None = None,
+        custom_task_ids: bool = False,
+        team_id: str | None = None,
     ) -> Optional[TaskResp]:
         """
         Get a task by ID.

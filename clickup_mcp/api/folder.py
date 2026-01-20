@@ -36,7 +36,7 @@ import logging
 from typing import TYPE_CHECKING, Optional
 
 from clickup_mcp.models.dto.folder import FolderCreate, FolderResp, FolderUpdate
-from clickup_mcp.types import ClickUpSpaceID, ClickUpFolderID
+from clickup_mcp.types import ClickUpFolderID, ClickUpSpaceID
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient

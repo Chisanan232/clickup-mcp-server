@@ -57,7 +57,6 @@ from fastapi import FastAPI
 from mcp.server import FastMCP
 
 from clickup_mcp._base import BaseServerFactory
-from clickup_mcp.types import MCPServerProtocol
 
 _MCP_SERVER_INSTANCE: FastMCP | None = None
 

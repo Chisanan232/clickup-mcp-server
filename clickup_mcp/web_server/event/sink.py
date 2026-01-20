@@ -29,6 +29,7 @@ import os
 from abc import ABC, abstractmethod
 
 from clickup_mcp.types import EventSinkProtocol
+
 from .handler import get_registry
 from .models import ClickUpWebhookEvent
 

@@ -31,7 +31,7 @@ This type system follows these Python Enhancement Proposals:
 
 - **PEP 561**: Distributing and Packaging Type Information
 - **PEP 484**: Type Hints
-- **PEP 585**: Type Hinting Generics  
+- **PEP 585**: Type Hinting Generics
 - **PEP 544**: Protocols (Structural Subtyping)
 
 ## Type Categories
@@ -122,7 +122,7 @@ from clickup_mcp import types
 class MyClickUpClient:
     async def get(self, endpoint: str, **kwargs) -> types.ClickUpAPIResponse:
         return {"data": "mock"}
-    
+
     async def post(self, endpoint: str, **kwargs) -> types.ClickUpAPIResponse:
         return {"data": "created"}
 
@@ -192,7 +192,7 @@ from clickup_mcp import types
 class MyMCPServer:
     async def list_tools(self) -> List[Dict[str, Any]]:
         return [{"name": "test_tool", "description": "Test tool"}]
-    
+
     async def call_tool(self, name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         return {"result": f"Called {name} with {arguments}"}
 
@@ -280,16 +280,16 @@ class TaskEventHandler:
     async def handle_event(self, event: types.ClickUpEventPayload) -> None:
         """Handle ClickUp task events with type safety."""
         event_type = event.get("event")
-        
+
         if event_type == "task.created":
             await self.handle_task_created(event)
         elif event_type == "task.updated":
             await self.handle_task_updated(event)
-    
+
     async def handle_task_created(self, event: types.ClickUpEventPayload) -> None:
         task_data: types.ClickUpTaskPayload = event.get("task", {})
         task_id: types.ClickUpTaskID = task_data.get("id")
-        
+
         if types.is_clickup_task_id(task_id):
             print(f"New task created: {task_id}")
 ```
@@ -303,18 +303,18 @@ from typing import Optional
 class ClickUpClient:
     def __init__(self, token: types.ClickUpToken):
         self.token = token
-    
+
     async def get_task(
-        self, 
+        self,
         task_id: types.ClickUpTaskID
     ) -> Optional[types.ClickUpTaskPayload]:
         """Get a task with type-safe parameters."""
         if not types.is_clickup_task_id(task_id):
             raise ValueError(f"Invalid task ID: {task_id}")
-        
+
         # Implementation here
         return {"id": task_id, "name": "Sample Task"}
-    
+
     async def create_task(
         self,
         name: str,
@@ -324,7 +324,7 @@ class ClickUpClient:
         """Create a task with type-safe parameters."""
         if not types.is_clickup_list_id(list_id):
             raise ValueError(f"Invalid list ID: {list_id}")
-        
+
         # Implementation here
         return {"id": "new_task_id", "name": name, "list_id": list_id}
 ```

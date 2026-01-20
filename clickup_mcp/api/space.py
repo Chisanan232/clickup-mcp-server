@@ -9,7 +9,7 @@ import logging
 from typing import TYPE_CHECKING, Optional
 
 from clickup_mcp.models.dto.space import SpaceCreate, SpaceResp, SpaceUpdate
-from clickup_mcp.types import ClickUpTeamID, ClickUpSpaceID
+from clickup_mcp.types import ClickUpSpaceID, ClickUpTeamID
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient

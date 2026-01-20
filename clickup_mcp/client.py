@@ -29,7 +29,7 @@ from .exceptions import (
 )
 from .models.cli import ServerConfig
 from .models.dto.base import BaseResponseDTO
-from .types import ClickUpToken, ClickUpClientProtocol
+from .types import ClickUpClientProtocol, ClickUpToken
 
 logger = logging.getLogger(__name__)
 
