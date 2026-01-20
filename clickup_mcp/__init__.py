@@ -27,6 +27,9 @@ from .exceptions import (
 )
 from .models.domain.space import ClickUpSpace, Space
 
+# Import types module for PEP 561 compliance
+from . import types
+
 __version__ = "0.0.0"
 __author__ = "Chisanan232"
 __email__ = "chi10211201@cycu.org.tw"
@@ -56,5 +59,6 @@ __all__ = [
     "Space",
     # API Resource Managers
     "SpaceAPI",
-    # Utilities
+    # Type definitions (PEP 561 compliance)
+    "types",
 ]
