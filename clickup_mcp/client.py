@@ -29,6 +29,7 @@ from .exceptions import (
 )
 from .models.cli import ServerConfig
 from .models.dto.base import BaseResponseDTO
+from .types import ClickUpToken, ClickUpClientProtocol
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +167,7 @@ class APIResponse(BaseModel, Generic[T]):
         return [dto_class.deserialize({"data": item} if "id" in item else item) for item in items]
 
 
-class ClickUpAPIClient:
+class ClickUpAPIClient(ClickUpClientProtocol):
     """
     A comprehensive HTTP client for the ClickUp API.
 
@@ -206,7 +207,7 @@ class ClickUpAPIClient:
 
     def __init__(
         self,
-        api_token: str,
+        api_token: ClickUpToken,
         base_url: str = "https://api.clickup.com/api/v2",
         timeout: float = 30.0,
         max_retries: int = 3,

@@ -59,6 +59,7 @@ from clickup_mcp.config import get_settings
 from clickup_mcp.mcp_server.app import mcp_factory
 from clickup_mcp.models.cli import MCPTransportType, ServerConfig
 from clickup_mcp.models.dto.health_check import HealthyCheckResponseDto
+from clickup_mcp.types import ClickUpToken, TransportType
 from clickup_mcp.web_server.event.bootstrap import import_handler_modules_from_env
 from clickup_mcp.web_server.event.webhook import router as clickup_webhook_router
 
@@ -188,7 +189,7 @@ web_factory = WebServerFactory
 web = web_factory.create()
 
 
-def mount_service(transport: str = MCPTransportType.SSE) -> None:
+def mount_service(transport: TransportType = MCPTransportType.SSE) -> None:
     """
     Mount the MCP service into the FastAPI web server.
 

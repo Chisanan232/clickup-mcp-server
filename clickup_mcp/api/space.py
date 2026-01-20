@@ -9,6 +9,7 @@ import logging
 from typing import TYPE_CHECKING, Optional
 
 from clickup_mcp.models.dto.space import SpaceCreate, SpaceResp, SpaceUpdate
+from clickup_mcp.types import ClickUpTeamID, ClickUpSpaceID
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
@@ -60,7 +61,7 @@ class SpaceAPI:
         """
         self._client = client
 
-    async def create(self, team_id: str, space_create: SpaceCreate) -> Optional[SpaceResp]:
+    async def create(self, team_id: ClickUpTeamID, space_create: SpaceCreate) -> Optional[SpaceResp]:
         """
         Create a new space in a team.
 
@@ -110,7 +111,7 @@ class SpaceAPI:
 
         return SpaceResp(**response.data)
 
-    async def get_all(self, team_id: str) -> list[SpaceResp]:
+    async def get_all(self, team_id: ClickUpTeamID) -> list[SpaceResp]:
         """
         Get all spaces in a team/workspace.
 
@@ -157,7 +158,7 @@ class SpaceAPI:
         logger.debug(f"All spaces: {spaces_data}")
         return [SpaceResp(**space_data) for space_data in spaces_data]
 
-    async def get(self, space_id: str) -> Optional[SpaceResp]:
+    async def get(self, space_id: ClickUpSpaceID) -> Optional[SpaceResp]:
         """
         Get a space by ID.
 
@@ -198,7 +199,7 @@ class SpaceAPI:
         logger.debug(f"Space API response: {response.data}")
         return SpaceResp(**response.data)
 
-    async def update(self, space_id: str, space_update: SpaceUpdate) -> Optional[SpaceResp]:
+    async def update(self, space_id: ClickUpSpaceID, space_update: SpaceUpdate) -> Optional[SpaceResp]:
         """
         Update a space.
 
@@ -246,7 +247,7 @@ class SpaceAPI:
 
         return SpaceResp(**response.data)
 
-    async def delete(self, space_id: str) -> bool:
+    async def delete(self, space_id: ClickUpSpaceID) -> bool:
         """
         Delete a space.
 
