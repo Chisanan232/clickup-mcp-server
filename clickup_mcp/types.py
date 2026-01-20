@@ -272,25 +272,69 @@ class ClickUpClientProtocol(Protocol):
 
 
 @runtime_checkable
-class EventHandlerProtocol(Protocol):
-    """Protocol for objects that can handle ClickUp events.
+class EventHandlerDecoratorProtocol(Protocol):
+    """Protocol for event handler decorator factories.
     
-    This protocol defines the interface that all event handlers must implement.
-    It follows PEP 544 for structural subtyping.
+    This protocol defines the interface for objects that create and register
+    event handlers. This is different from EventHandlerProtocol which defines
+    the interface for the handlers themselves.
     
     Example:
-        >>> class MyHandler:
-        ...     async def handle_event(self, event: Dict[str, Any]) -> None:
-        ...         print(f"Handling event: {event['event']}")
+        >>> class MyEventDecorator:
+        ...     def __call__(self, event_type: ClickUpWebhookEventType):
+        ...         def decorator(func: EventHandlerProtocol) -> EventHandlerProtocol:
+        ...             # Register func for event_type
+        ...             return func
+        ...         return decorator
         >>>
-        >>> handler: EventHandlerProtocol = MyHandler()
+        >>> decorator: EventHandlerDecoratorProtocol = MyEventDecorator()
     """
     
-    async def handle_event(self, event: ClickUpEventPayload) -> None:
-        """Handle a ClickUp event.
+    def __call__(self, event_type: "ClickUpWebhookEventType") -> Callable[["EventHandlerProtocol"], "EventHandlerProtocol"]:
+        """Create a decorator for the specified event type.
         
         Args:
-            event: The ClickUp event payload
+            event_type: The type of event to handle
+            
+        Returns:
+            A decorator function that registers event handlers
+        """
+        ...
+
+
+@runtime_checkable
+class EventHandlerProtocol(Protocol):
+    """Protocol for ClickUp webhook event handlers.
+    
+    This protocol defines the interface for event handlers that can be called
+    directly with a ClickUpWebhookEvent object. This matches the actual usage
+    pattern in the ClickUp MCP server where handlers are callable objects.
+    
+    Both decorator-style and OOP-style handlers implement this protocol:
+    - Decorator handlers: Functions that accept ClickUpWebhookEvent
+    - OOP handlers: Objects with __call__ method accepting ClickUpWebhookEvent
+    
+    Example:
+        >>> # Decorator style
+        >>> @clickup_event.task_created
+        ... async def handle_task_created(event: ClickUpWebhookEvent) -> None:
+        ...     print(f"Task created: {event.body.get('task_id')}")
+        >>>
+        >>> # OOP style  
+        >>> class TaskHandler(BaseClickUpWebhookHandler):
+        ...     async def on_task_created(self, event: ClickUpWebhookEvent) -> None:
+        ...         print(f"Task created: {event.body.get('task_id')}")
+        >>>
+        >>> handler: EventHandlerProtocol = handle_task_created  # decorator style
+        >>> handler: EventHandlerProtocol = TaskHandler()       # OOP style
+        >>> await handler(event)  # Both are callable
+    """
+    
+    def __call__(self, event: "ClickUpWebhookEvent") -> Awaitable[None]:
+        """Handle a ClickUp webhook event.
+        
+        Args:
+            event: The normalized ClickUp webhook event
         """
         ...
 
@@ -641,6 +685,7 @@ __all__ = [
     
     # Protocol Definitions
     "ClickUpClientProtocol",
+    "EventHandlerDecoratorProtocol",
     "EventHandlerProtocol",
     "WebhookEventHandlerProtocol",
     "EventSinkProtocol",

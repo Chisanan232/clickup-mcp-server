@@ -178,9 +178,17 @@ jobs:
 
           # Test Protocol types
           assert hasattr(types, 'ClickUpClientProtocol')
+          assert hasattr(types, 'EventHandlerDecoratorProtocol')
           assert hasattr(types, 'EventHandlerProtocol')
+          assert hasattr(types, 'WebhookEventHandlerProtocol')
+          assert hasattr(types, 'EventSinkProtocol')
           assert hasattr(types, 'MCPServerProtocol')
+          assert hasattr(types, 'MCPToolProtocol')
           print('✅ Protocol types accessible')
+
+          # Test consolidated MCP tool data type
+          assert hasattr(types, 'MCPToolData')
+          print('✅ MCPToolData type accessible')
 
           # Test type guards
           assert hasattr(types, 'is_clickup_team_id')
@@ -220,6 +228,11 @@ jobs:
           assert types.is_clickup_token('pk_1234567890abcdef') == True
           assert types.is_clickup_token('invalid') == False
           print('✅ Token type guard works')
+
+          # Test MCP tool name validation
+          assert types.is_mcp_tool_name('task.create') == True
+          assert types.is_mcp_tool_name('invalid') == False
+          print('✅ MCP tool name type guard works')
           "
 
       - name: Test protocol implementations
@@ -248,13 +261,47 @@ jobs:
           client: types.ClickUpClientProtocol = TestClickUpClient()
           print('✅ ClickUpClientProtocol implementation works')
 
+          # Test EventHandlerDecoratorProtocol
+          class TestEventDecorator:
+              def __call__(self, event_type: types.ClickUpWebhookEventType):
+                  def decorator(func: types.EventHandlerProtocol) -> types.EventHandlerProtocol:
+                      return func
+                  return decorator
+
+          decorator: types.EventHandlerDecoratorProtocol = TestEventDecorator()
+          print('✅ EventHandlerDecoratorProtocol implementation works')
+
           # Test EventHandlerProtocol
           class TestEventHandler:
-              async def handle_event(self, event: types.ClickUpEventPayload) -> None:
+              async def __call__(self, event: types.ClickUpWebhookEvent) -> None:
                   pass
 
           handler: types.EventHandlerProtocol = TestEventHandler()
           print('✅ EventHandlerProtocol implementation works')
+
+          # Test WebhookEventHandlerProtocol
+          class TestWebhookHandler:
+              async def handle_webhook_event(self, event: types.ClickUpWebhookEvent) -> None:
+                  pass
+
+          webhook_handler: types.WebhookEventHandlerProtocol = TestWebhookHandler()
+          print('✅ WebhookEventHandlerProtocol implementation works')
+
+          # Test EventSinkProtocol
+          class TestEventSink:
+              async def handle(self, event: types.ClickUpWebhookEvent) -> None:
+                  pass
+
+          sink: types.EventSinkProtocol = TestEventSink()
+          print('✅ EventSinkProtocol implementation works')
+
+          # Test MCPToolProtocol
+          class TestMCPTool:
+              async def execute(self, input: types.MCPToolData) -> types.MCPToolData:
+                  return {'result': 'success'}
+
+          tool: types.MCPToolProtocol = TestMCPTool()
+          print('✅ MCPToolProtocol implementation works')
 
           # Test MCPServerProtocol
           class TestMCPServer:

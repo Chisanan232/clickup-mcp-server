@@ -74,7 +74,6 @@ ClickUp-specific identifiers and payloads:
 MCP transport configuration:
 
 - `TransportType`: Literal["stdio", "sse", "http-streaming"]
-- `MCPTransport`: Alias for TransportType
 
 ### Configuration Types
 
@@ -99,11 +98,9 @@ HTTP client configuration:
 MCP server configuration:
 
 - `MCPToolName`: Tool name identifier
+- `MCPToolTitle`: Tool display title
 - `MCPToolDescription`: Tool description
-- `MCPToolArguments`: Tool arguments schema
-- `MCPToolResult`: Tool execution result
-- `MCPResourceURI`: Resource URI
-- `MCPResourceData`: Resource data
+- `MCPToolData`: Generic tool data structure for arguments, results, input, and output
 
 ### Handler Types
 
@@ -133,18 +130,56 @@ class MyClickUpClient:
 client: types.ClickUpClientProtocol = MyClickUpClient()
 ```
 
-### EventHandlerProtocol
+### EventHandlerDecoratorProtocol
 
-Protocol for event handlers:
+Protocol for event handler decorator factories that create and register event handlers:
 
 ```python
 from clickup_mcp import types
+from clickup_mcp.web_server.event.handler.decorators import ClickUpEventDecorator
 
-class MyEventHandler:
-    async def handle_event(self, event: types.ClickUpEventPayload) -> None:
-        print(f"Handling event: {event['event']}")
+# The decorator factory implements EventHandlerDecoratorProtocol
+decorator: types.EventHandlerDecoratorProtocol = ClickUpEventDecorator()
 
-handler: types.EventHandlerProtocol = MyEventHandler()
+# It creates decorators for specific event types
+task_decorator = decorator(types.ClickUpWebhookEventType.TASK_CREATED)
+
+# The decorator registers handlers that implement EventHandlerProtocol
+@task_decorator
+async def handle_task_created(event: types.ClickUpWebhookEvent) -> None:
+    print(f"Task created: {event.body.get('task_id')}")
+
+# The handler itself implements EventHandlerProtocol
+handler: types.EventHandlerProtocol = handle_task_created
+```
+
+**Note**: `EventHandlerDecoratorProtocol` is for decorator factories (producers), while `EventHandlerProtocol` is for the actual event handlers (consumers). They serve different roles in the architecture.
+
+### EventHandlerProtocol
+
+Protocol for ClickUp webhook event handlers that can be called directly with events:
+
+```python
+from clickup_mcp import types
+from clickup_mcp.web_server.event.handler.decorators import clickup_event
+from clickup_mcp.web_server.event.handler.oop import BaseClickUpWebhookHandler
+
+# Decorator style
+@clickup_event.task_created
+async def handle_task_created(event: types.ClickUpWebhookEvent) -> None:
+    print(f"Task created: {event.body.get('task_id')}")
+
+handler: types.EventHandlerProtocol = handle_task_created
+
+# OOP style
+class TaskHandler(BaseClickUpWebhookHandler):
+    async def on_task_created(self, event: types.ClickUpWebhookEvent) -> None:
+        print(f"Task created: {event.body.get('task_id')}")
+
+handler: types.EventHandlerProtocol = TaskHandler()
+
+# Both are callable
+await handler(event)
 ```
 
 ### MCPServerProtocol
@@ -162,6 +197,48 @@ class MyMCPServer:
         return {"result": f"Called {name} with {arguments}"}
 
 server: types.MCPServerProtocol = MyMCPServer()
+```
+
+### WebhookEventHandlerProtocol
+
+Protocol for handling normalized ClickUp webhook events:
+
+```python
+from clickup_mcp import types
+
+class MyWebhookHandler:
+    async def handle_webhook_event(self, event: types.ClickUpWebhookEvent) -> None:
+        print(f"Handling webhook: {event.type.value}")
+
+handler: types.WebhookEventHandlerProtocol = MyWebhookHandler()
+```
+
+### EventSinkProtocol
+
+Protocol for event sink implementations:
+
+```python
+from clickup_mcp import types
+
+class MyEventSink:
+    async def handle(self, event: types.ClickUpWebhookEvent) -> None:
+        print(f"Processing event: {event.type}")
+
+sink: types.EventSinkProtocol = MyEventSink()
+```
+
+### MCPToolProtocol
+
+Protocol for MCP tool implementations:
+
+```python
+from clickup_mcp import types
+
+class MyTool:
+    async def execute(self, input: types.MCPToolData) -> types.MCPToolData:
+        return {"result": "success"}
+
+tool: types.MCPToolProtocol = MyTool()
 ```
 
 ## Type Guards
@@ -189,6 +266,7 @@ Available type guards:
 - `is_clickup_task_id()`: Validate task ID format
 - `is_clickup_user_id()`: Validate user ID format
 - `is_clickup_token()`: Validate API token format
+- `is_mcp_tool_name()`: Validate MCP tool name format
 
 ## Usage Examples
 
