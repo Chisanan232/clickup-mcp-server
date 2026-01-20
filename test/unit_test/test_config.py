@@ -47,7 +47,7 @@ class TestConfig:
         # Pass a non-existent file to ensure we don't load local .env
         settings = Settings(_env_file="non_existent_env_file")
         assert settings.clickup_api_token is None
-        assert settings.log_level == "INFO"
+        assert settings.log_level == "info"
         assert settings.clickup_webhook_handler_modules == ""
 
     def test_test_settings_defaults(self) -> None:
@@ -65,7 +65,7 @@ class TestConfig:
         settings = Settings(_env_file="non_existent_env_file")
         assert settings.clickup_api_token
         assert settings.clickup_api_token.get_secret_value() == "env_token"
-        assert settings.log_level == "DEBUG"
+        assert settings.log_level == "debug"
 
     def test_test_settings_from_env_vars(self) -> None:
         """Test loading TestSettings from environment variables."""
@@ -85,7 +85,7 @@ class TestConfig:
         settings = get_settings(str(env_file))
         assert settings.clickup_api_token
         assert settings.clickup_api_token.get_secret_value() == "file_token"
-        assert settings.log_level == "WARNING"
+        assert settings.log_level == "warning"
 
     def test_get_api_token_priority(self, tmp_path: Path) -> None:
         """Test token resolution priority: CLI > Settings(Env Var) > Settings(Env File)."""

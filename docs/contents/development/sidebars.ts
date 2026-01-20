@@ -26,6 +26,7 @@ const sidebars: SidebarsConfig = {
       ],
     },
     'rate-limit-and-pagination',
+    'type-checking',
     {
       type: 'category',
       label: 'CI/CD Workflows',

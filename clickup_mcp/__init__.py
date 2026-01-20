@@ -5,6 +5,8 @@ This package provides a comprehensive API client and MCP server for interacting
 with ClickUp's API, enabling AI assistants to manage tasks, projects, and teams.
 """
 
+# Import types module for PEP 561 compliance
+from . import types
 from .api.space import SpaceAPI
 from .client import (
     APIResponse,
@@ -56,5 +58,6 @@ __all__ = [
     "Space",
     # API Resource Managers
     "SpaceAPI",
-    # Utilities
+    # Type definitions (PEP 561 compliance)
+    "types",
 ]

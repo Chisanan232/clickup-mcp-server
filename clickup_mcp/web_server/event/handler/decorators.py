@@ -24,6 +24,7 @@ Usage Examples:
 import inspect
 from typing import Awaitable, Callable, Protocol
 
+from clickup_mcp.types import EventHandlerDecoratorProtocol
 from clickup_mcp.web_server.event.models import (
     ClickUpWebhookEvent,
     ClickUpWebhookEventType,
@@ -64,7 +65,7 @@ def ensure_async(fn: _HandlerFn) -> AsyncHandler:
     return wrapper
 
 
-class ClickUpEventDecorator:
+class ClickUpEventDecorator(EventHandlerDecoratorProtocol):
     """
     Decorator facade for registering webhook handlers.
 

@@ -36,6 +36,7 @@ import logging
 from typing import TYPE_CHECKING, Optional
 
 from clickup_mcp.models.dto.folder import FolderCreate, FolderResp, FolderUpdate
+from clickup_mcp.types import ClickUpFolderID, ClickUpSpaceID
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
@@ -72,7 +73,7 @@ class FolderAPI:
         """
         self._client = client
 
-    async def create(self, space_id: str, folder_create: FolderCreate) -> Optional[FolderResp]:
+    async def create(self, space_id: ClickUpSpaceID, folder_create: FolderCreate) -> Optional[FolderResp]:
         """
         Create a new folder in a space.
 
@@ -115,7 +116,7 @@ class FolderAPI:
 
         return FolderResp(**response.data)
 
-    async def get_all(self, space_id: str) -> list[FolderResp]:
+    async def get_all(self, space_id: ClickUpSpaceID) -> list[FolderResp]:
         """
         Get all folders in a space.
 
@@ -155,7 +156,7 @@ class FolderAPI:
 
         return [FolderResp(**folder_data) for folder_data in folders_data]
 
-    async def get(self, folder_id: str) -> Optional[FolderResp]:
+    async def get(self, folder_id: ClickUpFolderID) -> Optional[FolderResp]:
         """
         Get a folder by ID.
 
@@ -191,7 +192,7 @@ class FolderAPI:
         logger.debug(f"Folder API response: {response.data}")
         return FolderResp(**response.data)
 
-    async def update(self, folder_id: str, folder_update: FolderUpdate) -> Optional[FolderResp]:
+    async def update(self, folder_id: ClickUpFolderID, folder_update: FolderUpdate) -> Optional[FolderResp]:
         """
         Update a folder's properties.
 
@@ -233,7 +234,7 @@ class FolderAPI:
 
         return FolderResp(**response.data)
 
-    async def delete(self, folder_id: str) -> bool:
+    async def delete(self, folder_id: ClickUpFolderID) -> bool:
         """
         Delete a folder.
 

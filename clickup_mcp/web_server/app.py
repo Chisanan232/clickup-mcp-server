@@ -188,7 +188,7 @@ web_factory = WebServerFactory
 web = web_factory.create()
 
 
-def mount_service(transport: str = MCPTransportType.SSE) -> None:
+def mount_service(transport: MCPTransportType = MCPTransportType.SSE) -> None:
     """
     Mount the MCP service into the FastAPI web server.
 

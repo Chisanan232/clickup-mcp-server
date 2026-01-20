@@ -1,0 +1,358 @@
+name: PEP 561 Type Distribution
+
+on:
+  # Run on push to master and pull requests
+  push:
+    branches:
+      - "master"
+    paths:
+      # GitHub Action workflow files
+      - ".github/workflows/type-check.yml"
+      # Type definition files
+      - "clickup_mcp/types.py"
+      - "clickup_mcp/py.typed"
+      - "clickup_mcp/__init__.py"
+      # Configuration files
+      - "pyproject.toml"
+      - "uv.lock"
+
+  pull_request:
+    branches:
+      - "master"
+    paths:
+      # GitHub Action workflow files
+      - ".github/workflows/type-check.yml"
+      # Type definition files
+      - "clickup_mcp/types.py"
+      - "clickup_mcp/py.typed"
+      - "clickup_mcp/__init__.py"
+      # Configuration files
+      - "pyproject.toml"
+      - "uv.lock"
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  verify-pep561-compliance:
+    name: Verify PEP 561 Compliance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: 3.13
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+
+      - name: Verify py.typed marker exists
+        run: |
+          if [ ! -f "clickup_mcp/py.typed" ]; then
+            echo "❌ Error: py.typed marker file not found!"
+            echo "PEP 561 requires a py.typed file in the package directory."
+            exit 1
+          fi
+          echo "✅ py.typed marker file exists"
+
+      - name: Verify types.py module exists
+        run: |
+          if [ ! -f "clickup_mcp/types.py" ]; then
+            echo "❌ Error: types.py module not found!"
+            exit 1
+          fi
+          echo "✅ types.py module exists"
+
+      - name: Check types.py has __all__ export
+        run: |
+          if ! grep -q "__all__" clickup_mcp/types.py; then
+            echo "❌ Error: types.py missing __all__ export!"
+            exit 1
+          fi
+          echo "✅ types.py has __all__ export"
+
+      - name: Verify pyproject.toml includes py.typed
+        run: |
+          if ! grep -q "py.typed" pyproject.toml; then
+            echo "❌ Error: pyproject.toml does not include py.typed in artifacts!"
+            exit 1
+          fi
+          echo "✅ pyproject.toml includes py.typed in artifacts"
+
+      - name: Build package and verify py.typed inclusion
+        run: |
+          uv build --sdist --wheel
+
+          # Check sdist
+          echo "Checking source distribution..."
+          if tar -tzf dist/*.tar.gz | grep -q "clickup_mcp/py.typed"; then
+            echo "✅ py.typed found in source distribution"
+          else
+            echo "❌ Error: py.typed not found in source distribution!"
+            exit 1
+          fi
+
+          # Check wheel
+          echo "Checking wheel distribution..."
+          if unzip -l dist/*.whl | grep -q "clickup_mcp/py.typed"; then
+            echo "✅ py.typed found in wheel distribution"
+          else
+            echo "❌ Error: py.typed not found in wheel distribution!"
+            exit 1
+          fi
+
+          # Check types.py in distributions
+          echo "Checking types.py in distributions..."
+          if tar -tzf dist/*.tar.gz | grep -q "clickup_mcp/types.py"; then
+            echo "✅ types.py found in source distribution"
+          else
+            echo "❌ Error: types.py not found in source distribution!"
+            exit 1
+          fi
+
+          if unzip -l dist/*.whl | grep -q "clickup_mcp/types.py"; then
+            echo "✅ types.py found in wheel distribution"
+          else
+            echo "❌ Error: types.py not found in wheel distribution!"
+            exit 1
+          fi
+
+  test-type-imports:
+    name: Test Type Imports
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: 3.13
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+
+      - name: Install package
+        run: |
+          uv sync --all-extras
+
+      - name: Test importing types module
+        run: |
+          uv run python -c "
+          from clickup_mcp import types
+          print('✅ Successfully imported types module')
+          print(f'✅ Available types: {len(types.__all__)} exports')
+          "
+
+      - name: Test importing ClickUpSpace
+        run: |
+          uv run python -c "
+          from clickup_mcp.models.dto import SpaceResp
+          print('✅ Successfully imported SpaceResp')
+          print(f'✅ SpaceResp model available')
+          "
+
+      - name: Test type definitions are accessible
+        run: |
+          uv run python -c "
+          from clickup_mcp import types
+
+          # Test JSON types
+          assert hasattr(types, 'JSONValue')
+          assert hasattr(types, 'JSONDict')
+          assert hasattr(types, 'JSONList')
+          assert hasattr(types, 'JSONPrimitive')
+          print('✅ JSON types accessible')
+
+          # Test ClickUp types
+          assert hasattr(types, 'ClickUpTeamID')
+          assert hasattr(types, 'ClickUpSpaceID')
+          assert hasattr(types, 'ClickUpTaskID')
+          assert hasattr(types, 'ClickUpUserID')
+          assert hasattr(types, 'ClickUpToken')
+          assert hasattr(types, 'ClickUpEventPayload')
+          print('✅ ClickUp types accessible')
+
+          # Test Protocol types
+          assert hasattr(types, 'ClickUpClientProtocol')
+          assert hasattr(types, 'EventHandlerDecoratorProtocol')
+          assert hasattr(types, 'EventHandlerProtocol')
+          assert hasattr(types, 'WebhookEventHandlerProtocol')
+          assert hasattr(types, 'EventSinkProtocol')
+          assert hasattr(types, 'MCPServerProtocol')
+          assert hasattr(types, 'MCPToolProtocol')
+          print('✅ Protocol types accessible')
+
+          # Test consolidated MCP tool data type
+          assert hasattr(types, 'MCPToolData')
+          print('✅ MCPToolData type accessible')
+
+          # Test type guards
+          assert hasattr(types, 'is_clickup_team_id')
+          assert hasattr(types, 'is_clickup_space_id')
+          assert hasattr(types, 'is_clickup_task_id')
+          assert hasattr(types, 'is_clickup_user_id')
+          assert hasattr(types, 'is_clickup_token')
+          print('✅ Type guards accessible')
+          "
+
+      - name: Test type guards functionality
+        run: |
+          uv run python -c "
+          from clickup_mcp import types
+
+          # Test team ID validation
+          assert types.is_clickup_team_id('123456789') == True
+          assert types.is_clickup_team_id('invalid') == False
+          print('✅ Team ID type guard works')
+
+          # Test space ID validation
+          assert types.is_clickup_space_id('123456789') == True
+          assert types.is_clickup_space_id('invalid') == False
+          print('✅ Space ID type guard works')
+
+          # Test task ID validation
+          assert types.is_clickup_task_id('123456789_abc123') == True
+          assert types.is_clickup_task_id('invalid') == False
+          print('✅ Task ID type guard works')
+
+          # Test user ID validation
+          assert types.is_clickup_user_id('123456789') == True
+          assert types.is_clickup_user_id('invalid') == False
+          print('✅ User ID type guard works')
+
+          # Test token validation
+          assert types.is_clickup_token('pk_1234567890abcdef') == True
+          assert types.is_clickup_token('invalid') == False
+          print('✅ Token type guard works')
+
+          # Test MCP tool name validation
+          assert types.is_mcp_tool_name('task.create') == True
+          assert types.is_mcp_tool_name('invalid') == False
+          print('✅ MCP tool name type guard works')
+          "
+
+      - name: Test protocol implementations
+        run: |
+          uv run python -c "
+          from clickup_mcp import types
+          from clickup_mcp.web_server.event.models.enums import ClickUpWebhookEventType
+          from typing import Dict, Any, List
+
+          # Test ClickUpClientProtocol
+          class TestClickUpClient:
+              async def get(self, endpoint: str, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None) -> types.ClickUpAPIResponse:
+                  return {'data': 'test'}
+              
+              async def post(self, endpoint: str, data: dict[str, Any] | None = None, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None) -> types.ClickUpAPIResponse:
+                  return {'data': 'created'}
+              
+              async def put(self, endpoint: str, data: dict[str, Any] | None = None, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None) -> types.ClickUpAPIResponse:
+                  return {'data': 'updated'}
+              
+              async def patch(self, endpoint: str, data: dict[str, Any] | None = None, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None) -> types.ClickUpAPIResponse:
+                  return {'data': 'patched'}
+              
+              async def delete(self, endpoint: str, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None) -> types.ClickUpAPIResponse:
+                  return {'data': 'deleted'}
+
+          client: types.ClickUpClientProtocol = TestClickUpClient()
+          print('✅ ClickUpClientProtocol implementation works')
+
+          # Test EventHandlerDecoratorProtocol
+          class TestEventDecorator:
+              def __call__(self, event_type: ClickUpWebhookEventType):
+                  def decorator(func: types.EventHandlerProtocol) -> types.EventHandlerProtocol:
+                      return func
+                  return decorator
+
+          decorator: types.EventHandlerDecoratorProtocol = TestEventDecorator()
+          print('✅ EventHandlerDecoratorProtocol implementation works')
+
+          # Test EventHandlerProtocol
+          class TestEventHandler:
+              async def __call__(self, event: types.ClickUpWebhookEvent) -> None:
+                  pass
+
+          handler: types.EventHandlerProtocol = TestEventHandler()
+          print('✅ EventHandlerProtocol implementation works')
+
+          # Test WebhookEventHandlerProtocol
+          class TestWebhookHandler:
+              async def handle_webhook_event(self, event: types.ClickUpWebhookEvent) -> None:
+                  pass
+
+          webhook_handler: types.WebhookEventHandlerProtocol = TestWebhookHandler()
+          print('✅ WebhookEventHandlerProtocol implementation works')
+
+          # Test EventSinkProtocol
+          class TestEventSink:
+              async def handle(self, event: types.ClickUpWebhookEvent) -> None:
+                  pass
+
+          sink: types.EventSinkProtocol = TestEventSink()
+          print('✅ EventSinkProtocol implementation works')
+
+          # Test MCPToolProtocol
+          class TestMCPTool:
+              async def execute(self, input: types.MCPToolData) -> types.MCPToolData:
+                  return {'result': 'success'}
+
+          tool: types.MCPToolProtocol = TestMCPTool()
+          print('✅ MCPToolProtocol implementation works')
+
+          # Test MCPServerProtocol
+          class TestMCPServer:
+              async def list_tools(self) -> List[Dict[str, Any]]:
+                  return [{'name': 'test', 'description': 'Test tool'}]
+              
+              async def call_tool(self, name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+                  return {'result': f'Called {name}'}
+
+          server: types.MCPServerProtocol = TestMCPServer()
+          print('✅ MCPServerProtocol implementation works')
+          "
+
+  summary:
+    name: PEP 561 Summary
+    runs-on: ubuntu-latest
+    needs: [verify-pep561-compliance, test-type-imports]
+    if: always()
+
+    steps:
+      - name: Check all jobs status
+        run: |
+          echo "## PEP 561 Type Distribution Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "ℹ️ **Note**: MyPy source code checking is handled by pre-commit hooks" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.verify-pep561-compliance.result }}" == "success" ]; then
+            echo "✅ PEP 561 compliance: **PASSED**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ PEP 561 compliance: **FAILED**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.test-type-imports.result }}" == "success" ]; then
+            echo "✅ Type imports: **PASSED**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Type imports: **FAILED**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### PEP Standards Verified" >> $GITHUB_STEP_SUMMARY
+          echo "- PEP 561: Distributing and Packaging Type Information" >> $GITHUB_STEP_SUMMARY
+          echo "- PEP 484: Type Hints" >> $GITHUB_STEP_SUMMARY
+          echo "- PEP 585: Type Hinting Generics" >> $GITHUB_STEP_SUMMARY
+          echo "- PEP 544: Protocols (Structural Subtyping)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if any job failed
+        if: |
+          needs.verify-pep561-compliance.result != 'success' ||
+          needs.test-type-imports.result != 'success'
+        run: |
+          echo "❌ One or more PEP 561 validation jobs failed!"
+          exit 1

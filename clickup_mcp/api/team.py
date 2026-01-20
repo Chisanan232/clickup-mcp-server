@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING, List
 
 from clickup_mcp.models.domain.team import ClickUpTeam
 from clickup_mcp.models.dto.space import SpaceResp
+from clickup_mcp.types import ClickUpTeamID
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
@@ -108,7 +109,7 @@ class TeamAPI:
         # Create a list of ClickUpTeam instances
         return [ClickUpTeam(**team_data) for team_data in teams_data]
 
-    async def get_spaces(self, team_id: str) -> list[SpaceResp]:
+    async def get_spaces(self, team_id: ClickUpTeamID) -> list[SpaceResp]:
         """
         Get all spaces in a team/workspace.
 

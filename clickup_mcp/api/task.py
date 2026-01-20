@@ -43,6 +43,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Optional
 
 from clickup_mcp.models.dto.task import TaskCreate, TaskListQuery, TaskResp, TaskUpdate
+from clickup_mcp.types import ClickUpListID, ClickUpTaskID
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
@@ -90,7 +91,7 @@ class TaskAPI:
         """
         self._client = client
 
-    async def create(self, list_id: str, task_create: TaskCreate) -> Optional[TaskResp]:
+    async def create(self, list_id: ClickUpListID, task_create: TaskCreate) -> Optional[TaskResp]:
         """
         Create a new task in a list (supports subtasks).
 
@@ -138,7 +139,12 @@ class TaskAPI:
         return TaskResp(**response.data)
 
     async def get(
-        self, task_id: str, *, subtasks: bool | None = None, custom_task_ids: bool = False, team_id: str | None = None
+        self,
+        task_id: ClickUpTaskID,
+        *,
+        subtasks: bool | None = None,
+        custom_task_ids: bool = False,
+        team_id: str | None = None,
     ) -> Optional[TaskResp]:
         """
         Get a task by ID.
@@ -259,7 +265,7 @@ class TaskAPI:
 
         return all_tasks
 
-    async def update(self, task_id: str, task_update: TaskUpdate) -> Optional[TaskResp]:
+    async def update(self, task_id: ClickUpTaskID, task_update: TaskUpdate) -> Optional[TaskResp]:
         """
         Update a task's properties (non-custom-fields).
 
@@ -415,7 +421,7 @@ class TaskAPI:
         response = await self._client.post(f"/task/{task_id}/dependency", data=data)
         return response.success and response.status_code in (200, 204)
 
-    async def delete(self, task_id: str) -> bool:
+    async def delete(self, task_id: ClickUpTaskID) -> bool:
         """
         Delete a task.
 
