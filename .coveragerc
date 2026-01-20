@@ -6,6 +6,7 @@ include=./clickup_mcp/
 omit =
 #    */__init__.py
     */__main__.py
+    */types.py
 
 [paths]
 source =

@@ -38,6 +38,7 @@ import logging
 from typing import TYPE_CHECKING, Optional
 
 from clickup_mcp.models.dto.list import ListCreate, ListResp, ListUpdate
+from clickup_mcp.types import ClickUpFolderID, ClickUpListID, ClickUpSpaceID
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
@@ -75,7 +76,7 @@ class ListAPI:
         """
         self._client = client
 
-    async def create(self, folder_id: str, list_create: ListCreate) -> Optional[ListResp]:
+    async def create(self, folder_id: ClickUpFolderID, list_create: ListCreate) -> Optional[ListResp]:
         """
         Create a new list inside a folder.
 
@@ -118,7 +119,7 @@ class ListAPI:
 
         return ListResp(**response.data)
 
-    async def get_all_in_folder(self, folder_id: str) -> list[ListResp]:
+    async def get_all_in_folder(self, folder_id: ClickUpFolderID) -> list[ListResp]:
         """
         Get all lists in a folder.
 
@@ -158,7 +159,7 @@ class ListAPI:
         logger.debug(f"All lists: {lists_data}")
         return [ListResp(**list_data) for list_data in lists_data]
 
-    async def get_all_folderless(self, space_id: str) -> list[ListResp]:
+    async def get_all_folderless(self, space_id: ClickUpSpaceID) -> list[ListResp]:
         """
         Get all folderless lists in a space.
 
@@ -198,7 +199,7 @@ class ListAPI:
         logger.debug(f"All folderless lists: {lists_data}")
         return [ListResp(**list_data) for list_data in lists_data]
 
-    async def get(self, list_id: str) -> Optional[ListResp]:
+    async def get(self, list_id: ClickUpListID) -> Optional[ListResp]:
         """
         Get a list by ID.
 
@@ -235,7 +236,7 @@ class ListAPI:
         logger.debug(f"List API response: {response.data}")
         return ListResp(**response.data)
 
-    async def update(self, list_id: str, list_update: ListUpdate) -> Optional[ListResp]:
+    async def update(self, list_id: ClickUpListID, list_update: ListUpdate) -> Optional[ListResp]:
         """
         Update a list's properties.
 
@@ -277,7 +278,7 @@ class ListAPI:
 
         return ListResp(**response.data)
 
-    async def delete(self, list_id: str) -> bool:
+    async def delete(self, list_id: ClickUpListID) -> bool:
         """
         Delete a list.
 
