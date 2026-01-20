@@ -41,6 +41,16 @@ Our CI/CD system is organized into focused, developer-friendly sections:
 - **Dual-trigger architecture solving GitHub Actions limitations**
 - **Guard job logic and troubleshooting**
 
+### **🔧 [Type System Design](../type-checking.mdx)**
+
+[![Type Check](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/type-check.yml/badge.svg)](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/type-check.yml)
+
+- **Protocol-based architecture** with PEP 544 structural typing
+- **Domain-specific types** for ClickUp API integration
+- **Event-driven architecture types** for webhook handling
+- **Comprehensive type checking** with MyPy validation
+- **Type guard patterns** for runtime validation
+
 ### **🔧 [Reusable Workflows](./reusable-workflows.mdx)**
 - **Docker, Python, and documentation operations**
 - **Workflow integration patterns and architecture**
@@ -88,11 +98,13 @@ We use **GitHub Actions** to automate testing, code quality checks, and deployme
 **New to our CI/CD system?** Start with:
 
 1. **📋 [Continuous Integration](./continuous-integration.mdx)** - Understand our testing and quality workflows
-2. **🔄 [Release System](./release-system.mdx)** - Learn about our release process and configuration
-3. **🛠️ [Developer Guide](./developer-guide.mdx)** - Find practical examples and troubleshooting tips
+2. **🔧 [Type System Design](../type-checking.mdx)** - Learn about our comprehensive type system and protocol architecture
+3. **🔄 [Release System](./release-system.mdx)** - Learn about our release process and configuration
+4. **🛠️ [Developer Guide](./developer-guide.mdx)** - Find practical examples and troubleshooting tips
 
 **Need specific information?**
 - **Configuring releases:** → [Release System](./release-system.mdx)
+- **Understanding type system:** → [Type System Design](../type-checking.mdx)
 - **Documentation not deploying:** → [Documentation Deployment](./documentation-deployment.mdx)  
 - **Understanding workflow patterns:** → [Reusable Workflows](./reusable-workflows.mdx)
 - **Troubleshooting issues:** → [Developer Guide](./developer-guide.mdx)

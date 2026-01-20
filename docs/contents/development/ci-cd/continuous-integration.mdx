@@ -59,11 +59,23 @@ For each test type (unit, integration, E2E, contract), the workflow:
 ### 3. Code Quality Checks
 
 As part of the test process, the following checks are performed:
-- **MyPy**: Type checking
+- **MyPy**: Type checking with comprehensive protocol validation
 - **PyLint**: Code analysis based on Google's Python style guide
 - **Flake8**: PEP 8 compliance checking
 - **Black**: Code formatting verification
 - **isort**: Import sorting verification
+
+### 4. Type System Validation
+
+We have a dedicated [type checking workflow](https://github.com/Chisanan232/clickup-mcp-server/actions/workflows/type-check.yml) that validates our comprehensive type system:
+
+- **Protocol Accessibility**: Ensures all protocol types are properly exported
+- **Protocol Implementation**: Tests compliance with EventHandlerProtocol, ClickUpClientProtocol, etc.
+- **Type Guard Validation**: Verifies type guards work correctly for ClickUp API types
+- **Consolidated Type Testing**: Validates unified MCPToolData usage
+- **Forward Reference Resolution**: Checks conditional imports and TYPE_CHECKING blocks
+
+For detailed information about our type system design, see the [Type System Design](../type-checking.mdx) documentation.
 
 ## Multi-Python Version Testing
 
