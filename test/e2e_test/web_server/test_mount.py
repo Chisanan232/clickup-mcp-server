@@ -21,17 +21,11 @@ class TestWebServerMountMcpServer(BaseE2ETestWithRunningServer):
         """Test if the MCP server endpoint is correctly mounted for every transports."""
         mcp_url = f"http://{server_fixture.host}:{server_fixture.port}{server_fixture.url_suffix}"
 
-        print(f"[DEBUG] Testing MCP endpoint: {mcp_url}")
-        print(f"[DEBUG] Transport: {server_fixture.transport}")
-        print(f"[DEBUG] URL suffix: {server_fixture.url_suffix}")
-
         # Simply check if the endpoint exists - we'll get a 200 or 307 if it's mounted
         with httpx.Client(timeout=OPERATION_TIMEOUT) as client:
             # Try HEAD request first to check if endpoint exists
             response = client.head(mcp_url)
             status_code = response.status_code
-
-        print(f"[DEBUG] Response status code: {status_code}")
 
         # If the endpoint is mounted, we should get a (200,307) status
         # If the endpoint is not mounted, we would get a 404 Not Found
