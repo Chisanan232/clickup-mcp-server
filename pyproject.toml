@@ -81,7 +81,6 @@ dev = [
     "pytest-rerunfailures>=15.1,<17",
     "aiohttp>=3.12.13,<4",
     "pytest-asyncio>=1.1.0,<2",
-    "python-dotenv>=1.1.1,<2",
     "httpx>=0.28.1,<0.29", # For FastAPI testing
     "pytest-mock>=3.14.1,<4",
 ]

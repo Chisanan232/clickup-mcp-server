@@ -39,7 +39,7 @@ class TestSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", case_sensitive=False)
 
 
-def get_test_settings(env_file: Optional[str] = None) -> TestSettings:
+def get_test_settings(env_file: Optional[str] = "./test/.env") -> TestSettings:
     """
     Generate and return a TestSettings instance.
 
