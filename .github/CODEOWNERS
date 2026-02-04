@@ -13,7 +13,7 @@
 #######################################
 # Source Code
 #######################################
-/src/                                 @Chisanan232
+/clickup_mcp/                         @Chisanan232
 *.py                                  @Chisanan232
 
 #######################################
@@ -26,6 +26,15 @@
 #######################################
 /docs/                                @Chisanan232
 *.md                                  @Chisanan232
+*.mdx                                 @Chisanan232
+*.js                                  @Chisanan232
+*.ts                                  @Chisanan232
+*.tsx                                 @Chisanan232
+*.css                                 @Chisanan232
+*.html                                @Chisanan232
+*.json                                @Chisanan232
+*.yml                                 @Chisanan232
+*.yaml                                @Chisanan232
 
 #######################################
 # CI/CD Configuration
