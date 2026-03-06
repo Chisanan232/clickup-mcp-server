@@ -49,7 +49,7 @@ jobs:
           buildkitd-flags: --debug
 
       - name: Validate build configuration
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           call: check
           tags: user/app:latest
@@ -68,7 +68,7 @@ jobs:
           buildkitd-flags: --debug
 
       - name: Build and export to Docker
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           load: true
           tags: ${{ env.TEST_TAG }}
