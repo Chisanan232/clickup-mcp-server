@@ -60,6 +60,6 @@ repos:
 
   - repo: https://github.com/astral-sh/uv-pre-commit
     # uv version.
-    rev: 0.10.10
+    rev: 0.10.12
     hooks:
       - id: uv-lock
