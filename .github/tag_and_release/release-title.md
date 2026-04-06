@@ -1,1 +1,1 @@
-v0.1.0 - Support basic ClickUp MCP features (first minor release) 🍻
+v0.2.0 - Enhanced type safety, comprehensive documentation, and improved developer experience 🚀
