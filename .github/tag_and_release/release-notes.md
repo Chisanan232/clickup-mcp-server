@@ -1,62 +1,198 @@
-### 🎉 New feature
+### 🎉 New Features
 
-1. Support complete golden user journeys for ClickUp MCP server.
-   1. Implement the API clients with complete features for the MCP tools.
-   2. Add the MCP tools.
-      1. ClickUp team level features (get info only)
-      2. ClickUp workspace level features (get info only)
-      3. ClickUp space level features (get, create, update, delete)
-      4. ClickUp folder level features (get, create, update, delete)
-      5. ClickUp list level features (get, create, update, delete)
-      6. ClickUp task level features (get, create, update, delete)
-2. Support basic user journeys for ClickUp webhook features in the MCP server.
-   1. Implement the webhook endpoint for ClickUp service.
-   2. Provide the webhook event handlers.
-      1. Provide the Pythonic style webhook event handlers.
-      2. Provide the OOP style webhook event handlers.
-   3. Implement the message queue components for the MCP server.
+1. **Enhanced Type System & Developer Experience**
+   - Implement comprehensive type definition system following PEP 561 standards ([PR#236])
+   - Add protocol-based architecture with EventHandlerProtocol, ClickUpClientProtocol, and MCPToolProtocol ([PR#236])
+   - Provide type guards for runtime validation of ClickUp API identifiers ([PR#236])
+   - Enable enterprise-grade type safety with 73 optimized type exports ([PR#236])
 
+2. **Improved Configuration Management**
+   - Migrate to Pydantic setting models for environment variable and .env file loading ([PR#225])
+   - Support flexible secret info loading from environment variables or dotenv files ([PR#225])
+   - Separate setting models for source code and test code usage ([PR#230])
+   - Minimize library dependencies with optional group dependencies ([PR#232])
 
-### 🪲 Bug Fix
+3. **Enhanced Documentation & Code Quality**
+   - Add comprehensive docstrings for all modules, objects, and functions ([PR#217])
+   - Improve MCP function implementations for better LLM understanding ([PR#223])
+   - Add detailed CLI usage guidelines and documentation ([PR#209])
+   - Enhance code owner settings for document scope management ([PR#242])
 
-#### 🙋‍♂️ For production
+4. **Robust Testing & Error Handling**
+   - Fix broken end-to-end tests and improve test reliability ([PR#238])
+   - Add comprehensive error logging for API request failures
+   - Improve test edge cases covering exception handling and boundary conditions ([PR#193])
+   - Separate test configuration models for better test isolation ([PR#230])
 
-1. 💣 Critical bugs: (0)
-   1. NaN
-2. 🦠 Major bugs: (1)
-   1. It only accepts to load the secret info from the command line option *--token*. ([PR#208])
-3. 🐛 Mirror bugs: (0)
-   1. NaN
+### 🪲 Bug Fixes
 
-[PR#208]: https://github.com/Chisanan232/clickup-mcp-server/pull/208
+#### 🙋‍♂️ For Production
 
-#### 👨‍💻 For development
+1. **Critical Fixes:**
+   - Fix CI workflow secret info access for bot-triggered workflows ([PR#237])
+   - Remove redundant dependencies and optimize test utility functions ([PR#239])
+   - Fix end-to-end test failures in HTTP streaming transport ([PR#238])
 
-1. Use the incorrect APIs to get the ClickUp API specification configuration. ([PR#187], [PR#192]).
-2. CI workflow cannot upload README info to Docker Hub. ([PR#142])
+2. **Major Fixes:**
+   - Adjust secret info loading mechanism to be more user-friendly ([PR#208])
+   - Fix CI workflow bugs in ClickUp API specification checks ([PR#192])
+   - Resolve git operation issues in CI workflows ([PR#192])
 
-[PR#187]: https://github.com/Chisanan232/clickup-mcp-server/pull/187
-[PR#192]: https://github.com/Chisanan232/clickup-mcp-server/pull/192
+#### 👨‍💻 For Development
+
+1. **Testing & CI Improvements:**
+   - Fix broken end-to-end test mount functionality ([PR#238])
+   - Improve CI workflow regression testing completeness ([PR#162])
+   - Add property settings for test code directory in PyTest configuration ([PR#182])
+
+2. **Code Quality Fixes:**
+   - Remove redundant dependency and adjust test setting models ([PR#239])
+   - Fix priority model bugs and improve status information integration ([PR#190])
+   - Improve source code and test code docstring accuracy ([PR#174])
+
+### 🍀 Improvements
+
+1. **Architecture & Design**
+   - Implement domain model layer with business behaviors and identity references ([PR#175])
+   - Add DTO↔Domain mappers for clean data flow architecture ([PR#175])
+   - Consolidate redundant models (User/ClickUpUser, Folder/ClickUpFolder, etc.) ([PR#175])
+   - Refine type definitions by removing redundancies while maintaining functionality ([PR#175])
+
+2. **Developer Experience**
+   - Enhance MCP function implementations to return proper data models ([PR#183])
+   - Centralize error handling and unify MCP function output models ([PR#181])
+   - Improve log messages for data deserialization debugging ([PR#173])
+   - Add comprehensive module-level docstrings for better code understanding ([PR#217])
+
+3. **Documentation & Communication**
+   - Add developer-facing documentation content ([PR#186])
+   - Improve user documentation tree structure ([PR#185])
+   - Add comprehensive user-facing documentation ([PR#184])
+   - Update code owner settings for better document scope management ([PR#242])
+
+4. **Performance & Dependencies**
+   - Minimize library dependencies with optional group dependencies ([PR#232])
+   - Upgrade key dependencies: aiohttp (3.12.14→3.13.3), mcp (1.10.1→1.23.0), starlette (0.46.2→0.49.1) ([PR#235], [PR#234], [PR#233])
+   - Remove redundant dependencies and optimize package structure ([PR#239])
+
+### 🤖 Dependency Updates
+
+1. **Core Dependencies:**
+   - Upgrade aiohttp from 3.12.14 to 3.13.3 ([PR#235])
+   - Upgrade aiohttp from 3.13.3 to 3.13.4 ([PR#262])
+   - Upgrade mcp from 1.10.1 to 1.23.0 ([PR#234])
+   - Upgrade starlette from 0.46.2 to 0.49.1 ([PR#233])
+   - Upgrade python-multipart from 0.0.20 to 0.0.22 ([PR#240])
+   - Upgrade pygments from 2.19.2 to 2.20.0 ([PR#261])
+
+2. **Development Dependencies:**
+   - Upgrade pylint from <4,>=3.3.7 to >=3.3.7,<5 ([PR#145])
+   - Upgrade pytest from <9,>=8.4.1 to >=8.4.1,<10 ([PR#167])
+   - Regular pre-commit autoupdates throughout the cycle ([PR#213], [PR#216], [PR#219], [PR#221], [PR#224], [PR#227], [PR#231])
+
+3. **CI/CD Infrastructure:**
+   - Upgrade GitHub Actions: checkout (5→6), create-pull-request (6→7), download-artifact (6→7) ([PR#212], [PR#211], [PR#219])
+   - Upgrade setup-node from 5 to 6 ([PR#147])
+   - Upgrade astral-sh/setup-uv from 6 to 7 ([PR#140])
+   - Upgrade peter-evans/create-pull-request from 7 to 8 ([PR#218])
+
+### 🔧 Infrastructure & Tooling
+
+1. **API Specification Management:**
+   - Auto-update ClickUp API specification to version 2.0 ([PR#226], [PR#222], [PR#215])
+   - Fix CI workflow bugs in API specification checking ([PR#192], [PR#187])
+   - Improve API specification configuration accuracy ([PR#187])
+
+2. **Release & Deployment:**
+   - Migrate to uv version management system replacing python-semantic-release
+   - Implement comprehensive release intent parsing and validation
+   - Fix git synchronization bugs in release workflows
+   - Add UV lock file synchronization for reproducible builds
+
+3. **Documentation Infrastructure:**
+   - Add comprehensive type system design documentation
+   - Create comprehensive unit tests for release intent parser
+   - Enhance CI/CD documentation with type checking workflow details
+
+### 📊 Statistics
+
+- **Total PRs merged since v0.1.0**: 36 PRs
+- **Major feature additions**: 4 categories
+- **Bug fixes**: 8 critical/major fixes
+- **Dependency updates**: 15+ packages
+- **Documentation improvements**: 6 major enhancements
+- **Infrastructure improvements**: 8 significant changes
+
+### 🚀 Breaking Changes
+
+This release maintains backward compatibility while introducing significant improvements:
+- No breaking changes to public APIs
+- Enhanced type system is additive and optional
+- Configuration changes are backward compatible
+- All existing functionality preserved
+
+### 🙏 Acknowledgments
+
+Special thanks to all contributors who made this release possible through their dedication to improving the ClickUp MCP Server ecosystem. This release represents a significant step forward in type safety, developer experience, and system reliability.
+
+---
+
+## GitHub Pull Request References
+
+[PR#140]: https://github.com/Chisanan232/clickup-mcp-server/pull/140
 [PR#142]: https://github.com/Chisanan232/clickup-mcp-server/pull/142
-
-
-### 🍀 Improvement
-
-1. Extract the long and big content about CI/CD workflows as a single section. ([PR#122])
-2. Add a new CI workflow checks the documentation building process. ([PR#144])
-3. Align all the workflows to reuse the GitHub Action reusable workflow repo. ([PR#157])
-4. Fix all the warnings in the documentation building. ([PR#160])
-5. Align the document content about the changes of aligning to reuse the GitHub Action reusable workflow repo. ([PR#161])
-
-[PR#122]: https://github.com/Chisanan232/clickup-mcp-server/pull/122
-[PR#144]: https://github.com/Chisanan232/clickup-mcp-server/pull/144
+[PR#145]: https://github.com/Chisanan232/clickup-mcp-server/pull/145
+[PR#147]: https://github.com/Chisanan232/clickup-mcp-server/pull/147
+[PR#151]: https://github.com/Chisanan232/clickup-mcp-server/pull/151
 [PR#157]: https://github.com/Chisanan232/clickup-mcp-server/pull/157
 [PR#160]: https://github.com/Chisanan232/clickup-mcp-server/pull/160
 [PR#161]: https://github.com/Chisanan232/clickup-mcp-server/pull/161
-
-
-### 🤖 Upgrade dependencies
-
-1. Upgrade the Python dependencies.
-2. Upgrade pre-commit dependencies.
-3. Upgrade the CI reusable workflows.
+[PR#162]: https://github.com/Chisanan232/clickup-mcp-server/pull/162
+[PR#167]: https://github.com/Chisanan232/clickup-mcp-server/pull/167
+[PR#173]: https://github.com/Chisanan232/clickup-mcp-server/pull/173
+[PR#174]: https://github.com/Chisanan232/clickup-mcp-server/pull/174
+[PR#175]: https://github.com/Chisanan232/clickup-mcp-server/pull/175
+[PR#181]: https://github.com/Chisanan232/clickup-mcp-server/pull/181
+[PR#182]: https://github.com/Chisanan232/clickup-mcp-server/pull/182
+[PR#183]: https://github.com/Chisanan232/clickup-mcp-server/pull/183
+[PR#184]: https://github.com/Chisanan232/clickup-mcp-server/pull/184
+[PR#185]: https://github.com/Chisanan232/clickup-mcp-server/pull/185
+[PR#186]: https://github.com/Chisanan232/clickup-mcp-server/pull/186
+[PR#187]: https://github.com/Chisanan232/clickup-mcp-server/pull/187
+[PR#190]: https://github.com/Chisanan232/clickup-mcp-server/pull/190
+[PR#191]: https://github.com/Chisanan232/clickup-mcp-server/pull/191
+[PR#192]: https://github.com/Chisanan232/clickup-mcp-server/pull/192
+[PR#193]: https://github.com/Chisanan232/clickup-mcp-server/pull/193
+[PR#208]: https://github.com/Chisanan232/clickup-mcp-server/pull/208
+[PR#209]: https://github.com/Chisanan232/clickup-mcp-server/pull/209
+[PR#211]: https://github.com/Chisanan232/clickup-mcp-server/pull/211
+[PR#212]: https://github.com/Chisanan232/clickup-mcp-server/pull/212
+[PR#213]: https://github.com/Chisanan232/clickup-mcp-server/pull/213
+[PR#214]: https://github.com/Chisanan232/clickup-mcp-server/pull/214
+[PR#215]: https://github.com/Chisanan232/clickup-mcp-server/pull/215
+[PR#216]: https://github.com/Chisanan232/clickup-mcp-server/pull/216
+[PR#217]: https://github.com/Chisanan232/clickup-mcp-server/pull/217
+[PR#218]: https://github.com/Chisanan232/clickup-mcp-server/pull/218
+[PR#219]: https://github.com/Chisanan232/clickup-mcp-server/pull/219
+[PR#221]: https://github.com/Chisanan232/clickup-mcp-server/pull/221
+[PR#222]: https://github.com/Chisanan232/clickup-mcp-server/pull/222
+[PR#223]: https://github.com/Chisanan232/clickup-mcp-server/pull/223
+[PR#224]: https://github.com/Chisanan232/clickup-mcp-server/pull/224
+[PR#225]: https://github.com/Chisanan232/clickup-mcp-server/pull/225
+[PR#226]: https://github.com/Chisanan232/clickup-mcp-server/pull/226
+[PR#227]: https://github.com/Chisanan232/clickup-mcp-server/pull/227
+[PR#230]: https://github.com/Chisanan232/clickup-mcp-server/pull/230
+[PR#231]: https://github.com/Chisanan232/clickup-mcp-server/pull/231
+[PR#232]: https://github.com/Chisanan232/clickup-mcp-server/pull/232
+[PR#233]: https://github.com/Chisanan232/clickup-mcp-server/pull/233
+[PR#234]: https://github.com/Chisanan232/clickup-mcp-server/pull/234
+[PR#235]: https://github.com/Chisanan232/clickup-mcp-server/pull/235
+[PR#236]: https://github.com/Chisanan232/clickup-mcp-server/pull/236
+[PR#237]: https://github.com/Chisanan232/clickup-mcp-server/pull/237
+[PR#238]: https://github.com/Chisanan232/clickup-mcp-server/pull/238
+[PR#239]: https://github.com/Chisanan232/clickup-mcp-server/pull/239
+[PR#240]: https://github.com/Chisanan232/clickup-mcp-server/pull/240
+[PR#242]: https://github.com/Chisanan232/clickup-mcp-server/pull/242
+[PR#251]: https://github.com/Chisanan232/clickup-mcp-server/pull/251
+[PR#261]: https://github.com/Chisanan232/clickup-mcp-server/pull/261
+[PR#262]: https://github.com/Chisanan232/clickup-mcp-server/pull/262
