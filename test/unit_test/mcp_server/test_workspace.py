@@ -21,7 +21,6 @@ from clickup_mcp.mcp_server.workspace import (
     workspace_get,
     workspace_update,
 )
-from clickup_mcp.models.domain.workspace import ClickUpWorkspace
 from clickup_mcp.models.dto.workspace import WorkspaceResp
 
 
@@ -31,11 +30,7 @@ async def test_workspace_create_success(mock_get_client: MagicMock) -> None:
     """Test creating a workspace successfully."""
     # Test data
     workspace_id: str = "9018752317"
-    mock_workspace_resp: WorkspaceResp = WorkspaceResp(
-        id=workspace_id,
-        name="Engineering Team",
-        color="#3498db"
-    )
+    mock_workspace_resp: WorkspaceResp = WorkspaceResp(id=workspace_id, name="Engineering Team", color="#3498db")
 
     # Set up mocks
     mock_client: MagicMock = MagicMock()
@@ -77,11 +72,7 @@ async def test_workspace_get_success(mock_get_client: MagicMock) -> None:
     """Test getting a workspace successfully."""
     # Test data
     workspace_id: str = "9018752317"
-    mock_workspace_resp: WorkspaceResp = WorkspaceResp(
-        id=workspace_id,
-        name="Engineering Team",
-        color="#3498db"
-    )
+    mock_workspace_resp: WorkspaceResp = WorkspaceResp(id=workspace_id, name="Engineering Team", color="#3498db")
 
     # Set up mocks
     mock_client: MagicMock = MagicMock()
@@ -122,11 +113,7 @@ async def test_workspace_update_success(mock_get_client: MagicMock) -> None:
     """Test updating a workspace successfully."""
     # Test data
     workspace_id: str = "9018752317"
-    mock_workspace_resp: WorkspaceResp = WorkspaceResp(
-        id=workspace_id,
-        name="Updated Team Name",
-        color="#e74c3c"
-    )
+    mock_workspace_resp: WorkspaceResp = WorkspaceResp(id=workspace_id, name="Updated Team Name", color="#e74c3c")
 
     # Set up mocks
     mock_client: MagicMock = MagicMock()
