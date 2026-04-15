@@ -30,10 +30,11 @@ Quick Examples:
 """
 
 import logging
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from clickup_mcp.models.domain.team import ClickUpTeam
 from clickup_mcp.models.dto.space import SpaceResp
+from clickup_mcp.models.dto.workspace import WorkspaceCreate, WorkspaceResp, WorkspaceUpdate
 from clickup_mcp.types import ClickUpTeamID
 
 if TYPE_CHECKING:
@@ -150,3 +151,147 @@ class TeamAPI:
 
         logger.debug(f"All spaces: {spaces_data}")
         return [SpaceResp(**space_data) for space_data in spaces_data]
+
+    async def create_workspace(self, workspace_create: WorkspaceCreate) -> Optional[WorkspaceResp]:
+        """
+        Create a new workspace (team).
+
+        API:
+            POST /team
+            Docs: https://developer.clickup.com/reference/createteam
+
+        Args:
+            workspace_create: Workspace creation DTO with name, color, and avatar
+
+        Returns:
+            WorkspaceResp: Created workspace details, or None on failure
+
+        Examples:
+            # Python (async)
+            from clickup_mcp.models.dto.workspace import WorkspaceCreate
+
+            workspace_create = WorkspaceCreate(name="Engineering Team", color="#3498db")
+            workspace = await team_api.create_workspace(workspace_create)
+
+            # curl
+            curl -X POST -H "Authorization: pk_..." \
+                 -H "Content-Type: application/json" \
+                 -d '{"name": "Engineering Team", "color": "#3498db"}' \
+                 https://api.clickup.com/api/v2/team
+        """
+        response = await self._client.post("/team", json=workspace_create.to_payload())
+
+        if not response.success or response.status_code != 200:
+            logger.error(f"Failed to create workspace: {response.status_code}")
+            return None
+
+        if response.data is None or not isinstance(response.data, dict):
+            logger.error("Invalid response data for workspace creation")
+            return None
+
+        logger.debug(f"Created workspace: {response.data}")
+        return WorkspaceResp(**response.data)
+
+    async def get_workspace(self, team_id: ClickUpTeamID) -> Optional[WorkspaceResp]:
+        """
+        Get a specific workspace by ID.
+
+        API:
+            GET /team/{team_id}
+
+        Args:
+            team_id: The workspace ID to retrieve
+
+        Returns:
+            WorkspaceResp: Workspace details, or None on failure
+
+        Examples:
+            # Python (async)
+            workspace = await team_api.get_workspace("9018752317")
+
+            # curl
+            curl -H "Authorization: pk_..." \
+                 https://api.clickup.com/api/v2/team/9018752317
+        """
+        response = await self._client.get(f"/team/{team_id}")
+
+        if not response.success or response.status_code != 200:
+            logger.error(f"Failed to get workspace: {response.status_code}")
+            return None
+
+        if response.data is None or not isinstance(response.data, dict):
+            logger.error("Invalid response data for workspace retrieval")
+            return None
+
+        logger.debug(f"Retrieved workspace: {response.data}")
+        return WorkspaceResp(**response.data)
+
+    async def update_workspace(self, team_id: ClickUpTeamID, workspace_update: WorkspaceUpdate) -> Optional[WorkspaceResp]:
+        """
+        Update an existing workspace.
+
+        API:
+            PUT /team/{team_id}
+
+        Args:
+            team_id: The workspace ID to update
+            workspace_update: Workspace update DTO with fields to update
+
+        Returns:
+            WorkspaceResp: Updated workspace details, or None on failure
+
+        Examples:
+            # Python (async)
+            from clickup_mcp.models.dto.workspace import WorkspaceUpdate
+
+            workspace_update = WorkspaceUpdate(name="Updated Team Name")
+            workspace = await team_api.update_workspace("9018752317", workspace_update)
+
+            # curl
+            curl -X PUT -H "Authorization: pk_..." \
+                 -H "Content-Type: application/json" \
+                 -d '{"name": "Updated Team Name"}' \
+                 https://api.clickup.com/api/v2/team/9018752317
+        """
+        response = await self._client.put(f"/team/{team_id}", json=workspace_update.to_payload())
+
+        if not response.success or response.status_code != 200:
+            logger.error(f"Failed to update workspace: {response.status_code}")
+            return None
+
+        if response.data is None or not isinstance(response.data, dict):
+            logger.error("Invalid response data for workspace update")
+            return None
+
+        logger.debug(f"Updated workspace: {response.data}")
+        return WorkspaceResp(**response.data)
+
+    async def delete_workspace(self, team_id: ClickUpTeamID) -> bool:
+        """
+        Delete a workspace.
+
+        API:
+            DELETE /team/{team_id}
+
+        Args:
+            team_id: The workspace ID to delete
+
+        Returns:
+            bool: True if deletion was successful, False otherwise
+
+        Examples:
+            # Python (async)
+            success = await team_api.delete_workspace("9018752317")
+
+            # curl
+            curl -X DELETE -H "Authorization: pk_..." \
+                 https://api.clickup.com/api/v2/team/9018752317
+        """
+        response = await self._client.delete(f"/team/{team_id}")
+
+        if not response.success or response.status_code != 200:
+            logger.error(f"Failed to delete workspace: {response.status_code}")
+            return False
+
+        logger.debug(f"Deleted workspace: {team_id}")
+        return True
