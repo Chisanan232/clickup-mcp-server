@@ -24,12 +24,14 @@ class WorkspaceCreateInput(BaseModel):
         WorkspaceCreateInput(name="Engineering Team", color="#3498db")
     """
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"name": "Engineering Team", "color": "#3498db"}]}
-    }
+    model_config = {"json_schema_extra": {"examples": [{"name": "Engineering Team", "color": "#3498db"}]}}
 
     name: str = Field(
-        ..., min_length=1, max_length=100, description="Workspace name.", examples=["Engineering Team", "Product", "Marketing"]
+        ...,
+        min_length=1,
+        max_length=100,
+        description="Workspace name.",
+        examples=["Engineering Team", "Product", "Marketing"],
     )
     color: Optional[str] = Field(
         None,
@@ -59,9 +61,7 @@ class WorkspaceGetInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"workspace_id": "9018752317"}]}}
 
-    workspace_id: str = Field(
-        ..., min_length=1, description="Workspace ID.", examples=["9018752317", "team_1"]
-    )
+    workspace_id: str = Field(..., min_length=1, description="Workspace ID.", examples=["9018752317", "team_1"])
 
 
 class WorkspaceUpdateInput(BaseModel):
@@ -89,9 +89,7 @@ class WorkspaceUpdateInput(BaseModel):
         }
     }
 
-    workspace_id: str = Field(
-        ..., min_length=1, description="Workspace ID.", examples=["9018752317", "team_1"]
-    )
+    workspace_id: str = Field(..., min_length=1, description="Workspace ID.", examples=["9018752317", "team_1"])
     name: Optional[str] = Field(
         None, min_length=1, max_length=100, description="Workspace name.", examples=["Engineering Team", "Product"]
     )
@@ -123,9 +121,7 @@ class WorkspaceDeleteInput(BaseModel):
 
     model_config = {"json_schema_extra": {"examples": [{"workspace_id": "9018752317"}]}}
 
-    workspace_id: str = Field(
-        ..., min_length=1, description="Workspace ID.", examples=["9018752317", "team_1"]
-    )
+    workspace_id: str = Field(..., min_length=1, description="Workspace ID.", examples=["9018752317", "team_1"])
 
 
 class WorkspaceListInput(BaseModel):
