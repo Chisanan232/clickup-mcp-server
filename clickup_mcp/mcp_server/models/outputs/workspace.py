@@ -8,10 +8,10 @@ Usage Examples:
     # Python - Single item
     from clickup_mcp.mcp_server.models.outputs.workspace import WorkspaceListItem, WorkspaceListResult, WorkspaceResult
     item = WorkspaceListItem(team_id="team_1", name="Engineering")
-    
+
     # Python - List result
     result = WorkspaceListResult(items=[item])
-    
+
     # Python - Individual workspace result
     workspace_result = WorkspaceResult(id="team_1", name="Engineering", color="#3498db")
 """
