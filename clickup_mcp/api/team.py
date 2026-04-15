@@ -34,7 +34,11 @@ from typing import TYPE_CHECKING, List, Optional
 
 from clickup_mcp.models.domain.team import ClickUpTeam
 from clickup_mcp.models.dto.space import SpaceResp
-from clickup_mcp.models.dto.workspace import WorkspaceCreate, WorkspaceResp, WorkspaceUpdate
+from clickup_mcp.models.dto.workspace import (
+    WorkspaceCreate,
+    WorkspaceResp,
+    WorkspaceUpdate,
+)
 from clickup_mcp.types import ClickUpTeamID
 
 if TYPE_CHECKING:
@@ -226,7 +230,9 @@ class TeamAPI:
         logger.debug(f"Retrieved workspace: {response.data}")
         return WorkspaceResp(**response.data)
 
-    async def update_workspace(self, team_id: ClickUpTeamID, workspace_update: WorkspaceUpdate) -> Optional[WorkspaceResp]:
+    async def update_workspace(
+        self, team_id: ClickUpTeamID, workspace_update: WorkspaceUpdate
+    ) -> Optional[WorkspaceResp]:
         """
         Update an existing workspace.
 

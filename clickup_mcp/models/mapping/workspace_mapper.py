@@ -38,14 +38,21 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from clickup_mcp.models.domain.workspace import ClickUpWorkspace
-from clickup_mcp.models.dto.workspace import WorkspaceCreate, WorkspaceResp, WorkspaceUpdate
+from clickup_mcp.models.dto.workspace import (
+    WorkspaceCreate,
+    WorkspaceResp,
+    WorkspaceUpdate,
+)
 
 if TYPE_CHECKING:
     from clickup_mcp.mcp_server.models.inputs.workspace import (
         WorkspaceCreateInput,
         WorkspaceUpdateInput,
     )
-    from clickup_mcp.mcp_server.models.outputs.workspace import WorkspaceListItem, WorkspaceResult
+    from clickup_mcp.mcp_server.models.outputs.workspace import (
+        WorkspaceListItem,
+        WorkspaceResult,
+    )
 
 
 class WorkspaceMapper:
@@ -124,12 +131,7 @@ class WorkspaceMapper:
             # workspace.name == "Engineering Team"
             # workspace.color == "#3498db"
         """
-        return ClickUpWorkspace(
-            id="temp",
-            name=input.name,
-            color=input.color,
-            avatar=input.avatar
-        )
+        return ClickUpWorkspace(id="temp", name=input.name, color=input.color, avatar=input.avatar)
 
     @staticmethod
     def from_update_input(input: "WorkspaceUpdateInput") -> ClickUpWorkspace:
@@ -167,12 +169,7 @@ class WorkspaceMapper:
             # workspace.id == "9018752317"
             # workspace.name == "Updated Team Name"
         """
-        return ClickUpWorkspace(
-            id=input.workspace_id,
-            name=input.name or "",
-            color=input.color,
-            avatar=input.avatar
-        )
+        return ClickUpWorkspace(id=input.workspace_id, name=input.name or "", color=input.color, avatar=input.avatar)
 
     @staticmethod
     def to_domain(resp: WorkspaceResp) -> ClickUpWorkspace:
@@ -221,7 +218,7 @@ class WorkspaceMapper:
             color=resp.color,
             avatar=resp.avatar,
             members=resp.members or [],
-            settings=resp.settings
+            settings=resp.settings,
         )
 
     @staticmethod
@@ -257,11 +254,7 @@ class WorkspaceMapper:
             # Python - Use with API client
             response = await client.team.create(workspace_create=create_dto)
         """
-        return WorkspaceCreate(
-            name=workspace.name,
-            color=workspace.color,
-            avatar=workspace.avatar
-        )
+        return WorkspaceCreate(name=workspace.name, color=workspace.color, avatar=workspace.avatar)
 
     @staticmethod
     def to_update_dto(workspace: ClickUpWorkspace) -> WorkspaceUpdate:
@@ -299,11 +292,7 @@ class WorkspaceMapper:
                 workspace_update=update_dto
             )
         """
-        return WorkspaceUpdate(
-            name=workspace.name,
-            color=workspace.color,
-            avatar=workspace.avatar
-        )
+        return WorkspaceUpdate(name=workspace.name, color=workspace.color, avatar=workspace.avatar)
 
     @staticmethod
     def to_workspace_result_output(workspace: ClickUpWorkspace) -> "WorkspaceResult":
@@ -346,12 +335,7 @@ class WorkspaceMapper:
         """
         from clickup_mcp.mcp_server.models.outputs.workspace import WorkspaceResult
 
-        return WorkspaceResult(
-            id=workspace.id,
-            name=workspace.name,
-            color=workspace.color,
-            avatar=workspace.avatar
-        )
+        return WorkspaceResult(id=workspace.id, name=workspace.name, color=workspace.color, avatar=workspace.avatar)
 
     @staticmethod
     def to_workspace_list_item_output(workspace: ClickUpWorkspace) -> "WorkspaceListItem":
