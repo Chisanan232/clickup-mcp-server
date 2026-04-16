@@ -183,7 +183,7 @@ class TeamAPI:
                  -d '{"name": "Engineering Team", "color": "#3498db"}' \
                  https://api.clickup.com/api/v2/team
         """
-        response = await self._client.post("/team", json=workspace_create.to_payload())
+        response = await self._client.post("/team", data=workspace_create.to_payload())
 
         if not response.success or response.status_code != 200:
             logger.error(f"Failed to create workspace: {response.status_code}")
@@ -259,7 +259,7 @@ class TeamAPI:
                  -d '{"name": "Updated Team Name"}' \
                  https://api.clickup.com/api/v2/team/9018752317
         """
-        response = await self._client.put(f"/team/{team_id}", json=workspace_update.to_payload())
+        response = await self._client.put(f"/team/{team_id}", data=workspace_update.to_payload())
 
         if not response.success or response.status_code != 200:
             logger.error(f"Failed to update workspace: {response.status_code}")
