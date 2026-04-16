@@ -91,9 +91,7 @@ class ClickUpWorkspace(BaseDomainModel):
     workspace_id: str = Field(alias="id", description="The unique identifier for the workspace")
     name: str = Field(description="The name of the workspace")
     color: str | None = Field(
-        default=None,
-        description="The workspace color in hex format for UI",
-        pattern=r"^#[0-9A-Fa-f]{6}$"
+        default=None, description="The workspace color in hex format for UI", pattern=r"^#[0-9A-Fa-f]{6}$"
     )
     avatar: str | None = Field(default=None, description="The workspace avatar URL")
     members: list[dict[str, Any]] = Field(default_factory=list, description="List of workspace members")
