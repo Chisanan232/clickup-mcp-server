@@ -44,11 +44,7 @@ class WorkspaceCreate(BaseRequestDTO):
     """
 
     name: str = Field(description=PROPERTY_NAME_DESCRIPTION)
-    color: str | None = Field(
-        default=None,
-        description="Hex color for the workspace",
-        pattern=r"^#[0-9A-Fa-f]{6}$"
-    )
+    color: str | None = Field(default=None, description="Hex color for the workspace", pattern=r"^#[0-9A-Fa-f]{6}$")
     avatar: str | None = Field(default=None, description="Avatar URL for the workspace")
 
 
@@ -70,11 +66,7 @@ class WorkspaceUpdate(BaseRequestDTO):
     """
 
     name: str | None = Field(default=None, description=PROPERTY_NAME_DESCRIPTION)
-    color: str | None = Field(
-        default=None,
-        description="Hex color for the workspace",
-        pattern=r"^#[0-9A-Fa-f]{6}$"
-    )
+    color: str | None = Field(default=None, description="Hex color for the workspace", pattern=r"^#[0-9A-Fa-f]{6}$")
     avatar: str | None = Field(default=None, description="Avatar URL for the workspace")
 
 
