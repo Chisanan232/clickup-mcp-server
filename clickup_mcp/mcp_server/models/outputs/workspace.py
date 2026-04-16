@@ -45,7 +45,9 @@ class WorkspaceListResult(BaseModel):
         examples=[[{"team_id": "team_1", "name": "Engineering"}]],
     )
 
-    model_config = ConfigDict(json_schema_extra={"examples": [{"items": [{"team_id": "team_1", "name": "Engineering"}]}]})
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"items": [{"team_id": "team_1", "name": "Engineering"}]}]}
+    )
 
 
 class WorkspaceResult(BaseModel):
