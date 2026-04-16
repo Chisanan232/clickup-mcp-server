@@ -136,10 +136,7 @@ async def test_workspace_get_with_avatar(mock_get_client: MagicMock) -> None:
     # Test data
     workspace_id: str = "9018752317"
     mock_workspace_resp: WorkspaceResp = WorkspaceResp(
-        id=workspace_id,
-        name="Engineering Team",
-        color="#3498db",
-        avatar="https://example.com/avatar.png"
+        id=workspace_id, name="Engineering Team", color="#3498db", avatar="https://example.com/avatar.png"
     )
 
     # Set up mocks
@@ -279,9 +276,7 @@ async def test_workspace_create_with_avatar(mock_get_client: MagicMock) -> None:
     mock_get_client.return_value = mock_client
 
     # Call the function
-    result = await workspace_create(
-        WorkspaceCreateInput(name="Engineering Team", color="#3498db", avatar=avatar_url)
-    )
+    result = await workspace_create(WorkspaceCreateInput(name="Engineering Team", color="#3498db", avatar=avatar_url))
 
     # Assertions
     assert result.ok is True
@@ -295,7 +290,9 @@ async def test_workspace_create_with_name_only(mock_get_client: MagicMock) -> No
     """Test creating a workspace with only name."""
     # Test data
     workspace_id: str = "9018752317"
-    mock_workspace_resp: WorkspaceResp = WorkspaceResp(id=workspace_id, name="Engineering Team", color=None, avatar=None)
+    mock_workspace_resp: WorkspaceResp = WorkspaceResp(
+        id=workspace_id, name="Engineering Team", color=None, avatar=None
+    )
 
     # Set up mocks
     mock_client: MagicMock = MagicMock()
