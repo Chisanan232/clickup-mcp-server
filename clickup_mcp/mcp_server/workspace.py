@@ -5,6 +5,7 @@ This module exposes workspace tools following the scope.operation naming:
 """
 
 from clickup_mcp.client import ClickUpAPIClientFactory
+from clickup_mcp.exceptions import ResourceNotFoundError
 from clickup_mcp.mcp_server.errors import handle_tool_errors
 from clickup_mcp.mcp_server.models.inputs.workspace import (
     WorkspaceCreateInput,
@@ -164,7 +165,7 @@ async def workspace_get(input: WorkspaceGetInput) -> WorkspaceResult:
         workspace_resp = await client.team.get_workspace(input.workspace_id)
 
     if workspace_resp is None:
-        raise Exception(f"Failed to get workspace: {input.workspace_id}")
+        raise ResourceNotFoundError(f"Workspace not found: {input.workspace_id}")
 
     # Convert API response to domain entity
     workspace_domain = WorkspaceMapper.to_domain(workspace_resp)
@@ -219,7 +220,7 @@ async def workspace_update(input: WorkspaceUpdateInput) -> WorkspaceResult:
         workspace_resp = await client.team.update_workspace(input.workspace_id, workspace_update_dto)
 
     if workspace_resp is None:
-        raise Exception(f"Failed to update workspace: {input.workspace_id}")
+        raise ResourceNotFoundError(f"Workspace not found: {input.workspace_id}")
 
     # Convert API response to domain entity
     workspace_domain = WorkspaceMapper.to_domain(workspace_resp)
@@ -261,11 +262,10 @@ async def workspace_delete(input: WorkspaceDeleteInput) -> DeletionResult:
         # Python (async)
         response = await workspace_delete(WorkspaceDeleteInput(workspace_id="9018752317"))
         if response.ok:
-            print(response.result.ok)
+            print(response.result.deleted)
     """
     # Call API
     client = ClickUpAPIClientFactory.get()
-    async with client:
-        success = await client.team.delete_workspace(input.workspace_id)
+    success = await client.team.delete_workspace(input.workspace_id)
 
-    return DeletionResult(ok=success)
+    return DeletionResult(deleted=success)
