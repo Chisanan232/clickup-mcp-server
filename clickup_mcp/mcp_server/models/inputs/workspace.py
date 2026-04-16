@@ -5,7 +5,7 @@ High-signal schemas for FastMCP: include constraints and examples to aid LLMs.
 
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class WorkspaceCreateInput(BaseModel):
@@ -24,9 +24,9 @@ class WorkspaceCreateInput(BaseModel):
         WorkspaceCreateInput(name="Engineering Team", color="#3498db")
     """
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"name": "Engineering Team", "color": "#3498db"}]}
-    }
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"name": "Engineering Team", "color": "#3498db"}]}
+    )
 
     name: str = Field(
         ..., min_length=1, max_length=100, description="Workspace name.", examples=["Engineering Team", "Product", "Marketing"]
@@ -57,7 +57,7 @@ class WorkspaceGetInput(BaseModel):
         WorkspaceGetInput(workspace_id="9018752317")
     """
 
-    model_config = {"json_schema_extra": {"examples": [{"workspace_id": "9018752317"}]}}
+    model_config = ConfigDict(json_schema_extra={"examples": [{"workspace_id": "9018752317"}]})
 
     workspace_id: str = Field(
         ..., min_length=1, description="Workspace ID.", examples=["9018752317", "team_1"]
@@ -80,14 +80,14 @@ class WorkspaceUpdateInput(BaseModel):
         WorkspaceUpdateInput(workspace_id="9018752317", name="Updated Team Name")
     """
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {"workspace_id": "9018752317", "name": "Updated Team Name"},
                 {"workspace_id": "9018752317", "color": "#e74c3c"},
             ]
         }
-    }
+    )
 
     workspace_id: str = Field(
         ..., min_length=1, description="Workspace ID.", examples=["9018752317", "team_1"]
@@ -121,7 +121,7 @@ class WorkspaceDeleteInput(BaseModel):
         WorkspaceDeleteInput(workspace_id="9018752317")
     """
 
-    model_config = {"json_schema_extra": {"examples": [{"workspace_id": "9018752317"}]}}
+    model_config = ConfigDict(json_schema_extra={"examples": [{"workspace_id": "9018752317"}]})
 
     workspace_id: str = Field(
         ..., min_length=1, description="Workspace ID.", examples=["9018752317", "team_1"]
@@ -138,4 +138,4 @@ class WorkspaceListInput(BaseModel):
         WorkspaceListInput()
     """
 
-    model_config = {"json_schema_extra": {"examples": [{}]}}
+    model_config = ConfigDict(json_schema_extra={"examples": [{}]})
