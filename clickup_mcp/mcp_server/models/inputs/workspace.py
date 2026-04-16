@@ -24,9 +24,7 @@ class WorkspaceCreateInput(BaseModel):
         WorkspaceCreateInput(name="Engineering Team", color="#3498db")
     """
 
-    model_config = ConfigDict(
-        json_schema_extra={"examples": [{"name": "Engineering Team", "color": "#3498db"}]}
-    )
+    model_config = ConfigDict(json_schema_extra={"examples": [{"name": "Engineering Team", "color": "#3498db"}]})
 
     name: str = Field(
         ...,
