@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 
 # Workspace MCP API
 
-Tools for discovering workspaces (a.k.a. teams) accessible by the token.
+Tools for managing workspaces (a.k.a. teams) including discovery and CRUD operations.
 
 :::note Errors and retries
 All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
@@ -46,6 +46,143 @@ Lists all workspaces (teams) the current token can access. This is a read-only d
 ```
 
 - **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### workspace.create
+
+Creates a new workspace (team) with a name, optional color, and avatar.
+
+- **Parameters**: [WorkspaceCreateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/workspace.py)
+
+```jsonc
+{
+  "name": "Engineering Team", // Required: Workspace name
+  "color": "#3498db", // Optional: Hex color for workspace UI
+  "avatar": "https://example.com/avatar.png" // Optional: Avatar URL
+}
+```
+
+- **Returns**: [WorkspaceResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/workspace.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "9018752317", // Workspace ID
+    "name": "Engineering Team",
+    "color": "#3498db",
+    "avatar": "https://example.com/avatar.png"
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `VALIDATION_ERROR` (invalid input)
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### workspace.get
+
+Retrieves details for a specific workspace by ID.
+
+- **Parameters**: [WorkspaceGetInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/workspace.py)
+
+```jsonc
+{
+  "workspace_id": "9018752317" // Required: Workspace ID to retrieve
+}
+```
+
+- **Returns**: [WorkspaceResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/workspace.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "9018752317",
+    "name": "Engineering Team",
+    "color": "#3498db",
+    "avatar": "https://example.com/avatar.png"
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `NOT_FOUND` (workspace doesn't exist)
+  - `VALIDATION_ERROR` (invalid input)
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### workspace.update
+
+Updates an existing workspace's name, color, or avatar.
+
+- **Parameters**: [WorkspaceUpdateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/workspace.py)
+
+```jsonc
+{
+  "workspace_id": "9018752317", // Required: Workspace ID to update
+  "name": "Updated Team Name", // Optional: New workspace name
+  "color": "#e74c3c", // Optional: New hex color
+  "avatar": "https://example.com/new-avatar.png" // Optional: New avatar URL
+}
+```
+
+- **Returns**: [WorkspaceResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/workspace.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "9018752317",
+    "name": "Updated Team Name",
+    "color": "#e74c3c",
+    "avatar": "https://example.com/new-avatar.png"
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `NOT_FOUND` (workspace doesn't exist)
+  - `VALIDATION_ERROR` (invalid input)
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### workspace.delete
+
+Deletes a workspace by ID. This action cannot be undone.
+
+- **Parameters**: [WorkspaceDeleteInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/workspace.py)
+
+```jsonc
+{
+  "workspace_id": "9018752317" // Required: Workspace ID to delete
+}
+```
+
+- **Returns**: [DeletionResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "ok": true // True if deletion succeeded
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `NOT_FOUND` (workspace doesn't exist)
+  - `VALIDATION_ERROR` (invalid input)
   - `AUTH_ERROR` (401), `FORBIDDEN` (403)
   - `RATE_LIMIT` (429)
   - `UPSTREAM_ERROR` (5xx/timeout)

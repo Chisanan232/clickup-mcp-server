@@ -18,7 +18,7 @@ Usage Examples:
 
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class WorkspaceListItem(BaseModel):
@@ -48,12 +48,14 @@ class WorkspaceListResult(BaseModel):
         examples=[[{"team_id": "team_1", "name": "Engineering"}]],
     )
 
-    model_config = {"json_schema_extra": {"examples": [{"items": [{"team_id": "team_1", "name": "Engineering"}]}]}}
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"items": [{"team_id": "team_1", "name": "Engineering"}]}]}
+    )
 
 
 class WorkspaceResult(BaseModel):
     """
-    Result model for individual workspace operations (create, get, update).
+    Result model for single workspace operations (create, get, update).
 
     Attributes:
         id: Workspace ID
@@ -62,28 +64,13 @@ class WorkspaceResult(BaseModel):
         avatar: Workspace avatar URL
     """
 
-    id: str = Field(..., description="Workspace ID", examples=["9018752317", "team_1"])
-    name: str = Field(..., description="Workspace name", examples=["Engineering", "Ops"])
+    id: str = Field(..., description="Workspace ID", examples=["9018752317"])
+    name: str = Field(..., description="Workspace name", examples=["Engineering Team"])
     color: Optional[str] = Field(
-        default=None,
-        description="Workspace color in hex format",
-        examples=["#3498db", "#e74c3c"],
+        None, description="Workspace color in hex format", examples=["#3498db"], pattern=r"^#[0-9A-Fa-f]{6}$"
     )
-    avatar: Optional[str] = Field(
-        default=None,
-        description="Workspace avatar URL",
-        examples=["https://example.com/avatar.png"],
-    )
+    avatar: Optional[str] = Field(None, description="Workspace avatar URL", examples=["https://example.com/avatar.png"])
 
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "id": "9018752317",
-                    "name": "Engineering",
-                    "color": "#3498db",
-                    "avatar": "https://example.com/avatar.png",
-                }
-            ]
-        }
-    }
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"id": "9018752317", "name": "Engineering Team", "color": "#3498db"}]}
+    )
