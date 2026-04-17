@@ -313,3 +313,55 @@ class TaskAddDependencyInput(BaseModel):
         description="Dependency type (waiting_on/blocking).",
         examples=["waiting_on", "blocking"],
     )
+
+
+class TaskAddAssigneeInput(BaseModel):
+    """
+    Add an assignee to a task. HTTP: POST /task/{task_id}/member/{member_id}
+
+    When to use: Assign a user to a task. This adds the user to the task's assignees list.
+
+    Attributes:
+        task_id: Task ID to assign user to
+        assignee_id: User ID to assign to the task
+
+    Examples:
+        TaskAddAssigneeInput(task_id="task_123", assignee_id=42)
+    """
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{"task_id": "task_123", "assignee_id": 42}, {"task_id": "task_123", "assignee_id": "usr_abc"}]
+        }
+    }
+
+    task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"])
+    assignee_id: int | str = Field(
+        ..., description="User ID to assign to the task.", examples=[42, "usr_abc"]
+    )
+
+
+class TaskRemoveAssigneeInput(BaseModel):
+    """
+    Remove an assignee from a task. HTTP: DELETE /task/{task_id}/member/{member_id}
+
+    When to use: Unassign a user from a task. This removes the user from the task's assignees list.
+
+    Attributes:
+        task_id: Task ID to remove user from
+        assignee_id: User ID to remove from the task
+
+    Examples:
+        TaskRemoveAssigneeInput(task_id="task_123", assignee_id=42)
+    """
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{"task_id": "task_123", "assignee_id": 42}, {"task_id": "task_123", "assignee_id": "usr_abc"}]
+        }
+    }
+
+    task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"])
+    assignee_id: int | str = Field(
+        ..., description="User ID to remove from the task.", examples=[42, "usr_abc"]
+    )
