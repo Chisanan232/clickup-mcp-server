@@ -289,3 +289,102 @@ Permanently deletes a task. This action cannot be undone and removes the task fr
   - `NOT_FOUND` (404) when task does not exist
   - `RATE_LIMIT` (429)
   - `UPSTREAM_ERROR` (5xx/timeout)
+
+### task.add_assignee
+
+Adds an assignee to a task. This adds the user to the task's assignees list without removing existing assignees. This operation modifies ClickUp data.
+- **Parameters**: [TaskAddAssigneeInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/task.py)
+
+```jsonc
+{
+  "task_id": "t1", // Task ID
+  "assignee_id": 42 // User ID to assign (integer or string)
+}
+```
+
+- **Returns**: [OperationResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "ok": true // Operation succeeded
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when task or user is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### task.remove_assignee
+
+Removes an assignee from a task. This removes the user from the task's assignees list without affecting other assignees. This operation modifies ClickUp data.
+- **Parameters**: [TaskRemoveAssigneeInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/task.py)
+
+```jsonc
+{
+  "task_id": "t1", // Task ID
+  "assignee_id": 42 // User ID to remove (integer or string)
+}
+```
+
+- **Returns**: [OperationResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "ok": true // Operation succeeded
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when task or user is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### task.search
+
+Searches tasks with natural language query combined with structured filters. Supports text search with status, priority, assignee, and date range filters. Read-only.
+- **Parameters**: [TaskSearchInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/task.py)
+
+```jsonc
+{
+  "query": "urgent bugs", // Natural language search query
+  "team_id": "team_1", // Filter by team/workspace ID
+  "space_id": "space_1", // Optional filter by space ID
+  "list_id": "list_1", // Optional filter by list ID
+  "statuses": ["open", "in progress"], // Optional filter by status names
+  "priorities": [1, 2], // Optional filter by priority levels (1-4)
+  "assignees": [42], // Optional filter by assignee user IDs
+  "due_date_from": 1702080000000, // Optional filter by due date range start (epoch ms)
+  "due_date_to": 1702166400000, // Optional filter by due date range end (epoch ms)
+  "page": 0, // Optional page number (0-indexed)
+  "limit": 50 // Optional page size (cap 100)
+}
+```
+
+- **Returns**: [TaskListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/task.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "items": [
+      {
+        "id": "t1", // Task ID
+        "name": "Fix urgent bug", // Title
+        "status": "open", // Status
+        "list_id": "L1", // Home list
+        "url": "https://app.clickup.com/t/t1" // URL
+      }
+    ]
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when team_id is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
