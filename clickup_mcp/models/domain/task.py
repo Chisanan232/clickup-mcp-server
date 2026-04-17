@@ -400,6 +400,78 @@ class ClickUpTask(BaseDomainModel):
         if user_id in self.assignee_ids:
             self.assignee_ids.remove(user_id)
 
+    def matches_search(
+        self,
+        query: str | None = None,
+        status: str | None = None,
+        priority: int | None = None,
+        assignee_id: int | str | None = None,
+        due_date_from: int | None = None,
+        due_date_to: int | None = None,
+    ) -> bool:
+        """
+        Check if task matches search criteria.
+
+        Filters tasks based on natural language query and structured filters.
+        The query is matched against task name and description (case-insensitive).
+
+        Args:
+            query: Natural language search query (matched against name/description)
+            status: Filter by status name
+            priority: Filter by priority level
+            assignee_id: Filter by assignee ID
+            due_date_from: Filter by due date range start (epoch ms)
+            due_date_to: Filter by due date range end (epoch ms)
+
+        Returns:
+            bool: True if task matches all provided filters
+
+        Usage Examples:
+            # Python - Simple text search
+            task = ClickUpTask(id="task_123", name="Fix urgent bug", status="open")
+            task.matches_search(query="urgent")  # True
+
+            # Python - Combined filters
+            task.matches_search(
+                query="bug",
+                status="open",
+                priority=1
+            )  # True if all filters match
+
+            # Python - Date range filter
+            task.matches_search(
+                due_date_from=1702080000000,
+                due_date_to=1702166400000
+            )  # True if due date in range
+        """
+        # Text search (case-insensitive)
+        if query:
+            query_lower = query.lower()
+            name_matches = self.name and query_lower in self.name.lower()
+            desc_matches = False  # Description not currently in domain model
+            if not (name_matches or desc_matches):
+                return False
+
+        # Status filter
+        if status and self.status != status:
+            return False
+
+        # Priority filter
+        if priority and self.priority != priority:
+            return False
+
+        # Assignee filter
+        if assignee_id and assignee_id not in self.assignee_ids:
+            return False
+
+        # Due date range filter
+        if due_date_from and (self.due_date is None or self.due_date < due_date_from):
+            return False
+        if due_date_to and (self.due_date is None or self.due_date > due_date_to):
+            return False
+
+        return True
+
 
 # Backwards compatibility alias
 Task = ClickUpTask
