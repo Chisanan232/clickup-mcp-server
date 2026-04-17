@@ -350,6 +350,56 @@ class ClickUpTask(BaseDomainModel):
         # Replace existing assignees with provided
         self.assignee_ids = list(user_ids)
 
+    def add_assignee(self, user_id: int | str) -> None:
+        """
+        Add a single assignee to the task.
+
+        Adds the user ID to the assignees list if not already assigned.
+        Does not remove existing assignees.
+
+        Args:
+            user_id: User ID to add to the task
+
+        Usage Examples:
+            # Python - Add a single assignee
+            task = ClickUpTask(id="task_123", name="My Task")
+            task.add_assignee("user_789")
+            print(task.assignee_ids)  # ["user_789"]
+
+            # Python - Add another assignee (preserves existing)
+            task.add_assignee("user_790")
+            print(task.assignee_ids)  # ["user_789", "user_790"]
+
+            # Python - Adding duplicate user has no effect
+            task.add_assignee("user_789")
+            print(task.assignee_ids)  # ["user_789", "user_790"] (no duplicate)
+        """
+        if user_id not in self.assignee_ids:
+            self.assignee_ids.append(user_id)
+
+    def remove_assignee(self, user_id: int | str) -> None:
+        """
+        Remove a single assignee from the task.
+
+        Removes the user ID from the assignees list if present.
+        Does not affect other assignees.
+
+        Args:
+            user_id: User ID to remove from the task
+
+        Usage Examples:
+            # Python - Remove a single assignee
+            task = ClickUpTask(id="task_123", name="My Task", assignee_ids=["user_789", "user_790"])
+            task.remove_assignee("user_789")
+            print(task.assignee_ids)  # ["user_790"]
+
+            # Python - Removing non-existent user has no effect
+            task.remove_assignee("user_999")
+            print(task.assignee_ids)  # ["user_790"] (unchanged)
+        """
+        if user_id in self.assignee_ids:
+            self.assignee_ids.remove(user_id)
+
 
 # Backwards compatibility alias
 Task = ClickUpTask
