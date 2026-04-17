@@ -509,3 +509,36 @@ class TaskAPI:
         """
         response = await self._client.delete(f"/task/{task_id}/member/{assignee_id}")
         return response.success and response.status_code in (200, 204)
+
+    async def search(self, query: dict[str, Any]) -> Optional[TaskResp]:
+        """
+        Search tasks with natural language query and filters.
+
+        API:
+            GET /team/{team_id}/task with query parameters
+
+        Args:
+            query: Search query parameters including text query and filters
+
+        Returns:
+            Optional[TaskResp]: Task response with search results, or None if search failed
+
+        Examples:
+            # Python (async)
+            results = await task_api.search({"query": "urgent bugs", "priorities": [1, 2]})
+
+            # curl
+            curl -H "Authorization: pk_..." \
+              "https://api.clickup.com/api/v2/team/123/task?query=urgent%20bugs&priorities[]=1&priorities[]=2"
+
+            # wget
+            wget --header="Authorization: pk_..." \
+              "https://api.clickup.com/api/v2/team/123/task?query=urgent%20bugs&priorities[]=1&priorities[]=2"
+        """
+        team_id = query.get("team_id")
+        if not team_id:
+            raise ValueError("team_id is required for search")
+        response = await self._client.get(f"/team/{team_id}/task", params=query)
+        if response.success and response.data:
+            return TaskResp(**response.data)
+        return None
