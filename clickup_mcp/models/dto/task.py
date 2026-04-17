@@ -355,3 +355,57 @@ class AssignmentResponse(BaseResponseDTO):
     """
 
     success: bool = Field(description="Whether the assignment operation succeeded")
+
+
+class TaskSearchQuery(BaseRequestDTO):
+    """
+    DTO for task search queries.
+
+    API:
+        GET /team/{team_id}/task with query parameters
+
+    Notes:
+        Supports natural language search combined with structured filters.
+
+    Attributes:
+        query: Natural language search query
+        team_id: Filter by team/workspace ID
+        space_id: Filter by space ID
+        list_id: Filter by list ID
+        statuses: Filter by status names
+        priorities: Filter by priority levels (1-4)
+        assignees: Filter by assignee user IDs
+        due_date_from: Filter by due date range start (epoch ms)
+        due_date_to: Filter by due date range end (epoch ms)
+        page: Page number (0-indexed)
+        limit: Page size (cap 100)
+
+    Examples:
+        # Python - Build search query
+        TaskSearchQuery(query="urgent bugs", priorities=[1, 2], limit=50)
+    """
+
+    query: str | None = Field(default=None, description="Natural language search query")
+    team_id: str | None = Field(default=None, description="Filter by team/workspace ID")
+    space_id: str | None = Field(default=None, description="Filter by space ID")
+    list_id: str | None = Field(default=None, description="Filter by list ID")
+    statuses: List[str] = Field(default_factory=list, description="Filter by status names")
+    priorities: List[int] = Field(default_factory=list, description="Filter by priority levels (1-4)")
+    assignees: List[int | str] = Field(default_factory=list, description="Filter by assignee user IDs")
+    due_date_from: EpochMs | None = Field(default=None, description="Filter by due date range start (epoch ms)")
+    due_date_to: EpochMs | None = Field(default=None, description="Filter by due date range end (epoch ms)")
+    page: int = Field(0, ge=0, description="Page number (0-indexed)")
+    limit: int = Field(100, ge=1, le=100, description="Page size (cap 100)")
+
+    def to_query(self) -> dict[str, Any]:
+        """
+        Convert the DTO into ClickUp search query parameters.
+
+        Returns:
+            dict[str, Any]: JSON-serializable query parameters with None values removed
+
+        Examples:
+            TaskSearchQuery(query="bugs", priorities=[1]).to_query()
+        """
+        data = self.model_dump(exclude_none=True, by_alias=True)
+        return data
