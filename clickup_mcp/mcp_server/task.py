@@ -6,6 +6,7 @@ Tools:
 - task.set_custom_field / task.clear_custom_field
 - task.add_dependency
 - task.add_assignee / task.remove_assignee
+- task.search
 """
 
 from clickup_mcp.client import ClickUpAPIClientFactory
@@ -19,6 +20,7 @@ from clickup_mcp.mcp_server.models.inputs.task import (
     TaskGetInput,
     TaskListInListInput,
     TaskRemoveAssigneeInput,
+    TaskSearchInput,
     TaskSetCustomFieldInput,
     TaskUpdateInput,
 )
@@ -28,7 +30,7 @@ from clickup_mcp.mcp_server.models.outputs.task import (
     TaskListResult,
     TaskResult,
 )
-from clickup_mcp.models.dto.task import TaskListQuery, TaskResp
+from clickup_mcp.models.dto.task import TaskListQuery, TaskResp, TaskSearchQuery
 from clickup_mcp.models.mapping.task_mapper import TaskMapper
 
 from .app import mcp
@@ -491,3 +493,71 @@ async def task_remove_assignee(input: TaskRemoveAssigneeInput) -> OperationResul
     client = ClickUpAPIClientFactory.get()
     success = await client.task.remove_assignee(input.task_id, input.assignee_id)
     return OperationResult(ok=success)
+
+
+@mcp.tool(
+    title="Search Tasks",
+    name="task.search",
+    description=(
+        "Search tasks with natural language query and filters. "
+        "Supports text search combined with status, priority, assignee, and date filters. "
+        "HTTP: GET /team/{team_id}/task with query parameters."
+    ),
+    annotations={
+        "readOnlyHint": True,
+        "openWorldHint": True,
+    },
+)
+@handle_tool_errors
+async def task_search(input: TaskSearchInput) -> TaskListResult:
+    """
+    Search tasks with natural language query and filters.
+
+    API:
+        GET /team/{team_id}/task with query parameters
+
+    Args:
+        input: TaskSearchInput with query text and optional filters
+
+    Returns:
+        TaskListResult: List of matching tasks
+
+    Error Handling:
+        This function is wrapped by `@handle_tool_errors` and returns a ToolResponse at runtime.
+        On failure, `ok=False` with issues (e.g., VALIDATION_ERROR, NOT_FOUND, PERMISSION_DENIED).
+
+    Examples:
+        # Python (async)
+        response = await task_search(TaskSearchInput(query="urgent bugs", team_id="team_123", priorities=[1, 2]))
+        if response.ok and response.result:
+            for task in response.result.tasks:
+                print(task.name)
+    """
+    client = ClickUpAPIClientFactory.get()
+    # Input -> DTO
+    dto = TaskSearchQuery(
+        query=input.query,
+        team_id=input.team_id,
+        space_id=input.space_id,
+        list_id=input.list_id,
+        statuses=input.statuses,
+        priorities=input.priorities,
+        assignees=input.assignees,
+        due_date_from=input.due_date_from,
+        due_date_to=input.due_date_to,
+        page=input.page,
+        limit=input.limit,
+    )
+    query_params = dto.to_query()
+    async with client:
+        resp = await client.task.search(query_params)
+    if not resp:
+        raise ClickUpAPIError("Search tasks failed")
+    # DTO -> Domain -> Output
+    tasks = []
+    if hasattr(resp, "tasks") and resp.tasks:
+        for task_dto in resp.tasks:
+            domain = TaskMapper.to_domain(task_dto)
+            output = TaskMapper.to_task_result_output(domain, url=task_dto.url if hasattr(task_dto, "url") else None)
+            tasks.append(output)
+    return TaskListResult(tasks=tasks)
