@@ -5,17 +5,20 @@ Tools:
 - task.list_in_list
 - task.set_custom_field / task.clear_custom_field
 - task.add_dependency
+- task.add_assignee / task.remove_assignee
 """
 
 from clickup_mcp.client import ClickUpAPIClientFactory
 from clickup_mcp.exceptions import ClickUpAPIError, ResourceNotFoundError
 from clickup_mcp.mcp_server.errors import handle_tool_errors
 from clickup_mcp.mcp_server.models.inputs.task import (
+    TaskAddAssigneeInput,
     TaskAddDependencyInput,
     TaskClearCustomFieldInput,
     TaskCreateInput,
     TaskGetInput,
     TaskListInListInput,
+    TaskRemoveAssigneeInput,
     TaskSetCustomFieldInput,
     TaskUpdateInput,
 )
@@ -406,3 +409,85 @@ def _taskresp_to_result(resp: TaskResp) -> TaskResult:
 def _taskresp_to_list_item(resp: TaskResp) -> TaskListItem:
     dom = TaskMapper.to_domain(resp)
     return TaskMapper.to_task_list_item_output(dom, url=resp.url)
+
+
+@mcp.tool(
+    title="Add Assignee",
+    name="task.add_assignee",
+    description=(
+        "Add an assignee to a task. This adds the user to the task's assignees list. "
+        "HTTP: POST /task/{task_id}/member/{member_id}."
+    ),
+    annotations={
+        "destructiveHint": False,
+        "openWorldHint": True,
+    },
+)
+@handle_tool_errors
+async def task_add_assignee(input: TaskAddAssigneeInput) -> OperationResult:
+    """
+    Add an assignee to a task.
+
+    API:
+        POST /task/{task_id}/member/{member_id}
+
+    Args:
+        input: TaskAddAssigneeInput with task_id and assignee_id
+
+    Returns:
+        OperationResult: Success status
+
+    Error Handling:
+        This function is wrapped by `@handle_tool_errors` and returns a ToolResponse at runtime.
+        On failure, `ok=False` with issues (e.g., NOT_FOUND, PERMISSION_DENIED, RATE_LIMIT).
+
+    Examples:
+        # Python (async)
+        response = await task_add_assignee(TaskAddAssigneeInput(task_id="task_123", assignee_id=42))
+        if response.ok:
+            print(response.result.ok)
+    """
+    client = ClickUpAPIClientFactory.get()
+    success = await client.task.add_assignee(input.task_id, input.assignee_id)
+    return OperationResult(ok=success)
+
+
+@mcp.tool(
+    title="Remove Assignee",
+    name="task.remove_assignee",
+    description=(
+        "Remove an assignee from a task. This removes the user from the task's assignees list. "
+        "HTTP: DELETE /task/{task_id}/member/{member_id}."
+    ),
+    annotations={
+        "destructiveHint": False,
+        "openWorldHint": True,
+    },
+)
+@handle_tool_errors
+async def task_remove_assignee(input: TaskRemoveAssigneeInput) -> OperationResult:
+    """
+    Remove an assignee from a task.
+
+    API:
+        DELETE /task/{task_id}/member/{member_id}
+
+    Args:
+        input: TaskRemoveAssigneeInput with task_id and assignee_id
+
+    Returns:
+        OperationResult: Success status
+
+    Error Handling:
+        This function is wrapped by `@handle_tool_errors` and returns a ToolResponse at runtime.
+        On failure, `ok=False` with issues (e.g., NOT_FOUND, PERMISSION_DENIED, RATE_LIMIT).
+
+    Examples:
+        # Python (async)
+        response = await task_remove_assignee(TaskRemoveAssigneeInput(task_id="task_123", assignee_id=42))
+        if response.ok:
+            print(response.result.ok)
+    """
+    client = ClickUpAPIClientFactory.get()
+    success = await client.task.remove_assignee(input.task_id, input.assignee_id)
+    return OperationResult(ok=success)
