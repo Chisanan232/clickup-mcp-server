@@ -449,3 +449,63 @@ class TaskAPI:
         """
         response = await self._client.delete(f"/task/{task_id}")
         return response.success and response.status_code in (200, 204)
+
+    async def add_assignee(self, task_id: ClickUpTaskID, assignee_id: int | str) -> bool:
+        """
+        Add an assignee to a task.
+
+        API:
+            POST /task/{task_id}/member/{member_id}
+
+        Args:
+            task_id: The ID of the task
+            assignee_id: The ID of the user to assign to the task
+
+        Returns:
+            bool: True if assignee was successfully added, otherwise False
+
+        Examples:
+            # Python (async)
+            ok = await task_api.add_assignee("abc123", assignee_id=42)
+
+            # curl
+            curl -X POST -H "Authorization: pk_..." \
+              https://api.clickup.com/api/v2/task/abc123/member/42
+
+            # wget
+            wget --method=POST \
+              --header="Authorization: pk_..." \
+              https://api.clickup.com/api/v2/task/abc123/member/42
+        """
+        response = await self._client.post(f"/task/{task_id}/member/{assignee_id}")
+        return response.success and response.status_code in (200, 201)
+
+    async def remove_assignee(self, task_id: ClickUpTaskID, assignee_id: int | str) -> bool:
+        """
+        Remove an assignee from a task.
+
+        API:
+            DELETE /task/{task_id}/member/{member_id}
+
+        Args:
+            task_id: The ID of the task
+            assignee_id: The ID of the user to remove from the task
+
+        Returns:
+            bool: True if assignee was successfully removed, otherwise False
+
+        Examples:
+            # Python (async)
+            ok = await task_api.remove_assignee("abc123", assignee_id=42)
+
+            # curl
+            curl -X DELETE -H "Authorization: pk_..." \
+              https://api.clickup.com/api/v2/task/abc123/member/42
+
+            # wget
+            wget --method=DELETE \
+              --header="Authorization: pk_..." \
+              https://api.clickup.com/api/v2/task/abc123/member/42
+        """
+        response = await self._client.delete(f"/task/{task_id}/member/{assignee_id}")
+        return response.success and response.status_code in (200, 204)
