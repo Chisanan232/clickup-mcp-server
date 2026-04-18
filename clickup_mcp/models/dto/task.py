@@ -333,3 +333,25 @@ class TaskResp(BaseResponseDTO):
     custom_fields: List[CustomFieldValueResp] = Field(default_factory=builtins.list, description="Custom field values")
     dependencies: List[TaskDependency] | None = Field(default=None, description="Task dependencies")
     subtasks: List[SubtaskSummary] | None = Field(default=None, description="Subtasks")
+
+
+class AssignmentResponse(BaseResponseDTO):
+    """
+    DTO for assignment operation responses.
+
+    API:
+        POST /task/{task_id}/member/{member_id}
+        DELETE /task/{task_id}/member/{member_id}
+
+    Notes:
+        ClickUp returns a simple success/failure response for assignment operations.
+
+    Attributes:
+        success: Whether the assignment operation succeeded
+
+    Examples:
+        # Python - Successful assignment
+        AssignmentResponse(success=True)
+    """
+
+    success: bool = Field(description="Whether the assignment operation succeeded")
