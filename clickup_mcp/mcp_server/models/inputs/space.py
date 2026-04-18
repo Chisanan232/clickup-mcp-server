@@ -5,7 +5,7 @@ High-signal schemas for FastMCP: include constraints and examples to aid LLMs.
 
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SpaceCreateInput(BaseModel):
@@ -24,9 +24,9 @@ class SpaceCreateInput(BaseModel):
         SpaceCreateInput(team_id="team_1", name="[TEST] Eng", multiple_assignees=True)
     """
 
-    model_config = {
-        "json_schema_extra": {"examples": [{"team_id": "team_1", "name": "[TEST] Eng", "multiple_assignees": True}]}
-    }
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"team_id": "team_1", "name": "[TEST] Eng", "multiple_assignees": True}]}
+    )
 
     team_id: str = Field(
         ..., min_length=1, description="Target workspace (team) ID.", examples=["9018752317", "team_1"]
@@ -52,7 +52,7 @@ class SpaceGetInput(BaseModel):
         SpaceGetInput(space_id="space_1")
     """
 
-    model_config = {"json_schema_extra": {"examples": [{"space_id": "space_1"}]}}
+    model_config = ConfigDict(json_schema_extra={"examples": [{"space_id": "space_1"}]})
 
     space_id: str = Field(..., min_length=1, description="Space ID.", examples=["space_1", "abc123"])
 
@@ -73,14 +73,14 @@ class SpaceUpdateInput(BaseModel):
         SpaceUpdateInput(space_id="space_1", name="Delivery", private=False)
     """
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {"space_id": "space_1", "name": "Delivery", "private": False},
                 {"space_id": "space_1", "multiple_assignees": True},
             ]
         }
-    }
+    )
 
     space_id: str = Field(..., min_length=1, description="Space ID.", examples=["space_1", "abc123"])
     name: Optional[str] = Field(None, min_length=1, description="Space name.", examples=["Delivery", "Engineering"])
@@ -103,7 +103,7 @@ class SpaceDeleteInput(BaseModel):
         SpaceDeleteInput(space_id="space_1")
     """
 
-    model_config = {"json_schema_extra": {"examples": [{"space_id": "space_1"}]}}
+    model_config = ConfigDict(json_schema_extra={"examples": [{"space_id": "space_1"}]})
 
     space_id: str = Field(..., min_length=1, description="Space ID.", examples=["space_1", "abc123"])
 
@@ -121,6 +121,6 @@ class SpaceListInput(BaseModel):
         SpaceListInput(team_id="team_1")
     """
 
-    model_config = {"json_schema_extra": {"examples": [{"team_id": "team_1"}]}}
+    model_config = ConfigDict(json_schema_extra={"examples": [{"team_id": "team_1"}]})
 
     team_id: str = Field(..., min_length=1, description="Workspace (team) ID.", examples=["9018752317", "team_1"])

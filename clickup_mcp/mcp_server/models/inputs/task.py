@@ -6,7 +6,7 @@ Domain entities first, then DTOs for ClickUp wire format.
 
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TaskCreateInput(BaseModel):
@@ -41,8 +41,8 @@ class TaskCreateInput(BaseModel):
         TaskCreateInput(list_id="123", name="Implement child", parent="task_abc")
     """
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {
                     "list_id": "123",
@@ -59,7 +59,7 @@ class TaskCreateInput(BaseModel):
                 },
             ]
         }
-    }
+    )
 
     list_id: str = Field(
         ...,
@@ -114,8 +114,8 @@ class TaskUpdateInput(BaseModel):
         TaskUpdateInput(task_id="task_123", status="done", priority=2, assignees=[42, 43])
     """
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {
                     "task_id": "task_123",
@@ -125,7 +125,7 @@ class TaskUpdateInput(BaseModel):
                 }
             ]
         }
-    }
+    )
 
     task_id: str = Field(..., min_length=1, description="Target task ID.", examples=["task_123", "CU-123"])
     name: Optional[str] = Field(
@@ -165,14 +165,14 @@ class TaskGetInput(BaseModel):
         TaskGetInput(task_id="CU-123", custom_task_ids=True, team_id="team_1")
     """
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {"task_id": "task_123"},
                 {"task_id": "CU-123", "custom_task_ids": True, "team_id": "team_1"},
             ]
         }
-    }
+    )
 
     task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"])
     subtasks: Optional[bool] = Field(None, description="Include subtasks (true/false).", examples=[True, False])
@@ -207,14 +207,14 @@ class TaskListInListInput(BaseModel):
         TaskListInListInput(list_id="123", limit=50, statuses=["open", "in progress"])
     """
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {"list_id": "123", "limit": 50, "statuses": ["open", "in progress"]},
                 {"list_id": "123", "page": 1, "limit": 100, "include_timl": True},
             ]
         }
-    }
+    )
 
     list_id: str = Field(..., min_length=1, description="List ID.", examples=["123", "list_1"])
     page: int = Field(0, ge=0, description="Page number (0-indexed).", examples=[0, 1, 2])
@@ -245,14 +245,14 @@ class TaskSetCustomFieldInput(BaseModel):
         TaskSetCustomFieldInput(task_id="task_123", field_id="cf_text", value="Ready to ship")
     """
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {"task_id": "task_123", "field_id": "cf_priority", "value": 3},
                 {"task_id": "task_123", "field_id": "cf_text", "value": "Ready to ship"},
             ]
         }
-    }
+    )
 
     task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"])
     field_id: str = Field(..., min_length=1, description="Custom field ID.", examples=["cf_priority", "cf_text"])
@@ -277,7 +277,7 @@ class TaskClearCustomFieldInput(BaseModel):
         TaskClearCustomFieldInput(task_id="task_123", field_id="cf_priority")
     """
 
-    model_config = {"json_schema_extra": {"examples": [{"task_id": "task_123", "field_id": "cf_priority"}]}}
+    model_config = ConfigDict(json_schema_extra={"examples": [{"task_id": "task_123", "field_id": "cf_priority"}]})
 
     task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"])
     field_id: str = Field(..., min_length=1, description="Custom field ID.", examples=["cf_priority", "cf_text"])
@@ -298,11 +298,11 @@ class TaskAddDependencyInput(BaseModel):
         TaskAddDependencyInput(task_id="task_123", depends_on="task_456", dependency_type="waiting_on")
     """
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [{"task_id": "task_123", "depends_on": "task_456", "dependency_type": "waiting_on"}]
         }
-    }
+    )
 
     task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123"])
     depends_on: str = Field(
@@ -329,16 +329,14 @@ class TaskAddAssigneeInput(BaseModel):
         TaskAddAssigneeInput(task_id="task_123", assignee_id=42)
     """
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [{"task_id": "task_123", "assignee_id": 42}, {"task_id": "task_123", "assignee_id": "usr_abc"}]
         }
-    }
+    )
 
     task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"])
-    assignee_id: int | str = Field(
-        ..., description="User ID to assign to the task.", examples=[42, "usr_abc"]
-    )
+    assignee_id: int | str = Field(..., description="User ID to assign to the task.", examples=[42, "usr_abc"])
 
 
 class TaskRemoveAssigneeInput(BaseModel):
@@ -355,16 +353,14 @@ class TaskRemoveAssigneeInput(BaseModel):
         TaskRemoveAssigneeInput(task_id="task_123", assignee_id=42)
     """
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [{"task_id": "task_123", "assignee_id": 42}, {"task_id": "task_123", "assignee_id": "usr_abc"}]
         }
-    }
+    )
 
     task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"])
-    assignee_id: int | str = Field(
-        ..., description="User ID to remove from the task.", examples=[42, "usr_abc"]
-    )
+    assignee_id: int | str = Field(..., description="User ID to remove from the task.", examples=[42, "usr_abc"])
 
 
 class TaskSearchInput(BaseModel):
@@ -397,8 +393,8 @@ class TaskSearchInput(BaseModel):
         TaskSearchInput(query="API documentation", assignees=[42], space_id="space_123")
     """
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {
                     "query": "urgent bugs",
@@ -413,12 +409,12 @@ class TaskSearchInput(BaseModel):
                 },
             ]
         }
-    }
-
-    query: str = Field(..., min_length=1, description="Natural language search query.", examples=["urgent bugs", "API documentation"])
-    team_id: Optional[str] = Field(
-        None, description="Filter by team/workspace ID.", examples=["team_1", "9018752317"]
     )
+
+    query: str = Field(
+        ..., min_length=1, description="Natural language search query.", examples=["urgent bugs", "API documentation"]
+    )
+    team_id: Optional[str] = Field(None, description="Filter by team/workspace ID.", examples=["team_1", "9018752317"])
     space_id: Optional[str] = Field(None, description="Filter by space ID.", examples=["space_1", "456"])
     list_id: Optional[str] = Field(None, description="Filter by list ID.", examples=["list_1", "123"])
     statuses: Optional[List[str]] = Field(
