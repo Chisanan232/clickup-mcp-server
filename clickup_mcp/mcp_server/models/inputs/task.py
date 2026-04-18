@@ -411,10 +411,10 @@ class TaskSearchInput(BaseModel):
         }
     )
 
-    query: str = Field(..., min_length=1, description="Natural language search query.", examples=["urgent bugs", "API documentation"])
-    team_id: Optional[str] = Field(
-        None, description="Filter by team/workspace ID.", examples=["team_1", "9018752317"]
+    query: str = Field(
+        ..., min_length=1, description="Natural language search query.", examples=["urgent bugs", "API documentation"]
     )
+    team_id: Optional[str] = Field(None, description="Filter by team/workspace ID.", examples=["team_1", "9018752317"])
     space_id: Optional[str] = Field(None, description="Filter by space ID.", examples=["space_1", "456"])
     list_id: Optional[str] = Field(None, description="Filter by list ID.", examples=["list_1", "123"])
     statuses: Optional[List[str]] = Field(
