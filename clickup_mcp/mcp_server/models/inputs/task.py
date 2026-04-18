@@ -336,9 +336,7 @@ class TaskAddAssigneeInput(BaseModel):
     )
 
     task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"])
-    assignee_id: int | str = Field(
-        ..., description="User ID to assign to the task.", examples=[42, "usr_abc"]
-    )
+    assignee_id: int | str = Field(..., description="User ID to assign to the task.", examples=[42, "usr_abc"])
 
 
 class TaskRemoveAssigneeInput(BaseModel):
@@ -362,6 +360,4 @@ class TaskRemoveAssigneeInput(BaseModel):
     )
 
     task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"])
-    assignee_id: int | str = Field(
-        ..., description="User ID to remove from the task.", examples=[42, "usr_abc"]
-    )
+    assignee_id: int | str = Field(..., description="User ID to remove from the task.", examples=[42, "usr_abc"])
