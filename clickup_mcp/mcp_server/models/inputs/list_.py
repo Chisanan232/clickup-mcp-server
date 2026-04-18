@@ -5,7 +5,7 @@ High-signal schemas for FastMCP with constraints and examples.
 
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ListCreateInput(BaseModel):
@@ -37,11 +37,11 @@ class ListCreateInput(BaseModel):
         ListCreateInput(folder_id="folder_1", name="Bugs", priority=2, due_date=1731523200000)
     """
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [{"folder_id": "folder_1", "name": "Sprint Backlog", "status": "Open", "priority": 2}]
         }
-    }
+    )
 
     folder_id: str = Field(..., min_length=1, description="Parent folder ID.", examples=["folder_1", "fld_abc"])
     name: str = Field(..., min_length=1, description="List name.", examples=["Sprint Backlog", "Bugs"])
@@ -68,7 +68,7 @@ class ListGetInput(BaseModel):
         ListGetInput(list_id="list_1")
     """
 
-    model_config = {"json_schema_extra": {"examples": [{"list_id": "list_1"}]}}
+    model_config = ConfigDict(json_schema_extra={"examples": [{"list_id": "list_1"}]})
 
     list_id: str = Field(..., min_length=1, description="List ID.", examples=["list_1", "lst_abc"])
 
@@ -93,11 +93,11 @@ class ListUpdateInput(BaseModel):
         ListUpdateInput(list_id="list_1", name="Sprint 12", status="In progress", priority=3)
     """
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [{"list_id": "list_1", "name": "Sprint 12", "status": "In progress", "priority": 3}]
         }
-    }
+    )
 
     list_id: str = Field(..., min_length=1, description="List ID.", examples=["list_1", "lst_abc"])
     name: Optional[str] = Field(None, min_length=1, description="List name.", examples=["Sprint 12", "Bugs"])
@@ -124,7 +124,7 @@ class ListDeleteInput(BaseModel):
         ListDeleteInput(list_id="list_1")
     """
 
-    model_config = {"json_schema_extra": {"examples": [{"list_id": "list_1"}]}}
+    model_config = ConfigDict(json_schema_extra={"examples": [{"list_id": "list_1"}]})
 
     list_id: str = Field(
         ..., min_length=1, description="List ID.", json_schema_extra={"examples": ["list_1", "lst_abc"]}
@@ -144,7 +144,7 @@ class ListListInFolderInput(BaseModel):
         ListListInFolderInput(folder_id="folder_1")
     """
 
-    model_config = {"json_schema_extra": {"examples": [{"folder_id": "folder_1"}]}}
+    model_config = ConfigDict(json_schema_extra={"examples": [{"folder_id": "folder_1"}]})
 
     folder_id: str = Field(..., min_length=1, description="Folder ID.", examples=["folder_1", "fld_abc"])
 
@@ -162,7 +162,7 @@ class ListListInSpaceFolderlessInput(BaseModel):
         ListListInSpaceFolderlessInput(space_id="space_1")
     """
 
-    model_config = {"json_schema_extra": {"examples": [{"space_id": "space_1"}]}}
+    model_config = ConfigDict(json_schema_extra={"examples": [{"space_id": "space_1"}]})
 
     space_id: str = Field(..., min_length=1, description="Space ID.", examples=["space_1", "spc_abc"])
 
@@ -181,7 +181,7 @@ class ListAddTaskInput(BaseModel):
         ListAddTaskInput(list_id="list_2", task_id="task_123")
     """
 
-    model_config = {"json_schema_extra": {"examples": [{"list_id": "list_2", "task_id": "task_123"}]}}
+    model_config = ConfigDict(json_schema_extra={"examples": [{"list_id": "list_2", "task_id": "task_123"}]})
 
     list_id: str = Field(..., min_length=1, description="Target list ID.", examples=["list_2", "lst_abc"])
     task_id: str = Field(..., min_length=1, description="Existing task ID.", examples=["task_123", "tsk_abc"])
@@ -201,7 +201,7 @@ class ListRemoveTaskInput(BaseModel):
         ListRemoveTaskInput(list_id="list_2", task_id="task_123")
     """
 
-    model_config = {"json_schema_extra": {"examples": [{"list_id": "list_2", "task_id": "task_123"}]}}
+    model_config = ConfigDict(json_schema_extra={"examples": [{"list_id": "list_2", "task_id": "task_123"}]})
 
     list_id: str = Field(
         ..., min_length=1, description="Target list ID.", json_schema_extra={"examples": ["list_2", "lst_abc"]}
