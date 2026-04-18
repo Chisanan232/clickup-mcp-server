@@ -361,3 +361,76 @@ class TaskRemoveAssigneeInput(BaseModel):
 
     task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123", "CU-123"])
     assignee_id: int | str = Field(..., description="User ID to remove from the task.", examples=[42, "usr_abc"])
+
+
+class TaskSearchInput(BaseModel):
+    """
+    Search tasks with natural language query and filters.
+
+    When to use: Search for tasks using natural language text query combined with
+    structured filters like status, priority, assignees, and date ranges.
+
+    Constraints:
+        - `query` supports natural language search terms
+        - `limit` ≤ 100 per API
+        - Date filters use epoch milliseconds
+
+    Attributes:
+        query: Natural language search query (e.g., "urgent bugs", "API documentation")
+        team_id: Filter by team/workspace ID
+        space_id: Filter by space ID
+        list_id: Filter by list ID
+        statuses: Filter by status names
+        priorities: Filter by priority levels (1-4)
+        assignees: Filter by assignee user IDs
+        due_date_from: Filter by due date range start (epoch ms)
+        due_date_to: Filter by due date range end (epoch ms)
+        page: Page number (0-indexed)
+        limit: Page size (cap 100)
+
+    Examples:
+        TaskSearchInput(query="urgent bugs", priorities=[1, 2], limit=50)
+        TaskSearchInput(query="API documentation", assignees=[42], space_id="space_123")
+    """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "query": "urgent bugs",
+                    "priorities": [1, 2],
+                    "limit": 50,
+                },
+                {
+                    "query": "API documentation",
+                    "assignees": [42],
+                    "space_id": "space_123",
+                    "limit": 25,
+                },
+            ]
+        }
+    )
+
+    query: str = Field(
+        ..., min_length=1, description="Natural language search query.", examples=["urgent bugs", "API documentation"]
+    )
+    team_id: Optional[str] = Field(None, description="Filter by team/workspace ID.", examples=["team_1", "9018752317"])
+    space_id: Optional[str] = Field(None, description="Filter by space ID.", examples=["space_1", "456"])
+    list_id: Optional[str] = Field(None, description="Filter by list ID.", examples=["list_1", "123"])
+    statuses: Optional[List[str]] = Field(
+        None, description="Filter by status names.", examples=[["open"], ["open", "in progress"]]
+    )
+    priorities: Optional[List[int]] = Field(
+        None, description="Filter by priority levels (1-4).", examples=[[1, 2], [3, 4]]
+    )
+    assignees: Optional[List[int | str]] = Field(
+        None, description="Filter by assignee user IDs.", examples=[[42], ["usr_abc"]]
+    )
+    due_date_from: Optional[int] = Field(
+        None, description="Filter by due date range start (epoch ms).", examples=[1702080000000]
+    )
+    due_date_to: Optional[int] = Field(
+        None, description="Filter by due date range end (epoch ms).", examples=[1702166400000]
+    )
+    page: int = Field(0, ge=0, description="Page number (0-indexed).", examples=[0, 1, 2])
+    limit: int = Field(100, ge=1, le=100, description="Page size (cap 100 by API).", examples=[25, 50, 100])
