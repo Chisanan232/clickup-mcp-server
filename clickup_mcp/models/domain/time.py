@@ -36,8 +36,6 @@ Usage Examples:
     entry.adjust_timing(1702087200000, 1702090800000)
 """
 
-from typing import Optional
-
 from pydantic import Field
 
 from .base import BaseDomainModel

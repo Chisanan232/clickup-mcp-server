@@ -41,7 +41,7 @@ Quick Examples:
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Optional
 
 from clickup_mcp.models.dto.time import (
     TimeEntryCreate,
@@ -101,9 +101,7 @@ class TimeAPI:
         """
         self._client = client
 
-    async def create(
-        self, team_id: ClickUpTeamID, time_entry_create: TimeEntryCreate
-    ) -> Optional[TimeEntryResponse]:
+    async def create(self, team_id: ClickUpTeamID, time_entry_create: TimeEntryCreate) -> Optional[TimeEntryResponse]:
         """
         Create a new time entry for a task.
 
@@ -377,9 +375,7 @@ class TimeAPI:
         if description is not None:
             data["description"] = description
 
-        response = await self._client.post(
-            f"/task/{task_id}/time_tracking/stop", data=data if data else None
-        )
+        response = await self._client.post(f"/task/{task_id}/time_tracking/stop", data=data if data else None)
 
         return response.success and response.status_code == 200
 
