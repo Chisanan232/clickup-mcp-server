@@ -105,7 +105,7 @@ class TimeReportListQuery(BaseRequestDTO):
             TimeReportListQuery(limit=150, start_date=1702080000000).to_query()
             # {"start_date": 1702080000000, "page": 0, "limit": 100}
         """
-        query = {
+        query: dict[str, Any] = {
             "page": self.page,
             "limit": min(self.limit, 100),
         }
