@@ -36,8 +36,12 @@ class KeyResultResult(BaseModel):
     current: float = Field(default=0.0, description="Current value", examples=[500000, 25.0])
     unit: Optional[str] = Field(None, description="Unit of measurement", examples=["$", "%", "users"])
     description: Optional[str] = Field(None, description="Description", examples=["Monthly recurring revenue"])
-    date_created: Optional[int] = Field(None, description="Creation date in epoch milliseconds", examples=[1702000000000])
-    date_updated: Optional[int] = Field(None, description="Last update date in epoch milliseconds", examples=[1702100000000])
+    date_created: Optional[int] = Field(
+        None, description="Creation date in epoch milliseconds", examples=[1702000000000]
+    )
+    date_updated: Optional[int] = Field(
+        None, description="Last update date in epoch milliseconds", examples=[1702100000000]
+    )
 
     model_config = {
         "json_schema_extra": {

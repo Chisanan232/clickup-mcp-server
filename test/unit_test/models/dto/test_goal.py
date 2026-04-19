@@ -1,6 +1,11 @@
 """DTO tests for Goal."""
 
-from clickup_mcp.models.dto.goal import GoalCreate, GoalListQuery, GoalResponse, GoalUpdate
+from clickup_mcp.models.dto.goal import (
+    GoalCreate,
+    GoalListQuery,
+    GoalResponse,
+    GoalUpdate,
+)
 
 
 def test_goal_create_serialization() -> None:

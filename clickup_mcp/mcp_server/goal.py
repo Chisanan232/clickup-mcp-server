@@ -77,9 +77,7 @@ async def goal_create(input: GoalCreateInput) -> GoalResult:
 @mcp.tool(
     title="Get Goal",
     name="goal.get",
-    description=(
-        "Get a goal by ID. HTTP: GET /goal/{goal_id}."
-    ),
+    description=("Get a goal by ID. HTTP: GET /goal/{goal_id}."),
     annotations={
         "readOnlyHint": True,
         "openWorldHint": True,
@@ -115,6 +113,7 @@ async def goal_get(input: GoalGetInput) -> GoalResult:
     if not resp:
         raise ClickUpAPIError("Get goal failed")
     from clickup_mcp.models.dto.goal import GoalResponse
+
     goal_response = GoalResponse(**resp)
     goal_domain = GoalMapper.to_domain(goal_response)
     return GoalResult(**GoalMapper.to_goal_result_output(goal_domain))
@@ -123,9 +122,7 @@ async def goal_get(input: GoalGetInput) -> GoalResult:
 @mcp.tool(
     title="Update Goal",
     name="goal.update",
-    description=(
-        "Update a goal by ID. HTTP: PUT /goal/{goal_id}."
-    ),
+    description=("Update a goal by ID. HTTP: PUT /goal/{goal_id}."),
     annotations={
         "destructiveHint": False,
         "openWorldHint": True,
@@ -163,6 +160,7 @@ async def goal_update(input: GoalUpdateInput) -> GoalResult:
     if not resp:
         raise ClickUpAPIError("Update goal failed")
     from clickup_mcp.models.dto.goal import GoalResponse
+
     goal_response = GoalResponse(**resp)
     goal_domain = GoalMapper.to_domain(goal_response)
     return GoalResult(**GoalMapper.to_goal_result_output(goal_domain))
@@ -171,9 +169,7 @@ async def goal_update(input: GoalUpdateInput) -> GoalResult:
 @mcp.tool(
     title="Delete Goal",
     name="goal.delete",
-    description=(
-        "Delete a goal by ID. HTTP: DELETE /goal/{goal_id}."
-    ),
+    description=("Delete a goal by ID. HTTP: DELETE /goal/{goal_id}."),
     annotations={
         "destructiveHint": True,
         "openWorldHint": True,
@@ -214,10 +210,7 @@ async def goal_delete(input: GoalDeleteInput) -> dict:
 @mcp.tool(
     title="List Goals",
     name="goal.list",
-    description=(
-        "List goals for a team with filters. Constraints: `limit` ≤ 100. "
-        "HTTP: GET /team/{team_id}/goal."
-    ),
+    description=("List goals for a team with filters. Constraints: `limit` ≤ 100. " "HTTP: GET /team/{team_id}/goal."),
     annotations={
         "readOnlyHint": True,
         "openWorldHint": True,
