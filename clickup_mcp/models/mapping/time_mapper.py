@@ -32,7 +32,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from clickup_mcp.models.domain.time import TimeEntry
-from clickup_mcp.models.dto.time import TimeEntryCreate, TimeEntryResponse, TimeEntryUpdate
+from clickup_mcp.models.dto.time import (
+    TimeEntryCreate,
+    TimeEntryResponse,
+    TimeEntryUpdate,
+)
 
 if TYPE_CHECKING:  # type hints only; avoid importing mcp_server package at runtime
     from clickup_mcp.mcp_server.models.inputs.time import (
