@@ -19,6 +19,7 @@ Usage Examples:
 
 # Import tool modules to register tools
 from . import folder  # noqa: F401
+from . import goal  # noqa: F401
 from . import list  # noqa: F401
 from . import reporting  # noqa: F401
 from . import space  # noqa: F401
