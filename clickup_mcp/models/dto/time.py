@@ -24,12 +24,12 @@ Usage Examples:
     # => {"task_id": "task_123", "limit": 50}
 """
 
-from typing import Any, Dict, List
+from typing import Any, List
 
 from pydantic import Field
 
 from .base import BaseRequestDTO, BaseResponseDTO, PaginatedResponseDTO
-from .common import EpochMs, TaskId, TeamId, UserId
+from .common import EpochMs, UserId
 
 PROPERTY_DESCRIPTION_DESCRIPTION: str = "Description of the time entry"
 PROPERTY_START_DESCRIPTION: str = "Start time in epoch milliseconds"
