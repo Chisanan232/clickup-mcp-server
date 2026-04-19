@@ -45,7 +45,9 @@ class GoalCreateInput(BaseModel):
     )
 
     team_id: str = Field(..., min_length=1, description="Team/workspace ID.", examples=["team_1", "9018752317"])
-    name: str = Field(..., min_length=1, description="Goal name/title.", examples=["Q1 Revenue Goal", "Increase user retention"])
+    name: str = Field(
+        ..., min_length=1, description="Goal name/title.", examples=["Q1 Revenue Goal", "Increase user retention"]
+    )
     description: Optional[str] = Field(
         None, description="Description of the goal.", examples=["Achieve $1M in revenue", "Improve user onboarding"]
     )
@@ -53,8 +55,12 @@ class GoalCreateInput(BaseModel):
     key_results: Optional[list[str]] = Field(
         None, description="List of key result names.", examples=[["KR1", "KR2"], ["Increase MRR by 20%"]]
     )
-    multiple_owners: bool = Field(default=False, description="Whether multiple users can own this goal.", examples=[True, False])
-    owners: Optional[list[str]] = Field(None, description="List of user IDs who own this goal.", examples=[["user_1", "user_2"]])
+    multiple_owners: bool = Field(
+        default=False, description="Whether multiple users can own this goal.", examples=[True, False]
+    )
+    owners: Optional[list[str]] = Field(
+        None, description="List of user IDs who own this goal.", examples=[["user_1", "user_2"]]
+    )
 
 
 class GoalGetInput(BaseModel):
@@ -99,14 +105,18 @@ class GoalUpdateInput(BaseModel):
     """
 
     model_config = ConfigDict(
-        json_schema_extra={"examples": [{"goal_id": "goal_123", "name": "Updated Goal Name", "due_date": 1702166400000}]}
+        json_schema_extra={
+            "examples": [{"goal_id": "goal_123", "name": "Updated Goal Name", "due_date": 1702166400000}]
+        }
     )
 
     goal_id: str = Field(..., min_length=1, description="Goal ID.", examples=["goal_123", "gl_abc"])
     name: Optional[str] = Field(None, description="New goal name.", examples=["Updated Goal Name"])
     description: Optional[str] = Field(None, description="New description.", examples=["Updated description"])
     due_date: Optional[int] = Field(None, description="New due date in epoch ms.", examples=[1702166400000])
-    key_results: Optional[list[str]] = Field(None, description="New list of key result names.", examples=[["KR1", "KR2"]])
+    key_results: Optional[list[str]] = Field(
+        None, description="New list of key result names.", examples=[["KR1", "KR2"]]
+    )
     owners: Optional[list[str]] = Field(None, description="New list of user IDs.", examples=[["user_1", "user_2"]])
     status: Optional[str] = Field(None, description="New goal status.", examples=["active", "completed", "paused"])
 
@@ -154,7 +164,9 @@ class GoalListInput(BaseModel):
     model_config = ConfigDict(json_schema_extra={"examples": [{"team_id": "team_1", "status": "active", "limit": 50}]})
 
     team_id: str = Field(..., min_length=1, description="Team/workspace ID.", examples=["team_1", "9018752317"])
-    status: Optional[str] = Field(None, description="Filter by goal status.", examples=["active", "completed", "paused"])
+    status: Optional[str] = Field(
+        None, description="Filter by goal status.", examples=["active", "completed", "paused"]
+    )
     owner: Optional[str] = Field(None, description="Filter by user ID.", examples=["user_123", "usr_abc"])
     start_date: Optional[int] = Field(None, description="Filter by start date (epoch ms).", examples=[1702080000000])
     end_date: Optional[int] = Field(None, description="Filter by end date (epoch ms).", examples=[1702166400000])

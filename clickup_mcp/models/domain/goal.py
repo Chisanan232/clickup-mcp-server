@@ -383,4 +383,5 @@ class Goal(BaseDomainModel):
         if self.due_date is None or self.status == "completed":
             return False
         import time
+
         return self.due_date < int(time.time() * 1000)
