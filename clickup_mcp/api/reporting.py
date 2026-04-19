@@ -36,9 +36,13 @@ Quick Examples:
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Optional
 
-from clickup_mcp.models.dto.reporting import TimeReportCreate, TimeReportListQuery, TimeReportListResponse
+from clickup_mcp.models.dto.reporting import (
+    TimeReportCreate,
+    TimeReportListQuery,
+    TimeReportListResponse,
+)
 from clickup_mcp.types import ClickUpTeamID
 
 if TYPE_CHECKING:
@@ -76,9 +80,7 @@ class ReportingAPI:
         """
         self._client = client
 
-    async def create(
-        self, team_id: ClickUpTeamID, report_create: TimeReportCreate
-    ) -> Optional[TimeReportListResponse]:
+    async def create(self, team_id: ClickUpTeamID, report_create: TimeReportCreate) -> Optional[TimeReportListResponse]:
         """
         Create a time report for a team.
 
