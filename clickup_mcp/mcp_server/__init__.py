@@ -20,6 +20,7 @@ Usage Examples:
 # Import tool modules to register tools
 from . import folder  # noqa: F401
 from . import list  # noqa: F401
+from . import reporting  # noqa: F401
 from . import space  # noqa: F401
 from . import task  # noqa: F401
 from . import team  # noqa: F401
