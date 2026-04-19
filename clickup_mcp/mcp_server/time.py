@@ -76,7 +76,7 @@ async def time_entry_create(input: TimeEntryCreateInput) -> TimeEntryResult | No
         resp = await client.time.create(input.team_id, dto)
     if not resp:
         raise ClickUpAPIError("Create time entry failed")
-    return TimeMapper.to_time_entry_result_output(TimeMapper.to_domain(resp))
+    return TimeEntryResult(**TimeMapper.to_time_entry_result_output(TimeMapper.to_domain(resp)))
 
 
 @mcp.tool(
@@ -117,7 +117,7 @@ async def time_entry_get(input: TimeEntryGetInput) -> TimeEntryResult | None:
         resp = await client.time.get(input.team_id, input.time_entry_id)
     if not resp:
         raise ResourceNotFoundError("Time entry not found")
-    return TimeMapper.to_time_entry_result_output(TimeMapper.to_domain(resp))
+    return TimeEntryResult(**TimeMapper.to_time_entry_result_output(TimeMapper.to_domain(resp)))
 
 
 @mcp.tool(
@@ -216,7 +216,7 @@ async def time_entry_update(input: TimeEntryUpdateInput) -> TimeEntryResult | No
         resp = await client.time.update(input.team_id, input.time_entry_id, dto)
     if not resp:
         raise ResourceNotFoundError("Time entry not found")
-    return TimeMapper.to_time_entry_result_output(TimeMapper.to_domain(resp))
+    return TimeEntryResult(**TimeMapper.to_time_entry_result_output(TimeMapper.to_domain(resp)))
 
 
 @mcp.tool(
