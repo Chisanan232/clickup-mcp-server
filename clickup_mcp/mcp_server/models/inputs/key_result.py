@@ -49,7 +49,9 @@ class KeyResultCreateInput(BaseModel):
     type: str = Field(..., description="Key result type.", examples=["number", "currency", "boolean"])
     target: float = Field(..., description="Target value.", examples=[1000000, 50.0, 1])
     unit: Optional[str] = Field(None, description="Unit of measurement.", examples=["$", "%", "users"])
-    description: Optional[str] = Field(None, description="Description of the key result.", examples=["Monthly recurring revenue"])
+    description: Optional[str] = Field(
+        None, description="Description of the key result.", examples=["Monthly recurring revenue"]
+    )
 
 
 class KeyResultGetInput(BaseModel):
