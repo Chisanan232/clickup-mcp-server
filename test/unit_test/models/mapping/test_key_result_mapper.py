@@ -1,7 +1,9 @@
 """Mapper tests for KeyResult."""
 
 from clickup_mcp.models.domain.key_result import KeyResult
-from clickup_mcp.models.dto.key_result import KeyResultCreate, KeyResultResponse, KeyResultUpdate
+from clickup_mcp.models.dto.key_result import (
+    KeyResultResponse,
+)
 from clickup_mcp.models.mapping.key_result_mapper import KeyResultMapper
 
 

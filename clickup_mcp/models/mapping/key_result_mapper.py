@@ -32,10 +32,17 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from clickup_mcp.models.domain.key_result import KeyResult
-from clickup_mcp.models.dto.key_result import KeyResultCreate, KeyResultResponse, KeyResultUpdate
+from clickup_mcp.models.dto.key_result import (
+    KeyResultCreate,
+    KeyResultResponse,
+    KeyResultUpdate,
+)
 
 if TYPE_CHECKING:  # type hints only; avoid importing mcp_server package at runtime
-    from clickup_mcp.mcp_server.models.inputs.key_result import KeyResultCreateInput, KeyResultUpdateInput
+    from clickup_mcp.mcp_server.models.inputs.key_result import (
+        KeyResultCreateInput,
+        KeyResultUpdateInput,
+    )
 
 
 class KeyResultMapper:
