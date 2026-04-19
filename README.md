@@ -156,6 +156,8 @@ The server provides access to the following ClickUp resources:
 
 - Teams
 - Spaces
+- Goals
+- Key Results
 
 [//]: # (- Folders)
 
