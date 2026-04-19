@@ -23,6 +23,7 @@ from . import list  # noqa: F401
 from . import space  # noqa: F401
 from . import task  # noqa: F401
 from . import team  # noqa: F401
+from . import time  # noqa: F401
 from . import workspace  # noqa: F401
 
 # Ensure app is created before importing tool modules
