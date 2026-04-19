@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 
 from ._base import BaseServerFactory
 from .api.folder import FolderAPI
+from .api.goal import GoalAPI
 from .api.list import ListAPI
 from .api.reporting import ReportingAPI
 from .api.space import SpaceAPI
@@ -283,6 +284,7 @@ class ClickUpAPIClient(ClickUpClientProtocol):
         self.task = TaskAPI(self)
         self.time = TimeAPI(self)
         self.reporting = ReportingAPI(self)
+        self.goal = GoalAPI(self)
 
     async def __aenter__(self) -> "ClickUpAPIClient":
         """Async context manager entry."""
