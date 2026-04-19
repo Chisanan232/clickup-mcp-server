@@ -22,7 +22,6 @@ from clickup_mcp.mcp_server.models.inputs.time import (
 from clickup_mcp.mcp_server.models.outputs.common import DeletionResult, OperationResult
 from clickup_mcp.mcp_server.models.outputs.time import (
     TimeEntryListResult,
-    TimeEntryListItem,
     TimeEntryResult,
     TimeTrackingStatus,
 )
@@ -83,9 +82,7 @@ async def time_entry_create(input: TimeEntryCreateInput) -> TimeEntryResult | No
 @mcp.tool(
     title="Get Time Entry",
     name="time_entry.get",
-    description=(
-        "Get a time entry by ID. HTTP: GET /team/{team_id}/time_entries/{time_entry_id}."
-    ),
+    description=("Get a time entry by ID. HTTP: GET /team/{team_id}/time_entries/{time_entry_id}."),
     annotations={
         "readOnlyHint": True,
         "openWorldHint": True,
@@ -127,8 +124,7 @@ async def time_entry_get(input: TimeEntryGetInput) -> TimeEntryResult | None:
     title="List Time Entries",
     name="time_entry.list",
     description=(
-        "List time entries with filters. Constraints: `limit` ≤ 100. "
-        "HTTP: GET /team/{team_id}/time_entries."
+        "List time entries with filters. Constraints: `limit` ≤ 100. " "HTTP: GET /team/{team_id}/time_entries."
     ),
     annotations={
         "readOnlyHint": True,
@@ -173,9 +169,7 @@ async def time_entry_list(input: TimeEntryListInput) -> TimeEntryListResult:
         resp = await client.time.list(input.team_id, query)
     if not resp:
         raise ClickUpAPIError("List time entries failed")
-    items = [
-        TimeMapper.to_time_entry_list_item_output(TimeMapper.to_domain(entry)) for entry in resp.items
-    ]
+    items = [TimeMapper.to_time_entry_list_item_output(TimeMapper.to_domain(entry)) for entry in resp.items]
     return TimeEntryListResult(items=items, next_cursor=resp.next_page, truncated=False)
 
 
@@ -228,9 +222,7 @@ async def time_entry_update(input: TimeEntryUpdateInput) -> TimeEntryResult | No
 @mcp.tool(
     title="Delete Time Entry",
     name="time_entry.delete",
-    description=(
-        "Delete a time entry permanently. HTTP: DELETE /team/{team_id}/time_entries/{time_entry_id}."
-    ),
+    description=("Delete a time entry permanently. HTTP: DELETE /team/{team_id}/time_entries/{time_entry_id}."),
     annotations={
         "destructiveHint": True,
         "openWorldHint": True,
@@ -271,9 +263,7 @@ async def time_entry_delete(input: TimeEntryDeleteInput) -> DeletionResult:
 @mcp.tool(
     title="Start Time Tracking",
     name="time_tracking.start",
-    description=(
-        "Start time tracking for a task. HTTP: POST /task/{task_id}/time_tracking/start."
-    ),
+    description=("Start time tracking for a task. HTTP: POST /task/{task_id}/time_tracking/start."),
     annotations={
         "destructiveHint": False,
         "openWorldHint": True,
@@ -358,9 +348,7 @@ async def time_tracking_stop(input: TimeTrackingStopInput) -> OperationResult:
 @mcp.tool(
     title="Get Time Tracking Status",
     name="time_tracking.get_status",
-    description=(
-        "Get time tracking status for a task. HTTP: GET /task/{task_id}/time_tracking."
-    ),
+    description=("Get time tracking status for a task. HTTP: GET /task/{task_id}/time_tracking."),
     annotations={
         "readOnlyHint": True,
         "openWorldHint": True,
