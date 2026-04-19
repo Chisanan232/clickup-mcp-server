@@ -33,7 +33,9 @@ class TimeEntryResult(BaseModel):
     task_id: str = Field(..., description="Task ID this time entry belongs to", examples=["task_123", "tsk_abc"])
     user_id: str = Field(..., description="User ID who logged the time", examples=["user_456", "usr_xyz"])
     team_id: str = Field(..., description="Team/workspace ID", examples=["team_789"])
-    description: Optional[str] = Field(None, description="Description of the work done", examples=["Implementation work"])
+    description: Optional[str] = Field(
+        None, description="Description of the work done", examples=["Implementation work"]
+    )
     start: Optional[int] = Field(None, ge=0, description="Start time in epoch milliseconds", examples=[1702080000000])
     end: Optional[int] = Field(None, ge=0, description="End time in epoch milliseconds", examples=[1702083600000])
     duration: Optional[int] = Field(None, ge=0, description="Duration in milliseconds", examples=[3600000])
@@ -69,7 +71,9 @@ class TimeEntryListItem(BaseModel):
 
     id: str = Field(..., description="Time entry ID", examples=["entry_1", "ent_123"])
     task_id: str = Field(..., description="Task ID this time entry belongs to", examples=["task_123", "tsk_abc"])
-    description: Optional[str] = Field(None, description="Description of the work done", examples=["Implementation work"])
+    description: Optional[str] = Field(
+        None, description="Description of the work done", examples=["Implementation work"]
+    )
     duration: Optional[int] = Field(None, ge=0, description="Duration in milliseconds", examples=[3600000])
 
 
@@ -93,8 +97,12 @@ class TimeTrackingStatus(BaseModel):
     """Time tracking status for a task."""
 
     active: bool = Field(..., description="Whether time tracking is currently active", examples=[True, False])
-    start: Optional[int] = Field(None, ge=0, description="Start time of current session in epoch ms", examples=[1702080000000])
-    task_id: Optional[str] = Field(None, description="Task ID being tracked (if active)", examples=["task_123", "tsk_abc"])
+    start: Optional[int] = Field(
+        None, ge=0, description="Start time of current session in epoch ms", examples=[1702080000000]
+    )
+    task_id: Optional[str] = Field(
+        None, description="Task ID being tracked (if active)", examples=["task_123", "tsk_abc"]
+    )
 
     model_config = {
         "json_schema_extra": {

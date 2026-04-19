@@ -26,8 +26,6 @@ Usage Examples:
     report.set_total_duration(7200000)
 """
 
-from typing import Optional
-
 from pydantic import Field
 
 from .base import BaseDomainModel
