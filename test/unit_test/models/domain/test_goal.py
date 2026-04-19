@@ -56,9 +56,9 @@ def test_goal_add_key_result() -> None:
     goal.add_key_result("KR2")
     assert goal.key_results == ["KR1", "KR2"]
 
-    # Adding duplicate has no effect
-    goal.add_key_result("KR1")
-    assert goal.key_results == ["KR1", "KR2"]
+    # Adding duplicate raises error
+    with pytest.raises(ValueError):
+        goal.add_key_result("KR1")
 
 
 def test_goal_remove_key_result() -> None:
@@ -66,13 +66,13 @@ def test_goal_remove_key_result() -> None:
     goal.remove_key_result("KR1")
     assert goal.key_results == ["KR2"]
 
-    # Removing non-existent key result has no effect
-    goal.remove_key_result("KR999")
-    assert goal.key_results == ["KR2"]
+    # Removing non-existent key result raises error
+    with pytest.raises(ValueError):
+        goal.remove_key_result("KR999")
 
 
 def test_goal_add_owner() -> None:
-    goal = Goal(id="goal_1", team_id="team_1", name="Goal", due_date=1702080000000)
+    goal = Goal(id="goal_1", team_id="team_1", name="Goal", due_date=1702080000000, multiple_owners=True)
     goal.add_owner("user_1")
     assert goal.owners == ["user_1"]
 
@@ -80,9 +80,9 @@ def test_goal_add_owner() -> None:
     goal.add_owner("user_2")
     assert goal.owners == ["user_1", "user_2"]
 
-    # Adding duplicate has no effect
-    goal.add_owner("user_1")
-    assert goal.owners == ["user_1", "user_2"]
+    # Adding duplicate raises error
+    with pytest.raises(ValueError):
+        goal.add_owner("user_1")
 
 
 def test_goal_remove_owner() -> None:
@@ -90,9 +90,9 @@ def test_goal_remove_owner() -> None:
     goal.remove_owner("user_1")
     assert goal.owners == ["user_2"]
 
-    # Removing non-existent owner has no effect
-    goal.remove_owner("user_999")
-    assert goal.owners == ["user_2"]
+    # Removing non-existent owner raises error
+    with pytest.raises(ValueError):
+        goal.remove_owner("user_999")
 
 
 def test_goal_is_active() -> None:
