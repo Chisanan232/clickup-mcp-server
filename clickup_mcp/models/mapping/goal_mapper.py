@@ -35,7 +35,10 @@ from clickup_mcp.models.domain.goal import Goal
 from clickup_mcp.models.dto.goal import GoalCreate, GoalResponse, GoalUpdate
 
 if TYPE_CHECKING:  # type hints only; avoid importing mcp_server package at runtime
-    from clickup_mcp.mcp_server.models.inputs.goal import GoalCreateInput, GoalUpdateInput
+    from clickup_mcp.mcp_server.models.inputs.goal import (
+        GoalCreateInput,
+        GoalUpdateInput,
+    )
 
 
 class GoalMapper:
