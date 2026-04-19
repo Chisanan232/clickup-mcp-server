@@ -18,7 +18,10 @@ from clickup_mcp.mcp_server.models.inputs.key_result import (
     KeyResultListInput,
     KeyResultUpdateInput,
 )
-from clickup_mcp.mcp_server.models.outputs.key_result import KeyResultListResult, KeyResultResult
+from clickup_mcp.mcp_server.models.outputs.key_result import (
+    KeyResultListResult,
+    KeyResultResult,
+)
 from clickup_mcp.models.mapping.key_result_mapper import KeyResultMapper
 
 from .app import mcp
@@ -74,9 +77,7 @@ async def key_result_create(input: KeyResultCreateInput) -> KeyResultResult:
 @mcp.tool(
     title="Get Key Result",
     name="key_result.get",
-    description=(
-        "Get a key result by ID. HTTP: GET /key_result/{key_result_id}."
-    ),
+    description=("Get a key result by ID. HTTP: GET /key_result/{key_result_id}."),
     annotations={
         "readOnlyHint": True,
         "openWorldHint": True,
@@ -112,6 +113,7 @@ async def key_result_get(input: KeyResultGetInput) -> KeyResultResult:
     if not resp:
         raise ClickUpAPIError("Get key result failed")
     from clickup_mcp.models.dto.key_result import KeyResultResponse
+
     kr_response = KeyResultResponse(**resp)
     kr_domain = KeyResultMapper.to_domain(kr_response)
     return KeyResultResult(**KeyResultMapper.to_key_result_result_output(kr_domain))
@@ -120,9 +122,7 @@ async def key_result_get(input: KeyResultGetInput) -> KeyResultResult:
 @mcp.tool(
     title="Update Key Result",
     name="key_result.update",
-    description=(
-        "Update a key result by ID. HTTP: PUT /key_result/{key_result_id}."
-    ),
+    description=("Update a key result by ID. HTTP: PUT /key_result/{key_result_id}."),
     annotations={
         "destructiveHint": False,
         "openWorldHint": True,
@@ -160,6 +160,7 @@ async def key_result_update(input: KeyResultUpdateInput) -> KeyResultResult:
     if not resp:
         raise ClickUpAPIError("Update key result failed")
     from clickup_mcp.models.dto.key_result import KeyResultResponse
+
     kr_response = KeyResultResponse(**resp)
     kr_domain = KeyResultMapper.to_domain(kr_response)
     return KeyResultResult(**KeyResultMapper.to_key_result_result_output(kr_domain))
@@ -168,9 +169,7 @@ async def key_result_update(input: KeyResultUpdateInput) -> KeyResultResult:
 @mcp.tool(
     title="Delete Key Result",
     name="key_result.delete",
-    description=(
-        "Delete a key result by ID. HTTP: DELETE /key_result/{key_result_id}."
-    ),
+    description=("Delete a key result by ID. HTTP: DELETE /key_result/{key_result_id}."),
     annotations={
         "destructiveHint": True,
         "openWorldHint": True,
@@ -211,9 +210,7 @@ async def key_result_delete(input: KeyResultDeleteInput) -> dict:
 @mcp.tool(
     title="List Key Results",
     name="key_result.list",
-    description=(
-        "List key results for a goal. HTTP: GET /goal/{goal_id}/key_result."
-    ),
+    description=("List key results for a goal. HTTP: GET /goal/{goal_id}/key_result."),
     annotations={
         "readOnlyHint": True,
         "openWorldHint": True,
