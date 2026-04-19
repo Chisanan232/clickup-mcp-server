@@ -1,7 +1,7 @@
 """Mapper tests for Goal."""
 
 from clickup_mcp.models.domain.goal import Goal
-from clickup_mcp.models.dto.goal import GoalCreate, GoalResponse, GoalUpdate
+from clickup_mcp.models.dto.goal import GoalResponse
 from clickup_mcp.models.mapping.goal_mapper import GoalMapper
 
 
