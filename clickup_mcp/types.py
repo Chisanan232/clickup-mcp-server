@@ -60,6 +60,9 @@ type ClickUpListID = str
 type ClickUpGoalID = str
 """ClickUp goal ID (e.g., '123456789')."""
 
+type ClickUpKeyResultID = str
+"""ClickUp key result ID (e.g., '123456789')."""
+
 type ClickUpTaskID = str
 """ClickUp task ID (e.g., '123456789_abc123')."""
 
@@ -656,6 +659,7 @@ __all__ = [
     "ClickUpFolderID",
     "ClickUpListID",
     "ClickUpGoalID",
+    "ClickUpKeyResultID",
     "ClickUpTaskID",
     "ClickUpUserID",
     "ClickUpToken",
