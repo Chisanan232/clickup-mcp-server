@@ -143,7 +143,7 @@ class TimeEntryListQuery(BaseRequestDTO):
             TimeEntryListQuery(limit=150, task_id="task_123").to_query()
             # {"task_id": "task_123", "page": 0, "limit": 100}
         """
-        query = {
+        query: dict[str, Any] = {
             "page": self.page,
             "limit": min(self.limit, 100),
         }
