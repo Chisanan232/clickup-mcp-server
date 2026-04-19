@@ -48,15 +48,9 @@ class TimeEntryCreateInput(BaseModel):
     description: Optional[str] = Field(
         None, description="Description of the time entry.", examples=["Implementation work", "Bug fix"]
     )
-    start: Optional[int] = Field(
-        None, description="Start time in epoch ms.", examples=[1702080000000]
-    )
-    end: Optional[int] = Field(
-        None, description="End time in epoch ms.", examples=[1702083600000]
-    )
-    duration: Optional[int] = Field(
-        None, ge=0, description="Duration in milliseconds.", examples=[3600000, 7200000]
-    )
+    start: Optional[int] = Field(None, description="Start time in epoch ms.", examples=[1702080000000])
+    end: Optional[int] = Field(None, description="End time in epoch ms.", examples=[1702083600000])
+    duration: Optional[int] = Field(None, ge=0, description="Duration in milliseconds.", examples=[3600000, 7200000])
 
 
 class TimeEntryGetInput(BaseModel):
@@ -73,14 +67,10 @@ class TimeEntryGetInput(BaseModel):
         TimeEntryGetInput(team_id="team_1", time_entry_id="entry_123")
     """
 
-    model_config = ConfigDict(
-        json_schema_extra={"examples": [{"team_id": "team_1", "time_entry_id": "entry_123"}]}
-    )
+    model_config = ConfigDict(json_schema_extra={"examples": [{"team_id": "team_1", "time_entry_id": "entry_123"}]})
 
     team_id: str = Field(..., min_length=1, description="Team/workspace ID.", examples=["team_1", "9018752317"])
-    time_entry_id: str = Field(
-        ..., min_length=1, description="Time entry ID.", examples=["entry_123", "ent_abc"]
-    )
+    time_entry_id: str = Field(..., min_length=1, description="Time entry ID.", examples=["entry_123", "ent_abc"])
 
 
 class TimeEntryUpdateInput(BaseModel):
@@ -110,21 +100,11 @@ class TimeEntryUpdateInput(BaseModel):
     )
 
     team_id: str = Field(..., min_length=1, description="Team/workspace ID.", examples=["team_1", "9018752317"])
-    time_entry_id: str = Field(
-        ..., min_length=1, description="Time entry ID.", examples=["entry_123", "ent_abc"]
-    )
-    description: Optional[str] = Field(
-        None, description="New description.", examples=["Updated description"]
-    )
-    start: Optional[int] = Field(
-        None, description="New start time in epoch ms.", examples=[1702080000000]
-    )
-    end: Optional[int] = Field(
-        None, description="New end time in epoch ms.", examples=[1702087200000]
-    )
-    duration: Optional[int] = Field(
-        None, ge=0, description="New duration in milliseconds.", examples=[7200000]
-    )
+    time_entry_id: str = Field(..., min_length=1, description="Time entry ID.", examples=["entry_123", "ent_abc"])
+    description: Optional[str] = Field(None, description="New description.", examples=["Updated description"])
+    start: Optional[int] = Field(None, description="New start time in epoch ms.", examples=[1702080000000])
+    end: Optional[int] = Field(None, description="New end time in epoch ms.", examples=[1702087200000])
+    duration: Optional[int] = Field(None, ge=0, description="New duration in milliseconds.", examples=[7200000])
 
 
 class TimeEntryDeleteInput(BaseModel):
@@ -141,14 +121,10 @@ class TimeEntryDeleteInput(BaseModel):
         TimeEntryDeleteInput(team_id="team_1", time_entry_id="entry_123")
     """
 
-    model_config = ConfigDict(
-        json_schema_extra={"examples": [{"team_id": "team_1", "time_entry_id": "entry_123"}]}
-    )
+    model_config = ConfigDict(json_schema_extra={"examples": [{"team_id": "team_1", "time_entry_id": "entry_123"}]})
 
     team_id: str = Field(..., min_length=1, description="Team/workspace ID.", examples=["team_1", "9018752317"])
-    time_entry_id: str = Field(
-        ..., min_length=1, description="Time entry ID.", examples=["entry_123", "ent_abc"]
-    )
+    time_entry_id: str = Field(..., min_length=1, description="Time entry ID.", examples=["entry_123", "ent_abc"])
 
 
 class TimeEntryListInput(BaseModel):
@@ -178,18 +154,10 @@ class TimeEntryListInput(BaseModel):
     )
 
     team_id: str = Field(..., min_length=1, description="Team/workspace ID.", examples=["team_1", "9018752317"])
-    task_id: Optional[str] = Field(
-        None, description="Filter by task ID.", examples=["task_123", "tsk_abc"]
-    )
-    assignee: Optional[str] = Field(
-        None, description="Filter by user ID.", examples=["user_123", "usr_abc"]
-    )
-    start_date: Optional[int] = Field(
-        None, description="Filter by start date (epoch ms).", examples=[1702080000000]
-    )
-    end_date: Optional[int] = Field(
-        None, description="Filter by end date (epoch ms).", examples=[1702166400000]
-    )
+    task_id: Optional[str] = Field(None, description="Filter by task ID.", examples=["task_123", "tsk_abc"])
+    assignee: Optional[str] = Field(None, description="Filter by user ID.", examples=["user_123", "usr_abc"])
+    start_date: Optional[int] = Field(None, description="Filter by start date (epoch ms).", examples=[1702080000000])
+    end_date: Optional[int] = Field(None, description="Filter by end date (epoch ms).", examples=[1702166400000])
     page: int = Field(0, ge=0, description="Page number (0-indexed).", examples=[0, 1, 2])
     limit: int = Field(100, ge=1, le=100, description="Page size (cap 100).", examples=[25, 50, 100])
 
@@ -207,9 +175,7 @@ class TimeTrackingGetInput(BaseModel):
         TimeTrackingGetInput(task_id="task_123")
     """
 
-    model_config = ConfigDict(
-        json_schema_extra={"examples": [{"task_id": "task_123"}]}
-    )
+    model_config = ConfigDict(json_schema_extra={"examples": [{"task_id": "task_123"}]})
 
     task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123", "tsk_abc"])
 
@@ -227,9 +193,7 @@ class TimeTrackingStartInput(BaseModel):
         TimeTrackingStartInput(task_id="task_123")
     """
 
-    model_config = ConfigDict(
-        json_schema_extra={"examples": [{"task_id": "task_123"}]}
-    )
+    model_config = ConfigDict(json_schema_extra={"examples": [{"task_id": "task_123"}]})
 
     task_id: str = Field(..., min_length=1, description="Task ID.", examples=["task_123", "tsk_abc"])
 

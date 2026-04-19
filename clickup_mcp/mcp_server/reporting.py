@@ -14,7 +14,6 @@ from clickup_mcp.mcp_server.models.inputs.reporting import (
 )
 from clickup_mcp.mcp_server.models.outputs.reporting import (
     TimeReportListResult,
-    TimeReportListItem,
 )
 from clickup_mcp.models.dto.reporting import TimeReportListQuery
 from clickup_mcp.models.mapping.reporting_mapper import ReportingMapper
@@ -68,9 +67,7 @@ async def report_create(input: TimeReportCreateInput) -> TimeReportListResult:
         resp = await client.reporting.create(input.team_id, dto)
     if not resp:
         raise ClickUpAPIError("Create time report failed")
-    items = [
-        ReportingMapper.to_time_report_list_item_output(ReportingMapper.to_domain(entry)) for entry in resp.items
-    ]
+    items = [ReportingMapper.to_time_report_list_item_output(ReportingMapper.to_domain(entry)) for entry in resp.items]
     return TimeReportListResult(items=items, next_cursor=resp.next_page, truncated=False)
 
 
@@ -124,7 +121,5 @@ async def report_list(input: TimeReportListInput) -> TimeReportListResult:
         resp = await client.reporting.list(input.team_id, query)
     if not resp:
         raise ClickUpAPIError("List time reports failed")
-    items = [
-        ReportingMapper.to_time_report_list_item_output(ReportingMapper.to_domain(entry)) for entry in resp.items
-    ]
+    items = [ReportingMapper.to_time_report_list_item_output(ReportingMapper.to_domain(entry)) for entry in resp.items]
     return TimeReportListResult(items=items, next_cursor=resp.next_page, truncated=False)
