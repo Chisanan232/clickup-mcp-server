@@ -40,7 +40,11 @@ Quick Examples:
 import logging
 from typing import TYPE_CHECKING, Optional
 
-from clickup_mcp.models.dto.key_result import KeyResultCreate, KeyResultListResponse, KeyResultUpdate
+from clickup_mcp.models.dto.key_result import (
+    KeyResultCreate,
+    KeyResultListResponse,
+    KeyResultUpdate,
+)
 from clickup_mcp.types import ClickUpGoalID, ClickUpKeyResultID
 
 if TYPE_CHECKING:
@@ -83,7 +87,9 @@ class KeyResultAPI:
         """
         self._client = client
 
-    async def create(self, goal_id: ClickUpGoalID, key_result_create: KeyResultCreate) -> Optional[KeyResultListResponse]:
+    async def create(
+        self, goal_id: ClickUpGoalID, key_result_create: KeyResultCreate
+    ) -> Optional[KeyResultListResponse]:
         """
         Create a key result for a goal.
 

@@ -40,8 +40,13 @@ Quick Examples:
 import logging
 from typing import TYPE_CHECKING, Optional
 
-from clickup_mcp.models.dto.goal import GoalCreate, GoalListQuery, GoalListResponse, GoalUpdate
-from clickup_mcp.types import ClickUpTeamID, ClickUpGoalID
+from clickup_mcp.models.dto.goal import (
+    GoalCreate,
+    GoalListQuery,
+    GoalListResponse,
+    GoalUpdate,
+)
+from clickup_mcp.types import ClickUpGoalID, ClickUpTeamID
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient

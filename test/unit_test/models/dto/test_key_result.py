@@ -1,6 +1,11 @@
 """DTO tests for KeyResult."""
 
-from clickup_mcp.models.dto.key_result import KeyResultCreate, KeyResultListResponse, KeyResultResponse, KeyResultUpdate
+from clickup_mcp.models.dto.key_result import (
+    KeyResultCreate,
+    KeyResultListResponse,
+    KeyResultResponse,
+    KeyResultUpdate,
+)
 
 
 def test_key_result_create_serialization() -> None:
