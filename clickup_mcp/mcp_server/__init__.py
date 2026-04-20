@@ -18,6 +18,7 @@ Usage Examples:
 """
 
 # Import tool modules to register tools
+from . import bottleneck  # noqa: F401
 from . import folder  # noqa: F401
 from . import goal  # noqa: F401
 from . import key_result  # noqa: F401
@@ -28,7 +29,6 @@ from . import task  # noqa: F401
 from . import team  # noqa: F401
 from . import time  # noqa: F401
 from . import workflow  # noqa: F401
-from . import bottleneck  # noqa: F401
 from . import workspace  # noqa: F401
 
 # Ensure app is created before importing tool modules

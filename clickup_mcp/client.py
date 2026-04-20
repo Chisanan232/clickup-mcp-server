@@ -16,6 +16,7 @@ import httpx
 from pydantic import BaseModel, Field
 
 from ._base import BaseServerFactory
+from .api.bottleneck import BottleneckAPI
 from .api.folder import FolderAPI
 from .api.goal import GoalAPI
 from .api.key_result import KeyResultAPI
@@ -27,7 +28,6 @@ from .api.team import TeamAPI
 from .api.time import TimeAPI
 from .api.workflow import WorkflowAPI
 from .api.workflow_context import WorkflowContextAPI
-from .api.bottleneck import BottleneckAPI
 from .config import get_settings
 from .exceptions import (
     AuthenticationError,

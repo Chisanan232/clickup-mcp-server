@@ -48,7 +48,9 @@ class BottleneckDetectionInput(BaseModel):
     start_date: int = Field(..., description="Start date in epoch milliseconds.", examples=[1640995200000])
     end_date: int = Field(..., description="End date in epoch milliseconds.", examples=[1643673600000])
     list_id: Optional[str] = Field(None, description="Filter by list ID.", examples=["list_123"])
-    threshold: Optional[float] = Field(None, gt=0, description="Threshold value for bottleneck detection.", examples=[0.5, 0.7])
+    threshold: Optional[float] = Field(
+        None, gt=0, description="Threshold value for bottleneck detection.", examples=[0.5, 0.7]
+    )
     bottleneck_type: Optional[str] = Field(
         None,
         description="Type of bottleneck to detect.",

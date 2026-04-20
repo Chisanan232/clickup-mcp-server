@@ -28,7 +28,7 @@ Usage Examples:
     is_critical = detection.is_critical()
 """
 
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from pydantic import Field
 
@@ -90,7 +90,9 @@ class BottleneckDetection(BaseDomainModel):
     list_id: Optional[str] = Field(default=None, description="List ID for filtered detection")
     start_date: int = Field(description="Start date in epoch milliseconds")
     end_date: int = Field(description="End date in epoch milliseconds")
-    bottleneck_type: str = Field(description="Type of bottleneck (e.g., 'status_stuck', 'assignee_overload', 'list_backlog')")
+    bottleneck_type: str = Field(
+        description="Type of bottleneck (e.g., 'status_stuck', 'assignee_overload', 'list_backlog')"
+    )
     severity: str = Field(description="Severity level (low, medium, high, critical)")
     affected_tasks: int = Field(default=0, description="Number of tasks affected by the bottleneck")
     threshold: Optional[float] = Field(default=None, description="Threshold value that triggered the detection")

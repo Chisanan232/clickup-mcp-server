@@ -4,12 +4,12 @@ DTOs for ClickUp API requests and responses.
 This module exports all DTO classes for interacting with the ClickUp API.
 """
 
+from .bottleneck import BottleneckDetectionQuery, BottleneckDetectionResponse
 from .custom_fields import CustomField
 from .folder import FolderCreate, FolderResp, FolderUpdate
 from .list import ListCreate, ListResp, ListUpdate
 from .space import SpaceCreate, SpaceFeatures, SpaceResp, SpaceUpdate
 from .task import TaskCreate, TaskListQuery, TaskResp, TaskUpdate
-from .bottleneck import BottleneckDetectionQuery, BottleneckDetectionResponse
 
 __all__ = [
     "SpaceCreate",

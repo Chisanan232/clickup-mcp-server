@@ -26,7 +26,10 @@ Quick Examples:
 import logging
 from typing import TYPE_CHECKING, Optional
 
-from clickup_mcp.models.dto.bottleneck import BottleneckDetectionQuery, BottleneckDetectionResponse
+from clickup_mcp.models.dto.bottleneck import (
+    BottleneckDetectionQuery,
+    BottleneckDetectionResponse,
+)
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
@@ -63,9 +66,7 @@ class BottleneckAPI:
         """
         self._client = client
 
-    async def detect(
-        self, team_id: str, query: BottleneckDetectionQuery
-    ) -> Optional[BottleneckDetectionResponse]:
+    async def detect(self, team_id: str, query: BottleneckDetectionQuery) -> Optional[BottleneckDetectionResponse]:
         """
         Detect bottlenecks in team workflows.
 

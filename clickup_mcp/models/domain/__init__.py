@@ -5,6 +5,8 @@ This package contains domain models that represent core business entities
 in the ClickUp MCP application.
 """
 
+from .analytics import ListAnalytics, SpaceAnalytics, TaskAnalytics, TeamAnalytics
+from .bottleneck import BottleneckDetection
 from .folder import ClickUpFolder, Folder
 from .goal import Goal
 from .key_result import KeyResult
@@ -14,8 +16,6 @@ from .task import ClickUpTask, Task
 from .team import ClickUpTeam, ClickUpTeamMember, ClickUpUser, Team
 from .workflow import Workflow
 from .workflow_context import WorkflowContext
-from .analytics import ListAnalytics, SpaceAnalytics, TaskAnalytics, TeamAnalytics
-from .bottleneck import BottleneckDetection
 
 __all__ = [
     # Space models

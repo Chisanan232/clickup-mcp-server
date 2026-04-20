@@ -10,7 +10,6 @@ from clickup_mcp.mcp_server.errors import handle_tool_errors
 from clickup_mcp.mcp_server.models.inputs.bottleneck import BottleneckDetectionInput
 from clickup_mcp.mcp_server.models.outputs.bottleneck import BottleneckDetectionResult
 from clickup_mcp.models.dto.bottleneck import BottleneckDetectionQuery
-from clickup_mcp.models.mapping.analytics_mapper import AnalyticsMapper
 
 from .app import mcp
 
