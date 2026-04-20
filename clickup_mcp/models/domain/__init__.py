@@ -13,6 +13,7 @@ from .space import ClickUpSpace, Space
 from .task import ClickUpTask, Task
 from .team import ClickUpTeam, ClickUpTeamMember, ClickUpUser, Team
 from .workflow import Workflow
+from .workflow_context import WorkflowContext
 
 __all__ = [
     # Space models
@@ -38,4 +39,6 @@ __all__ = [
     "KeyResult",
     # Workflow models
     "Workflow",
+    # Workflow context models
+    "WorkflowContext",
 ]

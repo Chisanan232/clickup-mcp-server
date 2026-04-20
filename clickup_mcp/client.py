@@ -26,6 +26,7 @@ from .api.task import TaskAPI
 from .api.team import TeamAPI
 from .api.time import TimeAPI
 from .api.workflow import WorkflowAPI
+from .api.workflow_context import WorkflowContextAPI
 from .config import get_settings
 from .exceptions import (
     AuthenticationError,
@@ -289,6 +290,7 @@ class ClickUpAPIClient(ClickUpClientProtocol):
         self.goal = GoalAPI(self)
         self.key_result = KeyResultAPI(self)
         self.workflow = WorkflowAPI(self)
+        self.workflow_context = WorkflowContextAPI(self)
 
     async def __aenter__(self) -> "ClickUpAPIClient":
         """Async context manager entry."""
