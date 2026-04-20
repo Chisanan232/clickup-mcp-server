@@ -28,7 +28,12 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from clickup_mcp.models.domain.analytics import ListAnalytics, SpaceAnalytics, TaskAnalytics, TeamAnalytics
+from clickup_mcp.models.domain.analytics import (
+    ListAnalytics,
+    SpaceAnalytics,
+    TaskAnalytics,
+    TeamAnalytics,
+)
 from clickup_mcp.models.dto.analytics import (
     ListAnalyticsResponse,
     SpaceAnalyticsResponse,
