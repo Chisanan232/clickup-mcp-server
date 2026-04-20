@@ -74,9 +74,7 @@ class TestWorkflowContext:
 
     def test_remove_variable(self):
         """Test removing a context variable."""
-        context = WorkflowContext(
-            id="ctx_123", workflow_id="wf_456", name="Test", variables={"priority": "urgent"}
-        )
+        context = WorkflowContext(id="ctx_123", workflow_id="wf_456", name="Test", variables={"priority": "urgent"})
         context.remove_variable("priority")
         assert context.variables == {}
 
@@ -112,9 +110,7 @@ class TestWorkflowContext:
 
     def test_remove_condition(self):
         """Test removing an execution condition."""
-        context = WorkflowContext(
-            id="ctx_123", workflow_id="wf_456", name="Test", conditions=["status == 'open'"]
-        )
+        context = WorkflowContext(id="ctx_123", workflow_id="wf_456", name="Test", conditions=["status == 'open'"])
         context.remove_condition("status == 'open'")
         assert context.conditions == []
 
