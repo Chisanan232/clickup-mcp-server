@@ -28,6 +28,7 @@ from . import task  # noqa: F401
 from . import team  # noqa: F401
 from . import time  # noqa: F401
 from . import workflow  # noqa: F401
+from . import analytics  # noqa: F401
 from . import workspace  # noqa: F401
 
 # Ensure app is created before importing tool modules
