@@ -55,6 +55,7 @@ const sidebars: SidebarsConfig = {
                 'api-references/mcp-server/tools/folder-mcp-api',
                 'api-references/mcp-server/tools/list-mcp-api',
                 'api-references/mcp-server/tools/task-mcp-api',
+                'api-references/mcp-server/tools/analytics-mcp-api',
               ],
             },
           ],
