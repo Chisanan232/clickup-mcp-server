@@ -48,13 +48,17 @@ class TestWorkflow:
 
     def test_update_description(self):
         """Test updating workflow description."""
-        workflow = Workflow(id="wf_123", team_id="team_456", name="Test", description="Old Description", trigger_type="task_created")
+        workflow = Workflow(
+            id="wf_123", team_id="team_456", name="Test", description="Old Description", trigger_type="task_created"
+        )
         workflow.update_description("New Description")
         assert workflow.description == "New Description"
 
     def test_update_description_clear(self):
         """Test clearing workflow description."""
-        workflow = Workflow(id="wf_123", team_id="team_456", name="Test", description="Description", trigger_type="task_created")
+        workflow = Workflow(
+            id="wf_123", team_id="team_456", name="Test", description="Description", trigger_type="task_created"
+        )
         workflow.update_description(None)
         assert workflow.description is None
 
@@ -147,8 +151,12 @@ class TestWorkflow:
 
     def test_is_active_workflow(self):
         """Test checking if workflow is active."""
-        active_workflow = Workflow(id="wf_123", team_id="team_456", name="Test", is_active=True, trigger_type="task_created")
-        inactive_workflow = Workflow(id="wf_124", team_id="team_456", name="Test", is_active=False, trigger_type="task_created")
+        active_workflow = Workflow(
+            id="wf_123", team_id="team_456", name="Test", is_active=True, trigger_type="task_created"
+        )
+        inactive_workflow = Workflow(
+            id="wf_124", team_id="team_456", name="Test", is_active=False, trigger_type="task_created"
+        )
 
         assert active_workflow.is_active_workflow() is True
         assert inactive_workflow.is_active_workflow() is False
