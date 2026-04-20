@@ -121,7 +121,7 @@ class WorkflowContextAPI:
         payload = context_create.to_payload()
 
         logger.info(f"Creating context for workflow {workflow_id}: {context_create.name}")
-        response = await self._client.post(endpoint, json=payload)
+        response = await self._client.post(endpoint, data=payload)
 
         if response and "data" in response:
             return WorkflowContextListResponse.deserialize(response["data"])
@@ -177,7 +177,7 @@ class WorkflowContextAPI:
         payload = context_update.to_payload()
 
         logger.info(f"Updating context {context_id} for workflow {workflow_id}")
-        response = await self._client.put(endpoint, json=payload)
+        response = await self._client.put(endpoint, data=payload)
 
         if response and "data" in response:
             return WorkflowContextListResponse.deserialize(response["data"])
