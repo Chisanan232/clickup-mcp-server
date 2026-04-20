@@ -16,6 +16,7 @@ import httpx
 from pydantic import BaseModel, Field
 
 from ._base import BaseServerFactory
+from .api.analytics import AnalyticsAPI
 from .api.folder import FolderAPI
 from .api.goal import GoalAPI
 from .api.key_result import KeyResultAPI
@@ -25,7 +26,6 @@ from .api.space import SpaceAPI
 from .api.task import TaskAPI
 from .api.team import TeamAPI
 from .api.time import TimeAPI
-from .api.analytics import AnalyticsAPI
 from .api.workflow import WorkflowAPI
 from .api.workflow_context import WorkflowContextAPI
 from .config import get_settings

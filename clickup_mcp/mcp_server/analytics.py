@@ -90,9 +90,7 @@ async def analytics_get_task_analytics(input: TaskAnalyticsInput) -> TaskAnalyti
 @mcp.tool(
     title="Get Team Analytics",
     name="analytics.get_team_analytics",
-    description=(
-        "Get team analytics with date range. HTTP: GET /team/{team_id}/analytics/team."
-    ),
+    description=("Get team analytics with date range. HTTP: GET /team/{team_id}/analytics/team."),
     annotations={
         "readOnlyHint": True,
         "openWorldHint": True,
@@ -137,9 +135,7 @@ async def analytics_get_team_analytics(input: TeamAnalyticsInput) -> TeamAnalyti
 @mcp.tool(
     title="Get List Analytics",
     name="analytics.get_list_analytics",
-    description=(
-        "Get list analytics with date range. HTTP: GET /list/{list_id}/analytics."
-    ),
+    description=("Get list analytics with date range. HTTP: GET /list/{list_id}/analytics."),
     annotations={
         "readOnlyHint": True,
         "openWorldHint": True,
@@ -184,9 +180,7 @@ async def analytics_get_list_analytics(input: ListAnalyticsInput) -> ListAnalyti
 @mcp.tool(
     title="Get Space Analytics",
     name="analytics.get_space_analytics",
-    description=(
-        "Get space analytics with date range. HTTP: GET /space/{space_id}/analytics."
-    ),
+    description=("Get space analytics with date range. HTTP: GET /space/{space_id}/analytics."),
     annotations={
         "readOnlyHint": True,
         "openWorldHint": True,

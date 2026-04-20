@@ -32,7 +32,7 @@ Usage Examples:
     completion_rate = analytics.get_completion_rate()
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from pydantic import Field
 
@@ -192,7 +192,9 @@ class TeamAnalytics(BaseDomainModel):
     completed_tasks: int = Field(default=0, description="Number of completed tasks")
     total_lists: int = Field(default=0, description="Number of lists in the team")
     active_users: int = Field(default=0, description="Number of active users")
-    average_task_completion_time: Optional[int] = Field(default=None, description="Average task completion time in milliseconds")
+    average_task_completion_time: Optional[int] = Field(
+        default=None, description="Average task completion time in milliseconds"
+    )
 
     @property
     def id(self) -> str:
@@ -284,7 +286,9 @@ class ListAnalytics(BaseDomainModel):
     total_tasks: int = Field(default=0, description="Total number of tasks in the list")
     completed_tasks: int = Field(default=0, description="Number of completed tasks")
     overdue_tasks: int = Field(default=0, description="Number of overdue tasks")
-    average_completion_time: Optional[int] = Field(default=None, description="Average task completion time in milliseconds")
+    average_completion_time: Optional[int] = Field(
+        default=None, description="Average task completion time in milliseconds"
+    )
 
     @property
     def id(self) -> str:

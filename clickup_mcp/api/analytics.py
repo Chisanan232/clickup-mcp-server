@@ -90,9 +90,7 @@ class AnalyticsAPI:
         """
         self._client = client
 
-    async def get_task_analytics(
-        self, team_id: str, query: TaskAnalyticsQuery
-    ) -> Optional[TaskAnalyticsResponse]:
+    async def get_task_analytics(self, team_id: str, query: TaskAnalyticsQuery) -> Optional[TaskAnalyticsResponse]:
         """
         Get task analytics for a team.
 
@@ -125,9 +123,7 @@ class AnalyticsAPI:
             return TaskAnalyticsResponse.deserialize(response["data"])
         return None
 
-    async def get_team_analytics(
-        self, team_id: str, query: TeamAnalyticsQuery
-    ) -> Optional[TeamAnalyticsResponse]:
+    async def get_team_analytics(self, team_id: str, query: TeamAnalyticsQuery) -> Optional[TeamAnalyticsResponse]:
         """
         Get team analytics.
 
@@ -160,9 +156,7 @@ class AnalyticsAPI:
             return TeamAnalyticsResponse.deserialize(response["data"])
         return None
 
-    async def get_list_analytics(
-        self, list_id: str, query: ListAnalyticsQuery
-    ) -> Optional[ListAnalyticsResponse]:
+    async def get_list_analytics(self, list_id: str, query: ListAnalyticsQuery) -> Optional[ListAnalyticsResponse]:
         """
         Get list analytics.
 
@@ -195,9 +189,7 @@ class AnalyticsAPI:
             return ListAnalyticsResponse.deserialize(response["data"])
         return None
 
-    async def get_space_analytics(
-        self, space_id: str, query: SpaceAnalyticsQuery
-    ) -> Optional[SpaceAnalyticsResponse]:
+    async def get_space_analytics(self, space_id: str, query: SpaceAnalyticsQuery) -> Optional[SpaceAnalyticsResponse]:
         """
         Get space analytics.
 
