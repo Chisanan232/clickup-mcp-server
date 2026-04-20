@@ -2,7 +2,12 @@
 
 import pytest
 
-from clickup_mcp.models.domain.analytics import ListAnalytics, SpaceAnalytics, TaskAnalytics, TeamAnalytics
+from clickup_mcp.models.domain.analytics import (
+    ListAnalytics,
+    SpaceAnalytics,
+    TaskAnalytics,
+    TeamAnalytics,
+)
 
 
 class TestTaskAnalytics:
