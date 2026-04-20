@@ -9,6 +9,7 @@ from .folder import FolderCreate, FolderResp, FolderUpdate
 from .list import ListCreate, ListResp, ListUpdate
 from .space import SpaceCreate, SpaceFeatures, SpaceResp, SpaceUpdate
 from .task import TaskCreate, TaskListQuery, TaskResp, TaskUpdate
+from .insights import InsightsGenerationQuery, InsightsGenerationResponse
 
 __all__ = [
     "SpaceCreate",
@@ -26,4 +27,7 @@ __all__ = [
     "TaskListQuery",
     "SpaceFeatures",
     "CustomField",
+    # Insights generation DTOs
+    "InsightsGenerationQuery",
+    "InsightsGenerationResponse",
 ]
