@@ -45,7 +45,11 @@ Quick Examples:
 import logging
 from typing import TYPE_CHECKING, Optional
 
-from clickup_mcp.models.dto.workflow import WorkflowCreate, WorkflowListResponse, WorkflowUpdate
+from clickup_mcp.models.dto.workflow import (
+    WorkflowCreate,
+    WorkflowListResponse,
+    WorkflowUpdate,
+)
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
@@ -95,9 +99,7 @@ class WorkflowAPI:
         """
         self._client = client
 
-    async def create(
-        self, team_id: str, workflow_create: WorkflowCreate
-    ) -> Optional[WorkflowListResponse]:
+    async def create(self, team_id: str, workflow_create: WorkflowCreate) -> Optional[WorkflowListResponse]:
         """
         Create a workflow automation.
 
@@ -160,9 +162,7 @@ class WorkflowAPI:
             return WorkflowListResponse.deserialize(response["data"])
         return None
 
-    async def update(
-        self, workflow_id: str, workflow_update: WorkflowUpdate
-    ) -> Optional[WorkflowListResponse]:
+    async def update(self, workflow_id: str, workflow_update: WorkflowUpdate) -> Optional[WorkflowListResponse]:
         """
         Update a workflow automation.
 

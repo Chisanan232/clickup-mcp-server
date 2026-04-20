@@ -32,7 +32,9 @@ class WorkflowResult(BaseModel):
     description: Optional[str] = Field(None, description="Description", examples=["Auto-assign tasks when created"])
     trigger_type: str = Field(..., description="Trigger type", examples=["task_created", "status_changed"])
     trigger_config: Optional[dict] = Field(None, description="Trigger configuration", examples=[{"list_id": "456"}])
-    actions: List[dict] = Field(default_factory=list, description="Actions to execute", examples=[[{"type": "assign", "user_id": "789"}]])
+    actions: List[dict] = Field(
+        default_factory=list, description="Actions to execute", examples=[[{"type": "assign", "user_id": "789"}]]
+    )
     is_active: bool = Field(..., description="Whether the workflow is active", examples=[True, False])
     priority: Optional[int] = Field(None, description="Execution priority", examples=[1, 2, 3])
     date_created: Optional[int] = Field(
