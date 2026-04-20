@@ -6,10 +6,13 @@ in the ClickUp MCP application.
 """
 
 from .folder import ClickUpFolder, Folder
+from .goal import Goal
+from .key_result import KeyResult
 from .list import ClickUpList, List
 from .space import ClickUpSpace, Space
 from .task import ClickUpTask, Task
 from .team import ClickUpTeam, ClickUpTeamMember, ClickUpUser, Team
+from .workflow import Workflow
 
 __all__ = [
     # Space models
@@ -29,4 +32,10 @@ __all__ = [
     "ClickUpTeamMember",
     "ClickUpUser",
     "Team",  # Backwards compatibility alias
+    # Goal models
+    "Goal",
+    # Key result models
+    "KeyResult",
+    # Workflow models
+    "Workflow",
 ]
