@@ -45,7 +45,11 @@ Quick Examples:
 import logging
 from typing import TYPE_CHECKING, Optional
 
-from clickup_mcp.models.dto.workflow import WorkflowCreate, WorkflowListResponse, WorkflowUpdate
+from clickup_mcp.models.dto.workflow import (
+    WorkflowCreate,
+    WorkflowListResponse,
+    WorkflowUpdate,
+)
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
@@ -95,9 +99,7 @@ class WorkflowAPI:
         """
         self._client = client
 
-    async def create(
-        self, team_id: str, workflow_create: WorkflowCreate
-    ) -> Optional[WorkflowListResponse]:
+    async def create(self, team_id: str, workflow_create: WorkflowCreate) -> Optional[WorkflowListResponse]:
         """
         Create a workflow automation.
 
@@ -129,7 +131,7 @@ class WorkflowAPI:
         payload = workflow_create.to_payload()
 
         logger.info(f"Creating workflow for team {team_id}: {workflow_create.name}")
-        response = await self._client.post(endpoint, json=payload)
+        response = await self._client.post(endpoint, data=payload)
 
         if response and "data" in response:
             return WorkflowListResponse.deserialize(response["data"])
@@ -160,9 +162,7 @@ class WorkflowAPI:
             return WorkflowListResponse.deserialize(response["data"])
         return None
 
-    async def update(
-        self, workflow_id: str, workflow_update: WorkflowUpdate
-    ) -> Optional[WorkflowListResponse]:
+    async def update(self, workflow_id: str, workflow_update: WorkflowUpdate) -> Optional[WorkflowListResponse]:
         """
         Update a workflow automation.
 
@@ -183,7 +183,7 @@ class WorkflowAPI:
         payload = workflow_update.to_payload()
 
         logger.info(f"Updating workflow {workflow_id}")
-        response = await self._client.put(endpoint, json=payload)
+        response = await self._client.put(endpoint, data=payload)
 
         if response and "data" in response:
             return WorkflowListResponse.deserialize(response["data"])
