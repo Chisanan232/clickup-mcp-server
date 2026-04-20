@@ -131,7 +131,7 @@ class WorkflowAPI:
         payload = workflow_create.to_payload()
 
         logger.info(f"Creating workflow for team {team_id}: {workflow_create.name}")
-        response = await self._client.post(endpoint, json=payload)
+        response = await self._client.post(endpoint, data=payload)
 
         if response and "data" in response:
             return WorkflowListResponse.deserialize(response["data"])
@@ -183,7 +183,7 @@ class WorkflowAPI:
         payload = workflow_update.to_payload()
 
         logger.info(f"Updating workflow {workflow_id}")
-        response = await self._client.put(endpoint, json=payload)
+        response = await self._client.put(endpoint, data=payload)
 
         if response and "data" in response:
             return WorkflowListResponse.deserialize(response["data"])
