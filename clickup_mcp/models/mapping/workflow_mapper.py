@@ -40,7 +40,6 @@ from typing import TYPE_CHECKING
 from clickup_mcp.models.domain.workflow import Workflow
 from clickup_mcp.models.dto.workflow import (
     WorkflowCreate,
-    WorkflowListResponse,
     WorkflowResponse,
     WorkflowUpdate,
 )
@@ -49,10 +48,6 @@ if TYPE_CHECKING:  # type hints only; avoid importing mcp_server package at runt
     from clickup_mcp.mcp_server.models.inputs.workflow import (
         WorkflowCreateInput,
         WorkflowUpdateInput,
-    )
-    from clickup_mcp.mcp_server.models.outputs.workflow import (
-        WorkflowListItem,
-        WorkflowResult,
     )
 
 logger = logging.getLogger(__name__)

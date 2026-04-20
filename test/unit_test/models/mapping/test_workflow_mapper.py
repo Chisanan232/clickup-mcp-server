@@ -1,9 +1,11 @@
 """Unit tests for Workflow mapper."""
 
-import pytest
-
 from clickup_mcp.models.domain.workflow import Workflow
-from clickup_mcp.models.dto.workflow import WorkflowCreate, WorkflowResponse, WorkflowUpdate
+from clickup_mcp.models.dto.workflow import (
+    WorkflowCreate,
+    WorkflowResponse,
+    WorkflowUpdate,
+)
 from clickup_mcp.models.mapping.workflow_mapper import WorkflowMapper
 
 

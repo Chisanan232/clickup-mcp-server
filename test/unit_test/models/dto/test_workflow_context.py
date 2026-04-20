@@ -1,7 +1,5 @@
 """Unit tests for WorkflowContext DTOs."""
 
-import pytest
-
 from clickup_mcp.models.dto.workflow_context import (
     WorkflowContextCreate,
     WorkflowContextListQuery,
