@@ -26,7 +26,10 @@ Quick Examples:
 import logging
 from typing import TYPE_CHECKING, Optional
 
-from clickup_mcp.models.dto.insights import InsightsGenerationQuery, InsightsGenerationResponse
+from clickup_mcp.models.dto.insights import (
+    InsightsGenerationQuery,
+    InsightsGenerationResponse,
+)
 
 if TYPE_CHECKING:
     from clickup_mcp.client import ClickUpAPIClient
@@ -63,9 +66,7 @@ class InsightsAPI:
         """
         self._client = client
 
-    async def generate(
-        self, team_id: str, query: InsightsGenerationQuery
-    ) -> Optional[InsightsGenerationResponse]:
+    async def generate(self, team_id: str, query: InsightsGenerationQuery) -> Optional[InsightsGenerationResponse]:
         """
         Generate insights from analytics data.
 

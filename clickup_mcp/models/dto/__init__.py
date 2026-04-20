@@ -6,10 +6,10 @@ This module exports all DTO classes for interacting with the ClickUp API.
 
 from .custom_fields import CustomField
 from .folder import FolderCreate, FolderResp, FolderUpdate
+from .insights import InsightsGenerationQuery, InsightsGenerationResponse
 from .list import ListCreate, ListResp, ListUpdate
 from .space import SpaceCreate, SpaceFeatures, SpaceResp, SpaceUpdate
 from .task import TaskCreate, TaskListQuery, TaskResp, TaskUpdate
-from .insights import InsightsGenerationQuery, InsightsGenerationResponse
 
 __all__ = [
     "SpaceCreate",

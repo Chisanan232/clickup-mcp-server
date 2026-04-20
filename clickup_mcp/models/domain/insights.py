@@ -25,7 +25,7 @@ Usage Examples:
     )
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from pydantic import Field
 

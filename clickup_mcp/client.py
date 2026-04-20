@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 from ._base import BaseServerFactory
 from .api.folder import FolderAPI
 from .api.goal import GoalAPI
+from .api.insights import InsightsAPI
 from .api.key_result import KeyResultAPI
 from .api.list import ListAPI
 from .api.reporting import ReportingAPI
@@ -27,7 +28,6 @@ from .api.team import TeamAPI
 from .api.time import TimeAPI
 from .api.workflow import WorkflowAPI
 from .api.workflow_context import WorkflowContextAPI
-from .api.insights import InsightsAPI
 from .config import get_settings
 from .exceptions import (
     AuthenticationError,
