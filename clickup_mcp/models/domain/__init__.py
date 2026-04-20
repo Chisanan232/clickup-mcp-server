@@ -15,6 +15,7 @@ from .team import ClickUpTeam, ClickUpTeamMember, ClickUpUser, Team
 from .workflow import Workflow
 from .workflow_context import WorkflowContext
 from .analytics import ListAnalytics, SpaceAnalytics, TaskAnalytics, TeamAnalytics
+from .insights import InsightsGeneration
 
 __all__ = [
     # Space models
@@ -47,4 +48,6 @@ __all__ = [
     "TeamAnalytics",
     "ListAnalytics",
     "SpaceAnalytics",
+    # Insights generation models
+    "InsightsGeneration",
 ]
