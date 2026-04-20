@@ -119,9 +119,7 @@ async def workflow_get(input: WorkflowGetInput) -> WorkflowResult:
 @mcp.tool(
     title="Update Workflow",
     name="workflow.update",
-    description=(
-        "Update a workflow automation by ID. HTTP: PUT /workflow/{workflow_id}."
-    ),
+    description=("Update a workflow automation by ID. HTTP: PUT /workflow/{workflow_id}."),
     annotations={
         "destructiveHint": False,
         "openWorldHint": True,
@@ -165,9 +163,7 @@ async def workflow_update(input: WorkflowUpdateInput) -> WorkflowResult:
 @mcp.tool(
     title="Delete Workflow",
     name="workflow.delete",
-    description=(
-        "Delete a workflow automation by ID. HTTP: DELETE /workflow/{workflow_id}."
-    ),
+    description=("Delete a workflow automation by ID. HTTP: DELETE /workflow/{workflow_id}."),
     annotations={
         "destructiveHint": True,
         "openWorldHint": True,
@@ -243,9 +239,7 @@ async def workflow_list(input: WorkflowListInput) -> WorkflowListResult:
     """
     client = ClickUpAPIClientFactory.get()
     async with client:
-        resp = await client.workflow.list(
-            input.team_id, page=input.page, limit=input.limit, is_active=input.is_active
-        )
+        resp = await client.workflow.list(input.team_id, page=input.page, limit=input.limit, is_active=input.is_active)
     if not resp:
         raise ClickUpAPIError("List workflows failed")
     items = [WorkflowMapper.to_workflow_list_item_output(WorkflowMapper.to_domain(item)) for item in resp.items]

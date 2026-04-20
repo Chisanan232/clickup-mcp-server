@@ -4,7 +4,7 @@ These inputs are LLM-friendly contracts used by FastMCP tools. They map to
 Domain entities first, then DTOs for ClickUp wire format.
 """
 
-from typing import List, Literal, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -55,13 +55,18 @@ class WorkflowCreateInput(BaseModel):
         None, description="Description of the automation.", examples=["Auto-assign tasks when created in list 456"]
     )
     trigger_type: str = Field(
-        ..., min_length=1, description="Type of trigger (e.g., task_created, status_changed).", examples=["task_created", "status_changed"]
+        ...,
+        min_length=1,
+        description="Type of trigger (e.g., task_created, status_changed).",
+        examples=["task_created", "status_changed"],
     )
     trigger_config: Optional[dict] = Field(
         None, description="Configuration for the trigger.", examples=[{"list_id": "456"}, {"status": "done"}]
     )
     actions: List[dict] = Field(
-        default_factory=list, description="List of actions to execute.", examples=[[{"type": "assign", "user_id": "789"}]]
+        default_factory=list,
+        description="List of actions to execute.",
+        examples=[[{"type": "assign", "user_id": "789"}]],
     )
     is_active: bool = Field(True, description="Whether the workflow is active.", examples=[True, False])
     priority: Optional[int] = Field(None, description="Execution priority.", examples=[1, 2, 3])
@@ -96,15 +101,9 @@ class WorkflowUpdateInput(BaseModel):
     )
 
     workflow_id: str = Field(..., min_length=1, description="Workflow automation ID.", examples=["wf_123"])
-    name: Optional[str] = Field(
-        None, min_length=1, description="New workflow name.", examples=["Updated name"]
-    )
-    description: Optional[str] = Field(
-        None, description="New description.", examples=["Updated description"]
-    )
-    trigger_type: Optional[str] = Field(
-        None, description="New trigger type.", examples=["status_changed"]
-    )
+    name: Optional[str] = Field(None, min_length=1, description="New workflow name.", examples=["Updated name"])
+    description: Optional[str] = Field(None, description="New description.", examples=["Updated description"])
+    trigger_type: Optional[str] = Field(None, description="New trigger type.", examples=["status_changed"])
     trigger_config: Optional[dict] = Field(
         None, description="New trigger configuration.", examples=[{"status": "done"}]
     )
