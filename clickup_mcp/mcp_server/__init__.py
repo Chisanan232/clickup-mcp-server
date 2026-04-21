@@ -18,6 +18,7 @@ Usage Examples:
 """
 
 # Import tool modules to register tools
+from . import analytics  # noqa: F401
 from . import folder  # noqa: F401
 from . import goal  # noqa: F401
 from . import key_result  # noqa: F401
