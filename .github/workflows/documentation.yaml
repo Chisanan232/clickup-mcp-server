@@ -97,7 +97,7 @@ jobs:
     uses: Chisanan232/GitHub-Action_Reusable_Workflows-Python/.github/workflows/rw_docusaurus_operations.yaml@master
     with:
       operation: build
-      node-version: '22'
+      node-version: '24'
       working-directory: docs
       upload-artifacts: true
 
