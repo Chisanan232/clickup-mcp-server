@@ -16,6 +16,7 @@ import httpx
 from pydantic import BaseModel, Field
 
 from ._base import BaseServerFactory
+from .api.analytics import AnalyticsAPI
 from .api.bottleneck import BottleneckAPI
 from .api.folder import FolderAPI
 from .api.goal import GoalAPI
@@ -292,6 +293,7 @@ class ClickUpAPIClient(ClickUpClientProtocol):
         self.key_result = KeyResultAPI(self)
         self.workflow = WorkflowAPI(self)
         self.workflow_context = WorkflowContextAPI(self)
+        self.analytics = AnalyticsAPI(self)
         self.bottleneck = BottleneckAPI(self)
 
     async def __aenter__(self) -> "ClickUpAPIClient":
