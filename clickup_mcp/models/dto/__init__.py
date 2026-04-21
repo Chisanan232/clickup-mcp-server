@@ -4,6 +4,16 @@ DTOs for ClickUp API requests and responses.
 This module exports all DTO classes for interacting with the ClickUp API.
 """
 
+from .analytics import (
+    ListAnalyticsQuery,
+    ListAnalyticsResponse,
+    SpaceAnalyticsQuery,
+    SpaceAnalyticsResponse,
+    TaskAnalyticsQuery,
+    TaskAnalyticsResponse,
+    TeamAnalyticsQuery,
+    TeamAnalyticsResponse,
+)
 from .custom_fields import CustomField
 from .folder import FolderCreate, FolderResp, FolderUpdate
 from .list import ListCreate, ListResp, ListUpdate
@@ -26,4 +36,13 @@ __all__ = [
     "TaskListQuery",
     "SpaceFeatures",
     "CustomField",
+    # Analytics DTOs
+    "TaskAnalyticsQuery",
+    "TaskAnalyticsResponse",
+    "TeamAnalyticsQuery",
+    "TeamAnalyticsResponse",
+    "ListAnalyticsQuery",
+    "ListAnalyticsResponse",
+    "SpaceAnalyticsQuery",
+    "SpaceAnalyticsResponse",
 ]
