@@ -5,6 +5,7 @@ This package contains domain models that represent core business entities
 in the ClickUp MCP application.
 """
 
+from .analytics import ListAnalytics, SpaceAnalytics, TaskAnalytics, TeamAnalytics
 from .folder import ClickUpFolder, Folder
 from .goal import Goal
 from .key_result import KeyResult
@@ -41,4 +42,9 @@ __all__ = [
     "Workflow",
     # Workflow context models
     "WorkflowContext",
+    # Analytics models
+    "TaskAnalytics",
+    "TeamAnalytics",
+    "ListAnalytics",
+    "SpaceAnalytics",
 ]
