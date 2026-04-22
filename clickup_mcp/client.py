@@ -20,6 +20,7 @@ from .api.analytics import AnalyticsAPI
 from .api.bottleneck import BottleneckAPI
 from .api.folder import FolderAPI
 from .api.goal import GoalAPI
+from .api.insights import InsightsAPI
 from .api.key_result import KeyResultAPI
 from .api.list import ListAPI
 from .api.reporting import ReportingAPI
@@ -295,6 +296,7 @@ class ClickUpAPIClient(ClickUpClientProtocol):
         self.workflow_context = WorkflowContextAPI(self)
         self.analytics = AnalyticsAPI(self)
         self.bottleneck = BottleneckAPI(self)
+        self.insights = InsightsAPI(self)
 
     async def __aenter__(self) -> "ClickUpAPIClient":
         """Async context manager entry."""

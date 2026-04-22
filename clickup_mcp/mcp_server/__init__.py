@@ -22,6 +22,7 @@ from . import analytics  # noqa: F401
 from . import bottleneck  # noqa: F401
 from . import folder  # noqa: F401
 from . import goal  # noqa: F401
+from . import insights  # noqa: F401
 from . import key_result  # noqa: F401
 from . import list  # noqa: F401
 from . import reporting  # noqa: F401

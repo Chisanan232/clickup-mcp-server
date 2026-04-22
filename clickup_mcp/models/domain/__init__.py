@@ -9,6 +9,7 @@ from .analytics import ListAnalytics, SpaceAnalytics, TaskAnalytics, TeamAnalyti
 from .bottleneck import BottleneckDetection
 from .folder import ClickUpFolder, Folder
 from .goal import Goal
+from .insights import InsightsGeneration
 from .key_result import KeyResult
 from .list import ClickUpList, List
 from .space import ClickUpSpace, Space
@@ -50,4 +51,6 @@ __all__ = [
     "SpaceAnalytics",
     # Bottleneck detection models
     "BottleneckDetection",
+    # Insights generation models
+    "InsightsGeneration",
 ]

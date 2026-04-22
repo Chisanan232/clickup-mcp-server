@@ -17,6 +17,7 @@ from .analytics import (
 from .bottleneck import BottleneckDetectionQuery, BottleneckDetectionResponse
 from .custom_fields import CustomField
 from .folder import FolderCreate, FolderResp, FolderUpdate
+from .insights import InsightsGenerationQuery, InsightsGenerationResponse
 from .list import ListCreate, ListResp, ListUpdate
 from .space import SpaceCreate, SpaceFeatures, SpaceResp, SpaceUpdate
 from .task import TaskCreate, TaskListQuery, TaskResp, TaskUpdate
@@ -49,4 +50,7 @@ __all__ = [
     # Bottleneck detection DTOs
     "BottleneckDetectionQuery",
     "BottleneckDetectionResponse",
+    # Insights generation DTOs
+    "InsightsGenerationQuery",
+    "InsightsGenerationResponse",
 ]
