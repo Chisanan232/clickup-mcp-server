@@ -6,6 +6,7 @@ in the ClickUp MCP application.
 """
 
 from .analytics import ListAnalytics, SpaceAnalytics, TaskAnalytics, TeamAnalytics
+from .bottleneck import BottleneckDetection
 from .folder import ClickUpFolder, Folder
 from .goal import Goal
 from .key_result import KeyResult
@@ -47,4 +48,6 @@ __all__ = [
     "TeamAnalytics",
     "ListAnalytics",
     "SpaceAnalytics",
+    # Bottleneck detection models
+    "BottleneckDetection",
 ]
