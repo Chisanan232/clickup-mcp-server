@@ -1,0 +1,269 @@
+---
+id: analytics-mcp-api
+title: Analytics
+sidebar_position: 7
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Analytics MCP API
+
+Tools for retrieving analytics data, detecting bottlenecks, and generating insights from ClickUp workspace data.
+
+:::note Errors and retries
+All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
+and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
+[Errors and Retries (MCP)](../errors-and-retries.mdx) for details.
+:::
+
+## Tools
+
+### analytics.get_task_analytics
+
+Retrieves task analytics for a team within a specified date range. Supports filtering by assignee, status, and limit. Read-only.
+- **Parameters**: [TaskAnalyticsInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/analytics.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "start_date": 1640995200000, // Start date in epoch milliseconds
+  "end_date": 1643673600000, // End date in epoch milliseconds
+  "assignee_id": "user_123", // Optional: filter by assignee ID
+  "status": "done", // Optional: filter by status
+  "limit": 50 // Optional: page size (cap 100 by API)
+}
+```
+
+- **Returns**: [TaskAnalyticsResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/analytics.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "analytics_123", // Analytics ID
+    "team_id": "team_1", // Team/workspace ID
+    "list_id": "list_456", // Optional list ID for filtered analytics
+    "start_date": 1640995200000, // Start date in epoch milliseconds
+    "end_date": 1643673600000, // End date in epoch milliseconds
+    "total_tasks": 100, // Total number of tasks
+    "completed_tasks": 75, // Number of completed tasks
+    "in_progress_tasks": 15, // Number of tasks in progress
+    "blocked_tasks": 10, // Number of blocked tasks
+    "average_completion_time": 86400000, // Average completion time in milliseconds
+    "assignee_metrics": {}, // Metrics per assignee
+    "status_metrics": {} // Metrics per status
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `team_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### analytics.get_team_analytics
+
+Retrieves team-level analytics within a specified date range. Read-only.
+- **Parameters**: [TeamAnalyticsInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/analytics.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "start_date": 1640995200000, // Start date in epoch milliseconds
+  "end_date": 1643673600000 // End date in epoch milliseconds
+}
+```
+
+- **Returns**: [TeamAnalyticsResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/analytics.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "analytics_123", // Analytics ID
+    "team_id": "team_1", // Team/workspace ID
+    "start_date": 1640995200000, // Start date in epoch milliseconds
+    "end_date": 1643673600000, // End date in epoch milliseconds
+    "total_tasks": 500, // Total number of tasks
+    "completed_tasks": 400, // Number of completed tasks
+    "active_users": 10, // Number of active users
+    "productivity_score": 80.5, // Productivity score
+    "efficiency_metrics": {} // Efficiency metrics
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `team_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### analytics.get_list_analytics
+
+Retrieves list-level analytics within a specified date range. Read-only.
+- **Parameters**: [ListAnalyticsInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/analytics.py)
+
+```jsonc
+{
+  "list_id": "list_1", // List ID
+  "start_date": 1640995200000, // Start date in epoch milliseconds
+  "end_date": 1643673600000 // End date in epoch milliseconds
+}
+```
+
+- **Returns**: [ListAnalyticsResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/analytics.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "analytics_123", // Analytics ID
+    "list_id": "list_1", // List ID
+    "start_date": 1640995200000, // Start date in epoch milliseconds
+    "end_date": 1643673600000, // End date in epoch milliseconds
+    "total_tasks": 50, // Total number of tasks
+    "completed_tasks": 40, // Number of completed tasks
+    "overdue_tasks": 5, // Number of overdue tasks
+    "velocity": 10.5, // Average tasks completed per day
+    "cycle_time": 86400000 // Average cycle time in milliseconds
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `list_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### analytics.get_space_analytics
+
+Retrieves space-level analytics within a specified date range. Read-only.
+- **Parameters**: [SpaceAnalyticsInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/analytics.py)
+
+```jsonc
+{
+  "space_id": "space_1", // Space ID
+  "start_date": 1640995200000, // Start date in epoch milliseconds
+  "end_date": 1643673600000 // End date in epoch milliseconds
+}
+```
+
+- **Returns**: [SpaceAnalyticsResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/analytics.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "analytics_123", // Analytics ID
+    "space_id": "space_1", // Space ID
+    "start_date": 1640995200000, // Start date in epoch milliseconds
+    "end_date": 1643673600000, // End date in epoch milliseconds
+    "total_tasks": 200, // Total number of tasks
+    "completed_tasks": 150, // Number of completed tasks
+    "total_lists": 10, // Total number of lists
+    "average_tasks_per_list": 20.0, // Average tasks per list
+    "health_score": 75.0 // Health score
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `space_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### bottleneck.detect
+
+Detects bottlenecks in team workflows within a specified date range. Supports filtering by list, threshold, and bottleneck type. Read-only.
+- **Parameters**: [BottleneckDetectionInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/bottleneck.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "start_date": 1640995200000, // Start date in epoch milliseconds
+  "end_date": 1643673600000, // End date in epoch milliseconds
+  "list_id": "list_456", // Optional: filter by list ID
+  "threshold": 0.5, // Optional: threshold value for bottleneck detection
+  "bottleneck_type": "status_stuck" // Optional: type of bottleneck to detect
+}
+```
+
+- **Returns**: [BottleneckDetectionResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/bottleneck.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "bd_123", // Detection ID
+    "team_id": "team_1", // Team/workspace ID
+    "list_id": "list_456", // Optional list ID for filtered detection
+    "start_date": 1640995200000, // Start date in epoch milliseconds
+    "end_date": 1643673600000, // End date in epoch milliseconds
+    "bottleneck_type": "status_stuck", // Type of bottleneck
+    "severity": "high", // Severity level (low, medium, high, critical)
+    "affected_tasks": 25, // Number of tasks affected by the bottleneck
+    "threshold": 0.5, // Threshold value that triggered the detection
+    "current_value": 0.75, // Current value that exceeded the threshold
+    "recommendations": ["Review stuck tasks", "Reassign work"], // Recommendations
+    "date_detected": 1641000000000, // Detection date in epoch milliseconds
+    "date_resolved": null // Resolution date in epoch milliseconds
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `team_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### insights.generate
+
+Generates actionable insights from analytics data within a specified date range. Requires insight type specification. Read-only.
+- **Parameters**: [InsightsGenerationInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/insights.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "start_date": 1640995200000, // Start date in epoch milliseconds
+  "end_date": 1643673600000, // End date in epoch milliseconds
+  "insight_type": "productivity" // Type of insight (productivity, efficiency, workload)
+}
+```
+
+- **Returns**: [InsightsGenerationResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/insights.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "insights_123", // Insights ID
+    "team_id": "team_1", // Team/workspace ID
+    "start_date": 1640995200000, // Start date in epoch milliseconds
+    "end_date": 1643673600000, // End date in epoch milliseconds
+    "insight_type": "productivity", // Type of insight
+    "priority": "high", // Priority level (low, medium, high)
+    "recommendations": ["Reduce task switching", "Improve communication"], // Actionable recommendations
+    "metrics": {"velocity": 10.5, "efficiency": 0.85}, // Key metrics
+    "confidence_score": 85, // Confidence score (0-100)
+    "date_generated": 1641000000000 // Generation date in epoch milliseconds
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when `team_id` is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
