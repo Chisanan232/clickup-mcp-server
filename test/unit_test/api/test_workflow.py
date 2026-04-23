@@ -9,16 +9,17 @@ Tests the WorkflowAPI class methods including:
 - List workflows
 """
 
-import pytest
 from unittest.mock import MagicMock
 
+import pytest
+
 from clickup_mcp.api.workflow import WorkflowAPI
+from clickup_mcp.client import ClickUpAPIClient
 from clickup_mcp.models.dto.workflow import (
     WorkflowCreate,
-    WorkflowUpdate,
     WorkflowListResponse,
+    WorkflowUpdate,
 )
-from clickup_mcp.client import ClickUpAPIClient
 
 
 @pytest.fixture
@@ -86,9 +87,7 @@ class TestWorkflowAPI:
         assert len(result.items) == 1
 
     @pytest.mark.asyncio
-    async def test_create_workflow_returns_none_on_failure(
-        self, workflow_api, mock_api_client
-    ):
+    async def test_create_workflow_returns_none_on_failure(self, workflow_api, mock_api_client):
         """Test creating a workflow that fails returns None."""
         # Arrange
         team_id = "team_001"
@@ -122,9 +121,7 @@ class TestWorkflowAPI:
         assert len(result.items) == 1
 
     @pytest.mark.asyncio
-    async def test_get_workflow_returns_none_on_failure(
-        self, workflow_api, mock_api_client
-    ):
+    async def test_get_workflow_returns_none_on_failure(self, workflow_api, mock_api_client):
         """Test getting a workflow that fails returns None."""
         # Arrange
         workflow_id = "wf_123"
@@ -154,9 +151,7 @@ class TestWorkflowAPI:
         assert isinstance(result, WorkflowListResponse)
 
     @pytest.mark.asyncio
-    async def test_update_workflow_returns_none_on_failure(
-        self, workflow_api, mock_api_client
-    ):
+    async def test_update_workflow_returns_none_on_failure(self, workflow_api, mock_api_client):
         """Test updating a workflow that fails returns None."""
         # Arrange
         workflow_id = "wf_123"
@@ -184,9 +179,7 @@ class TestWorkflowAPI:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_delete_workflow_returns_false_on_failure(
-        self, workflow_api, mock_api_client
-    ):
+    async def test_delete_workflow_returns_false_on_failure(self, workflow_api, mock_api_client):
         """Test deleting a workflow that fails returns False."""
         # Arrange
         workflow_id = "wf_123"
@@ -216,9 +209,7 @@ class TestWorkflowAPI:
         assert len(result.items) == 1
 
     @pytest.mark.asyncio
-    async def test_list_workflows_with_pagination(
-        self, workflow_api, mock_api_client, sample_workflow_data
-    ):
+    async def test_list_workflows_with_pagination(self, workflow_api, mock_api_client, sample_workflow_data):
         """Test listing workflows with pagination parameters."""
         # Arrange
         team_id = "team_001"
@@ -233,9 +224,7 @@ class TestWorkflowAPI:
         assert call_args[1]["params"]["limit"] == "50"
 
     @pytest.mark.asyncio
-    async def test_list_workflows_with_active_filter(
-        self, workflow_api, mock_api_client, sample_workflow_data
-    ):
+    async def test_list_workflows_with_active_filter(self, workflow_api, mock_api_client, sample_workflow_data):
         """Test listing workflows with active status filter."""
         # Arrange
         team_id = "team_001"
@@ -249,9 +238,7 @@ class TestWorkflowAPI:
         assert call_args[1]["params"]["is_active"] == "true"
 
     @pytest.mark.asyncio
-    async def test_list_workflows_returns_none_on_failure(
-        self, workflow_api, mock_api_client
-    ):
+    async def test_list_workflows_returns_none_on_failure(self, workflow_api, mock_api_client):
         """Test listing workflows that fails returns None."""
         # Arrange
         team_id = "team_001"
