@@ -337,3 +337,95 @@ class TestTaskAPI(BaseAPIClientTestSuite):
 
         # Assert
         assert result is False
+
+    @pytest.mark.asyncio
+    async def test_add_assignee(self, task_api, mock_api_client):
+        """Test adding an assignee to a task."""
+        # Arrange
+        task_id = "task_123"
+        assignee_id = 42
+        mock_api_client.post.return_value = APIResponse(success=True, status_code=204, data=None, headers={})
+
+        # Act
+        result = await task_api.add_assignee(task_id, assignee_id)
+
+        # Assert
+        mock_api_client.post.assert_called_once_with(f"/task/{task_id}/member/{assignee_id}")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_add_assignee_with_string_id(self, task_api, mock_api_client):
+        """Test adding an assignee with string user ID."""
+        # Arrange
+        task_id = "task_123"
+        assignee_id = "user_abc"
+        mock_api_client.post.return_value = APIResponse(success=True, status_code=204, data=None, headers={})
+
+        # Act
+        result = await task_api.add_assignee(task_id, assignee_id)
+
+        # Assert
+        mock_api_client.post.assert_called_once_with(f"/task/{task_id}/member/{assignee_id}")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_add_assignee_returns_false_on_failure(self, task_api, mock_api_client):
+        """Test adding an assignee that fails returns False."""
+        # Arrange
+        task_id = "task_123"
+        assignee_id = 42
+        mock_api_client.post.return_value = APIResponse(
+            success=False, status_code=404, data={"err": "Task not found"}, headers={}
+        )
+
+        # Act
+        result = await task_api.add_assignee(task_id, assignee_id)
+
+        # Assert
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_remove_assignee(self, task_api, mock_api_client):
+        """Test removing an assignee from a task."""
+        # Arrange
+        task_id = "task_123"
+        assignee_id = 42
+        mock_api_client.delete.return_value = APIResponse(success=True, status_code=204, data=None, headers={})
+
+        # Act
+        result = await task_api.remove_assignee(task_id, assignee_id)
+
+        # Assert
+        mock_api_client.delete.assert_called_once_with(f"/task/{task_id}/member/{assignee_id}")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_remove_assignee_with_string_id(self, task_api, mock_api_client):
+        """Test removing an assignee with string user ID."""
+        # Arrange
+        task_id = "task_123"
+        assignee_id = "user_abc"
+        mock_api_client.delete.return_value = APIResponse(success=True, status_code=204, data=None, headers={})
+
+        # Act
+        result = await task_api.remove_assignee(task_id, assignee_id)
+
+        # Assert
+        mock_api_client.delete.assert_called_once_with(f"/task/{task_id}/member/{assignee_id}")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_remove_assignee_returns_false_on_failure(self, task_api, mock_api_client):
+        """Test removing an assignee that fails returns False."""
+        # Arrange
+        task_id = "task_123"
+        assignee_id = 42
+        mock_api_client.delete.return_value = APIResponse(
+            success=False, status_code=404, data={"err": "Task not found"}, headers={}
+        )
+
+        # Act
+        result = await task_api.remove_assignee(task_id, assignee_id)
+
+        # Assert
+        assert result is False
