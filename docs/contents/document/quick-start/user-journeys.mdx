@@ -1,0 +1,419 @@
+---
+id: user-journeys
+title: User Journey Examples
+sidebar_position: 6
+---
+
+# User Journey Examples
+
+This section provides practical user journey examples demonstrating common workflows when using the ClickUp MCP Server.
+
+## Journey 1: Task Management Workflow
+
+### Scenario: Create, Assign, and Track Tasks
+
+This journey demonstrates how to create a task, assign it to a team member, and track its progress.
+
+```python
+# Step 1: Create a task
+response = await mcp.call_tool("task.create", {
+    "list_id": "L123",
+    "name": "Implement user authentication",
+    "description": "Add OAuth2 authentication for user login",
+    "status": "to do",
+    "priority": 3,
+    "assignees": [789],
+    "due_date": 1731523200000
+})
+
+# Step 2: Get the task details
+task_response = await mcp.call_tool("task.get", {
+    "task_id": response.result.id
+})
+
+# Step 3: Update task status when work begins
+await mcp.call_tool("task.update", {
+    "task_id": response.result.id,
+    "status": "in progress"
+})
+
+# Step 4: Start time tracking for the task
+await mcp.call_tool("time_tracking.start", {
+    "task_id": response.result.id
+})
+
+# Step 5: Stop time tracking when work is complete
+await mcp.call_tool("time_tracking.stop", {
+    "task_id": response.result.id,
+    "description": "Completed authentication implementation"
+})
+
+# Step 6: Mark task as completed
+await mcp.call_tool("task.update", {
+    "task_id": response.result.id,
+    "status": "complete"
+})
+```
+
+## Journey 2: Goal and Key Result Management
+
+### Scenario: Set Up Quarterly Goals with Key Results
+
+This journey demonstrates how to create a goal with key results and track progress.
+
+```python
+# Step 1: Create a quarterly goal
+goal_response = await mcp.call_tool("goal.create", {
+    "team_id": "team_1",
+    "name": "Q1 2024 Revenue Goal",
+    "description": "Achieve $1M in revenue for Q1 2024",
+    "due_date": 1702080000000,
+    "owners": [789],
+    "multiple_owners": false
+})
+
+# Step 2: Add key results to the goal
+await mcp.call_tool("key_result.create", {
+    "goal_id": goal_response.result.id,
+    "name": "Increase Monthly Recurring Revenue",
+    "type": "currency",
+    "target": 1000000,
+    "unit": "$",
+    "description": "Increase MRR from $500K to $1M",
+    "start_value": 500000,
+    "current_value": 750000
+})
+
+await mcp.call_tool("key_result.create", {
+    "goal_id": goal_response.result.id,
+    "name": "Acquire New Customers",
+    "type": "number",
+    "target": 100,
+    "unit": "customers",
+    "description": "Acquire 100 new enterprise customers",
+    "start_value": 0,
+    "current_value": 45
+})
+
+# Step 3: Update key result progress
+await mcp.call_tool("key_result.update", {
+    "key_result_id": "kr_123",
+    "current_value": 850000,
+    "status": "on_track"
+})
+
+# Step 4: List all goals for the team
+goals = await mcp.call_tool("goal.list", {
+    "team_id": "team_1",
+    "status": "active"
+})
+```
+
+## Journey 3: Workflow Automation Setup
+
+### Scenario: Automate Task Assignment Based on Status
+
+This journey demonstrates how to create a workflow automation that automatically assigns tasks when status changes.
+
+```python
+# Step 1: Create a workflow automation
+workflow_response = await mcp.call_tool("workflow.create", {
+    "team_id": "team_1",
+    "name": "Auto-assign on status change",
+    "description": "Automatically assign tasks to team lead when status changes to 'in review'",
+    "trigger_type": "status_changed",
+    "trigger_config": {
+        "from_status": "in progress",
+        "to_status": "in review"
+    },
+    "actions": [
+        {
+            "type": "assign",
+            "user_id": 789
+        },
+        {
+            "type": "add_comment",
+            "comment": "Task assigned to team lead for review"
+        }
+    ],
+    "is_active": true,
+    "priority": 1
+})
+
+# Step 2: List all active workflows
+workflows = await mcp.call_tool("workflow.list", {
+    "team_id": "team_1",
+    "is_active": true
+})
+
+# Step 3: Update workflow if needed
+await mcp.call_tool("workflow.update", {
+    "workflow_id": workflow_response.result.id,
+    "is_active": false
+})
+```
+
+## Journey 4: Time Tracking and Reporting
+
+### Scenario: Track Time and Generate Reports
+
+This journey demonstrates how to track time for tasks and generate time reports.
+
+```python
+# Step 1: Create time entries for completed work
+await mcp.call_tool("time_entry.create", {
+    "team_id": "team_1",
+    "task_id": "task_123",
+    "description": "Worked on authentication feature",
+    "duration": 3600000,  # 1 hour in milliseconds
+    "start": 1702080000000,
+    "end": 1702083600000
+})
+
+await mcp.call_tool("time_entry.create", {
+    "team_id": "team_1",
+    "task_id": "task_123",
+    "description": "Code review",
+    "duration": 1800000,  # 30 minutes
+    "start": 1702083600000,
+    "end": 1702085400000
+})
+
+# Step 2: Create a time report for a date range
+report = await mcp.call_tool("report.create", {
+    "team_id": "team_1",
+    "start_date": 1702080000000,
+    "end_date": 1702166400000,
+    "assignee": 789
+})
+
+# Step 3: List time entries with filters
+time_entries = await mcp.call_tool("time_entry.list", {
+    "team_id": "team_1",
+    "task_id": "task_123",
+    "start_date": 1702080000000,
+    "end_date": 1702166400000,
+    "limit": 100
+})
+
+# Step 4: Get time tracking status for a task
+status = await mcp.call_tool("time_tracking.get_status", {
+    "team_id": "team_1",
+    "task_id": "task_123"
+})
+```
+
+## Journey 5: Analytics and Insights
+
+### Scenario: Analyze Team Performance and Detect Bottlenecks
+
+This journey demonstrates how to use analytics to gain insights into team performance.
+
+```python
+# Step 1: Get task analytics
+task_analytics = await mcp.call_tool("analytics.get_task_analytics", {
+    "team_id": "team_1",
+    "start_date": 1702080000000,
+    "end_date": 1702166400000,
+    "assignee_id": 789
+})
+
+# Step 2: Detect bottlenecks in the workflow
+bottlenecks = await mcp.call_tool("bottleneck.detect", {
+    "team_id": "team_1",
+    "start_date": 1702080000000,
+    "end_date": 1702166400000,
+    "threshold": 5
+})
+
+# Step 3: Generate insights from analytics
+insights = await mcp.call_tool("insights.generate", {
+    "team_id": "team_1",
+    "start_date": 1702080000000,
+    "end_date": 1702166400000,
+    "insight_type": "productivity"
+})
+
+# Step 4: Use insights to improve workflow
+if insights.result.recommendations:
+    for recommendation in insights.result.recommendations:
+        print(f"Recommendation: {recommendation}")
+```
+
+## Journey 6: Workspace and Project Setup
+
+### Scenario: Set Up a New Project Workspace
+
+This journey demonstrates how to set up a new workspace with spaces, folders, and lists.
+
+```python
+# Step 1: Get all workspaces
+workspaces = await mcp.call_tool("workspace.list", {})
+
+# Step 2: Get a specific workspace
+workspace = await mcp.call_tool("workspace.get", {
+    "workspace_id": workspaces.result.items[0].id
+})
+
+# Step 3: Create a new space
+space_response = await mcp.call_tool("space.create", {
+    "team_id": "team_1",
+    "name": "Development",
+    "description": "Development team workspace"
+})
+
+# Step 4: Create folders in the space
+folder_response = await mcp.call_tool("folder.create", {
+    "space_id": space_response.result.id,
+    "name": "Backend",
+    "description": "Backend development tasks"
+})
+
+# Step 5: Create lists in the folder
+list_response = await mcp.call_tool("list.create", {
+    "folder_id": folder_response.result.id,
+    "name": "Sprint 1",
+    "description": "Sprint 1 tasks"
+})
+
+# Step 6: Create tasks in the list
+await mcp.call_tool("task.create", {
+    "list_id": list_response.result.id,
+    "name": "Setup database",
+    "description": "Configure PostgreSQL database",
+    "status": "to do"
+})
+```
+
+## Journey 7: Custom Field Management
+
+### Scenario: Use Custom Fields for Task Metadata
+
+This journey demonstrates how to set and manage custom fields on tasks.
+
+```python
+# Step 1: Create a task with custom fields
+task_response = await mcp.call_tool("task.create", {
+    "list_id": "L123",
+    "name": "Feature implementation",
+    "custom_fields": {
+        "cf_story_points": 8,
+        "cf_priority_level": "high",
+        "cf_sprint": "Sprint 42"
+    }
+})
+
+# Step 2: Set a custom field value
+await mcp.call_tool("task.set_custom_field", {
+    "task_id": task_response.result.id,
+    "field_id": "cf_story_points",
+    "value": 13
+})
+
+# Step 3: Clear a custom field value
+await mcp.call_tool("task.clear_custom_field", {
+    "task_id": task_response.result.id,
+    "field_id": "cf_sprint"
+})
+
+# Step 4: Get task to verify custom fields
+task = await mcp.call_tool("task.get", {
+    "task_id": task_response.result.id
+})
+```
+
+## Journey 8: Task Dependencies
+
+### Scenario: Manage Task Dependencies
+
+This journey demonstrates how to set up and manage task dependencies.
+
+```python
+# Step 1: Create parent task
+parent_task = await mcp.call_tool("task.create", {
+    "list_id": "L123",
+    "name": "Implement API endpoint",
+    "status": "to do"
+})
+
+# Step 2: Create dependent task
+dependent_task = await mcp.call_tool("task.create", {
+    "list_id": "L123",
+    "name": "Write API tests",
+    "status": "to do",
+    "parent": parent_task.result.id
+})
+
+# Step 3: Add explicit dependency
+await mcp.call_tool("task.add_dependency", {
+    "task_id": dependent_task.result.id,
+    "depends_on": parent_task.result.id
+})
+
+# Step 4: List tasks with dependencies
+tasks = await mcp.call_tool("task.list_in_list", {
+    "list_id": "L123",
+    "include_subtasks": true
+})
+```
+
+## Best Practices
+
+### Error Handling
+
+Always check the `ok` field in the response and handle errors appropriately:
+
+```python
+response = await mcp.call_tool("task.create", {...})
+if not response.ok:
+    for issue in response.issues:
+        print(f"Error: {issue.code} - {issue.message}")
+        if issue.retry_after_ms:
+            print(f"Retry after: {issue.retry_after_ms}ms")
+```
+
+### Pagination
+
+When working with list operations, handle pagination:
+
+```python
+page = 0
+limit = 100
+all_items = []
+
+while True:
+    response = await mcp.call_tool("task.list_in_list", {
+        "list_id": "L123",
+        "page": page,
+        "limit": limit
+    })
+    all_items.extend(response.result.items)
+    
+    if not response.result.next_cursor:
+        break
+    page += 1
+```
+
+### Rate Limiting
+
+Respect rate limits by implementing backoff:
+
+```python
+import asyncio
+
+async def call_with_retry(tool_name, args, max_retries=3):
+    for attempt in range(max_retries):
+        response = await mcp.call_tool(tool_name, args)
+        if response.ok:
+            return response
+        
+        # Check for rate limit
+        for issue in response.issues:
+            if issue.code == "RATE_LIMIT" and issue.retry_after_ms:
+                await asyncio.sleep(issue.retry_after_ms / 1000)
+                continue
+        
+        # For other errors, return the response
+        return response
+    return response
+```
