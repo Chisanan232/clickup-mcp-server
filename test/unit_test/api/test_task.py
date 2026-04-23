@@ -337,3 +337,171 @@ class TestTaskAPI(BaseAPIClientTestSuite):
 
         # Assert
         assert result is False
+
+    @pytest.mark.asyncio
+    async def test_add_assignee(self, task_api, mock_api_client):
+        """Test adding an assignee to a task."""
+        # Arrange
+        task_id = "task_123"
+        assignee_id = 42
+        mock_api_client.post.return_value = APIResponse(success=True, status_code=204, data=None, headers={})
+
+        # Act
+        result = await task_api.add_assignee(task_id, assignee_id)
+
+        # Assert
+        mock_api_client.post.assert_called_once_with(f"/task/{task_id}/member/{assignee_id}")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_add_assignee_with_string_id(self, task_api, mock_api_client):
+        """Test adding an assignee with string user ID."""
+        # Arrange
+        task_id = "task_123"
+        assignee_id = "user_abc"
+        mock_api_client.post.return_value = APIResponse(success=True, status_code=204, data=None, headers={})
+
+        # Act
+        result = await task_api.add_assignee(task_id, assignee_id)
+
+        # Assert
+        mock_api_client.post.assert_called_once_with(f"/task/{task_id}/member/{assignee_id}")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_add_assignee_returns_false_on_failure(self, task_api, mock_api_client):
+        """Test adding an assignee that fails returns False."""
+        # Arrange
+        task_id = "task_123"
+        assignee_id = 42
+        mock_api_client.post.return_value = APIResponse(
+            success=False, status_code=404, data={"err": "Task not found"}, headers={}
+        )
+
+        # Act
+        result = await task_api.add_assignee(task_id, assignee_id)
+
+        # Assert
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_remove_assignee(self, task_api, mock_api_client):
+        """Test removing an assignee from a task."""
+        # Arrange
+        task_id = "task_123"
+        assignee_id = 42
+        mock_api_client.delete.return_value = APIResponse(success=True, status_code=204, data=None, headers={})
+
+        # Act
+        result = await task_api.remove_assignee(task_id, assignee_id)
+
+        # Assert
+        mock_api_client.delete.assert_called_once_with(f"/task/{task_id}/member/{assignee_id}")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_remove_assignee_with_string_id(self, task_api, mock_api_client):
+        """Test removing an assignee with string user ID."""
+        # Arrange
+        task_id = "task_123"
+        assignee_id = "user_abc"
+        mock_api_client.delete.return_value = APIResponse(success=True, status_code=204, data=None, headers={})
+
+        # Act
+        result = await task_api.remove_assignee(task_id, assignee_id)
+
+        # Assert
+        mock_api_client.delete.assert_called_once_with(f"/task/{task_id}/member/{assignee_id}")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_remove_assignee_returns_false_on_failure(self, task_api, mock_api_client):
+        """Test removing an assignee that fails returns False."""
+        # Arrange
+        task_id = "task_123"
+        assignee_id = 42
+        mock_api_client.delete.return_value = APIResponse(
+            success=False, status_code=404, data={"err": "Task not found"}, headers={}
+        )
+
+        # Act
+        result = await task_api.remove_assignee(task_id, assignee_id)
+
+        # Assert
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_search(self, task_api, mock_api_client, sample_task_data):
+        """Test searching tasks with query parameters."""
+        # Arrange
+        query = {"team_id": "team_123", "query": "urgent bugs"}
+        mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data=sample_task_data, headers={})
+
+        # Act
+        result = await task_api.search(query)
+
+        # Assert
+        mock_api_client.get.assert_called_once()
+        call_args = mock_api_client.get.call_args
+        assert call_args[0][0] == "/team/team_123/task"
+        assert call_args[1]["params"] == query
+        assert isinstance(result, TaskResp)
+
+    @pytest.mark.asyncio
+    async def test_search_with_filters(self, task_api, mock_api_client, sample_task_data):
+        """Test searching tasks with multiple filters."""
+        # Arrange
+        query = {
+            "team_id": "team_123",
+            "query": "urgent bugs",
+            "priorities": [1, 2],
+            "statuses": ["open", "in progress"],
+        }
+        mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data=sample_task_data, headers={})
+
+        # Act
+        result = await task_api.search(query)
+
+        # Assert
+        call_args = mock_api_client.get.call_args
+        assert call_args[1]["params"]["priorities"] == [1, 2]
+        assert call_args[1]["params"]["statuses"] == ["open", "in progress"]
+        assert isinstance(result, TaskResp)
+
+    @pytest.mark.asyncio
+    async def test_search_without_team_id_raises(self, task_api, mock_api_client):
+        """Test searching without team_id raises ValueError."""
+        # Arrange
+        query = {"query": "urgent bugs"}
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="team_id is required for search"):
+            await task_api.search(query)
+
+    @pytest.mark.asyncio
+    async def test_search_returns_none_on_failure(self, task_api, mock_api_client):
+        """Test searching that fails returns None."""
+        # Arrange
+        query = {"team_id": "team_123", "query": "urgent bugs"}
+        mock_api_client.get.return_value = APIResponse(
+            success=False, status_code=404, data={"err": "Team not found"}, headers={}
+        )
+
+        # Act
+        result = await task_api.search(query)
+
+        # Assert
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_search_with_empty_data_returns_none(self, task_api, mock_api_client):
+        """Test searching with empty data returns None."""
+        # Arrange
+        query = {"team_id": "team_123", "query": "urgent bugs"}
+        mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
+
+        # Act
+        result = await task_api.search(query)
+
+        # Assert
+        assert result is None

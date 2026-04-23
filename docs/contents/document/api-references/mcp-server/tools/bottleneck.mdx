@@ -1,0 +1,63 @@
+---
+id: bottleneck-mcp-api
+title: Bottleneck
+sidebar_position: 11
+---
+
+# Bottleneck MCP API
+
+Tools for detecting bottlenecks in team workflows using ClickUp analytics.
+
+:::note Errors and retries
+All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
+and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
+[Errors and Retries (MCP)](../errors-and-retries.mdx) for details.
+:::
+
+## Tools
+
+### bottleneck.detect
+
+Detects bottlenecks in team workflows with date range and optional filters. Read-only.
+- **Parameters**: [BottleneckDetectionInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/bottleneck.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "start_date": 1640995200000, // Start date in epoch ms
+  "end_date": 1643673600000, // End date in epoch ms
+  "list_id": "list_123", // Optional: filter by list
+  "threshold": 5, // Optional: threshold for bottleneck detection
+  "bottleneck_type": "status" // Optional: bottleneck type filter
+}
+```
+
+- **Returns**: [BottleneckDetectionResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/bottleneck.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "bn_123", // Bottleneck detection ID
+    "team_id": "team_1", // Team/workspace ID
+    "list_id": "list_123", // List ID (if filtered)
+    "start_date": 1640995200000, // Start date epoch ms
+    "end_date": 1643673600000, // End date epoch ms
+    "bottleneck_type": "status", // Type of bottleneck
+    "severity": "high", // Severity level
+    "affected_tasks": 25, // Number of affected tasks
+    "threshold": 5, // Threshold used for detection
+    "current_value": 12, // Current value
+    "recommendations": ["Increase assignee capacity"], // Recommendations
+    "date_detected": 1640995200000, // Detection date epoch ms
+    "date_resolved": null // Resolution date epoch ms (null if unresolved)
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `VALIDATION_ERROR` when date range is invalid
+  - `NOT_FOUND` (404) when team_id is invalid
+  - `RATE_LIMIT` (429)
