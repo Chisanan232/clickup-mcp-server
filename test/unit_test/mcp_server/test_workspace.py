@@ -318,9 +318,7 @@ async def test_workspace_create_with_special_characters(mock_get_client: MagicMo
     """Test creating a workspace with special characters in name."""
     # Test data
     workspace_id: str = "9018752317"
-    mock_workspace_resp: WorkspaceResp = WorkspaceResp(
-        id=workspace_id, name="Team @#$%^&*()", color="#3498db"
-    )
+    mock_workspace_resp: WorkspaceResp = WorkspaceResp(id=workspace_id, name="Team @#$%^&*()", color="#3498db")
 
     # Set up mocks
     mock_client: MagicMock = MagicMock()
@@ -344,9 +342,7 @@ async def test_workspace_create_with_long_name(mock_get_client: MagicMock) -> No
     # Test data
     workspace_id: str = "9018752317"
     long_name = "A" * 200
-    mock_workspace_resp: WorkspaceResp = WorkspaceResp(
-        id=workspace_id, name=long_name, color="#3498db"
-    )
+    mock_workspace_resp: WorkspaceResp = WorkspaceResp(id=workspace_id, name=long_name, color="#3498db")
 
     # Set up mocks
     mock_client: MagicMock = MagicMock()
@@ -370,9 +366,7 @@ async def test_workspace_create_with_invalid_color_format(mock_get_client: Magic
     # Test data
     workspace_id: str = "9018752317"
     invalid_color = "not-a-valid-color"
-    mock_workspace_resp: WorkspaceResp = WorkspaceResp(
-        id=workspace_id, name="Engineering Team", color=invalid_color
-    )
+    mock_workspace_resp: WorkspaceResp = WorkspaceResp(id=workspace_id, name="Engineering Team", color=invalid_color)
 
     # Set up mocks
     mock_client: MagicMock = MagicMock()
