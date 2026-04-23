@@ -1,0 +1,293 @@
+---
+id: time-mcp-api
+title: Time
+sidebar_position: 7
+---
+
+# Time MCP API
+
+Tools for managing time entries and time tracking in ClickUp, including creating, retrieving, listing, updating, and deleting time entries, as well as starting, stopping, and checking the status of time tracking.
+
+:::note Errors and retries
+All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
+and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
+[Errors and Retries (MCP)](../errors-and-retries.mdx) for details.
+:::
+
+## Tools
+
+### time_entry.create
+
+Creates a new time entry for a task. Requires either `duration` or both `start` and `end` times. Time fields are epoch milliseconds. This operation modifies ClickUp data and returns the created time entry.
+- **Parameters**: [TimeEntryCreateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/time.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "task_id": "task_123", // Task ID to log time against
+  "description": "Work on feature", // Optional description
+  "start": 1731523200000, // Optional start time in epoch ms
+  "end": 1731526800000, // Optional end time in epoch ms
+  "duration": 3600000 // Optional duration in ms (use if no start/end)
+}
+```
+
+- **Returns**: [TimeEntryResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/time.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "entry_123", // Time entry ID
+    "task_id": "task_123", // Associated task
+    "user_id": 789, // User who logged the time
+    "team_id": "team_1", // Team/workspace
+    "description": "Work on feature", // Description
+    "duration": 3600000, // Duration in ms
+    "start": 1731523200000, // Start time epoch ms
+    "end": 1731526800000 // End time epoch ms
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `VALIDATION_ERROR` when duration or start/end are invalid
+  - `NOT_FOUND` (404) when task_id is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### time_entry.get
+
+Retrieves a single time entry by ID. Read-only.
+- **Parameters**: [TimeEntryGetInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/time.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "time_entry_id": "entry_123" // Time entry ID
+}
+```
+
+- **Returns**: [TimeEntryResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/time.py)
+
+```jsonc
+{
+  "id": "entry_123",
+  "task_id": "task_123",
+  "user_id": 789,
+  "team_id": "team_1",
+  "description": "Work on feature",
+  "duration": 3600000,
+  "start": 1731523200000,
+  "end": 1731526800000
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when time entry does not exist
+  - `RATE_LIMIT` (429)
+
+### time_entry.list
+
+Lists time entries for a team with optional filtering. Read-only.
+- **Parameters**: [TimeEntryListInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/time.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "task_id": "task_123", // Optional: filter by task
+  "start_date": 1731523200000, // Optional: start date epoch ms
+  "end_date": 1731526800000, // Optional: end date epoch ms
+  "assignee": 789, // Optional: filter by assignee ID
+  "page": 0, // Optional: page number (default 0)
+  "limit": 100 // Optional: page size (default 100, max 100)
+}
+```
+
+- **Returns**: [TimeEntryListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/time.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "items": [
+      {
+        "id": "entry_123",
+        "task_id": "task_123",
+        "user_id": 789,
+        "duration": 3600000
+      }
+    ],
+    "page": 0,
+    "limit": 100,
+    "total": 50
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `VALIDATION_ERROR` when date range is invalid
+  - `RATE_LIMIT` (429)
+
+### time_entry.update
+
+Updates an existing time entry. This operation modifies ClickUp data.
+- **Parameters**: [TimeEntryUpdateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/time.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "time_entry_id": "entry_123", // Time entry ID
+  "description": "Updated description", // Optional new description
+  "start": 1731523300000, // Optional new start time
+  "end": 1731526900000, // Optional new end time
+  "duration": 3600000 // Optional new duration
+}
+```
+
+- **Returns**: [TimeEntryResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/time.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "entry_123",
+    "task_id": "task_123",
+    "description": "Updated description",
+    "duration": 3600000
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when time entry does not exist
+  - `VALIDATION_ERROR` when update data is invalid
+  - `RATE_LIMIT` (429)
+
+### time_entry.delete
+
+Deletes a time entry by ID. This operation permanently removes data from ClickUp.
+- **Parameters**: [TimeEntryDeleteInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/time.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "time_entry_id": "entry_123" // Time entry ID to delete
+}
+```
+
+- **Returns**: [DeletionResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "deleted": true,
+    "id": "entry_123"
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when time entry does not exist
+  - `RATE_LIMIT` (429)
+
+### time_tracking.start
+
+Starts time tracking for a task. This operation modifies ClickUp data.
+- **Parameters**: [TimeTrackingStartInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/time.py)
+
+```jsonc
+{
+  "task_id": "task_123" // Task ID to track time for
+}
+```
+
+- **Returns**: [OperationResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "success": true,
+    "message": "Time tracking started"
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when task_id is invalid
+  - `RATE_LIMIT` (429)
+
+### time_tracking.stop
+
+Stops time tracking for a task with an optional description. This operation modifies ClickUp data.
+- **Parameters**: [TimeTrackingStopInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/time.py)
+
+```jsonc
+{
+  "task_id": "task_123", // Task ID to stop tracking for
+  "description": "Completed work" // Optional description for the time entry
+}
+```
+
+- **Returns**: [OperationResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "success": true,
+    "message": "Time tracking stopped"
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when task_id is invalid
+  - `RATE_LIMIT` (429)
+
+### time_tracking.get_status
+
+Gets the current time tracking status for a task. Read-only.
+- **Parameters**: [TimeTrackingGetInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/time.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "task_id": "task_123" // Task ID to check tracking status
+}
+```
+
+- **Returns**: [TimeTrackingStatus](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/time.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "active": true, // Whether tracking is active
+    "duration": 3600000, // Current duration in ms
+    "start": 1731523200000, // Start time epoch ms
+    "user_id": 789 // User tracking time
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when task_id is invalid
+  - `RATE_LIMIT` (429)

@@ -1,0 +1,108 @@
+---
+id: reporting-mcp-api
+title: Reporting
+sidebar_position: 13
+---
+
+# Reporting MCP API
+
+Tools for creating and listing time reports for teams with date range and assignee filters.
+
+:::note Errors and retries
+All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
+and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
+[Errors and Retries (MCP)](../errors-and-retries.mdx) for details.
+:::
+
+## Tools
+
+### report.create
+
+Creates a time report for a team with date range filters. Time fields are epoch milliseconds. This operation returns time entries matching the report criteria.
+- **Parameters**: [TimeReportCreateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/reporting.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "start_date": 1702080000000, // Start date in epoch ms
+  "end_date": 1702166400000, // End date in epoch ms
+  "assignee": 789, // Optional: filter by assignee user ID
+  "task_id": "task_123" // Optional: filter by task ID
+}
+```
+
+- **Returns**: [TimeReportListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/reporting.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "items": [
+      {
+        "id": "entry_123", // Time entry ID
+        "task_id": "task_123", // Associated task
+        "user_id": 789, // User who logged the time
+        "team_id": "team_1", // Team/workspace
+        "duration": 3600000, // Duration in ms
+        "start": 1702080000000, // Start time epoch ms
+        "end": 1702083600000 // End time epoch ms
+      }
+    ],
+    "next_cursor": "cursor=2", // Cursor for pagination
+    "truncated": false // Whether results are truncated
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `VALIDATION_ERROR` when date range is invalid
+  - `NOT_FOUND` (404) when team_id is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### report.list
+
+Lists time entries for a team with filters. Constraints: `limit` ≤ 100. Read-only.
+- **Parameters**: [TimeReportListInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/reporting.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "assignee": 789, // Optional: filter by assignee user ID
+  "task_id": "task_123", // Optional: filter by task ID
+  "start_date": 1702080000000, // Optional: start date epoch ms
+  "end_date": 1702166400000, // Optional: end date epoch ms
+  "page": 0, // Optional: page number (default 0)
+  "limit": 100 // Optional: page size (default 100, max 100)
+}
+```
+
+- **Returns**: [TimeReportListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/reporting.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "items": [
+      {
+        "id": "entry_123",
+        "task_id": "task_123",
+        "user_id": 789,
+        "duration": 3600000,
+        "start": 1702080000000
+      }
+    ],
+    "next_cursor": "cursor=2",
+    "truncated": false
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `VALIDATION_ERROR` when limit > 100 or date range is invalid
+  - `NOT_FOUND` (404) when team_id is invalid
+  - `RATE_LIMIT` (429)

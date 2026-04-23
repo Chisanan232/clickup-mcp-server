@@ -1,0 +1,203 @@
+---
+id: workflow-mcp-api
+title: Workflow
+sidebar_position: 9
+---
+
+# Workflow MCP API
+
+Tools for managing ClickUp workflow automations, including creating, retrieving, listing, updating, and deleting workflow automations with triggers and actions.
+
+:::note Errors and retries
+All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
+and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
+[Errors and Retries (MCP)](../errors-and-retries.mdx) for details.
+:::
+
+## Tools
+
+### workflow.create
+
+Creates a new workflow automation with name, trigger type, trigger config, and actions. This operation modifies ClickUp data and returns the created workflow.
+- **Parameters**: [WorkflowCreateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/workflow.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "name": "Auto-assign on create", // Workflow name
+  "description": "Automatically assign tasks on creation", // Optional description
+  "trigger_type": "task_created", // Trigger type (e.g., task_created, status_changed)
+  "trigger_config": {"list_id": "456"}, // Trigger configuration
+  "actions": [{"type": "assign", "user_id": "789"}], // List of actions to execute
+  "is_active": true, // Optional: whether workflow is active (default true)
+  "priority": 1 // Optional: execution priority
+}
+```
+
+- **Returns**: [WorkflowResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/workflow.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "wf_123", // Workflow ID
+    "team_id": "team_1", // Team/workspace ID
+    "name": "Auto-assign on create", // Workflow name
+    "description": "Automatically assign tasks on creation", // Description
+    "trigger_type": "task_created", // Trigger type
+    "trigger_config": {"list_id": "456"}, // Trigger configuration
+    "actions": [{"type": "assign", "user_id": "789"}], // Actions
+    "is_active": true, // Active flag
+    "priority": 1, // Priority
+    "date_created": 1702080000000, // Creation date epoch ms
+    "date_updated": 1702080000000 // Last update epoch ms
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `VALIDATION_ERROR` when required fields are missing
+  - `NOT_FOUND` (404) when team_id is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### workflow.get
+
+Retrieves a single workflow automation by ID. Read-only.
+- **Parameters**: [WorkflowGetInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/workflow.py)
+
+```jsonc
+{
+  "workflow_id": "wf_123" // Workflow ID
+}
+```
+
+- **Returns**: [WorkflowResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/workflow.py)
+
+```jsonc
+{
+  "id": "wf_123",
+  "team_id": "team_1",
+  "name": "Auto-assign on create",
+  "trigger_type": "task_created",
+  "trigger_config": {"list_id": "456"},
+  "actions": [{"type": "assign", "user_id": "789"}],
+  "is_active": true
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when workflow does not exist
+  - `RATE_LIMIT` (429)
+
+### workflow.list
+
+Lists workflow automations for a team with optional filtering by active status and pagination. Read-only.
+- **Parameters**: [WorkflowListInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/workflow.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "page": 0, // Optional: page number (default 0)
+  "limit": 100, // Optional: page size (default 100, max 100)
+  "is_active": true // Optional: filter by active status
+}
+```
+
+- **Returns**: [WorkflowListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/workflow.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "items": [
+      {
+        "id": "wf_123",
+        "team_id": "team_1",
+        "name": "Auto-assign on create",
+        "trigger_type": "task_created",
+        "is_active": true
+      }
+    ],
+    "page": 0,
+    "limit": 100,
+    "total": 10
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `RATE_LIMIT` (429)
+
+### workflow.update
+
+Updates an existing workflow automation. This operation modifies ClickUp data.
+- **Parameters**: [WorkflowUpdateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/workflow.py)
+
+```jsonc
+{
+  "workflow_id": "wf_123", // Workflow ID
+  "name": "Updated name", // Optional new name
+  "description": "Updated description", // Optional new description
+  "trigger_type": "status_changed", // Optional new trigger type
+  "trigger_config": {"list_id": "789"}, // Optional new trigger config
+  "actions": [{"type": "assign", "user_id": "790"}], // Optional new actions
+  "is_active": false, // Optional new active status
+  "priority": 2 // Optional new priority
+}
+```
+
+- **Returns**: [WorkflowResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/workflow.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "wf_123",
+    "name": "Updated name",
+    "trigger_type": "status_changed",
+    "is_active": false
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when workflow does not exist
+  - `VALIDATION_ERROR` when update data is invalid
+  - `RATE_LIMIT` (429)
+
+### workflow.delete
+
+Deletes a workflow automation by ID. This operation permanently removes data from ClickUp.
+- **Parameters**: [WorkflowDeleteInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/workflow.py)
+
+```jsonc
+{
+  "workflow_id": "wf_123" // Workflow ID to delete
+}
+```
+
+- **Returns**: [DeletionResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "deleted": true,
+    "id": "wf_123"
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when workflow does not exist
+  - `RATE_LIMIT` (429)

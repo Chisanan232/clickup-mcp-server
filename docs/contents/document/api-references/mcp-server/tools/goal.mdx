@@ -1,0 +1,207 @@
+---
+id: goal-mcp-api
+title: Goal
+sidebar_position: 8
+---
+
+# Goal MCP API
+
+Tools for managing ClickUp goals, including creating, retrieving, listing, updating, and deleting goals with key results.
+
+:::note Errors and retries
+All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
+and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
+[Errors and Retries (MCP)](../errors-and-retries.mdx) for details.
+:::
+
+## Tools
+
+### goal.create
+
+Creates a new goal for a team with name, description, and due date. Time fields are epoch milliseconds. This operation modifies ClickUp data and returns the created goal.
+- **Parameters**: [GoalCreateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/goal.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "name": "Q1 Revenue Goal", // Goal name
+  "description": "Achieve $1M in revenue", // Optional description
+  "due_date": 1702080000000, // Due date in epoch ms
+  "key_results": ["KR1", "KR2"], // Optional list of key results
+  "owners": [789], // Optional list of owner user IDs
+  "multiple_owners": false, // Optional: allow multiple owners
+  "color": "#FF0000" // Optional: goal color hex code
+}
+```
+
+- **Returns**: [GoalResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/goal.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "goal_123", // Goal ID
+    "team_id": "team_1", // Team/workspace ID
+    "name": "Q1 Revenue Goal", // Goal name
+    "description": "Achieve $1M in revenue", // Description
+    "due_date": 1702080000000, // Due date epoch ms
+    "status": "active", // Goal status
+    "key_results": ["KR1", "KR2"], // Key results
+    "owners": [789], // Owner user IDs
+    "multiple_owners": false, // Multiple owners flag
+    "color": "#FF0000" // Goal color
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `VALIDATION_ERROR` when required fields are missing
+  - `NOT_FOUND` (404) when team_id is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### goal.get
+
+Retrieves a single goal by ID. Read-only.
+- **Parameters**: [GoalGetInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/goal.py)
+
+```jsonc
+{
+  "goal_id": "goal_123" // Goal ID
+}
+```
+
+- **Returns**: [GoalResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/goal.py)
+
+```jsonc
+{
+  "id": "goal_123",
+  "team_id": "team_1",
+  "name": "Q1 Revenue Goal",
+  "description": "Achieve $1M in revenue",
+  "due_date": 1702080000000,
+  "status": "active",
+  "key_results": ["KR1", "KR2"],
+  "owners": [789],
+  "multiple_owners": false
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when goal does not exist
+  - `RATE_LIMIT` (429)
+
+### goal.list
+
+Lists goals for a team with optional filtering by status, owner, and date range. Read-only.
+- **Parameters**: [GoalListInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/goal.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "status": "active", // Optional: filter by status
+  "owner": 789, // Optional: filter by owner user ID
+  "start_date": 1702080000000, // Optional: start date epoch ms
+  "end_date": 1702083600000, // Optional: end date epoch ms
+  "page": 0, // Optional: page number (default 0)
+  "limit": 100 // Optional: page size (default 100)
+}
+```
+
+- **Returns**: [GoalListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/goal.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "items": [
+      {
+        "id": "goal_123",
+        "team_id": "team_1",
+        "name": "Q1 Revenue Goal",
+        "status": "active"
+      }
+    ],
+    "page": 0,
+    "limit": 100,
+    "total": 25
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `VALIDATION_ERROR` when date range is invalid
+  - `RATE_LIMIT` (429)
+
+### goal.update
+
+Updates an existing goal. This operation modifies ClickUp data.
+- **Parameters**: [GoalUpdateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/goal.py)
+
+```jsonc
+{
+  "goal_id": "goal_123", // Goal ID
+  "name": "Updated Goal Name", // Optional new name
+  "description": "Updated description", // Optional new description
+  "due_date": 1702083600000, // Optional new due date
+  "status": "completed", // Optional new status
+  "key_results": ["KR1", "KR2", "KR3"], // Optional updated key results
+  "owners": [789, 790], // Optional updated owners
+  "is_active": false // Optional: active flag
+}
+```
+
+- **Returns**: [GoalResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/goal.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "goal_123",
+    "name": "Updated Goal Name",
+    "description": "Updated description",
+    "status": "completed"
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when goal does not exist
+  - `VALIDATION_ERROR` when update data is invalid
+  - `RATE_LIMIT` (429)
+
+### goal.delete
+
+Deletes a goal by ID. This operation permanently removes data from ClickUp.
+- **Parameters**: [GoalDeleteInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/goal.py)
+
+```jsonc
+{
+  "goal_id": "goal_123" // Goal ID to delete
+}
+```
+
+- **Returns**: [DeletionResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "deleted": true,
+    "id": "goal_123"
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when goal does not exist
+  - `RATE_LIMIT` (429)
