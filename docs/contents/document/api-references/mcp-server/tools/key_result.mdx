@@ -1,0 +1,208 @@
+---
+id: key-result-mcp-api
+title: Key Result
+sidebar_position: 10
+---
+
+# Key Result MCP API
+
+Tools for managing ClickUp key results, including creating, retrieving, listing, updating, and deleting key results for goals.
+
+:::note Errors and retries
+All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
+and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
+[Errors and Retries (MCP)](../errors-and-retries.mdx) for details.
+:::
+
+## Tools
+
+### key_result.create
+
+Creates a new key result for a goal with name, type, target, and optional unit. Time fields are epoch milliseconds. This operation modifies ClickUp data and returns the created key result.
+- **Parameters**: [KeyResultCreateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/key_result.py)
+
+```jsonc
+{
+  "goal_id": "goal_123", // Goal ID to create key result for
+  "name": "Increase MRR", // Key result name
+  "type": "currency", // Key result type (e.g., currency, number, boolean)
+  "target": 1000000, // Target value
+  "unit": "$", // Optional unit (e.g., $, %, hours)
+  "description": "Increase monthly recurring revenue", // Optional description
+  "start_value": 500000, // Optional start value
+  "current_value": 750000 // Optional current value
+}
+```
+
+- **Returns**: [KeyResultResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/key_result.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "kr_123", // Key result ID
+    "goal_id": "goal_123", // Parent goal ID
+    "name": "Increase MRR", // Key result name
+    "type": "currency", // Key result type
+    "target": 1000000, // Target value
+    "unit": "$", // Unit
+    "description": "Increase monthly recurring revenue", // Description
+    "start_value": 500000, // Start value
+    "current_value": 750000, // Current value
+    "progress": 50, // Progress percentage
+    "status": "on_track" // Status
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `VALIDATION_ERROR` when required fields are missing
+  - `NOT_FOUND` (404) when goal_id is invalid
+  - `RATE_LIMIT` (429)
+  - `UPSTREAM_ERROR` (5xx/timeout)
+
+### key_result.get
+
+Retrieves a single key result by ID. Read-only.
+- **Parameters**: [KeyResultGetInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/key_result.py)
+
+```jsonc
+{
+  "key_result_id": "kr_123" // Key result ID
+}
+```
+
+- **Returns**: [KeyResultResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/key_result.py)
+
+```jsonc
+{
+  "id": "kr_123",
+  "goal_id": "goal_123",
+  "name": "Increase MRR",
+  "type": "currency",
+  "target": 1000000,
+  "unit": "$",
+  "current_value": 750000,
+  "progress": 75,
+  "status": "on_track"
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when key result does not exist
+  - `RATE_LIMIT` (429)
+
+### key_result.list
+
+Lists key results for a goal. Read-only.
+- **Parameters**: [KeyResultListInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/key_result.py)
+
+```jsonc
+{
+  "goal_id": "goal_123", // Goal ID
+  "page": 0, // Optional: page number (default 0)
+  "limit": 100 // Optional: page size (default 100)
+}
+```
+
+- **Returns**: [KeyResultListResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/key_result.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "items": [
+      {
+        "id": "kr_123",
+        "goal_id": "goal_123",
+        "name": "Increase MRR",
+        "type": "currency",
+        "target": 1000000,
+        "current_value": 750000
+      }
+    ],
+    "page": 0,
+    "limit": 100,
+    "total": 5
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when goal_id is invalid
+  - `RATE_LIMIT` (429)
+
+### key_result.update
+
+Updates an existing key result. This operation modifies ClickUp data.
+- **Parameters**: [KeyResultUpdateInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/key_result.py)
+
+```jsonc
+{
+  "key_result_id": "kr_123", // Key result ID
+  "name": "Updated name", // Optional new name
+  "type": "number", // Optional new type
+  "target": 2000000, // Optional new target
+  "unit": "%", // Optional new unit
+  "current_value": 1500000, // Optional new current value
+  "description": "Updated description", // Optional new description
+  "status": "ahead" // Optional new status
+}
+```
+
+- **Returns**: [KeyResultResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/key_result.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "kr_123",
+    "name": "Updated name",
+    "type": "number",
+    "target": 2000000,
+    "current_value": 1500000,
+    "status": "ahead"
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when key result does not exist
+  - `VALIDATION_ERROR` when update data is invalid
+  - `RATE_LIMIT` (429)
+
+### key_result.delete
+
+Deletes a key result by ID. This operation permanently removes data from ClickUp.
+- **Parameters**: [KeyResultDeleteInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/key_result.py)
+
+```jsonc
+{
+  "key_result_id": "kr_123" // Key result ID to delete
+}
+```
+
+- **Returns**: [DeletionResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/common.py)
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "deleted": true,
+    "id": "kr_123"
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `NOT_FOUND` (404) when key result does not exist
+  - `RATE_LIMIT` (429)

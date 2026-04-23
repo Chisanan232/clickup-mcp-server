@@ -1,0 +1,62 @@
+---
+id: insights-mcp-api
+title: Insights
+sidebar_position: 12
+---
+
+# Insights MCP API
+
+Tools for generating insights from ClickUp analytics data.
+
+:::note Errors and retries
+All MCP tools return a uniform ToolResponse envelope (`ok`, `result`, `issues[]`). When `ok: false`, inspect `issues` 
+and apply retries/backoff (respect `retry_after_ms` for 429 and back off on 5xx/transient errors). See 
+[Errors and Retries (MCP)](../errors-and-retries.mdx) for details.
+:::
+
+## Tools
+
+### insights.generate
+
+Generates insights from analytics data with date range and insight type. Read-only.
+- **Parameters**: [InsightsGenerationInput](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/inputs/insights.py)
+
+```jsonc
+{
+  "team_id": "team_1", // Team/workspace ID
+  "start_date": 1640995200000, // Start date in epoch ms
+  "end_date": 1643673600000, // End date in epoch ms
+  "insight_type": "productivity" // Type of insight (e.g., productivity, efficiency, workload)
+}
+```
+
+- **Returns**: [InsightsGenerationResult](https://github.com/Chisanan232/clickup-mcp-server/blob/master/clickup_mcp/mcp_server/models/outputs/insights.py) in `ToolResponse`
+
+```jsonc
+{
+  "ok": true,
+  "result": {
+    "id": "ins_123", // Insight ID
+    "team_id": "team_1", // Team/workspace ID
+    "start_date": 1640995200000, // Start date epoch ms
+    "end_date": 1643673600000, // End date epoch ms
+    "insight_type": "productivity", // Type of insight
+    "priority": "high", // Priority level
+    "recommendations": ["Increase task completion rate"], // Recommendations
+    "metrics": {
+      "completion_rate": 85,
+      "average_time": 3600000,
+      "efficiency_score": 75
+    }, // Key metrics
+    "confidence_score": 0.92, // Confidence score (0-1)
+    "date_generated": 1640995200000 // Generation date epoch ms
+  },
+  "issues": []
+}
+```
+
+- **Errors**
+  - `AUTH_ERROR` (401), `FORBIDDEN` (403)
+  - `VALIDATION_ERROR` when date range is invalid
+  - `NOT_FOUND` (404) when team_id is invalid
+  - `RATE_LIMIT` (429)
