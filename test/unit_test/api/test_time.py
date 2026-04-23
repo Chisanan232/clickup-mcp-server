@@ -12,19 +12,20 @@ Tests the TimeAPI class methods including:
 - Get tracking status
 """
 
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock
 
 from clickup_mcp.api.time import TimeAPI
+from clickup_mcp.client import ClickUpAPIClient
 from clickup_mcp.models.dto.time import (
     TimeEntryCreate,
     TimeEntryListQuery,
-    TimeEntryUpdate,
-    TimeEntryResponse,
     TimeEntryListResponse,
+    TimeEntryResponse,
+    TimeEntryUpdate,
     TimeTrackingStatusResponse,
 )
-from clickup_mcp.client import ClickUpAPIClient
 from clickup_mcp.models.http import APIResponse
 
 
@@ -104,9 +105,7 @@ class TestTimeAPI:
         """Test creating a time entry."""
         # Arrange
         team_id = "team_001"
-        time_entry_create = TimeEntryCreate(
-            task_id="task_456", description="Implementation work", duration=3600000
-        )
+        time_entry_create = TimeEntryCreate(task_id="task_456", description="Implementation work", duration=3600000)
         mock_api_client.post.return_value = APIResponse(
             success=True, status_code=200, data=sample_time_entry_data, headers={}
         )
@@ -122,15 +121,11 @@ class TestTimeAPI:
         assert result.id == "entry_123"
 
     @pytest.mark.asyncio
-    async def test_create_time_entry_returns_none_on_failure(
-        self, time_api, mock_api_client
-    ):
+    async def test_create_time_entry_returns_none_on_failure(self, time_api, mock_api_client):
         """Test creating a time entry that fails returns None."""
         # Arrange
         team_id = "team_001"
-        time_entry_create = TimeEntryCreate(
-            task_id="task_456", description="Implementation work", duration=3600000
-        )
+        time_entry_create = TimeEntryCreate(task_id="task_456", description="Implementation work", duration=3600000)
         mock_api_client.post.return_value = APIResponse(
             success=False, status_code=400, data={"err": "Invalid request"}, headers={}
         )
@@ -155,16 +150,12 @@ class TestTimeAPI:
         result = await time_api.get(team_id, time_entry_id)
 
         # Assert
-        mock_api_client.get.assert_called_once_with(
-            f"/team/{team_id}/time_entries/{time_entry_id}"
-        )
+        mock_api_client.get.assert_called_once_with(f"/team/{team_id}/time_entries/{time_entry_id}")
         assert isinstance(result, TimeEntryResponse)
         assert result.id == "entry_123"
 
     @pytest.mark.asyncio
-    async def test_get_time_entry_returns_none_on_failure(
-        self, time_api, mock_api_client
-    ):
+    async def test_get_time_entry_returns_none_on_failure(self, time_api, mock_api_client):
         """Test getting a time entry that fails returns None."""
         # Arrange
         team_id = "team_001"
@@ -180,9 +171,7 @@ class TestTimeAPI:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_list_time_entries(
-        self, time_api, mock_api_client, sample_time_entry_list_data
-    ):
+    async def test_list_time_entries(self, time_api, mock_api_client, sample_time_entry_list_data):
         """Test listing time entries with query parameters."""
         # Arrange
         team_id = "team_001"
@@ -202,9 +191,7 @@ class TestTimeAPI:
         assert len(result.items) == 2
 
     @pytest.mark.asyncio
-    async def test_list_time_entries_returns_none_on_failure(
-        self, time_api, mock_api_client
-    ):
+    async def test_list_time_entries_returns_none_on_failure(self, time_api, mock_api_client):
         """Test listing time entries that fails returns None."""
         # Arrange
         team_id = "team_001"
@@ -240,9 +227,7 @@ class TestTimeAPI:
         assert isinstance(result, TimeEntryResponse)
 
     @pytest.mark.asyncio
-    async def test_update_time_entry_returns_none_on_failure(
-        self, time_api, mock_api_client
-    ):
+    async def test_update_time_entry_returns_none_on_failure(self, time_api, mock_api_client):
         """Test updating a time entry that fails returns None."""
         # Arrange
         team_id = "team_001"
@@ -264,23 +249,17 @@ class TestTimeAPI:
         # Arrange
         team_id = "team_001"
         time_entry_id = "entry_123"
-        mock_api_client.delete.return_value = APIResponse(
-            success=True, status_code=200, data=None, headers={}
-        )
+        mock_api_client.delete.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
 
         # Act
         result = await time_api.delete(team_id, time_entry_id)
 
         # Assert
-        mock_api_client.delete.assert_called_once_with(
-            f"/team/{team_id}/time_entries/{time_entry_id}"
-        )
+        mock_api_client.delete.assert_called_once_with(f"/team/{team_id}/time_entries/{time_entry_id}")
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_delete_time_entry_returns_false_on_failure(
-        self, time_api, mock_api_client
-    ):
+    async def test_delete_time_entry_returns_false_on_failure(self, time_api, mock_api_client):
         """Test deleting a time entry that fails returns False."""
         # Arrange
         team_id = "team_001"
@@ -300,23 +279,17 @@ class TestTimeAPI:
         """Test starting time tracking for a task."""
         # Arrange
         task_id = "task_123"
-        mock_api_client.post.return_value = APIResponse(
-            success=True, status_code=200, data=None, headers={}
-        )
+        mock_api_client.post.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
 
         # Act
         result = await time_api.start_tracking(task_id)
 
         # Assert
-        mock_api_client.post.assert_called_once_with(
-            f"/task/{task_id}/time_tracking/start"
-        )
+        mock_api_client.post.assert_called_once_with(f"/task/{task_id}/time_tracking/start")
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_start_tracking_returns_false_on_failure(
-        self, time_api, mock_api_client
-    ):
+    async def test_start_tracking_returns_false_on_failure(self, time_api, mock_api_client):
         """Test starting tracking that fails returns False."""
         # Arrange
         task_id = "task_123"
@@ -336,9 +309,7 @@ class TestTimeAPI:
         # Arrange
         task_id = "task_123"
         description = "Completed implementation"
-        mock_api_client.post.return_value = APIResponse(
-            success=True, status_code=200, data=None, headers={}
-        )
+        mock_api_client.post.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
 
         # Act
         result = await time_api.stop_tracking(task_id, description)
@@ -355,9 +326,7 @@ class TestTimeAPI:
         """Test stopping tracking without description."""
         # Arrange
         task_id = "task_123"
-        mock_api_client.post.return_value = APIResponse(
-            success=True, status_code=200, data=None, headers={}
-        )
+        mock_api_client.post.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
 
         # Act
         result = await time_api.stop_tracking(task_id)
@@ -370,9 +339,7 @@ class TestTimeAPI:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_stop_tracking_returns_false_on_failure(
-        self, time_api, mock_api_client
-    ):
+    async def test_stop_tracking_returns_false_on_failure(self, time_api, mock_api_client):
         """Test stopping tracking that fails returns False."""
         # Arrange
         task_id = "task_123"
@@ -387,9 +354,7 @@ class TestTimeAPI:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_get_tracking_status(
-        self, time_api, mock_api_client, sample_tracking_status_data
-    ):
+    async def test_get_tracking_status(self, time_api, mock_api_client, sample_tracking_status_data):
         """Test getting time tracking status for a task."""
         # Arrange
         task_id = "task_123"
@@ -407,9 +372,7 @@ class TestTimeAPI:
         assert result.task_id == "task_123"
 
     @pytest.mark.asyncio
-    async def test_get_tracking_status_returns_none_on_failure(
-        self, time_api, mock_api_client
-    ):
+    async def test_get_tracking_status_returns_none_on_failure(self, time_api, mock_api_client):
         """Test getting tracking status that fails returns None."""
         # Arrange
         task_id = "task_123"
