@@ -9,17 +9,18 @@ Tests the GoalAPI class methods including:
 - List goals
 """
 
-import pytest
 from unittest.mock import MagicMock
 
+import pytest
+
 from clickup_mcp.api.goal import GoalAPI
+from clickup_mcp.client import ClickUpAPIClient
 from clickup_mcp.models.dto.goal import (
     GoalCreate,
     GoalListQuery,
-    GoalUpdate,
     GoalListResponse,
+    GoalUpdate,
 )
-from clickup_mcp.client import ClickUpAPIClient
 from clickup_mcp.models.http import APIResponse
 
 
@@ -95,9 +96,7 @@ class TestGoalAPI:
         """Test creating a goal."""
         # Arrange
         team_id = "team_001"
-        goal_create = GoalCreate(
-            name="Q1 Revenue Goal", description="Achieve $1M in revenue", due_date=1702080000000
-        )
+        goal_create = GoalCreate(name="Q1 Revenue Goal", description="Achieve $1M in revenue", due_date=1702080000000)
         mock_api_client.post.return_value = APIResponse(
             success=True, status_code=200, data=sample_goal_list_data, headers={}
         )
@@ -117,9 +116,7 @@ class TestGoalAPI:
         """Test creating a goal that fails returns None."""
         # Arrange
         team_id = "team_001"
-        goal_create = GoalCreate(
-            name="Q1 Revenue Goal", description="Achieve $1M in revenue", due_date=1702080000000
-        )
+        goal_create = GoalCreate(name="Q1 Revenue Goal", description="Achieve $1M in revenue", due_date=1702080000000)
         mock_api_client.post.return_value = APIResponse(
             success=False, status_code=400, data={"err": "Invalid request"}, headers={}
         )
@@ -135,9 +132,7 @@ class TestGoalAPI:
         """Test getting a goal by ID."""
         # Arrange
         goal_id = "goal_123"
-        mock_api_client.get.return_value = APIResponse(
-            success=True, status_code=200, data=sample_goal_data, headers={}
-        )
+        mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data=sample_goal_data, headers={})
 
         # Act
         result = await goal_api.get(goal_id)
@@ -168,9 +163,7 @@ class TestGoalAPI:
         # Arrange
         goal_id = "goal_123"
         goal_update = GoalUpdate(name="Updated Goal Name")
-        mock_api_client.put.return_value = APIResponse(
-            success=True, status_code=200, data=sample_goal_data, headers={}
-        )
+        mock_api_client.put.return_value = APIResponse(success=True, status_code=200, data=sample_goal_data, headers={})
 
         # Act
         result = await goal_api.update(goal_id, goal_update)
@@ -203,9 +196,7 @@ class TestGoalAPI:
         """Test deleting a goal."""
         # Arrange
         goal_id = "goal_123"
-        mock_api_client.delete.return_value = APIResponse(
-            success=True, status_code=200, data=None, headers={}
-        )
+        mock_api_client.delete.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
 
         # Act
         result = await goal_api.delete(goal_id)
@@ -270,9 +261,7 @@ class TestGoalAPI:
         """Test listing goals with multiple filters."""
         # Arrange
         team_id = "team_001"
-        query = GoalListQuery(
-            status="active", owner="user_123", start_date=1702080000000, end_date=1702083600000
-        )
+        query = GoalListQuery(status="active", owner="user_123", start_date=1702080000000, end_date=1702083600000)
         mock_api_client.get.return_value = APIResponse(
             success=True, status_code=200, data=sample_goal_list_data, headers={}
         )

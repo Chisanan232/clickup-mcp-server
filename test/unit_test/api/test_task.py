@@ -435,9 +435,7 @@ class TestTaskAPI(BaseAPIClientTestSuite):
         """Test searching tasks with query parameters."""
         # Arrange
         query = {"team_id": "team_123", "query": "urgent bugs"}
-        mock_api_client.get.return_value = APIResponse(
-            success=True, status_code=200, data=sample_task_data, headers={}
-        )
+        mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data=sample_task_data, headers={})
 
         # Act
         result = await task_api.search(query)
@@ -459,9 +457,7 @@ class TestTaskAPI(BaseAPIClientTestSuite):
             "priorities": [1, 2],
             "statuses": ["open", "in progress"],
         }
-        mock_api_client.get.return_value = APIResponse(
-            success=True, status_code=200, data=sample_task_data, headers={}
-        )
+        mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data=sample_task_data, headers={})
 
         # Act
         result = await task_api.search(query)
@@ -502,9 +498,7 @@ class TestTaskAPI(BaseAPIClientTestSuite):
         """Test searching with empty data returns None."""
         # Arrange
         query = {"team_id": "team_123", "query": "urgent bugs"}
-        mock_api_client.get.return_value = APIResponse(
-            success=True, status_code=200, data=None, headers={}
-        )
+        mock_api_client.get.return_value = APIResponse(success=True, status_code=200, data=None, headers={})
 
         # Act
         result = await task_api.search(query)

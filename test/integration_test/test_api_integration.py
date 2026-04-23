@@ -5,15 +5,16 @@ This module tests the integration of different API components to ensure
 they work together properly in a realistic scenario with minimal mocking.
 """
 
-import pytest
 from unittest.mock import MagicMock
 
-from clickup_mcp.client import ClickUpAPIClient
+import pytest
+
+from clickup_mcp.api.analytics import AnalyticsAPI
+from clickup_mcp.api.goal import GoalAPI
 from clickup_mcp.api.task import TaskAPI
 from clickup_mcp.api.time import TimeAPI
-from clickup_mcp.api.goal import GoalAPI
 from clickup_mcp.api.workflow import WorkflowAPI
-from clickup_mcp.api.analytics import AnalyticsAPI
+from clickup_mcp.client import ClickUpAPIClient
 from clickup_mcp.models.http import APIResponse
 
 
@@ -159,8 +160,8 @@ class TestAPIIntegration:
         ]
 
         # Act - Create a workflow and then create a task that triggers it
-        from clickup_mcp.models.dto.workflow import WorkflowCreate
         from clickup_mcp.models.dto.task import TaskCreate
+        from clickup_mcp.models.dto.workflow import WorkflowCreate
 
         workflow = await workflow_api.create(
             "team_001",
@@ -197,8 +198,8 @@ class TestAPIIntegration:
         )
 
         # Act - Create tasks and then get analytics
-        from clickup_mcp.models.dto.task import TaskCreate
         from clickup_mcp.models.dto.analytics import TaskAnalyticsQuery
+        from clickup_mcp.models.dto.task import TaskCreate
 
         task1 = await task_api.create(TaskCreate(name="Task 1", list_id="list_123"))
         task2 = await task_api.create(TaskCreate(name="Task 2", list_id="list_123"))
@@ -260,8 +261,8 @@ class TestAPIIntegration:
         mock_client.post.side_effect = mock_response_generator
 
         # Act - Complete workflow: create task, track time, create goal
-        from clickup_mcp.models.dto.task import TaskCreate
         from clickup_mcp.models.dto.goal import GoalCreate
+        from clickup_mcp.models.dto.task import TaskCreate
 
         task = await task_api.create(TaskCreate(name="Test Task", list_id="list_123"))
         tracking_started = await time_api.start_tracking("task_123")
