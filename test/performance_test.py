@@ -5,16 +5,17 @@ This module contains performance benchmarks and load tests to ensure
 the system performs adequately under various conditions.
 """
 
-import pytest
 import asyncio
 import time
-from unittest.mock import MagicMock
 from typing import List
+from unittest.mock import MagicMock
 
-from clickup_mcp.client import ClickUpAPIClient
+import pytest
+
+from clickup_mcp.api.goal import GoalAPI
 from clickup_mcp.api.task import TaskAPI
 from clickup_mcp.api.time import TimeAPI
-from clickup_mcp.api.goal import GoalAPI
+from clickup_mcp.client import ClickUpAPIClient
 from clickup_mcp.models.http import APIResponse
 
 

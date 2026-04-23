@@ -8,21 +8,22 @@ Tests the AnalyticsAPI class methods including:
 - Get space analytics
 """
 
-import pytest
 from unittest.mock import MagicMock
 
+import pytest
+
 from clickup_mcp.api.analytics import AnalyticsAPI
-from clickup_mcp.models.dto.analytics import (
-    TaskAnalyticsQuery,
-    TeamAnalyticsQuery,
-    ListAnalyticsQuery,
-    SpaceAnalyticsQuery,
-    TaskAnalyticsResponse,
-    TeamAnalyticsResponse,
-    ListAnalyticsResponse,
-    SpaceAnalyticsResponse,
-)
 from clickup_mcp.client import ClickUpAPIClient
+from clickup_mcp.models.dto.analytics import (
+    ListAnalyticsQuery,
+    ListAnalyticsResponse,
+    SpaceAnalyticsQuery,
+    SpaceAnalyticsResponse,
+    TaskAnalyticsQuery,
+    TaskAnalyticsResponse,
+    TeamAnalyticsQuery,
+    TeamAnalyticsResponse,
+)
 
 
 @pytest.fixture
@@ -107,9 +108,7 @@ class TestAnalyticsAPI:
     """Test cases for AnalyticsAPI."""
 
     @pytest.mark.asyncio
-    async def test_get_task_analytics(
-        self, analytics_api, mock_api_client, sample_task_analytics_data
-    ):
+    async def test_get_task_analytics(self, analytics_api, mock_api_client, sample_task_analytics_data):
         """Test getting task analytics for a team."""
         # Arrange
         team_id = "team_001"
@@ -127,9 +126,7 @@ class TestAnalyticsAPI:
         assert result.total_tasks == 100
 
     @pytest.mark.asyncio
-    async def test_get_task_analytics_with_filters(
-        self, analytics_api, mock_api_client, sample_task_analytics_data
-    ):
+    async def test_get_task_analytics_with_filters(self, analytics_api, mock_api_client, sample_task_analytics_data):
         """Test getting task analytics with filters."""
         # Arrange
         team_id = "team_001"
@@ -150,9 +147,7 @@ class TestAnalyticsAPI:
         assert call_args[1]["params"]["status"] == "open"
 
     @pytest.mark.asyncio
-    async def test_get_task_analytics_returns_none_on_failure(
-        self, analytics_api, mock_api_client
-    ):
+    async def test_get_task_analytics_returns_none_on_failure(self, analytics_api, mock_api_client):
         """Test getting task analytics that fails returns None."""
         # Arrange
         team_id = "team_001"
@@ -166,9 +161,7 @@ class TestAnalyticsAPI:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_get_team_analytics(
-        self, analytics_api, mock_api_client, sample_team_analytics_data
-    ):
+    async def test_get_team_analytics(self, analytics_api, mock_api_client, sample_team_analytics_data):
         """Test getting team analytics."""
         # Arrange
         team_id = "team_001"
@@ -186,9 +179,7 @@ class TestAnalyticsAPI:
         assert result.total_tasks == 500
 
     @pytest.mark.asyncio
-    async def test_get_team_analytics_returns_none_on_failure(
-        self, analytics_api, mock_api_client
-    ):
+    async def test_get_team_analytics_returns_none_on_failure(self, analytics_api, mock_api_client):
         """Test getting team analytics that fails returns None."""
         # Arrange
         team_id = "team_001"
@@ -202,9 +193,7 @@ class TestAnalyticsAPI:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_get_list_analytics(
-        self, analytics_api, mock_api_client, sample_list_analytics_data
-    ):
+    async def test_get_list_analytics(self, analytics_api, mock_api_client, sample_list_analytics_data):
         """Test getting list analytics."""
         # Arrange
         list_id = "list_123"
@@ -222,9 +211,7 @@ class TestAnalyticsAPI:
         assert result.total_tasks == 50
 
     @pytest.mark.asyncio
-    async def test_get_list_analytics_returns_none_on_failure(
-        self, analytics_api, mock_api_client
-    ):
+    async def test_get_list_analytics_returns_none_on_failure(self, analytics_api, mock_api_client):
         """Test getting list analytics that fails returns None."""
         # Arrange
         list_id = "list_123"
@@ -238,9 +225,7 @@ class TestAnalyticsAPI:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_get_space_analytics(
-        self, analytics_api, mock_api_client, sample_space_analytics_data
-    ):
+    async def test_get_space_analytics(self, analytics_api, mock_api_client, sample_space_analytics_data):
         """Test getting space analytics."""
         # Arrange
         space_id = "space_123"
@@ -258,9 +243,7 @@ class TestAnalyticsAPI:
         assert result.total_tasks == 200
 
     @pytest.mark.asyncio
-    async def test_get_space_analytics_returns_none_on_failure(
-        self, analytics_api, mock_api_client
-    ):
+    async def test_get_space_analytics_returns_none_on_failure(self, analytics_api, mock_api_client):
         """Test getting space analytics that fails returns None."""
         # Arrange
         space_id = "space_123"
