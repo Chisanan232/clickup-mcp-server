@@ -22,6 +22,7 @@ from clickup_mcp.mcp_server.workspace import (
     workspace_list,
     workspace_update,
 )
+from clickup_mcp.models.domain.team import ClickUpTeam
 from clickup_mcp.models.dto.workspace import WorkspaceResp
 
 
@@ -310,3 +311,103 @@ async def test_workspace_create_with_name_only(mock_get_client: MagicMock) -> No
     assert result.result.name == "Engineering Team"
     assert result.result.color is None
     assert result.result.avatar is None
+
+
+@pytest.mark.asyncio
+@patch("clickup_mcp.mcp_server.workspace.ClickUpAPIClientFactory.get")
+async def test_workspace_create_with_special_characters(mock_get_client: MagicMock) -> None:
+    """Test creating a workspace with special characters in name."""
+    # Test data
+    workspace_id: str = "9018752317"
+    mock_workspace_resp: WorkspaceResp = WorkspaceResp(id=workspace_id, name="Team @#$%^&*()", color="#3498db")
+
+    # Set up mocks
+    mock_client: MagicMock = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=None)
+    mock_client.team.create_workspace = AsyncMock(return_value=mock_workspace_resp)
+    mock_get_client.return_value = mock_client
+
+    # Call the function
+    result = await workspace_create(WorkspaceCreateInput(name="Team @#$%^&*()", color="#3498db"))
+
+    # Assertions
+    assert result.ok is True
+    assert result.result.name == "Team @#$%^&*()"
+
+
+@pytest.mark.asyncio
+@patch("clickup_mcp.mcp_server.workspace.ClickUpAPIClientFactory.get")
+async def test_workspace_create_with_long_name(mock_get_client: MagicMock) -> None:
+    """Test creating a workspace with a long name (at max length)."""
+    # Test data
+    workspace_id: str = "9018752317"
+    long_name = "A" * 100  # Max length is 100
+    mock_workspace_resp: WorkspaceResp = WorkspaceResp(id=workspace_id, name=long_name, color="#3498db")
+
+    # Set up mocks
+    mock_client: MagicMock = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=None)
+    mock_client.team.create_workspace = AsyncMock(return_value=mock_workspace_resp)
+    mock_get_client.return_value = mock_client
+
+    # Call the function
+    result = await workspace_create(WorkspaceCreateInput(name=long_name, color="#3498db"))
+
+    # Assertions
+    assert result.ok is True
+    assert result.result.name == long_name
+
+
+@pytest.mark.asyncio
+@patch("clickup_mcp.mcp_server.workspace.ClickUpAPIClientFactory.get")
+async def test_workspace_create_with_invalid_color_format(mock_get_client: MagicMock) -> None:
+    """Test creating a workspace with valid color format."""
+    # Test data
+    workspace_id: str = "9018752317"
+    valid_color = "#123456"  # Valid hex color
+    mock_workspace_resp: WorkspaceResp = WorkspaceResp(id=workspace_id, name="Engineering Team", color=valid_color)
+
+    # Set up mocks
+    mock_client: MagicMock = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=None)
+    mock_client.team.create_workspace = AsyncMock(return_value=mock_workspace_resp)
+    mock_get_client.return_value = mock_client
+
+    # Call the function
+    result = await workspace_create(WorkspaceCreateInput(name="Engineering Team", color=valid_color))
+
+    # Assertions - the color should be valid
+    assert result.ok is True
+    assert result.result.color == valid_color
+
+
+@pytest.mark.asyncio
+@patch("clickup_mcp.mcp_server.workspace.ClickUpAPIClientFactory.get")
+async def test_workspace_list_with_multiple_workspaces(mock_get_client: MagicMock) -> None:
+    """Test listing multiple workspaces."""
+    # Test data
+    mock_teams = [
+        ClickUpTeam(id="9018752317", name="Engineering Team"),
+        ClickUpTeam(id="9018752318", name="Marketing Team"),
+        ClickUpTeam(id="9018752319", name="Sales Team"),
+    ]
+
+    # Set up mocks
+    mock_client: MagicMock = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=None)
+    mock_client.team.get_authorized_teams = AsyncMock(return_value=mock_teams)
+    mock_get_client.return_value = mock_client
+
+    # Call the function
+    result = await workspace_list()
+
+    # Assertions
+    assert result.ok is True
+    assert len(result.result.items) == 3
+    assert result.result.items[0].name == "Engineering Team"
+    assert result.result.items[1].name == "Marketing Team"
+    assert result.result.items[2].name == "Sales Team"
