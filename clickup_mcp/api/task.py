@@ -478,7 +478,7 @@ class TaskAPI:
               https://api.clickup.com/api/v2/task/abc123/member/42
         """
         response = await self._client.post(f"/task/{task_id}/member/{assignee_id}")
-        return response.success and response.status_code in (200, 201)
+        return response.success and response.status_code in (200, 201, 204)
 
     async def remove_assignee(self, task_id: ClickUpTaskID, assignee_id: int | str) -> bool:
         """
