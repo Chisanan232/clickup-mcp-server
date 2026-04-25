@@ -14,14 +14,13 @@ from unittest.mock import MagicMock
 import pytest
 
 from clickup_mcp.api.goal import GoalAPI
-from clickup_mcp.client import ClickUpAPIClient
+from clickup_mcp.client import APIResponse, ClickUpAPIClient
 from clickup_mcp.models.dto.goal import (
     GoalCreate,
     GoalListQuery,
     GoalListResponse,
     GoalUpdate,
 )
-from clickup_mcp.models.http import APIResponse
 
 
 @pytest.fixture

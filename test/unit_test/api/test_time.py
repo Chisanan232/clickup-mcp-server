@@ -17,7 +17,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from clickup_mcp.api.time import TimeAPI
-from clickup_mcp.client import ClickUpAPIClient
+from clickup_mcp.client import APIResponse, ClickUpAPIClient
 from clickup_mcp.models.dto.time import (
     TimeEntryCreate,
     TimeEntryListQuery,
@@ -26,7 +26,6 @@ from clickup_mcp.models.dto.time import (
     TimeEntryUpdate,
     TimeTrackingStatusResponse,
 )
-from clickup_mcp.models.http import APIResponse
 
 
 @pytest.fixture
