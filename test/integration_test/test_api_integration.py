@@ -14,8 +14,7 @@ from clickup_mcp.api.goal import GoalAPI
 from clickup_mcp.api.task import TaskAPI
 from clickup_mcp.api.time import TimeAPI
 from clickup_mcp.api.workflow import WorkflowAPI
-from clickup_mcp.client import ClickUpAPIClient
-from clickup_mcp.models.http import APIResponse
+from clickup_mcp.client import APIResponse, ClickUpAPIClient
 
 
 class TestAPIIntegration:
