@@ -133,9 +133,13 @@ class WorkflowAPI:
         logger.info(f"Creating workflow for team {team_id}: {workflow_create.name}")
         response = await self._client.post(endpoint, data=payload)
 
-        if response and "data" in response:
-            return WorkflowListResponse.deserialize(response["data"])
-        return None
+        if not response.success or response.status_code != 200:
+            return None
+
+        if response.data is None or not isinstance(response.data, dict):
+            return None
+
+        return WorkflowListResponse.deserialize(response.data)
 
     async def get(self, workflow_id: str) -> Optional[WorkflowListResponse]:
         """
@@ -158,9 +162,13 @@ class WorkflowAPI:
         logger.info(f"Getting workflow {workflow_id}")
         response = await self._client.get(endpoint)
 
-        if response and "data" in response:
-            return WorkflowListResponse.deserialize(response["data"])
-        return None
+        if not response.success or response.status_code != 200:
+            return None
+
+        if response.data is None or not isinstance(response.data, dict):
+            return None
+
+        return WorkflowListResponse.deserialize(response.data)
 
     async def update(self, workflow_id: str, workflow_update: WorkflowUpdate) -> Optional[WorkflowListResponse]:
         """
@@ -185,9 +193,13 @@ class WorkflowAPI:
         logger.info(f"Updating workflow {workflow_id}")
         response = await self._client.put(endpoint, data=payload)
 
-        if response and "data" in response:
-            return WorkflowListResponse.deserialize(response["data"])
-        return None
+        if not response.success or response.status_code != 200:
+            return None
+
+        if response.data is None or not isinstance(response.data, dict):
+            return None
+
+        return WorkflowListResponse.deserialize(response.data)
 
     async def delete(self, workflow_id: str) -> bool:
         """
@@ -210,7 +222,7 @@ class WorkflowAPI:
         logger.info(f"Deleting workflow {workflow_id}")
         response = await self._client.delete(endpoint)
 
-        return response is not None
+        return response.success and response.status_code == 204
 
     async def list(
         self, team_id: str, page: int = 0, limit: int = 100, is_active: bool | None = None
@@ -244,6 +256,10 @@ class WorkflowAPI:
         logger.info(f"Listing workflows for team {team_id} (page={page}, limit={limit})")
         response = await self._client.get(endpoint, params=query_params)
 
-        if response and "data" in response:
-            return WorkflowListResponse.deserialize(response["data"])
-        return None
+        if not response.success or response.status_code != 200:
+            return None
+
+        if response.data is None or not isinstance(response.data, dict):
+            return None
+
+        return WorkflowListResponse.deserialize(response.data)

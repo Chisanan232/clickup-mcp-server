@@ -119,9 +119,13 @@ class AnalyticsAPI:
         logger.info(f"Getting task analytics for team {team_id}")
         response = await self._client.get(endpoint, params=query_params)
 
-        if response and "data" in response:
-            return TaskAnalyticsResponse.deserialize(response["data"])
-        return None
+        if not response.success or response.status_code != 200:
+            return None
+
+        if response.data is None or not isinstance(response.data, dict):
+            return None
+
+        return TaskAnalyticsResponse.deserialize(response.data)
 
     async def get_team_analytics(self, team_id: str, query: TeamAnalyticsQuery) -> Optional[TeamAnalyticsResponse]:
         """
@@ -152,9 +156,13 @@ class AnalyticsAPI:
         logger.info(f"Getting team analytics for team {team_id}")
         response = await self._client.get(endpoint, params=query_params)
 
-        if response and "data" in response:
-            return TeamAnalyticsResponse.deserialize(response["data"])
-        return None
+        if not response.success or response.status_code != 200:
+            return None
+
+        if response.data is None or not isinstance(response.data, dict):
+            return None
+
+        return TeamAnalyticsResponse.deserialize(response.data)
 
     async def get_list_analytics(self, list_id: str, query: ListAnalyticsQuery) -> Optional[ListAnalyticsResponse]:
         """
@@ -185,9 +193,13 @@ class AnalyticsAPI:
         logger.info(f"Getting list analytics for list {list_id}")
         response = await self._client.get(endpoint, params=query_params)
 
-        if response and "data" in response:
-            return ListAnalyticsResponse.deserialize(response["data"])
-        return None
+        if not response.success or response.status_code != 200:
+            return None
+
+        if response.data is None or not isinstance(response.data, dict):
+            return None
+
+        return ListAnalyticsResponse.deserialize(response.data)
 
     async def get_space_analytics(self, space_id: str, query: SpaceAnalyticsQuery) -> Optional[SpaceAnalyticsResponse]:
         """
@@ -218,6 +230,10 @@ class AnalyticsAPI:
         logger.info(f"Getting space analytics for space {space_id}")
         response = await self._client.get(endpoint, params=query_params)
 
-        if response and "data" in response:
-            return SpaceAnalyticsResponse.deserialize(response["data"])
-        return None
+        if not response.success or response.status_code != 200:
+            return None
+
+        if response.data is None or not isinstance(response.data, dict):
+            return None
+
+        return SpaceAnalyticsResponse.deserialize(response.data)

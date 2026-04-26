@@ -14,7 +14,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from clickup_mcp.api.workflow import WorkflowAPI
-from clickup_mcp.client import ClickUpAPIClient
+from clickup_mcp.client import APIResponse, ClickUpAPIClient
 from clickup_mcp.models.dto.workflow import (
     WorkflowCreate,
     WorkflowListResponse,
@@ -74,7 +74,9 @@ class TestWorkflowAPI:
             trigger_config={"list_id": "456"},
             actions=[{"type": "assign", "user_id": "789"}],
         )
-        mock_api_client.post.return_value = {"data": sample_workflow_data}
+        mock_api_client.post.return_value = APIResponse(
+            success=True, status_code=200, data=sample_workflow_data, headers={}
+        )
 
         # Act
         result = await workflow_api.create(team_id, workflow_create)
@@ -97,7 +99,7 @@ class TestWorkflowAPI:
             trigger_config={"list_id": "456"},
             actions=[{"type": "assign", "user_id": "789"}],
         )
-        mock_api_client.post.return_value = None
+        mock_api_client.post.return_value = APIResponse(success=False, status_code=500, data=None, headers={})
 
         # Act
         result = await workflow_api.create(team_id, workflow_create)
@@ -110,7 +112,9 @@ class TestWorkflowAPI:
         """Test getting a workflow by ID."""
         # Arrange
         workflow_id = "wf_123"
-        mock_api_client.get.return_value = {"data": sample_workflow_data}
+        mock_api_client.get.return_value = APIResponse(
+            success=True, status_code=200, data=sample_workflow_data, headers={}
+        )
 
         # Act
         result = await workflow_api.get(workflow_id)
@@ -125,7 +129,7 @@ class TestWorkflowAPI:
         """Test getting a workflow that fails returns None."""
         # Arrange
         workflow_id = "wf_123"
-        mock_api_client.get.return_value = None
+        mock_api_client.get.return_value = APIResponse(success=False, status_code=500, data=None, headers={})
 
         # Act
         result = await workflow_api.get(workflow_id)
@@ -139,7 +143,9 @@ class TestWorkflowAPI:
         # Arrange
         workflow_id = "wf_123"
         workflow_update = WorkflowUpdate(name="Updated name", is_active=False)
-        mock_api_client.put.return_value = {"data": sample_workflow_data}
+        mock_api_client.put.return_value = APIResponse(
+            success=True, status_code=200, data=sample_workflow_data, headers={}
+        )
 
         # Act
         result = await workflow_api.update(workflow_id, workflow_update)
@@ -156,7 +162,7 @@ class TestWorkflowAPI:
         # Arrange
         workflow_id = "wf_123"
         workflow_update = WorkflowUpdate(name="Updated name")
-        mock_api_client.put.return_value = None
+        mock_api_client.put.return_value = APIResponse(success=False, status_code=500, data=None, headers={})
 
         # Act
         result = await workflow_api.update(workflow_id, workflow_update)
@@ -169,7 +175,7 @@ class TestWorkflowAPI:
         """Test deleting a workflow."""
         # Arrange
         workflow_id = "wf_123"
-        mock_api_client.delete.return_value = {"success": True}
+        mock_api_client.delete.return_value = APIResponse(success=True, status_code=204, data=None, headers={})
 
         # Act
         result = await workflow_api.delete(workflow_id)
@@ -183,7 +189,7 @@ class TestWorkflowAPI:
         """Test deleting a workflow that fails returns False."""
         # Arrange
         workflow_id = "wf_123"
-        mock_api_client.delete.return_value = None
+        mock_api_client.delete.return_value = APIResponse(success=False, status_code=500, data=None, headers={})
 
         # Act
         result = await workflow_api.delete(workflow_id)
@@ -196,7 +202,9 @@ class TestWorkflowAPI:
         """Test listing workflows for a team."""
         # Arrange
         team_id = "team_001"
-        mock_api_client.get.return_value = {"data": sample_workflow_data}
+        mock_api_client.get.return_value = APIResponse(
+            success=True, status_code=200, data=sample_workflow_data, headers={}
+        )
 
         # Act
         result = await workflow_api.list(team_id)
@@ -213,7 +221,9 @@ class TestWorkflowAPI:
         """Test listing workflows with pagination parameters."""
         # Arrange
         team_id = "team_001"
-        mock_api_client.get.return_value = {"data": sample_workflow_data}
+        mock_api_client.get.return_value = APIResponse(
+            success=True, status_code=200, data=sample_workflow_data, headers={}
+        )
 
         # Act
         result = await workflow_api.list(team_id, page=1, limit=50)
@@ -228,7 +238,9 @@ class TestWorkflowAPI:
         """Test listing workflows with active status filter."""
         # Arrange
         team_id = "team_001"
-        mock_api_client.get.return_value = {"data": sample_workflow_data}
+        mock_api_client.get.return_value = APIResponse(
+            success=True, status_code=200, data=sample_workflow_data, headers={}
+        )
 
         # Act
         result = await workflow_api.list(team_id, is_active=True)
@@ -242,7 +254,7 @@ class TestWorkflowAPI:
         """Test listing workflows that fails returns None."""
         # Arrange
         team_id = "team_001"
-        mock_api_client.get.return_value = None
+        mock_api_client.get.return_value = APIResponse(success=False, status_code=500, data=None, headers={})
 
         # Act
         result = await workflow_api.list(team_id)
