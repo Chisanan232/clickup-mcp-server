@@ -99,9 +99,7 @@ class TestWorkflowAPI:
             trigger_config={"list_id": "456"},
             actions=[{"type": "assign", "user_id": "789"}],
         )
-        mock_api_client.post.return_value = APIResponse(
-            success=False, status_code=500, data=None, headers={}
-        )
+        mock_api_client.post.return_value = APIResponse(success=False, status_code=500, data=None, headers={})
 
         # Act
         result = await workflow_api.create(team_id, workflow_create)
@@ -131,9 +129,7 @@ class TestWorkflowAPI:
         """Test getting a workflow that fails returns None."""
         # Arrange
         workflow_id = "wf_123"
-        mock_api_client.get.return_value = APIResponse(
-            success=False, status_code=500, data=None, headers={}
-        )
+        mock_api_client.get.return_value = APIResponse(success=False, status_code=500, data=None, headers={})
 
         # Act
         result = await workflow_api.get(workflow_id)
@@ -166,9 +162,7 @@ class TestWorkflowAPI:
         # Arrange
         workflow_id = "wf_123"
         workflow_update = WorkflowUpdate(name="Updated name")
-        mock_api_client.put.return_value = APIResponse(
-            success=False, status_code=500, data=None, headers={}
-        )
+        mock_api_client.put.return_value = APIResponse(success=False, status_code=500, data=None, headers={})
 
         # Act
         result = await workflow_api.update(workflow_id, workflow_update)
@@ -181,9 +175,7 @@ class TestWorkflowAPI:
         """Test deleting a workflow."""
         # Arrange
         workflow_id = "wf_123"
-        mock_api_client.delete.return_value = APIResponse(
-            success=True, status_code=204, data=None, headers={}
-        )
+        mock_api_client.delete.return_value = APIResponse(success=True, status_code=204, data=None, headers={})
 
         # Act
         result = await workflow_api.delete(workflow_id)
@@ -197,9 +189,7 @@ class TestWorkflowAPI:
         """Test deleting a workflow that fails returns False."""
         # Arrange
         workflow_id = "wf_123"
-        mock_api_client.delete.return_value = APIResponse(
-            success=False, status_code=500, data=None, headers={}
-        )
+        mock_api_client.delete.return_value = APIResponse(success=False, status_code=500, data=None, headers={})
 
         # Act
         result = await workflow_api.delete(workflow_id)
@@ -264,9 +254,7 @@ class TestWorkflowAPI:
         """Test listing workflows that fails returns None."""
         # Arrange
         team_id = "team_001"
-        mock_api_client.get.return_value = APIResponse(
-            success=False, status_code=500, data=None, headers={}
-        )
+        mock_api_client.get.return_value = APIResponse(success=False, status_code=500, data=None, headers={})
 
         # Act
         result = await workflow_api.list(team_id)

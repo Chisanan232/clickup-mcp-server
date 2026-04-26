@@ -156,9 +156,7 @@ class TestAnalyticsAPI:
         # Arrange
         team_id = "team_001"
         query = TaskAnalyticsQuery(start_date=1640995200000, end_date=1643673600000)
-        mock_api_client.get.return_value = APIResponse(
-            success=False, status_code=500, data=None, headers={}
-        )
+        mock_api_client.get.return_value = APIResponse(success=False, status_code=500, data=None, headers={})
 
         # Act
         result = await analytics_api.get_task_analytics(team_id, query)
@@ -192,9 +190,7 @@ class TestAnalyticsAPI:
         # Arrange
         team_id = "team_001"
         query = TeamAnalyticsQuery(start_date=1640995200000, end_date=1643673600000)
-        mock_api_client.get.return_value = APIResponse(
-            success=False, status_code=500, data=None, headers={}
-        )
+        mock_api_client.get.return_value = APIResponse(success=False, status_code=500, data=None, headers={})
 
         # Act
         result = await analytics_api.get_team_analytics(team_id, query)
@@ -228,9 +224,7 @@ class TestAnalyticsAPI:
         # Arrange
         list_id = "list_123"
         query = ListAnalyticsQuery(start_date=1640995200000, end_date=1643673600000)
-        mock_api_client.get.return_value = APIResponse(
-            success=False, status_code=500, data=None, headers={}
-        )
+        mock_api_client.get.return_value = APIResponse(success=False, status_code=500, data=None, headers={})
 
         # Act
         result = await analytics_api.get_list_analytics(list_id, query)
@@ -264,9 +258,7 @@ class TestAnalyticsAPI:
         # Arrange
         space_id = "space_123"
         query = SpaceAnalyticsQuery(start_date=1640995200000, end_date=1643673600000)
-        mock_api_client.get.return_value = APIResponse(
-            success=False, status_code=500, data=None, headers={}
-        )
+        mock_api_client.get.return_value = APIResponse(success=False, status_code=500, data=None, headers={})
 
         # Act
         result = await analytics_api.get_space_analytics(space_id, query)
