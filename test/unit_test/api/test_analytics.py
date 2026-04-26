@@ -13,7 +13,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from clickup_mcp.api.analytics import AnalyticsAPI
-from clickup_mcp.client import ClickUpAPIClient
+from clickup_mcp.client import APIResponse, ClickUpAPIClient
 from clickup_mcp.models.dto.analytics import (
     ListAnalyticsQuery,
     ListAnalyticsResponse,
@@ -113,7 +113,9 @@ class TestAnalyticsAPI:
         # Arrange
         team_id = "team_001"
         query = TaskAnalyticsQuery(start_date=1640995200000, end_date=1643673600000)
-        mock_api_client.get.return_value = {"data": sample_task_analytics_data}
+        mock_api_client.get.return_value = APIResponse(
+            success=True, status_code=200, data=sample_task_analytics_data, headers={}
+        )
 
         # Act
         result = await analytics_api.get_task_analytics(team_id, query)
@@ -136,7 +138,9 @@ class TestAnalyticsAPI:
             assignee_id="user_123",
             status="open",
         )
-        mock_api_client.get.return_value = {"data": sample_task_analytics_data}
+        mock_api_client.get.return_value = APIResponse(
+            success=True, status_code=200, data=sample_task_analytics_data, headers={}
+        )
 
         # Act
         result = await analytics_api.get_task_analytics(team_id, query)
@@ -152,7 +156,9 @@ class TestAnalyticsAPI:
         # Arrange
         team_id = "team_001"
         query = TaskAnalyticsQuery(start_date=1640995200000, end_date=1643673600000)
-        mock_api_client.get.return_value = None
+        mock_api_client.get.return_value = APIResponse(
+            success=False, status_code=500, data=None, headers={}
+        )
 
         # Act
         result = await analytics_api.get_task_analytics(team_id, query)
@@ -166,7 +172,9 @@ class TestAnalyticsAPI:
         # Arrange
         team_id = "team_001"
         query = TeamAnalyticsQuery(start_date=1640995200000, end_date=1643673600000)
-        mock_api_client.get.return_value = {"data": sample_team_analytics_data}
+        mock_api_client.get.return_value = APIResponse(
+            success=True, status_code=200, data=sample_team_analytics_data, headers={}
+        )
 
         # Act
         result = await analytics_api.get_team_analytics(team_id, query)
@@ -184,7 +192,9 @@ class TestAnalyticsAPI:
         # Arrange
         team_id = "team_001"
         query = TeamAnalyticsQuery(start_date=1640995200000, end_date=1643673600000)
-        mock_api_client.get.return_value = None
+        mock_api_client.get.return_value = APIResponse(
+            success=False, status_code=500, data=None, headers={}
+        )
 
         # Act
         result = await analytics_api.get_team_analytics(team_id, query)
@@ -198,7 +208,9 @@ class TestAnalyticsAPI:
         # Arrange
         list_id = "list_123"
         query = ListAnalyticsQuery(start_date=1640995200000, end_date=1643673600000)
-        mock_api_client.get.return_value = {"data": sample_list_analytics_data}
+        mock_api_client.get.return_value = APIResponse(
+            success=True, status_code=200, data=sample_list_analytics_data, headers={}
+        )
 
         # Act
         result = await analytics_api.get_list_analytics(list_id, query)
@@ -216,7 +228,9 @@ class TestAnalyticsAPI:
         # Arrange
         list_id = "list_123"
         query = ListAnalyticsQuery(start_date=1640995200000, end_date=1643673600000)
-        mock_api_client.get.return_value = None
+        mock_api_client.get.return_value = APIResponse(
+            success=False, status_code=500, data=None, headers={}
+        )
 
         # Act
         result = await analytics_api.get_list_analytics(list_id, query)
@@ -230,7 +244,9 @@ class TestAnalyticsAPI:
         # Arrange
         space_id = "space_123"
         query = SpaceAnalyticsQuery(start_date=1640995200000, end_date=1643673600000)
-        mock_api_client.get.return_value = {"data": sample_space_analytics_data}
+        mock_api_client.get.return_value = APIResponse(
+            success=True, status_code=200, data=sample_space_analytics_data, headers={}
+        )
 
         # Act
         result = await analytics_api.get_space_analytics(space_id, query)
@@ -248,7 +264,9 @@ class TestAnalyticsAPI:
         # Arrange
         space_id = "space_123"
         query = SpaceAnalyticsQuery(start_date=1640995200000, end_date=1643673600000)
-        mock_api_client.get.return_value = None
+        mock_api_client.get.return_value = APIResponse(
+            success=False, status_code=500, data=None, headers={}
+        )
 
         # Act
         result = await analytics_api.get_space_analytics(space_id, query)
