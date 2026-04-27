@@ -14,8 +14,7 @@ from clickup_mcp.api.goal import GoalAPI
 from clickup_mcp.api.task import TaskAPI
 from clickup_mcp.api.time import TimeAPI
 from clickup_mcp.api.workflow import WorkflowAPI
-from clickup_mcp.client import ClickUpAPIClient
-from clickup_mcp.models.http import APIResponse
+from clickup_mcp.client import APIResponse, ClickUpAPIClient
 
 
 class TestAPIIntegration:
@@ -60,7 +59,7 @@ class TestAPIIntegration:
         from clickup_mcp.models.dto.task import TaskCreate
         from clickup_mcp.models.dto.time import TimeEntryCreate
 
-        task = await task_api.create(TaskCreate(name="Test Task", list_id="list_123"))
+        task = await task_api.create("list_123", TaskCreate(name="Test Task"))
         time_entry = await time_api.create(
             "team_001",
             TimeEntryCreate(task_id="task_123", description="Test work", duration=3600000),
@@ -124,7 +123,7 @@ class TestAPIIntegration:
         workflow_api = WorkflowAPI(mock_client)
         task_api = TaskAPI(mock_client)
 
-        # Mock workflow creation response
+        # Mock responses
         mock_client.post.side_effect = [
             APIResponse(
                 success=True,
@@ -173,7 +172,7 @@ class TestAPIIntegration:
             ),
         )
 
-        task = await task_api.create(TaskCreate(name="Test Task", list_id="456"))
+        task = await task_api.create("456", TaskCreate(name="Test Task"))
 
         # Assert - Both operations should succeed
         assert workflow is not None
@@ -189,7 +188,18 @@ class TestAPIIntegration:
         task_api = TaskAPI(mock_client)
 
         # Mock responses
-        mock_client.get.return_value = {"data": {"id": "a1", "team_id": "team_001", "total_tasks": 100}}
+        mock_client.get.return_value = APIResponse(
+            success=True,
+            status_code=200,
+            data={
+                "id": "a1",
+                "team_id": "team_001",
+                "total_tasks": 100,
+                "start_date": 1640995200000,
+                "end_date": 1643673600000,
+            },
+            headers={},
+        )
         mock_client.post.return_value = APIResponse(
             success=True,
             status_code=200,
@@ -201,8 +211,8 @@ class TestAPIIntegration:
         from clickup_mcp.models.dto.analytics import TaskAnalyticsQuery
         from clickup_mcp.models.dto.task import TaskCreate
 
-        task1 = await task_api.create(TaskCreate(name="Task 1", list_id="list_123"))
-        task2 = await task_api.create(TaskCreate(name="Task 2", list_id="list_123"))
+        task1 = await task_api.create("list_123", TaskCreate(name="Task 1"))
+        task2 = await task_api.create("list_123", TaskCreate(name="Task 2"))
 
         analytics = await analytics_api.get_task_analytics(
             "team_001",
@@ -264,7 +274,7 @@ class TestAPIIntegration:
         from clickup_mcp.models.dto.goal import GoalCreate
         from clickup_mcp.models.dto.task import TaskCreate
 
-        task = await task_api.create(TaskCreate(name="Test Task", list_id="list_123"))
+        task = await task_api.create("list_123", TaskCreate(name="Test Task"))
         tracking_started = await time_api.start_tracking("task_123")
         tracking_stopped = await time_api.stop_tracking("task_123", "Completed work")
         goal = await goal_api.create(
