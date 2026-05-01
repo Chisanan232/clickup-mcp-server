@@ -43,8 +43,8 @@ importers:
         version: 5.95.0
     devDependencies:
       '@docusaurus/module-type-aliases':
-        specifier: 3.10.0
-        version: 3.10.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 3.10.1
+        version: 3.10.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@docusaurus/plugin-content-docs':
         specifier: 3.10.0
         version: 3.10.0(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@18.3.1))(debug@4.4.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3)
@@ -1133,6 +1133,12 @@ packages:
       react: '*'
       react-dom: '*'
 
+  '@docusaurus/module-type-aliases@3.10.1':
+    resolution: {integrity: sha512-YoOZKUdGlp8xSYhuAkGdSo5Ydkbq4V4eK3sD8v0a2hloxCWdQbNBhkc+Ko9QyjpESc0BYcIGM5iHVAy5hdFV6w==}
+    peerDependencies:
+      react: '*'
+      react-dom: '*'
+
   '@docusaurus/plugin-content-blog@3.10.0':
     resolution: {integrity: sha512-RuTz68DhB7CL96QO5UsFbciD7GPYq6QV+YMfF9V0+N4ZgLhJIBgpVAr8GobrKF6NRe5cyWWETU5z5T834piG9g==}
     engines: {node: '>=20.0'}
@@ -1255,6 +1261,12 @@ packages:
 
   '@docusaurus/types@3.10.0':
     resolution: {integrity: sha512-F0dOt3FOoO20rRaFK7whGFQZ3ggyrWEdQc/c8/UiRuzhtg4y1w9FspXH5zpCT07uMnJKBPGh+qNazbNlCQqvSw==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+
+  '@docusaurus/types@3.10.1':
+    resolution: {integrity: sha512-XYMK8k1szDCFMw2V+Xyen0g7Kee1sP3dtFnl7vkGkZOkeAJ/oPDQPL8iz4HBKOo/cwU8QeV6onVjMqtP+tFzsw==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
@@ -5571,6 +5583,7 @@ packages:
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   v8-compile-cache-lib@3.0.1:
@@ -7210,6 +7223,24 @@ snapshots:
       - uglify-js
       - webpack-cli
 
+  '@docusaurus/module-type-aliases@3.10.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@docusaurus/types': 3.10.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/history': 4.7.11
+      '@types/react': 19.2.14
+      '@types/react-router-config': 5.0.11
+      '@types/react-router-dom': 5.3.3
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-helmet-async: '@slorber/react-helmet-async@1.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)'
+      react-loadable: '@docusaurus/react-loadable@6.0.0(react@18.3.1)'
+    transitivePeerDependencies:
+      - '@swc/core'
+      - esbuild
+      - supports-color
+      - uglify-js
+      - webpack-cli
+
   '@docusaurus/plugin-content-blog@3.10.0(@docusaurus/plugin-content-docs@3.10.0(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3))(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3)':
     dependencies:
       '@docusaurus/core': 3.10.0(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@18.3.1))(debug@4.4.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3)
@@ -7714,6 +7745,27 @@ snapshots:
   '@docusaurus/tsconfig@3.10.0': {}
 
   '@docusaurus/types@3.10.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@mdx-js/mdx': 3.1.1
+      '@types/history': 4.7.11
+      '@types/mdast': 4.0.4
+      '@types/react': 19.2.14
+      commander: 5.1.0
+      joi: 17.13.3
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-helmet-async: '@slorber/react-helmet-async@1.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)'
+      utility-types: 3.11.0
+      webpack: 5.95.0
+      webpack-merge: 5.10.0
+    transitivePeerDependencies:
+      - '@swc/core'
+      - esbuild
+      - supports-color
+      - uglify-js
+      - webpack-cli
+
+  '@docusaurus/types@3.10.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@mdx-js/mdx': 3.1.1
       '@types/history': 4.7.11

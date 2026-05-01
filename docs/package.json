@@ -28,7 +28,7 @@
     "webpack": "5.95.0"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "3.10.0",
+    "@docusaurus/module-type-aliases": "3.10.1",
     "@docusaurus/plugin-content-docs": "3.10.0",
     "@docusaurus/tsconfig": "3.10.0",
     "@docusaurus/types": "3.10.0",
