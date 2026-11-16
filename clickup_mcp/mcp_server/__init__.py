@@ -18,20 +18,22 @@ Usage Examples:
 """
 
 # Import tool modules to register tools
-from . import analytics  # noqa: F401
-from . import bottleneck  # noqa: F401
-from . import folder  # noqa: F401
-from . import goal  # noqa: F401
-from . import insights  # noqa: F401
-from . import key_result  # noqa: F401
-from . import list  # noqa: F401
-from . import reporting  # noqa: F401
-from . import space  # noqa: F401
-from . import task  # noqa: F401
-from . import team  # noqa: F401
-from . import time  # noqa: F401
-from . import workflow  # noqa: F401
-from . import workspace  # noqa: F401
+from . import (  # noqa: F401
+    analytics,
+    bottleneck,
+    folder,
+    goal,
+    insights,
+    key_result,
+    list,
+    reporting,
+    space,
+    task,
+    team,
+    time,
+    workflow,
+    workspace,
+)
 
 # Ensure app is created before importing tool modules
 from .app import mcp  # noqa: F401

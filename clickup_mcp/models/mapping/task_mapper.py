@@ -46,7 +46,10 @@ from clickup_mcp.models.mapping.priority import (
 )
 
 if TYPE_CHECKING:  # type hints only; avoid importing mcp_server package at runtime
-    from clickup_mcp.mcp_server.models.inputs.task import TaskCreateInput, TaskUpdateInput
+    from clickup_mcp.mcp_server.models.inputs.task import (
+        TaskCreateInput,
+        TaskUpdateInput,
+    )
     from clickup_mcp.mcp_server.models.outputs.task import TaskListItem, TaskResult
 
 from clickup_mcp.models.domain.task_priority import (
